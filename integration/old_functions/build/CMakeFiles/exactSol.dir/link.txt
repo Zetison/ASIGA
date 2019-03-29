@@ -1,0 +1,1 @@
+/usr/bin/cc  -std=c99    CMakeFiles/exactSol.dir/exactSol.c.o  -o exactSol -rdynamic -lm 

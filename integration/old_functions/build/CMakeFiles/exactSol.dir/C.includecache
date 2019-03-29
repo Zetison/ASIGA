@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/shomec/j/jonvegar/Dropbox/GitHub/exerciseSet6/exactSol/exactSol.c
+stdio.h
+-
+stdlib.h
+-
+math.h
+-
+stdint.h
+-
+gaussQuad.h
+/home/shomec/j/jonvegar/Dropbox/GitHub/exerciseSet6/exactSol/gaussQuad.h
+
+/home/shomec/j/jonvegar/Dropbox/GitHub/exerciseSet6/exactSol/gaussQuad.h
+
