@@ -10,19 +10,20 @@ addpath(genpath('e3Dss'))
 addpath(genpath('postProcessing'))
 addpath integration
 addpath subRoutines
-addpath export_fig
+addpath ../export_fig
+addpath ../
 % return
 
 getTasks
 runTasksInParallel = 0;
 startMatlabPool
 % Create folders
-folderName = 'results';
+folderName = '../results';
 if ~exist(folderName, 'dir')
     mkdir(folderName);
 end
 
-folderName = 'results/_studies';
+folderName = '../results/_studies';
 if ~exist(folderName, 'dir')
     mkdir(folderName);
 end
