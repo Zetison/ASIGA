@@ -1,7 +1,7 @@
 function [tasks, counter, task] = createTasks(tasks, counter, task, i, loopParameters, loopParametersArr)
 noParms = numel(loopParametersArr);
 if i > noParms
-    tasks(counter).task = task;
+    tasks(counter,1).task = task;
     counter = counter + 1;
 else
     fieldName = loopParameters{noParms-i+1};

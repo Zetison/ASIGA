@@ -841,6 +841,7 @@ if ~strcmp(scatteringCase,'Sweep')
     if  ~useROM
         switch scatteringCase
             case {'BI', 'Sweep','Ray'}    
+                %% Calculate Errors
                 calculateErrors
 
         %         keyboard

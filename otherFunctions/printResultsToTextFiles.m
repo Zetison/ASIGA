@@ -46,7 +46,8 @@ if isnan(options.subFolderName)
 else
     subFolderName = options.subFolderName;
 end
-analyticSolutionExist = study.tasks(1).task.varCol.analyticSolutionExist;
+% analyticSolutionExist = study.tasks(1).task.varCol.analyticSolutionExist;
+analyticSolutionExist = true;
 
 if isempty(options.fileDataHeaderX)
     fileDataHeaderX = xname;
@@ -245,18 +246,30 @@ switch options.noXLoopPrms
             end
             if ~isempty(legendEntries)
                 legendName = [];
+                saveName = model;  
                 for j = 1:length(legendEntries)
-                    temp = study.tasks(idxMap(i)).task.(legendEntries{j});
+                    temp2 = legendEntries{j};
+                    if ~isfield(study.tasks(i).task,legendEntries{j})
+                        continue
+                    end
+                    temp = study.tasks(i).task.(legendEntries{j});
                     if isnumeric(temp)
                         temp = num2str(temp);
                     end
                     if j ~= 1
                         legendName = [legendName ', ' ];
                     end
+                    if isstruct(temp)
+                        fieldNames = fieldnames(temp);
+                        temp2 = fieldNames{1};
+                        temp = temp.(temp2);
+                    end
                     switch legendEntries{j}
                         case {'formulation','IEbasis','method','coreMethod','BC'}
                             legendName = [legendName temp];
+                            saveName = [saveName '_' temp];
                         otherwise
+                            saveName = [saveName '_' temp2 temp];
                             legendName = [legendName legendEntries{j} '=' temp];
                     end
                 end
