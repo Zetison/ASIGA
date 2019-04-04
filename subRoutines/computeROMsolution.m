@@ -5,6 +5,8 @@ basisROM = 'Taylor';
 % basisROM = 'Fourier';
 % basisROM = 'Bernstein';
 U_P = task.varCol.U_sweep;
+task.varCol = rmfield(task.varCol,'U_sweep');
+task.varCol = rmfield(task.varCol,'U');
 
 noDofs = size(U_P{1},1);
 % noVec = size(U_P{1},2);
