@@ -6,15 +6,15 @@ k = 1;
 % f = 1e2;             % Frequency
 f = k*1500/(2*pi);
 N = 6;
-M = 1:6;
+M = 1:7;
 parm = [1,2];
-degree = 4;
+degree = 2;
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
 % alpha_s = 0;
 % beta_s = 0;
-alpha = alpha_s;
-beta = beta_s;
+alpha = (0:0.5:360)*pi/180;
+beta = 30*pi/180;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 extraGPBEM = 0;
@@ -36,12 +36,21 @@ collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 method = {'BEM'};
-% M = 1:2;
-% parm = 1;
-% degree = 2;
+M = 1:2;
+parm = 1;
+degree = 2;
 extraGPBEM = 0;
 extraGP = 0;
-formulation = {'CRCBIE1', 'CRCBIE2', 'CRCBIE3', 'GRCBIE1', 'GRCBIE2', 'GRCBIE3', 'CCBIE', 'GCBIE', 'CHBIE', 'GHBIE', 'CBM', 'GBM'};
-% formulation = {'GCBIE', 'CCBIE'};
+% coreMethod = {'IGA', 'C0_IGA', 'hp_FEM','h_FEM'};
+% coreMethod = {'linear_FEM'};
+% formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
+formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE','GRCBIE','CRCBIE1'};
+% formulation = {'CCBIE', 'CBM', 'CHBIE'};
+% formulation = {'CRCBIE'};
+% formulation = {'GRCBIE','CRCBIE','GCBIE','CCBIE'};
+% formulation = {'CCBIE'};
+% formulation = {'GCBIE'};
+formulation = {'GCBIE', 'CCBIE'};
+formulation = {'CRCBIE1', 'CRCBIE2', 'CRCBIE3', 'CCBIE', 'GRCBIE1', 'GRCBIE2', 'GRCBIE3', 'GCBIE'};
 
 collectIntoTasks

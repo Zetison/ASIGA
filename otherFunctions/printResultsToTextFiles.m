@@ -249,10 +249,10 @@ switch options.noXLoopPrms
                 saveName = model;  
                 for j = 1:length(legendEntries)
                     temp2 = legendEntries{j};
-                    if ~isfield(study.tasks(i).task,legendEntries{j})
+                    if ~isfield(study.tasks(idxMap(i)).task,legendEntries{j})
                         continue
                     end
-                    temp = study.tasks(i).task.(legendEntries{j});
+                    temp = study.tasks(idxMap(i)).task.(legendEntries{j});
                     if isnumeric(temp)
                         temp = num2str(temp);
                     end

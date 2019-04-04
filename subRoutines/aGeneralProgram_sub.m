@@ -422,16 +422,19 @@ for i_k = 1:numel(k)
                 case 'G' % Galerkin
                     switch formulation(2)
                         case 'R' % Regularized
-                            [A, FF] = buildRBEMmatrix_galerkin(varCol);  
+%                             [A, FF] = buildRBEMmatrix_galerkin(varCol);  
+                            [A, FF] = buildRBEMmatrix_galerkinVec(varCol);  
                         otherwise
-                            [A, FF] = buildBEMmatrix_galerkin(varCol);  
+%                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
+                            [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
                     end
                     A(dofsToRemove,:) = [];
                     FF(dofsToRemove,:) = [];
                 case 'C' % Collocation
                     switch formulation(2)
                         case 'R' % Regularized
-                            [A, FF] = buildRBEMmatrix(varCol);  
+                            [A, FF] = buildRBEMmatrixVec(varCol);  
+%                             [A, FF] = buildRBEMmatrix(varCol);  
                         otherwise
                             [A, FF] = buildBEMmatrixVec(varCol);  
     %                         [A, FF] = buildBEMmatrix(varCol);  
@@ -848,7 +851,7 @@ if ~strcmp(scatteringCase,'Sweep')
                 plotError = analyticSolutionExist && ~plotTimeOscillation; 
 
                 tic
-                plotResultsInMatlab = 1;
+                plotResultsInMatlab = 0;
                 if plotResultsInMatlab && analyticSolutionExist && strcmp(formulation,'GCBIE')
                     plotGalerkinResidual(varCol,U);
                     axis equal
