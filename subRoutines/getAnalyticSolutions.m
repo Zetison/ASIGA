@@ -151,7 +151,7 @@ switch applyLoad
             e3Dss_options = [];
         end
         if isinf(N_max)
-            p_inc = @(v) P_inc*exp(1i*(n*d_vec)*k_1);
+            p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
             gp_inc = @(v) 1i*elementProd(p_inc(v),d_vec.')*k_1;
             dp_inc = @(v,n) 1i*(n*d_vec)*k_1.*p_inc(v);
             dpdn = @(v,n) zeros(size(v,1),1);
