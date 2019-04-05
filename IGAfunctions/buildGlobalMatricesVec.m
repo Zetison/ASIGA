@@ -80,7 +80,13 @@ else
 end
 
 [W3D,Q3D] = gaussianQuadNURBS(p_xi+1,p_eta+1,p_zeta+1); 
-
+Qxi = Q3D(:,1);
+Qeta = Q3D(:,2);
+Qzeta = Q3D(:,3);
+% [Qxi, Wxi] = gaussQuad(p_xi+1);
+% [Qeta, Weta] = gaussQuad(p_eta+1);
+% [Qzeta, Wzeta] = gaussQuad(p_zeta+1);
+% W3D = tensorWeights(Wxi,Weta,Wzeta);
 %% Build global matrices
 % warning('Not running in Parallel')
 % keyboard
@@ -116,11 +122,12 @@ parfor e = 1:noElems
         f_e = zeros(d*n_en,1);
     end
 
-    xi   = parent2ParametricSpace(Xi_e,  Q3D(:,1));
-    eta  = parent2ParametricSpace(Eta_e, Q3D(:,2));
-    zeta = parent2ParametricSpace(Zeta_e,Q3D(:,3));
+    xi   = parent2ParametricSpace(Xi_e,  Qxi);
+    eta  = parent2ParametricSpace(Eta_e, Qeta);
+    zeta = parent2ParametricSpace(Zeta_e,Qzeta);
     
-    [R, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts); % New
+%     [R, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVecTen(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
+    [R, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
 
     dXdxi = dRdxi*pts;
     dXdeta = dRdeta*pts;
@@ -163,8 +170,10 @@ parfor e = 1:noElems
         end
     end
 
-    spIdxRow(:,e) = copyVector(sctr_k_e,d*n_en,1);
-    spIdxCol(:,e) = copyVector(sctr_k_e,d*n_en,2);
+%     spIdxRow(:,e) = copyVector(sctr_k_e,d*n_en,1);
+%     spIdxCol(:,e) = copyVector(sctr_k_e,d*n_en,2);
+    spIdxRow(:,e) = kron(ones(1,d*n_en),sctr_k_e);
+    spIdxCol(:,e) = kron(sctr_k_e,ones(1,d*n_en));
     temp = zeros(d*n_en,d*n_en);
     for i = 1:d
         for j = 1:d
@@ -181,7 +190,7 @@ parfor e = 1:noElems
         Mvalues(:,e) = reshape(temp, sizeKe, 1);
     end
     if applyBodyLoading
-        F_indices(:,e) = sctr_k_e';
+        F_indices(:,e) = sctr_k_e;
         Fvalues(:,e) = f_e;
     end
 end

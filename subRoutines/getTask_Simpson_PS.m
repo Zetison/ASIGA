@@ -3,10 +3,10 @@ getDefaultTaskValues
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
 scatteringCase = 'BI';
-model = 'SS_P';  % Pulsating sphere
-method = {'IENSG','IE'};
+model = 'S1_P';  % Pulsating sphere
+method = {'IE'};
 BC = 'SHBC';
-formulation = 'PGU';
+formulation = {'BGU'};
 coreMethod = 'IGA';
 
 f = 1/(2*pi);
@@ -14,39 +14,37 @@ f = 1/(2*pi);
 applyLoad = 'radialPulsation';
 
 M = 1:3; 
-M = 1; 
+M = 5; 
 parm = 2;
 
-degreeElev = 1;
-N = 1;
+degree = 4;
+N = 6;
 
-plotFarField          = 1;
+plotFarField          = 0;
 calculateSurfaceError = 1;
-calculateVolumeError  = 1;
+calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
-loopParameters = {'M', 'method'};
+loopParameters = {'M', 'method','formulation'};
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 method = {'BA'};
-formulation = 'SL2E';
-calculateVolumeError  = 0;
+formulation = {'SL2E'};
 % collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RBEM simulation
 method = {'BEM'};
-formulation = 'CRCBIE';
-M = 1; 
-plotMesh = 0;
-plotResultsInParaview = 0;
+formulation = {'CRCBIE1','CRCBIE2','CRCBIE3'};
+extraGP = 2; % extra quadrature points
+extraGPBEM = 2; % extra quadrature points around singularities for BEM formulations
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 method = {'BEM'};
-formulation = 'CCBIE';
-collectIntoTasks
+formulation = {'CCBIE'};
+% collectIntoTasks

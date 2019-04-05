@@ -460,7 +460,7 @@ parfor i = 1:n_cp
                 end
                 if radialPulsation
                     if useCBIE
-                        FF_temp = FF_temp + Phi_kTemp.*dpdn(y,ny).*fact;
+                        FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
                     end
                 end
                 if useCBIE
@@ -549,7 +549,7 @@ parfor i = 1:n_cp
             end
             if radialPulsation
                 if useCBIE
-                    FF_temp = FF_temp + Phi_kTemp.*dpdn(y,ny).*fact;
+                    FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
                 end
             end
             if useCBIE

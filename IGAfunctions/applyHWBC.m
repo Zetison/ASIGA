@@ -129,13 +129,13 @@ parfor e = 1:noElems
 
         
         crossProd = cross(J(:,1), J(:,2)); 
-
+        J_1 = norm(crossProd);
 
         X = R*pts;
-        n = -crossProd/norm(crossProd);
+        n = -crossProd.'/J_1;
                 
         deriv = -dp_inc(X,n).';
-        f_e = f_e + R'*deriv*norm(crossProd) * J_2 * wt;  
+        f_e = f_e + R'*deriv*J_1 * J_2 * wt;  
     end    
     indices(:,e) = sctrXiEta';
     Fvalues(:,e,:) = f_e;

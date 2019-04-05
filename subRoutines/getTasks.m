@@ -32,13 +32,13 @@ getDefaultTaskValues
 % getTask_S5
 % getTask_Fillinger
 % getTask_testIE
-% getTask_Hetmaniuk
+getTask_Hetmaniuk
 % getTask_articleIGA
 % getTask_articleIGA_convergenceAnalysis
 % getTask_articleIGA_Ihlenburg
 % getTask_articleIGA_Ihlenburg2
 % getTask_articleIGA_Ihlenburg3
-getTask_articleBEM_S1
+% getTask_articleBEM_S1
 % getTask_articleBEM_S1_convergenceAnalysis
 % getTask_articleBEM_S1_sweep
 % getTask_articleBEM_S1parmComp
