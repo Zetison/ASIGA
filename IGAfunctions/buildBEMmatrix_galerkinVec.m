@@ -50,9 +50,17 @@ dPhi_kdnx = @(xmy,r,nx) -Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*nx);
 d2Phi_0dnxdny = @(xmy,r,nx,ny) Phi_0(r)./r.^2.*((ny*nx)           - 3./r.^2                .*(xmy*nx).*sum(xmy.*ny,2));
 d2Phi_kdnxdny = @(xmy,r,nx,ny) Phi_k(r)./r.^2.*((ny*nx).*(1-1i*k*r)+(k^2+3./r.^2.*(1i*k*r-1)).*(xmy*nx).*sum(xmy.*ny,2));
 
-no_angles = length(varCol.alpha_s);
-p_inc = varCol.p_inc;
-dp_inc = varCol.dp_inc;
+SHBC = strcmp(varCol.BC, 'SHBC');
+if SHBC
+    no_angles = length(varCol.alpha_s);
+    p_inc = varCol.p_inc;
+    dp_inc = varCol.dp_inc;
+else
+    no_angles = 1;
+    p_inc = NaN;
+    dp_inc = NaN;
+end
+dpdn = varCol.dpdn;
 
 if exteriorProblem
     sgn = -1;
@@ -131,6 +139,7 @@ parfor e_x = 1:noElems
         dPhi_0dny_integral = 0;
         d2Phi_0dnxdny_integral = 0;
         ugly_integral = zeros(3,1);
+        FF_temp = complex(zeros(1, no_angles));
         idxCol = zeros(n_en, noElems);
     
         for e_y = 1:noElems   
@@ -221,6 +230,15 @@ parfor e_x = 1:noElems
                     xmy = x(ones(noGp,1),:)-y;
                     r = norm2(xmy);
 
+
+                    if ~SHBC
+                        if useCBIE
+                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact_y);
+                        end
+                        if useHBIE
+                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact_y);
+                        end
+                    end
                     dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
 
                     dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
@@ -277,6 +295,14 @@ parfor e_x = 1:noElems
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
 
+                if ~SHBC
+                    if useCBIE
+                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact_y);
+                    end
+                    if useHBIE
+                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact_y);
+                    end
+                end
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
                 dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
                 if useCBIE
@@ -301,12 +327,23 @@ parfor e_x = 1:noElems
         end
         if useCBIE
             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn) + dPhi_0dny_integral)*fact_x;
-            F_e = F_e - R_x.'*p_inc(x).'*fact_x;
         end
         if useHBIE
             temp = (dXIdv(1,:)*(v_1*ugly_integral) + dXIdv(2,:)*(v_2*ugly_integral))*[dR_xdxi; dR_xdeta];
             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + alpha*R_x.'*(-R_x*d2Phi_0dnxdny_integral + temp)*fact_x;
-            F_e = F_e - alpha*R_x.'*dp_inc(x,nx).'*fact_x;
+        end
+        if SHBC
+            if useCBIE
+                F_e = F_e - R_x.'*p_inc(x).'*fact_x;
+            end
+            if useHBIE
+                F_e = F_e - alpha*R_x.'*dp_inc(x,nx).'*fact_x;
+            end
+        else
+            F_e = F_e + R_x.'*FF_temp*fact_x;
+            if useHBIE
+                F_e = F_e + alpha*R_x.'*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral)*fact_x;
+            end
         end
     end
     
