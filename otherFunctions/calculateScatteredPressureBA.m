@@ -22,11 +22,11 @@ switch varCol.formulation
         if strcmp(varCol.applyLoad, 'radialPulsation')
             acousticScattering = false;
             dpdn = varCol.dpdn;
-            gp_inc = NaN;
+            dp_inc = NaN;
         else
             acousticScattering = true;
             dpdn = 0;
-            gp_inc = varCol.gp_inc;
+            dp_inc = varCol.dp_inc;
         end
 
         Phi_k = varCol.Phi_k;
@@ -83,7 +83,7 @@ switch varCol.formulation
                 J = pts'*[dRdxi' dRdeta'];
                 crossProd = cross(J(:,1),J(:,2));
                 J_1 = norm(crossProd);
-                n = crossProd/J_1;
+                n = crossProd.'/J_1;
 
                 Y = R*pts;
 
@@ -97,7 +97,7 @@ switch varCol.formulation
                 p_h_gp = R*U(sctr,:);
                 if strcmp(BC, 'SHBC')
                     if acousticScattering
-                        dp_h_gp = -gp_inc(Y)*n;
+                        dp_h_gp = -dp_inc(Y,n);
                     else
                         dp_h_gp = dpdn(Y,n);    
                     end
@@ -196,7 +196,7 @@ switch varCol.formulation
                 J = pts'*[dRdxi' dRdeta' dRdzeta'];
                 crossProd = cross(J(:,1),J(:,2));
                 J_1 = norm(crossProd);
-                n = crossProd/J_1;
+                n = crossProd.'/J_1;
 
                 Y = R_fun*pts;  
 

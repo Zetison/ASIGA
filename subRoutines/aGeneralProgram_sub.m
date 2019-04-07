@@ -119,7 +119,7 @@ if strcmp(scatteringCase,'Sweep')
     U_sweep = cell(1,numel(k));
 end
 % Outer fluid   
-for i_k = 1:numel(k)
+for i_k = 1:size(k,2)
     t_freq = tic;
     k_1 = k(1,i_k);
     varCol.k = k_1;

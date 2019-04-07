@@ -26,6 +26,7 @@ varCol.agpBEM = agpBEM;
 varCol.parms = parms;
 varCol.P_inc = P_inc;
 varCol.analyticSolutionExist = analyticSolutionExist;
+varCol.exteriorProblem = exteriorProblem;
 if isfield(task,'parm')
     varCol.parm = task.parm;
 end

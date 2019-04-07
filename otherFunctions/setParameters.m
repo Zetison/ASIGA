@@ -11,6 +11,8 @@ switch model
         setS1Parameters
     case 'S3'
         setS3Parameters
+    case 'Torus'
+        setTorusParameters
     case 'S5'
         setS5Parameters
     case 'IL'

@@ -1,11 +1,25 @@
 
 Phi_k = @(r) exp(1i*k_1*r)./(4*pi*r);
-dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k_1*r - 1).*dot3(xmy, ny);
-dPhi_kdnx = @(xmy,r,ny) Phi_k(r)./r.^2.*(1i*k_1*r - 1).*dot3(xmy, ny);
+dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k_1*r - 1).*sum(xmy.*ny,2);
+dPhi_kdnx = @(xmy,r,ny) Phi_k(r)./r.^2.*(1i*k_1*r - 1).*sum(xmy.*ny,2);
 varCol.Phi_k = Phi_k;
 varCol.dPhi_kdny = dPhi_kdny;
 
 switch applyLoad
+    case 'SimpsonTorus'
+        analytic = @(v) prod(sin(k_1*v/sqrt(3)),2);
+        gAnalytic = @(v) k_1/sqrt(3)*[cos(k_1*v(:,1)/sqrt(3)).*sin(k_1*v(:,2)/sqrt(3)).*sin(k_1*v(:,3)/sqrt(3)), ...
+                                    sin(k_1*v(:,1)/sqrt(3)).*cos(k_1*v(:,2)/sqrt(3)).*sin(k_1*v(:,3)/sqrt(3)), ...
+                                    sin(k_1*v(:,1)/sqrt(3)).*sin(k_1*v(:,2)/sqrt(3)).*cos(k_1*v(:,3)/sqrt(3))];
+        dpdn = @(v,n) sum(gAnalytic(v).*n,2);
+        
+        varCol.farField = @(v) NaN;
+        varCol.analytic = analytic;
+        varCol.gAnalytic = gAnalytic;
+        
+        p_inc = @(v) zeros(size(v,1),1);
+        gp_inc = @(v) zeros(size(v,1),1);
+        dp_inc = @(v,n) -dpdn(v,n);
     case 'radialPulsation'
         switch model
             case 'MS_P'
@@ -158,7 +172,7 @@ switch applyLoad
         else
             p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
             gp_inc = @(v) -gAnalytic_(v,e3Dss_options);
-            dp_inc = @(v,n) -(n*gAnalytic_(v,e3Dss_options));
+            dp_inc = @(v,n) -n*gAnalytic_(v,e3Dss_options);
             dpdn = @(v,n) zeros(size(v,1),1);
         end
 end

@@ -76,7 +76,7 @@ if true
             J = pts'*[dRdxi' dRdeta' dRdzeta'];
             crossProd = cross(J(:,1),J(:,2));
             J_1 = norm(crossProd);
-            n = crossProd/J_1;
+            n = crossProd.'/J_1;
 
             Y = R_fun*pts;  
 

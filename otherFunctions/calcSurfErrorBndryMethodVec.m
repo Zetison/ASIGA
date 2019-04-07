@@ -34,7 +34,8 @@ analytic = varCol.analytic;
 % noQuadPts = max(9,max(p_xi,p_eta)+3);
 % noQuadPts = max(9,max(p_xi,p_eta)+3);
 % [W2D,Q2D] = gaussianQuadNURBS(noQuadPts,noQuadPts);  
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+3,p_eta+3);  
+extraGP = varCol.extraGP;
+[W2D,Q2D] = gaussianQuadNURBS(p_xi+3+extraGP,p_eta+3+extraGP);  
 
 p_h = zeros(size(W2D,1), noElems);
 fact = zeros(size(W2D,1), noElems);
@@ -94,7 +95,7 @@ else
     p_h = reshape(p_h, size(p_h,1)*size(p_h,2),1);
 end
 
-if strcmp(varCol.method, 'BEM') && ~strcmp(varCol.applyLoad, 'radialPulsation')
+if strcmp(varCol.method, 'BEM') && strcmp(varCol.applyLoad, 'planeWave')
     p_inc = varCol.p_inc;
     p_h = p_h - p_inc(points);
 end

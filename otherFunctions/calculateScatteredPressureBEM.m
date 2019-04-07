@@ -85,7 +85,7 @@ parfor e = 1:noElems %[8 7 3 4 5 6 2 1]%
         J = pts'*[dRdxi' dRdeta'];
         crossProd = cross(J(:,1),J(:,2));
         J_1 = norm(crossProd);
-        n = crossProd/J_1;
+        n = crossProd.'/J_1;
 
         Y = R*pts;
 

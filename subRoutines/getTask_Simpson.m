@@ -16,7 +16,7 @@ k = 2;             % Wave number for Simpson2014aib
 omega = c_f*k;   % Angular frequency
 f = omega/(2*pi);    % Frequency
 
-M = 3;
+M = 1:3;
 
 alpha_s = pi;
 beta_s = 0;  
@@ -28,16 +28,16 @@ if 0
     calculateSurfaceError = true;
     LpOrder = 2; % For error calculation in calcSurfError()
     calculateVolumeError  = true;
-    degreeElev = 0;
+    degree = 2;
 else % reproduce plot in Simpson2014aib
     plotFarField = false; 
     r = 5; % radii for near-field evaluation
-    degreeElev = 1;
+    degree = 3;
 end
 N = 4;
 
-loopParameters = {'method','formulation'};
-parm = 2;
+loopParameters = {'M','method','formulation'};
+parm = 1;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,13 +46,13 @@ method = {'BEM'};
 % formulation = {'CCBIE', 'CHBIE', 'CBM'};
 formulation = {'CCBIE'};
 % formulation = 'CBM';
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 method = {'BA'};
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ABC simulation
@@ -67,7 +67,7 @@ loopParameters = {'M','method','N'};
 %% MFS simulation
 method = {'MFS'};
 M = 1:6;
-degreeElev = 0;
+degree = 2;
 calculateSurfaceError = 0;
 computeCondNumber = false;
 loopParameters = {'M','method'};

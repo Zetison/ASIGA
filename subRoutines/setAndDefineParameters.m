@@ -6,7 +6,7 @@ switch model
     otherwise
         analyticSolutionExist = false;
 end
-if strcmp(applyLoad,'radialPulsation') 
+if strcmp(applyLoad,'radialPulsation') || strcmp(applyLoad,'SimpsonTorus')
     analyticSolutionExist = true;
 end    
 if (calculateSurfaceError || calculateVolumeError) && ~analyticSolutionExist
@@ -65,6 +65,9 @@ switch BC
     case 'NNBC'
         useSolidDomain = true;
         useInnerFluidDomain = true;
+    otherwise
+        useSolidDomain = false;
+        useInnerFluidDomain = false;        
 end
 if useSolidDomain
     C = zeros(6,6);

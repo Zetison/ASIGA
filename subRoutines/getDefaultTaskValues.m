@@ -56,6 +56,7 @@ extraGP = 0; % extra quadrature points
 extraGPBEM = 0; % extra quadrature points around singularities for BEM formulations
 agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 useROM = false;
+exteriorProblem = true;
 
 M = 1;
 

@@ -19,6 +19,7 @@ extraGP = varCol.extraGP;
 extraGPBEM = varCol.extraGPBEM;
 noDofs = varCol.noDofs;
 agpBEM = varCol.agpBEM;
+exteriorProblem = varCol.exteriorProblem;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -53,7 +54,6 @@ no_angles = length(varCol.alpha_s);
 p_inc = varCol.p_inc;
 dp_inc = varCol.dp_inc;
 
-exteriorProblem = true;
 if exteriorProblem
     sgn = -1;
 else
@@ -120,8 +120,8 @@ parfor e_x = 1:noElems
             e_eta = m_2/h_eta;
 
             v_1 = e_xi;
-            nx = crossProd'/J_1;
-            v_3 = nx.';
+            nx = crossProd/J_1;
+            v_3 = nx;
             v_2 = cross(v_3,v_1);
             cosT = dot(e_xi,e_eta);
             sinT = dot(v_2,e_eta);
@@ -228,11 +228,11 @@ parfor e_x = 1:noElems
                         CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
                     end
                     if useHBIE
-                        d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx,ny);
+                        d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
                         d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
-                        HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx,ny).*fact_y).'*R_y;
-                        dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx);
-                        ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx.' ...
+                        HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact_y).'*R_y;
+                        dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                        ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
                                                                             + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
                     end
                 end
@@ -283,11 +283,11 @@ parfor e_x = 1:noElems
                     CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
                 end
                 if useHBIE
-                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx,ny);
+                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
                     d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
-                    HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx,ny).*fact_y).'*R_y;
-                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx);
-                    ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx.' ...
+                    HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact_y).'*R_y;
+                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                    ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
                                                                         + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
                 end
             end

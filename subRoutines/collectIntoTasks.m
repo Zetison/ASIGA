@@ -39,6 +39,7 @@ task.N_max = N_max;
 task.extraGP = extraGP;
 task.extraGPBEM = extraGPBEM;
 task.agpBEM = agpBEM;
+task.exteriorProblem = exteriorProblem;
 
 task.method = method;
 if exist('r_a','var')

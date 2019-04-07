@@ -25,23 +25,22 @@ extraGP = 0;
 loopParameters = {'M','degree','method','formulation','parm'};
 
 % applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 method = {'BA'};
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 method = {'BEM'};
-% M = 1:2;
-% parm = 1;
-% degree = 2;
+M = 4;
+parm = 2;
 extraGPBEM = 0;
 extraGP = 0;
-formulation = {'CRCBIE1', 'CRCBIE2', 'CRCBIE3', 'GRCBIE1', 'GRCBIE2', 'GRCBIE3', 'CCBIE', 'GCBIE', 'CHBIE', 'GHBIE', 'CBM', 'GBM'};
-% formulation = {'GCBIE', 'CCBIE'};
+% formulation = {'CRCBIE1', 'CRCBIE2', 'CRCBIE3', 'GRCBIE1', 'GRCBIE2', 'GRCBIE3', 'CCBIE', 'GCBIE', 'CHBIE', 'GHBIE', 'CBM', 'GBM'};
+formulation = {'CBM','GBM'};
 
 collectIntoTasks

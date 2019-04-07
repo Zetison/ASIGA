@@ -22,6 +22,7 @@ model = varCol.model;
 extraGP = varCol.extraGP;
 extraGPBEM = varCol.extraGPBEM;
 agpBEM = varCol.agpBEM;
+exteriorProblem = varCol.exteriorProblem;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -59,19 +60,18 @@ dPhi_kdnx = @(xmy,r,nx) -Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*nx);
 d2Phi_0dnxdny = @(xmy,r,nx,ny) Phi_0(r)./r.^2.*((ny*nx)           - 3./r.^2                .*(xmy*nx).*sum(xmy.*ny,2));
 d2Phi_kdnxdny = @(xmy,r,nx,ny) Phi_k(r)./r.^2.*((ny*nx).*(1-1i*k*r)+(k^2+3./r.^2.*(1i*k*r-1)).*(xmy*nx).*sum(xmy.*ny,2));
 
-radialPulsation = strcmp(varCol.applyLoad, 'radialPulsation');
-if radialPulsation
-    no_angles = 1;
-    p_inc = NaN;
-    dp_inc = NaN;
-else
+SHBC = strcmp(varCol.BC, 'SHBC');
+if SHBC
     no_angles = length(varCol.alpha_s);
     p_inc = varCol.p_inc;
     dp_inc = varCol.dp_inc;
+else
+    no_angles = 1;
+    p_inc = NaN;
+    dp_inc = NaN;
 end
 dpdn = varCol.dpdn;
 
-exteriorProblem = true;
 if exteriorProblem
     sgn = -1;
 else
@@ -223,8 +223,8 @@ parfor i = 1:n_cp
             J_x = [1, 0; 0, 1/h_eta];
         else
             v_1 = m_1/norm(m_1);
-            nx = crossProd_x'/norm(crossProd_x);
-            v_3 = nx.';
+            nx = crossProd_x/norm(crossProd_x);
+            v_3 = nx;
             v_2 = cross(v_3,v_1);
             cosT = dot(e_xi,e_eta);
             sinT = dot(v_2,e_eta);
@@ -468,12 +468,12 @@ parfor i = 1:n_cp
                 r = norm2(xmy);
 
 
-                if radialPulsation
+                if ~SHBC
                     if useCBIE
                         FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact);
                     end
                     if useHBIE
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx).*dpdn(y,ny).*fact);
+                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact);
                     end
                 end
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -482,11 +482,11 @@ parfor i = 1:n_cp
                     CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact).'*R_y;
                 end
                 if useHBIE
-                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx,ny);
+                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
                     d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact);
-                    HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx,ny).*fact).'*R_y;
-                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx);
-                    ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx.' ...
+                    HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact).'*R_y;
+                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                    ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
                                                                         + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact(:,[1,1,1]),1).';
                 end
             end
@@ -536,12 +536,12 @@ parfor i = 1:n_cp
             r = norm2(xmy);
 
 
-            if radialPulsation
+            if ~SHBC
                 if useCBIE
                     FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact);
                 end
                 if useHBIE
-                    FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx).*dpdn(y,ny).*fact);
+                    FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact);
                 end
             end
             dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -550,11 +550,11 @@ parfor i = 1:n_cp
                 CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact).'*R_y;
             end
             if useHBIE
-                d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx,ny);
+                d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
                 d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact);
-                HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx,ny).*fact).'*R_y;
-                dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx);
-                ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx.' ...
+                HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact).'*R_y;
+                dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
                                                                     + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact(:,[1,1,1]),1).';
             end
         end
@@ -592,17 +592,17 @@ parfor i = 1:n_cp
         end
     end
     A(i,:) = A_row;
-    if radialPulsation
-        FF(i,:) = FF(i,:) + FF_temp;
-        if useHBIE
-            FF(i,:) = FF(i,:) + alpha*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
-        end
-    else
+    if SHBC
         if useCBIE
             FF(i,:) = FF(i,:) - p_inc(x).';
         end
         if useHBIE
             FF(i,:) = FF(i,:) - alpha*dp_inc(x,nx).';
+        end
+    else
+        FF(i,:) = FF(i,:) + FF_temp;
+        if useHBIE
+            FF(i,:) = FF(i,:) + alpha*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
         end
     end
 %     dPhi_0dny_integral+0.5

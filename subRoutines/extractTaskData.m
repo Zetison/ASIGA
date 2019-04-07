@@ -35,7 +35,7 @@ extraGP                 = task.extraGP;
 extraGPBEM              = task.extraGPBEM;
 agpBEM                  = task.agpBEM;
 useROM                  = task.useROM;
-
+exteriorProblem         = task.exteriorProblem;
 
 if isfield(task,'noVecsArr')
     noVecsArr = task.noVecsArr;
