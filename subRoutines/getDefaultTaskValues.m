@@ -57,6 +57,8 @@ extraGPBEM = 0; % extra quadrature points around singularities for BEM formulati
 agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 useROM = false;
 exteriorProblem = true;
+initMeshFactXi = 1;
+initMeshFactZeta = 1;
 
 M = 1;
 

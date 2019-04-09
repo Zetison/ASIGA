@@ -719,9 +719,6 @@ for i_k = 1:size(k,2)
     if strcmp(scatteringCase,'Sweep')
         fprintf('\nTotal time spent on frequency: %12f', toc(t_freq))  
     end
-    if ~useROM
-        calculateErrors
-    end
 end
 if useROM
     varCol.U_sweep = U_sweep;
@@ -853,6 +850,10 @@ end
 if ~useROM
     switch scatteringCase
         case {'BI', 'Sweep','Ray'}    
+            %% Calculate Errors
+            for i_k = 1:size(k,2)
+            calculateErrors
+
     %         keyboard
             plotError = analyticSolutionExist && ~plotTimeOscillation; 
 
@@ -959,7 +960,7 @@ if ~useROM
                     createVTKmeshFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options)
                 end
 
-                delta = 0.5;
+                delta = 5;
                 xb = [-65,20]+pi*1e-6;
                 yb = [-15,15]+pi*1e-6;
                 zb = [-10,10]+pi*1e-6;

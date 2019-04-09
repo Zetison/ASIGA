@@ -40,7 +40,8 @@ task.extraGP = extraGP;
 task.extraGPBEM = extraGPBEM;
 task.agpBEM = agpBEM;
 task.exteriorProblem = exteriorProblem;
-
+task.initMeshFactXi = initMeshFactXi;
+task.initMeshFactZeta = initMeshFactZeta;
 task.method = method;
 if exist('r_a','var')
     task.r_a = r_a;

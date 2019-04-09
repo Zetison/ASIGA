@@ -146,6 +146,6 @@ parfor e = 1:noElems
     Fvalues(:,e,:) = f_e;
 end
 
-for alpha_s_Nr = 1:noVecs
-    F(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),indices,noDofs_tot);
+for i = 1:noVecs
+    F(:,i) = vectorAssembly(Fvalues(:,:,i),indices,noDofs_tot);
 end

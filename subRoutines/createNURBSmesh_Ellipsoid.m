@@ -21,6 +21,8 @@ end
 
 R_o = parms.R_o;
 t = parms.t;
+initMeshFactXi = varCol.initMeshFactXi;
+initMeshFactZeta = varCol.initMeshFactZeta;
 if varCol.boundaryMethod
     switch model
         case 'EL'
@@ -100,9 +102,9 @@ else
                 c_z = c_z_g+t_fluid;
                 c_xy = c_xy_g+t_fluid;
             end
-            noNewXiKnots = 2^(M-1)-1;
+            noNewXiKnots = initMeshFactXi*2^(M-1)-1;
             noNewEtaKnots = noNewXiKnots;
-            noNewZetaKnots = max(2^(M-1)/8-1,0);
+            noNewZetaKnots = max(initMeshFactZeta*2^(M-1)/8-1,0);
 %                 noNewZetaKnots = max(2^(M-2),1);
             L_gamma = 2*c_z_g;
     end

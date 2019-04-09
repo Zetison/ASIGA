@@ -10,7 +10,10 @@ if boundaryMethod
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface error = %g', surfaceError)
         end
-        task.results.surfaceError = surfaceError;
+        if i_k == 1
+            task.results.surfaceError = zeros(1,size(k,2));
+        end
+        task.results.surfaceError(i_k) = surfaceError;
     end
 else
     if calculateSurfaceError
@@ -23,7 +26,10 @@ else
             fprintf('using %12f seconds.', toc) 
             fprintf('\nSurface error = %g', surfaceError)
         end
-        task.results.surfaceError = surfaceError;
+        if i_k == 1
+            task.results.surfaceError = zeros(1,size(k,2));
+        end
+        task.results.surfaceError(i_k) = surfaceError;
     end
     if calculateVolumeError
         tic 
@@ -52,9 +58,15 @@ else
             fprintf('\nVolume H1-error = %f', H1Error)
             fprintf('\nVolume Energy-error = %f', energyError)
         end
-        task.results.energyError = energyError;
-        task.results.L2Error = L2Error;
-        task.results.H1Error = H1Error;
-        task.results.H1sError = H1sError;
+        if i_k == 1
+            task.results.energyError = zeros(1,size(k,2));
+            task.results.L2Error = zeros(1,size(k,2));
+            task.results.H1Error = zeros(1,size(k,2));
+            task.results.H1sError = zeros(1,size(k,2));
+        end
+        task.results.energyError(i_k) = energyError;
+        task.results.L2Error(i_k) = L2Error;
+        task.results.H1Error(i_k) = H1Error;
+        task.results.H1sError(i_k) = H1sError;
     end  
 end

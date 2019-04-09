@@ -212,16 +212,16 @@ for i_b = 1:numel(basisROMcell)
             surfaceErrorArr = zeros(size(k_ROM));
             runTasksInParallel = 0; % to avoid printing elapsed time
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
-            for i = 1:numel(k_ROM)
-                k = k_ROM(i);
+            for i_k = 1:numel(k_ROM)
+                k = k_ROM(i_k);
                 varCol.k = k;
                 omega = varCol.c_f*k;
                 varCol.f = omega/(2*pi);
-                U_fluid_o = U_fluid_oArr(:,i);
+                U_fluid_o = U_fluid_oArr(:,i_k);
                 e3Dss_options.omega = omega;
                 varCol.analytic = @(x)analytic_(x,e3Dss_options);
                 calculateErrors
-                surfaceErrorArr(i) = task.results.surfaceError;
+                surfaceErrorArr(i_k) = surfaceError;
             end
             fprintf('using %12f seconds.', toc)
             runTasksInParallel = false;

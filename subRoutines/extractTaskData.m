@@ -36,7 +36,8 @@ extraGPBEM              = task.extraGPBEM;
 agpBEM                  = task.agpBEM;
 useROM                  = task.useROM;
 exteriorProblem         = task.exteriorProblem;
-
+varCol.initMeshFactXi  	= task.initMeshFactXi;
+varCol.initMeshFactZeta	= task.initMeshFactZeta;
 if isfield(task,'noVecsArr')
     noVecsArr = task.noVecsArr;
     noVecs = max(noVecsArr);

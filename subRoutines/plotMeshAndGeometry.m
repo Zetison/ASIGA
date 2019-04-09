@@ -104,7 +104,7 @@ if plot2Dgeometry && ~boundaryMethod
     for i = 1:numel(fluid)
         switch model
             case {'IL','SS','S1','S2','S3','PS','IL_P','SS_P','S1_P','S1_P2','S2_P','S3_P'}
-                if parm == 1 && i > 4
+                if parm == 2 && i > 4
                     continue
                 end
                 plotCuttingPlaneConstEta(fluid{i}, [npts npts],'xz',0.5);

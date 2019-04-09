@@ -5,10 +5,11 @@ model = 'S1';  % Spherical shell
 coreMethod = {'IGA'};
 % coreMethod = {'IGA'};
 method = {'IE'};
-formulation = {'BGU'};
+formulation = {'BGC'};
 
 
 k = 9:0.05:36;
+k = (9:0.5:36)/10;
 % k = 36;
 c_f = 1500;
 f = k*c_f/(2*pi);
@@ -19,22 +20,28 @@ beta_s = -pi/2;
 alpha = 0;
 beta = -pi/2;   
 r_a = 1.2;
+N = 9;
 
 degree = 4;
-M = 6; 
+M = 2; 
 parm = 2;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
 plot2Dgeometry = 0;
-loopParameters = {'degree','M','parm','method','formulation'};
+loopParameters = {'method','coreMethod','formulation','M','degree','parm'};
+initMeshFactXi = 3;
+initMeshFactZeta = 4;
+useROM = false;
 
 % collectIntoTasks
 
+coreMethod = {'hp_FEM'};
+collectIntoTasks
 
 method = {'BA'};
 formulation = {'VL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 method = {'IE'};
 formulation = {'BGC'};
@@ -59,15 +66,15 @@ k_ROM = k(1):0.05:k(end);
 % k_ROM = k(1):0.5:k(end);
 c_f = 1500;
 f = k*c_f/(2*pi);
-M = 3; 
+M = 2; % 5
 N = 9;
 % M = 1; 
 % N = 2;
 useROM = true;
 storeFullVarCol = false;
-loopParameters = {'method','coreMethod','degree','M','parm','formulation'};
-collectIntoTasks
+loopParameters = {'method','coreMethod','formulation','M','degree','parm'};
+% collectIntoTasks
 
 M = M-1; 
 coreMethod = {'hp_FEM'};
-collectIntoTasks
+% collectIntoTasks
