@@ -22,6 +22,7 @@ calculateVolumeError  = 1;	% Only for spherical shell and if scatteringCase == '
 calculateFarFieldPattern = 0;
 computeCondNumber = 1;
 applyLoad = 'radialPulsation';
+BC = 'NBC';
 
 k = 10;
 c_f = 1500;

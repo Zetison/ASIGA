@@ -27,7 +27,7 @@ calculateFarFieldPattern = 1;
 computeCondNumber = 1;
 plotResultsInParaview = 0;
 plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dynamic result
-BC = 'SHBC';
+BC = 'NBC';
 N = 3;
 loopParameters = {'M','degreeElev','f'};
 

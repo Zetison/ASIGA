@@ -707,7 +707,10 @@ for i_k = 1:size(k,2)
             end
     end
     if strcmp(scatteringCase,'Sweep')
-        U_sweep{i_k} = U_fluid_o;
+        U_sweep{i_k} = U_fluid_o(1:varCol.noDofs,:);
+        if ~strcmp(BC,'SHBC')
+            error('not implemented due to noDofs')
+        end
     end
     if strcmp(scatteringCase,'Sweep')
         fprintf('\nTotal time spent on frequency: %12f', toc(t_freq))  

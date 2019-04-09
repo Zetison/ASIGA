@@ -30,7 +30,7 @@ for i_b = 1:numel(basisROMcell)
                     f = @(x,n) U_P{i}(:,n+1);
                     n = ceil(noVecs/2)-1;
                     m = floor(noVecs/2);
-                    [p{i},q{i}] = pade(f,k_P(i),n,m,options); 
+                    [p{i},q{i}] = pade(f,k_P(i),n,m); 
                 end
                 
             case 'Splines'
@@ -202,7 +202,7 @@ for i_b = 1:numel(basisROMcell)
             k_ROM = double(k_ROM);
             switch basisROM
                 case 'Pade'
-                    U_fluid_oArr = interPade(x,a,p,q);
+                    U_fluid_oArr = interPade(k_ROM,k_P,p,q);
                 case 'Bernstein'
                     B = bernsteinBasis(double((k_ROM-k_start)/(k_end - k_start)),double(p_ROM),0);
                     U_fluid_oArr = (B*a).';

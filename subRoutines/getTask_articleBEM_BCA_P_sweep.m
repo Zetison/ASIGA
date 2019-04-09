@@ -23,7 +23,7 @@ plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dy
 calculateSurfaceError = true;
 calculateFarFieldPattern = 0;
 
-BC = 'SHBC';
+BC = 'NBC';
 
 applyLoad = 'radialPulsation';
 method = {'BEM'};

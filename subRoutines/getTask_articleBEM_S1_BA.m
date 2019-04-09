@@ -22,9 +22,8 @@ plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dy
 calculateSurfaceError = true;
 calculateFarFieldPattern = false;
 
-BC = 'SHBC';
-
 applyLoad = 'radialPulsation';
+BC = 'NBC';
 method = {'BA'};
 formulation = 'SL2E';
 parm = 1;

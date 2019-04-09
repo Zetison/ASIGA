@@ -17,7 +17,7 @@ alpha = (0:0.05:360)*pi/180;
 plotResultsInParaview = 0;
 plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dynamic result
 % BC = 'SSBC';
-BC = 'SHBC';
+BC = 'NBC';
 
 method = {'BEM'};
 coreMethod = 'IGA';

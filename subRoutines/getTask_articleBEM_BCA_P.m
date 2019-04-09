@@ -6,7 +6,7 @@ coreMethod = 'IGA';
 plot3Dgeometry = 0;
 plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 
-BC = 'SHBC';
+BC = 'NBC';
 
 f = 1e2; %[1e2 5e2 1e3];             % Frequency
 plotResultsInParaview = 1;

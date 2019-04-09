@@ -22,7 +22,7 @@ calculateSurfaceError = 1;
 calculateVolumeError  = 1;
 plotResultsInParaview = 1;
 plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dynamic result
-BC = 'SHBC';
+BC = 'NBC';
 N = 3;
 
 collectIntoTasks

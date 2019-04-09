@@ -1,6 +1,6 @@
 function y = interPade(x,a,p,q)
 inter = (a(2:end)+a(1:end-1))/2;
-noDofs = size(p{1},1);
+noDofs = size(p{1},2);
 y = zeros(noDofs,numel(x));
 for i = 1:numel(a)
     if i == 1

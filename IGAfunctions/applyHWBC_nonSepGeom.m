@@ -68,7 +68,7 @@ parfor e = 1:noElems
 
         v = R_fun*pts;
         
-        n = -crossProd/norm(crossProd);
+        n = -crossProd.'/norm(crossProd);
         
         deriv = -dp_inc(v,n).';
         

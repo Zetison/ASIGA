@@ -38,7 +38,7 @@ switch applyLoad
 %                 y(1) = -100;
             case 'S1_P'
                 y = [0,0,0];
-                y = [1,1,1]/4;
+%                 y = [1,1,1]/4;
             case 'S1_P2'
                 R_o = parms.R_o;
                 y = R_o(end)/4*[1,1,1;
@@ -65,7 +65,7 @@ switch applyLoad
         p_inc = @(v) zeros(size(v,1),1);
         gp_inc = @(v) zeros(size(v,1),1);
         dp_inc = @(v,n) -dpdn(v,n);
-        if ~strcmp(BC,'SHBC')
+        if ~strcmp(BC,'NBC')
             error('The radial pulsation exact solution is not a solution to coupled problems')
         end
         e3Dss_options = struct('omega', omega, ...
