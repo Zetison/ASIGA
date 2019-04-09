@@ -452,7 +452,7 @@ for i_k = 1:size(k,2)
             if ~runTasksInParallel
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Building BA matrix ... ')
             end
-            [A_fluid_o, FF] = bestApproximation(varCol);
+            [A_fluid_o, FF] = bestApproximationVec(varCol);
 
             dofsToRemove = varCol.dofsToRemove;  
             noDofs_tot = varCol.noDofs;
@@ -956,7 +956,7 @@ if ~strcmp(scatteringCase,'Sweep')
                         createVTKmeshFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options)
                     end
 
-                    delta = 0.5;
+                    delta = 5;
                     xb = [-65,20]+pi*1e-6;
                     yb = [-15,15]+pi*1e-6;
                     zb = [-10,10]+pi*1e-6;

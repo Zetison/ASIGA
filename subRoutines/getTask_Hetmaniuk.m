@@ -2,7 +2,7 @@ scatteringCase = 'Sweep';
 % BC = 'NNBC';
 model = 'S1';  % Spherical shell
 
-coreMethod = 'IGA';
+coreMethod = {'IGA'};
 % coreMethod = {'IGA'};
 method = {'IE'};
 formulation = {'BGU'};
@@ -33,14 +33,14 @@ loopParameters = {'degree','M','parm','method','formulation'};
 
 
 method = {'BA'};
-formulation = {'SL2E'};
+formulation = {'VL2E'};
 % collectIntoTasks
 
 method = {'IE'};
 formulation = {'BGC'};
 noVecsArr = [8,16,24,32,64];        % do not put noVecsArr in loopParameters (this is done automatically)
-basisROMcell = {'Pade'};  % do not put basisROMcell in loopParameters (this is done automatically)
-% basisROMcell = {'Taylor'};  % do not put basisROMcell in loopParameters (this is done automatically)
+basisROMcell = {'Pade','Taylor','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
+% basisROMcell = {'Pade'};  % do not put basisROMcell in loopParameters (this is done automatically)
 % noVecsArr = [8,16];
 % k_start = 9/10;
 % k_end = 36/10;
@@ -54,17 +54,20 @@ basisROMcell = {'Pade'};  % do not put basisROMcell in loopParameters (this is d
 % k = k_arr(round(linspace(1,n,P)));
 k = [9, 22.5, 36];
 k = [9, 22.5, 36]/10;
-% k_ROM = k(1):0.05:k(end);
-k_ROM = k(1):0.005:k(end);
+k_ROM = k(1):0.05:k(end);
+% k_ROM = k(1):0.005:k(end);
 % k_ROM = k(1):0.5:k(end);
 c_f = 1500;
 f = k*c_f/(2*pi);
-M = 4; 
+M = 3; 
 N = 9;
 % M = 1; 
 % N = 2;
 useROM = true;
 storeFullVarCol = false;
-loopParameters = {'degree','M','parm','method','formulation'};
+loopParameters = {'method','coreMethod','degree','M','parm','formulation'};
 collectIntoTasks
 
+M = M-1; 
+coreMethod = {'hp_FEM'};
+collectIntoTasks

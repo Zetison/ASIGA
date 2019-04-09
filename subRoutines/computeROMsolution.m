@@ -227,7 +227,7 @@ for i_b = 1:numel(basisROMcell)
             runTasksInParallel = false;
             tasks(i_task,task_ROM,i_b).task = task;
             switch basisROM
-                case 'Taylor'
+                case {'Taylor','Pade'}
                     temp_error = surfaceErrorArr;
                     temp_k_ROM = k_ROM;
                     

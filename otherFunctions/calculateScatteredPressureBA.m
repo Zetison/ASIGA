@@ -18,15 +18,13 @@ switch varCol.formulation
         
         k = varCol.k;
         BC = varCol.BC;
-
-        if strcmp(varCol.applyLoad, 'radialPulsation')
-            acousticScattering = false;
-            dpdn = varCol.dpdn;
-            dp_inc = NaN;
-        else
-            acousticScattering = true;
+        SHBC = strcmp(BC, 'SHBC');
+        if SHBC
             dpdn = 0;
             dp_inc = varCol.dp_inc;
+        else
+            dpdn = varCol.dpdn;
+            dp_inc = NaN;
         end
 
         Phi_k = varCol.Phi_k;
@@ -95,14 +93,10 @@ switch varCol.formulation
                 end
 
                 p_h_gp = R*U(sctr,:);
-                if strcmp(BC, 'SHBC')
-                    if acousticScattering
-                        dp_h_gp = -dp_inc(Y,n);
-                    else
-                        dp_h_gp = dpdn(Y,n);    
-                    end
+                if SHBC
+                    dp_h_gp = -dp_inc(Y,n);
                 else
-                    error('not implemented')
+                    dp_h_gp = dpdn(Y,n);   
                 end
                 if computeFarField
                     x_d_n = dot3(P_far, n.')./norm2(P_far);

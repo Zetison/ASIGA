@@ -46,7 +46,7 @@ coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
 degree = 2;
 M = 1:7;
 
-collectIntoTasks
+% collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'IGA'};
 degree = 3:4;
@@ -57,4 +57,4 @@ coreMethod = {'linear_FEM'};
 degree = 1;
 M = [M, M(end)+1];
 
-collectIntoTasks
+% collectIntoTasks
