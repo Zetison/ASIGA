@@ -117,7 +117,7 @@ data2.scalarField = real(makeDynamic(scalarField, options, omega));
 if options.plotAnalytic
     analytic = varCol.analytic(X_on);
     data2.analytic = real(makeDynamic(analytic, options, omega)); 
-    data2.Error = abs(scalarField-analytic)./abs(analytic);
+    data2.Error = abs(scalarField-analytic)./max(abs(analytic));
 end
 data2.totField = real(makeDynamic(totField, options, omega));
 data2.totFieldAbs = abs(makeDynamic(totField, options, omega));

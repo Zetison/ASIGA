@@ -1,43 +1,44 @@
 
 for study_i = 1:numel(studies)
     study = studies(study_i);
-    options = struct('xname',           'nepw',  ...
+    options = struct('xname',           'dofs',  ...
                      'yname',           'surfaceError', ...
                      'plotResults', 	1, ... 
                      'printResults',	1, ... 
                      'axisType',        'loglog', ... 
                      'lineStyle',       '*-', ... 
                      'xLoopName',       'M', ...
-                     'subFolderName',   '../results/BCA', ...
-                     'legendEntries',   {{'method','f','M'}}, ...
+                     'subFolderName',   '../results/BCA_P', ...
+                     'legendEntries',   {{'method','formulation','M','degree'}}, ...
                      'noXLoopPrms',     1); 
-% 
+
     figure(2)
     printResultsToTextFiles(study,options)
-    addSlopes
-%     options.yname = 'cond_number';
-%     figure(3)
-%     printResultsToTextFiles(study,options)
-
-%     figure(5)
-%     options.legendEntries = {{'method','f','degreeElev','M'}};
-%     options.noXLoopPrms = 0;
-%     options.lineStyle = '-';
-%     options.axisType = 'plot';
-%     options.xname = 'alpha';
-%     options.yname = 'TS';
-%     options.xScale = 180/pi;
-% %             printResultsToTextFiles(study,options)
 % 
-%     options.yname = 'error_p';
-%     options.axisType = 'semilogy';
-% 
-%     figure(6)
-%     printResultsToTextFiles(study,options)
-
-%             options.yname = 'error_pAbs';
-%             options.axisType = 'semilogy';
-%             
-%             figure(7)
+%             options.xname = 'tot_time';
+%             options.axisType = 'loglog';
+%             figure(3)
 %             printResultsToTextFiles(study,options)
+% 
+%             options.xname = 'dofs';
+%             options.yname = 'cond_number';
+%             figure(4)
+%             printResultsToTextFiles(study,options)
+
+    options.noXLoopPrms = 0;
+    options.legendEntries = {'method','M','formulation'};
+    options.lineStyle = '-';
+    options.xname = 'alpha';
+    options.yname = 'error_pAbs';
+    options.axisType = 'semilogy';
+    options.xScale = 180/pi;
+%     options.yScale = 1/100;
+    figure(5)
+    printResultsToTextFiles(study,options)
+
+    options.yname = 'TS';
+    options.axisType = 'plot';
+    options.yScale = 1;
+    figure(6)
+    printResultsToTextFiles(study,options)
 end

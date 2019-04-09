@@ -6,7 +6,7 @@ getDefaultTaskValues
 % getTask_test
 % getTask_test2
 % getTask_Simpson
-getTask_Simpson_Torus
+% getTask_Simpson_Torus
 % getTask_Simpson_PS
 % getTask_Simpson_sweep
 % getTask_BeTSSi_IIb
@@ -50,7 +50,7 @@ getTask_Simpson_Torus
 % getTask_articleBEM_S1manufactored
 % getTask_articleBEM_BCA
 % getTask_articleBEM_BCA_MS
-% getTask_articleBEM_BCA_P
+getTask_articleBEM_BCA_P
 % getTask_articleBEM_BCA_P_sweep
 % getTask_articleBEM_BCA_BA
 % getTask_articleBEM_BCA_Pgp

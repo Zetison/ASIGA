@@ -33,7 +33,8 @@ switch applyLoad
                 h_s = parms.h_s;
                 c = parms.c;
                 arr = b:-b:-(L+3*b);
-                y = [[x_s-l_ls*0.3,0,c]; [arr; zeros(2,numel(arr))].'];
+%                 y = [[x_s-l_ls*0.3,0,c]; [arr; zeros(2,numel(arr))].'];
+                y = [arr; zeros(2,numel(arr))].';
 %                 y(1) = -100;
             case 'S1_P'
                 y = [0,0,0];

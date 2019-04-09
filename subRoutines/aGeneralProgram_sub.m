@@ -953,7 +953,7 @@ if ~strcmp(scatteringCase,'Sweep')
                         createVTKmeshFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options)
                     end
 
-                    delta = 10;
+                    delta = 0.5;
                     xb = [-65,20]+pi*1e-6;
                     yb = [-15,15]+pi*1e-6;
                     zb = [-10,10]+pi*1e-6;
@@ -974,11 +974,13 @@ if ~strcmp(scatteringCase,'Sweep')
                         varCol2.varColFull = varCol;
                         varCol2.U_full = U_fluid_o;
                     end
-                    R = 50;
-                    stringShift = 40;
-                    fprintf(['\n%-' num2str(stringShift) 's'], '    Compute solution on sphere ... ')
-                    plotOnSphere(varCol2, U_fluid_o2, options, delta, R, zb, '_spherePlot')
-                    fprintf('using %12f seconds.', toc)
+                    if 0
+                        R = 50;
+                        stringShift = 40;
+                        fprintf(['\n%-' num2str(stringShift) 's'], '    Compute solution on sphere ... ')
+                        plotOnSphere(varCol2, U_fluid_o2, options, delta, R, zb, '_spherePlot')
+                        fprintf('using %12f seconds.', toc)
+                    end
 
         %             theta = linspace(0,pi/3,2);
 

@@ -88,7 +88,7 @@ if true
                 dp_h_gp = dot3((J'\[dRdxi; dRdeta; dRdzeta]*U(sctr,:)).',n);
             end
             if computeFarField
-                x_d_n = dot3(P_far, n)./norm2(P_far);
+                x_d_n = dot3(P_far, n.')./norm2(P_far);
                 x_d_y = dot3(P_far, Y.')./norm2(P_far);
                 p_h = p_h - 1/(4*pi)*(1i*k* (p_h_gp.').*x_d_n + dp_h_gp).*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
             else
