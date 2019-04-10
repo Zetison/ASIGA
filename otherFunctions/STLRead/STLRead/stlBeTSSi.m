@@ -8,9 +8,9 @@ close all
 % suitable for use with MATLAB's PATCH graphics object.
 
 % Import an STL mesh, returning a PATCH-compatible face-vertex structure
-fv = stlread('../../../../rhinoceros/BeTSSi/BeTSSi_mod_10cm.stl');
-% fv = stlread('../../../../rhinoceros/test.stl');
-% fv = stlread('../../../../../FFI/BeTSSiIIb/Model_Files/outer_hull/hull_20cmMesh.stl');
+fv = stlread('../../../../../rhinoceros/BeTSSi/BeTSSi_mod_10cm.stl');
+% fv = stlread('../../../../../rhinoceros/test.stl');
+% fv = stlread('../../../../../../FFI/BeTSSiIIb/Model_Files/outer_hull/hull_20cmMesh.stl');
 
 
 %% Render
