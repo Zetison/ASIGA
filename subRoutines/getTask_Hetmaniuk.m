@@ -8,11 +8,6 @@ method = {'IE'};
 formulation = {'BGC'};
 
 
-k = 9:0.05:36;
-% k = (9:1:36)/10;
-% k = 36;
-c_f = 1500;
-f = k*c_f/(2*pi);
 
 alpha_s = 0;
 beta_s = -pi/2;  
@@ -23,17 +18,14 @@ r_a = 1.2;
 N = 9;
 
 degree = 4;
-M = 2; 
 parm = 2;
 calculateSurfaceError = 1;
 calculateVolumeError  = 1;
 calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
 plot2Dgeometry = 0;
-loopParameters = {'method','coreMethod','formulation','M','degree','parm'};
 initMeshFactXi = 3;
 initMeshFactZeta = 4;
-useROM = false;
 
 % collectIntoTasks
 
@@ -41,19 +33,6 @@ useROM = false;
 % coreMethod = {'C0_IGA'};
 % collectIntoTasks
 
-coreMethod = {'hp_FEM'};
-M = 4; 
-method = {'BA'};
-formulation = {'VL2E'};
-collectIntoTasks
-
-method = {'BA'};
-formulation = {'SL2E'};
-collectIntoTasks
-
-method = {'IE'};
-coreMethod = {'IGA'};
-formulation = {'BGC'};
 noVecsArr = [8,16,24,32,64];        % do not put noVecsArr in loopParameters (this is done automatically)
 basisROMcell = {'Pade','Taylor'};  % do not put basisROMcell in loopParameters (this is done automatically)
 % basisROMcell = {'Pade'};  % do not put basisROMcell in loopParameters (this is done automatically)
@@ -86,4 +65,30 @@ collectIntoTasks
 
 M = 4; 
 coreMethod = {'hp_FEM'};
+collectIntoTasks
+
+
+k = 9:0.05:36;
+% k = (9:1:36)/10;
+% k = 36;
+c_f = 1500;
+f = k*c_f/(2*pi);
+useROM = false;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+coreMethod = {'hp_FEM'};
+M = 4; 
+method = {'BA'};
+formulation = {'VL2E'};
+collectIntoTasks
+
+formulation = {'SL2E'};
+collectIntoTasks
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+coreMethod = {'IGA'};
+M = 5; 
+formulation = {'VL2E'};
+collectIntoTasks
+
+formulation = {'SL2E'};
 collectIntoTasks
