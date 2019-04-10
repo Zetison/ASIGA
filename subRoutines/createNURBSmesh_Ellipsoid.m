@@ -46,9 +46,9 @@ if varCol.boundaryMethod
     t = c_z/10;
 
     f_arc = @(s) sqrt(c_xy^2*sin(s).^2+c_z^2*cos(s).^2);
-    noNewXiKnots = 2^(M-1)-1;
-    noNewEtaKnots = round(integral(f_arc,0,pi/2)/(c_xy*pi/2)*(2^(M-1)-1));
-    noNewZetaKnots = 2^(M-1);
+    noNewXiKnots = initMeshFactXi*2^(M-1)-1;
+    noNewEtaKnots = round(integral(f_arc,0,pi/2)/(c_xy*pi/2)*(initMeshFactXi*2^(M-1)-1));
+    noNewZetaKnots = initMeshFactZeta*2^(M-1);
     if varCol.parm(1) == 1
         solid = getEllipsoidalShellData(c_xy,c_xy,c_z,t,alignWithAxis);
     else
