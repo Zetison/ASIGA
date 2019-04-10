@@ -46,8 +46,8 @@ if isnan(options.subFolderName)
 else
     subFolderName = options.subFolderName;
 end
-% analyticSolutionExist = study.tasks(1).task.varCol.analyticSolutionExist;
-analyticSolutionExist = true;
+analyticSolutionExist = study.tasks(1).task.varCol.analyticSolutionExist;
+% analyticSolutionExist = true;
 
 if isempty(options.fileDataHeaderX)
     fileDataHeaderX = xname;
