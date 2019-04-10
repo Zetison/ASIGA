@@ -77,7 +77,7 @@ switch varCol.formulation
         spIdxCol = zeros(sizeMe,noElems);
 
         Mvalues = zeros(sizeMe,noElems); 
-        F_values   = zeros(n_en,noElems); 
+        Fvalues   = zeros(n_en,noElems); 
         F_indices = zeros(n_en,noElems); 
 
 %         for e = 1:noElems
@@ -126,7 +126,7 @@ switch varCol.formulation
             Mvalues(:,e) = reshape(m_e, sizeMe, 1);
 
             F_indices(:,e) = sctr';
-            F_values(:,e) = F_e;
+            Fvalues(:,e) = F_e;
         end
     case 'VL2E'
         elRangeZeta = varCol.elRange{3};
@@ -170,7 +170,7 @@ switch varCol.formulation
         end
         v_values = reshape(v_values, size(W3D,1)*noElems, 3);
         analytic_values = varCol.analytic(v_values);
-        analytic_values = reshape(analytic_values, size(W3D,1), noElems);
+        analytic_values = reshape(analytic_values, size(W3D,1),noElems);
 
 
         %% Build global matrices
@@ -179,7 +179,7 @@ switch varCol.formulation
         spIdxCol = zeros(sizeMe,noElems);
 
         Mvalues = zeros(sizeMe,noElems); 
-        F_values   = zeros(n_en,noElems); 
+        Fvalues   = zeros(n_en,noElems); 
         F_indices = zeros(n_en,noElems); 
 
         parfor e = 1:noElems
@@ -231,13 +231,13 @@ switch varCol.formulation
             Mvalues(:,e) = reshape(m_e, sizeMe, 1);
 
             F_indices(:,e) = sctr';
-            F_values(:,e) = F_e;
+            Fvalues(:,e) = F_e;
         end
 end
         
 
 %% Collect data into global matrices (and load vector)
-F = vectorAssembly(F_values,F_indices,noDofs);
+F = vectorAssembly(Fvalues,F_indices,noDofs);
 
 M = sparse(spIdxRow,spIdxCol,Mvalues,noDofs,noDofs);
 

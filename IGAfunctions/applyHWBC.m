@@ -28,7 +28,6 @@ n_en = (p_xi+1)*(p_eta+1);
 % Computes Neumann conditions if the analytic functions is only known at
 % the boundary, g_xi0, g_xi1 etc.
 
-F = zeros(noDofs_tot,no_angles);        % external force vector
 
 
 noParams = 2;
@@ -141,6 +140,7 @@ parfor e = 1:noElems
     Fvalues(:,e,:) = f_e;
 end
 
-for alpha_s_Nr = 1:no_angles
-    F(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),indices,noDofs_tot);
+F = zeros(noDofs_tot,no_angles);        % external force vector
+for i = 1:no_angles
+    F(:,i) = vectorAssembly(Fvalues(:,:,i),indices,noDofs_tot);
 end

@@ -50,7 +50,7 @@ else
             [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol, U_fluid_o(1:varCol.noDofs), e3Dss_options);
 %                     [L2Error, H1Error, H1sError, energyError] = calcError_testSEM({varCol}, {U_fluid_o(1:varCol.noDofs)}, e3Dss_options);
         else
-            [L2Error, H1Error, H1sError, energyError] = calcError(varColCell, U_cell, e3Dss_options);
+            [L2Error, H1Error, H1sError, energyError] = calcErrorVec(varColCell, U_cell, e3Dss_options);
         end
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)

@@ -118,606 +118,641 @@ t_start = tic;
 if strcmp(scatteringCase,'Sweep')
     U_sweep = cell(1,numel(k));
 end
-% Outer fluid   
-for i_k = 1:size(k,2)
-    t_freq = tic;
-    k_1 = k(1,i_k);
-    varCol.k = k_1;
-    omega = k_1*varCol.c_f(1);
+if size(k,2) > 1 && strcmp(method,'BA') && strcmp(scatteringCase,'Sweep')
+    varCol.k = k;
+    omega = k*varCol.c_f(1);
     varCol.omega = omega;
     varCol.f = omega/(2*pi);
     getAnalyticSolutions
-    switch method
-        case {'IE','ABC'}
-            tic  
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
-            end
-            options = {'operator','Laplace',...
-                       'fieldDimension', 1,...
-                       'buildMassMatrix', 1};
+    tic
+    if ~runTasksInParallel
+        fprintf(['\n%-' num2str(stringShift) 's'], 'Building BA matrix ... ')
+    end
+    [A, FF] = bestApproximationVec(varCol);
 
-            if strcmp(varCol.coreMethod,'SEM')
-                [A_fluid_o, FF, varCol.dofsToRemove] = buildSEMMatrices(varCol);
-                FF = 1/(rho_f(1)*omega^2)*FF;        
-                noDofs_tot = size(A_fluid_o,1);
-            else
-    %             [A_K, A_M] = buildGlobalMatrices(varCol, options);
-                [A_K, A_M] = buildGlobalMatricesVec(varCol, options);
-                A_fluid_o = A_K - k_1^2*A_M;
-            end
-            if clearGlobalMatrices && ~useROM
-                clear A_K A_M
-            end
-            nnzA_fluid_o = nnz(A_fluid_o);
-            varCol.timeBuildSystem = toc;
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', toc)
-            end
+    dofsToRemove = varCol.dofsToRemove;  
+    noDofs_tot = varCol.noDofs;
 
-            if strcmp(method,'IE') && ~strcmp(varCol.coreMethod,'SEM')
-                % Add contribution from infinite elements
+    A(dofsToRemove,:) = [];  
+    A(:,dofsToRemove) = [];
+
+    FF(dofsToRemove,:) = [];
+
+    varCol.timeBuildSystem = toc;
+    if ~runTasksInParallel
+        fprintf('using %12f seconds.', varCol.timeBuildSystem)
+    end
+    if ~runTasksInParallel
+        fprintf(['\n%-' num2str(stringShift) 's'], 'Solving system of equations ... ')
+    end
+    UU = A\FF;
+    if ~runTasksInParallel
+        fprintf('using %12f seconds.', toc)
+    end
+else
+    for i_k = 1:size(k,2)
+        t_freq = tic;
+        k_1 = k(1,i_k);
+        varCol.k = k_1;
+        omega = k_1*varCol.c_f(1);
+        varCol.omega = omega;
+        varCol.f = omega/(2*pi);
+        getAnalyticSolutions
+        switch method
+            case {'IE','ABC'}
+                tic  
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
+                end
+                options = {'operator','Laplace',...
+                           'fieldDimension', 1,...
+                           'buildMassMatrix', 1};
+
+                if strcmp(varCol.coreMethod,'SEM')
+                    [A_fluid_o, FF, varCol.dofsToRemove] = buildSEMMatrices(varCol);
+                    FF = 1/(rho_f(1)*omega^2)*FF;        
+                    noDofs_tot = size(A_fluid_o,1);
+                else
+        %             [A_K, A_M] = buildGlobalMatrices(varCol, options);
+                    [A_K, A_M] = buildGlobalMatricesVec(varCol, options);
+                    A_fluid_o = A_K - k_1^2*A_M;
+                end
+                if clearGlobalMatrices && ~useROM
+                    clear A_K A_M
+                end
+                nnzA_fluid_o = nnz(A_fluid_o);
+                varCol.timeBuildSystem = toc;
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', toc)
+                end
+
+                if strcmp(method,'IE') && ~strcmp(varCol.coreMethod,'SEM')
+                    % Add contribution from infinite elements
+                    tic
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
+                    end
+                    if useROM
+                        [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM(varCol);
+                    else
+                        [A_gamma_a, newDofsToRemove] = addInfElements3(varCol);
+                    end
+
+            %         [A_inf, newDofsToRemove] = addInfElements4(varCol, k(1), Upsilon); 
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+
+                    noDofs_new = max(size(A_gamma_a));
+                    varCol.noDofs_new = noDofs_new;
+
+                    if noDofs_new > varCol.noDofs
+                        A_fluid_o(noDofs_new, noDofs_new) = 0;
+                        if useROM
+                            A_K(noDofs_new, noDofs_new) = 0;
+                            A_M(noDofs_new, noDofs_new) = 0;
+                        end
+                    end
+                    dofsToRemove_old = varCol.dofsToRemove;
+                    varCol.dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));
+                    varCol.dofsToRemove_old = dofsToRemove_old;
+
+                    noDofs_tot = noDofs_new;
+                elseif strcmp(method,'ABC')
+                    % Add contribution from infinite elements
+                    tic
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building ABC matrix ... ')
+                    end
+                    A_gamma_a = addABC(varCol); 
+
+            %         [A_inf, newDofsToRemove] = addInfElements4(varCol, k(1), Upsilon); 
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+
+
+                    noDofs_tot = varCol.noDofs;
+                end
+                dofsToRemove = varCol.dofsToRemove;
+                if strcmp(varCol.coreMethod,'SEM')
+                    A_fluid_o = 1/(rho_f(1)*omega^2)*A_fluid_o; 
+                else
+                    if useROM
+                        A_K = 1/(rho_f(1)*omega^2)*A_K; 
+                        A_M = 1/(rho_f(1)*omega^2)*A_M; 
+                        A_gamma_a = 1/(rho_f(1)*omega^2)*A_gamma_a; 
+                        A2_gamma_a = 1/(rho_f(1)*omega^2)*A2_gamma_a; 
+                        A3_gamma_a = 1/(rho_f(1)*omega^2)*A3_gamma_a; 
+                    else
+                        A_fluid_o = 1/(rho_f(1)*omega^2)*(A_fluid_o + A_gamma_a); 
+                    end
+                end
+
+                if useSolidDomain 
+                    tic
+                    % Solid matrices
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
+                    end
+                    options = {'operator','linearElasticity',...
+                               'fieldDimension', 3,...
+                               'buildMassMatrix', 1};
+                    [A_K, A_M] = buildGlobalMatrices(varCol_solid, options);
+
+                    A_solid = A_K-rho_s*omega^2*A_M;
+                    if clearGlobalMatrices
+                        clear A_K A_M
+                    end
+
+                    noDofs_tot = noDofs_tot + varCol_solid.noDofs;
+                    dofsToRemove = [varCol_solid.dofsToRemove (varCol.dofsToRemove+varCol_solid.noDofs)];
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                end
+
+                if useInnerFluidDomain
+                    tic        
+                    % Inner fluid   
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building inner fluid matrix ... ')
+                    end
+                    options = {'operator','laplace',...
+                               'fieldDimension', 1,...
+                               'buildMassMatrix', 1};
+                    [A_K, A_M] = buildGlobalMatrices(varCol_fluid_i, options);
+
+                    k_2 = k(2,i_k);
+                    A_fluid_i = 1/(rho_f(2)*omega^2)*(A_K - k_2^2*A_M);
+                    if clearGlobalMatrices
+                        clear A_K A_M
+                    end
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                    noDofs_tot = noDofs_tot + varCol_fluid_i.noDofs;
+                    dofsToRemove = [varCol_fluid_i.dofsToRemove (varCol_solid.dofsToRemove+varCol_fluid_i.noDofs) (varCol.dofsToRemove+varCol_fluid_i.noDofs+varCol_solid.noDofs)];
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                end
+
+
+                % Collect all matrices
+                A = sparse(noDofs_tot,noDofs_tot);
+                if ~useSolidDomain
+                    varCol.noDofs_tot = noDofs_tot;
+                    A = A_fluid_o;   
+                elseif useSolidDomain && ~useInnerFluidDomain
+                    varCol_solid.noDofs_tot = noDofs_tot;
+                    A(1:varCol_solid.noDofs,1:varCol_solid.noDofs) = A_solid;  
+                    A((varCol_solid.noDofs+1):noDofs_tot,(varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o; 
+                    shift = 0;
+                else 
+                    varCol_solid.noDofs_tot = noDofs_tot;
+                    A(1:varCol_fluid_i.noDofs,1:varCol_fluid_i.noDofs) = A_fluid_i; 
+                    A((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs),(varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs)) = A_solid;
+                    A((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot,(varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o;
+                    shift = varCol_fluid_i.noDofs;
+                end
+
+                % Apply coupling conditions    
+                if useSolidDomain 
+                    tic
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
+                    end
+                    A_coupling = applyCouplingCondition_new(varCol_solid,shift);
+                    A = A + A_coupling;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                end
+
+                if useInnerFluidDomain 
+                    tic
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building second coupling matrix ... ')
+                    end
+                    A_coupling = applyCouplingCondition2(varCol_solid,varCol_fluid_i,varCol_fluid_i.noDofs);
+                    A = A + A_coupling;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                end    
+
+                if clearGlobalMatrices
+                    clear A_fluid_o A_fluid_i A_solid A_coupling
+                end
+
+                % Apply Neumann conditions
+                tic
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
+                end
+                switch BC
+                    case 'SHBC'
+                        if ~strcmp(varCol.coreMethod,'SEM')
+                            if useROM
+                                FF = 1/(rho_f(1)*omega^2)*applyHWBC_ROM(varCol,noVecs);
+                            else
+                                FF = 1/(rho_f(1)*omega^2)*applyHWBC(varCol,length(alpha_s));  
+                            end
+                        end
+                    otherwise
+                        varCol_solid.p_inc = p_inc;
+                        varCol_solid.dp_inc = dp_inc;
+                        FF = applyNeumannCondition_CoupledProblem(varCol_solid,omega,rho_f(1),length(alpha_s), shift);
+                end 
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', toc)
+                end
+                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+
+                %% Modify system of equations
+                % Remove the rows and columns of the global matrix corresponding to
+                % removed degrees of freedom
+                if useSolidDomain 
+                    P1 = speye(size(A));
+                    if useInnerFluidDomain
+                        P1(1:varCol_fluid_i.noDofs, 1:varCol_fluid_i.noDofs) = ...
+                            sqrt(omega^2*rho_f(2))*speye(varCol_fluid_i.noDofs);
+                    end
+
+                    P1(shift+1:shift+varCol_solid.noDofs, shift+1:shift+varCol_solid.noDofs) = ...
+                        1/sqrt(max([omega^2*rho_s, C(1,1)]))*speye(varCol_solid.noDofs);
+                    P1(shift+1+varCol_solid.noDofs:end, shift+1+varCol_solid.noDofs:end) = ...
+                        sqrt(omega^2*rho_f(1))*speye(varCol.noDofs_new);
+
+                    A = P1*A*P1;
+                    FF = P1*FF;
+
+                    P1(dofsToRemove,:) = [];  
+                    P1(:,dofsToRemove) = [];
+                end
+
+                if useROM
+                    A_K(dofsToRemove,:) = [];  
+                    A_K(:,dofsToRemove) = [];
+                    A_M(dofsToRemove,:) = [];  
+                    A_M(:,dofsToRemove) = [];
+                    A_gamma_a(dofsToRemove,:) = [];  
+                    A_gamma_a(:,dofsToRemove) = [];
+                    A2_gamma_a(dofsToRemove,:) = [];  
+                    A2_gamma_a(:,dofsToRemove) = [];
+                    A3_gamma_a(dofsToRemove,:) = [];  
+                    A3_gamma_a(:,dofsToRemove) = [];
+                else
+                    A(dofsToRemove,:) = [];  
+                    A(:,dofsToRemove) = [];
+                end
+
+                FF(dofsToRemove,:) = [];
+            case 'IENSG'
                 tic
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
                 end
-                if useROM
-                    [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM(varCol);
-                else
-                    [A_gamma_a, newDofsToRemove] = addInfElements3(varCol);
-                end
-
-        %         [A_inf, newDofsToRemove] = addInfElements4(varCol, k(1), Upsilon); 
-                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                [A, dofsToRemove] = infElementsNonSepGeom(varCol);  
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
 
-                noDofs_new = max(size(A_gamma_a));
-                varCol.noDofs_new = noDofs_new;
-
-                if noDofs_new > varCol.noDofs
-                    A_fluid_o(noDofs_new, noDofs_new) = 0;
-                    if useROM
-                        A_K(noDofs_new, noDofs_new) = 0;
-                        A_M(noDofs_new, noDofs_new) = 0;
-                    end
-                end
-                dofsToRemove_old = varCol.dofsToRemove;
-                varCol.dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));
-                varCol.dofsToRemove_old = dofsToRemove_old;
-
-                noDofs_tot = noDofs_new;
-            elseif strcmp(method,'ABC')
-                % Add contribution from infinite elements
-                tic
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building ABC matrix ... ')
-                end
-                A_gamma_a = addABC(varCol); 
-
-        %         [A_inf, newDofsToRemove] = addInfElements4(varCol, k(1), Upsilon); 
-                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
-                end
-
-
-                noDofs_tot = varCol.noDofs;
-            end
-            dofsToRemove = varCol.dofsToRemove;
-            if strcmp(varCol.coreMethod,'SEM')
-                A_fluid_o = 1/(rho_f(1)*omega^2)*A_fluid_o; 
-            else
-                if useROM
-                    A_K = 1/(rho_f(1)*omega^2)*A_K; 
-                    A_M = 1/(rho_f(1)*omega^2)*A_M; 
-                    A_gamma_a = 1/(rho_f(1)*omega^2)*A_gamma_a; 
-                    A2_gamma_a = 1/(rho_f(1)*omega^2)*A2_gamma_a; 
-                    A3_gamma_a = 1/(rho_f(1)*omega^2)*A3_gamma_a; 
-                else
-                    A_fluid_o = 1/(rho_f(1)*omega^2)*(A_fluid_o + A_gamma_a); 
-                end
-            end
-
-            if useSolidDomain 
-                tic
-                % Solid matrices
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
-                end
-                options = {'operator','linearElasticity',...
-                           'fieldDimension', 3,...
-                           'buildMassMatrix', 1};
-                [A_K, A_M] = buildGlobalMatrices(varCol_solid, options);
-
-                A_solid = A_K-rho_s*omega^2*A_M;
-                if clearGlobalMatrices
-                    clear A_K A_M
-                end
-
-                noDofs_tot = noDofs_tot + varCol_solid.noDofs;
-                dofsToRemove = [varCol_solid.dofsToRemove (varCol.dofsToRemove+varCol_solid.noDofs)];
-                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
-                end
-            end
-
-            if useInnerFluidDomain
-                tic        
-                % Inner fluid   
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building inner fluid matrix ... ')
-                end
-                options = {'operator','laplace',...
-                           'fieldDimension', 1,...
-                           'buildMassMatrix', 1};
-                [A_K, A_M] = buildGlobalMatrices(varCol_fluid_i, options);
-
-                k_2 = k(2,i_k);
-                A_fluid_i = 1/(rho_f(2)*omega^2)*(A_K - k_2^2*A_M);
-                if clearGlobalMatrices
-                    clear A_K A_M
-                end
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
-                end
-                noDofs_tot = noDofs_tot + varCol_fluid_i.noDofs;
-                dofsToRemove = [varCol_fluid_i.dofsToRemove (varCol_solid.dofsToRemove+varCol_fluid_i.noDofs) (varCol.dofsToRemove+varCol_fluid_i.noDofs+varCol_solid.noDofs)];
-                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
-            end
-
-
-            % Collect all matrices
-            A = sparse(noDofs_tot,noDofs_tot);
-            if ~useSolidDomain
+                varCol.dofsToRemove = dofsToRemove;
+                noDofs_tot = varCol.noDofs*varCol.N;
                 varCol.noDofs_tot = noDofs_tot;
-                A = A_fluid_o;   
-            elseif useSolidDomain && ~useInnerFluidDomain
-                varCol_solid.noDofs_tot = noDofs_tot;
-                A(1:varCol_solid.noDofs,1:varCol_solid.noDofs) = A_solid;  
-                A((varCol_solid.noDofs+1):noDofs_tot,(varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o; 
-                shift = 0;
-            else 
-                varCol_solid.noDofs_tot = noDofs_tot;
-                A(1:varCol_fluid_i.noDofs,1:varCol_fluid_i.noDofs) = A_fluid_i; 
-                A((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs),(varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs)) = A_solid;
-                A((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot,(varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o;
-                shift = varCol_fluid_i.noDofs;
-            end
 
-            % Apply coupling conditions    
-            if useSolidDomain 
+                % Apply Neumann conditions
                 tic
                 if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
                 end
-                A_coupling = applyCouplingCondition_new(varCol_solid,shift);
-                A = A + A_coupling;
+
+                FF = applyHWBC_nonSepGeom(varCol,alpha_s);
+
+                varCol.timeBuildSystem = toc;
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
-                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
-            end
 
-            if useInnerFluidDomain 
-                tic
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building second coupling matrix ... ')
-                end
-                A_coupling = applyCouplingCondition2(varCol_solid,varCol_fluid_i,varCol_fluid_i.noDofs);
-                A = A + A_coupling;
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
-                end
-                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
-            end    
-
-            if clearGlobalMatrices
-                clear A_fluid_o A_fluid_i A_solid A_coupling
-            end
-
-            % Apply Neumann conditions
-            tic
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
-            end
-            switch BC
-                case 'SHBC'
-                    if ~strcmp(varCol.coreMethod,'SEM')
-                        if useROM
-                            FF = 1/(rho_f(1)*omega^2)*applyHWBC_ROM(varCol,noVecs);
-                        else
-                            FF = 1/(rho_f(1)*omega^2)*applyHWBC(varCol,length(alpha_s));  
-                        end
-                    end
-                otherwise
-                    varCol_solid.p_inc = p_inc;
-                    varCol_solid.dp_inc = dp_inc;
-                    FF = applyNeumannCondition_CoupledProblem(varCol_solid,omega,rho_f(1),length(alpha_s), shift);
-            end 
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', toc)
-            end
-            varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
-
-            %% Modify system of equations
-            % Remove the rows and columns of the global matrix corresponding to
-            % removed degrees of freedom
-            if useSolidDomain 
-                P1 = speye(size(A));
-                if useInnerFluidDomain
-                    P1(1:varCol_fluid_i.noDofs, 1:varCol_fluid_i.noDofs) = ...
-                        sqrt(omega^2*rho_f(2))*speye(varCol_fluid_i.noDofs);
-                end
-
-                P1(shift+1:shift+varCol_solid.noDofs, shift+1:shift+varCol_solid.noDofs) = ...
-                    1/sqrt(max([omega^2*rho_s, C(1,1)]))*speye(varCol_solid.noDofs);
-                P1(shift+1+varCol_solid.noDofs:end, shift+1+varCol_solid.noDofs:end) = ...
-                    sqrt(omega^2*rho_f(1))*speye(varCol.noDofs_new);
-
-                A = P1*A*P1;
-                FF = P1*FF;
-
-                P1(dofsToRemove,:) = [];  
-                P1(:,dofsToRemove) = [];
-            end
-
-            if useROM
-                A_K(dofsToRemove,:) = [];  
-                A_K(:,dofsToRemove) = [];
-                A_M(dofsToRemove,:) = [];  
-                A_M(:,dofsToRemove) = [];
-                A_gamma_a(dofsToRemove,:) = [];  
-                A_gamma_a(:,dofsToRemove) = [];
-                A2_gamma_a(dofsToRemove,:) = [];  
-                A2_gamma_a(:,dofsToRemove) = [];
-                A3_gamma_a(dofsToRemove,:) = [];  
-                A3_gamma_a(:,dofsToRemove) = [];
-            else
                 A(dofsToRemove,:) = [];  
                 A(:,dofsToRemove) = [];
-            end
 
-            FF(dofsToRemove,:) = [];
-        case 'IENSG'
-            tic
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
-            end
-            [A, dofsToRemove] = infElementsNonSepGeom(varCol);  
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', toc)
-            end
-
-            varCol.dofsToRemove = dofsToRemove;
-            noDofs_tot = varCol.noDofs*varCol.N;
-            varCol.noDofs_tot = noDofs_tot;
-
-            % Apply Neumann conditions
-            tic
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
-            end
-
-            FF = applyHWBC_nonSepGeom(varCol,alpha_s);
-
-            varCol.timeBuildSystem = toc;
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', toc)
-            end
-
-            A(dofsToRemove,:) = [];  
-            A(:,dofsToRemove) = [];
-
-            FF(dofsToRemove,:) = [];
-        case 'BEM'
-            tic
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building BEM matrix ... ')
-            end
-            dofsToRemove = varCol.dofsToRemove;  
-            switch formulation(1)
-                case 'G' % Galerkin
-                    switch formulation(2)
-                        case 'R' % Regularized
-%                             [A, FF] = buildRBEMmatrix_galerkin(varCol);  
-                            [A, FF] = buildRBEMmatrix_galerkinVec(varCol);  
-                        otherwise
-%                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
-                            [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
-                    end
-                    A(dofsToRemove,:) = [];
-                    FF(dofsToRemove,:) = [];
-                case 'C' % Collocation
-                    switch formulation(2)
-                        case 'R' % Regularized
-                            [A, FF] = buildRBEMmatrixVec(varCol);  
-%                             [A, FF] = buildRBEMmatrix(varCol);  
-                        otherwise
-                            [A, FF] = buildBEMmatrixVec(varCol);  
-    %                         [A, FF] = buildBEMmatrix(varCol);  
-                    end
-            end 
-
-            A(:,dofsToRemove) = [];
-            noDofs_tot = varCol.noDofs;
-            varCol.timeBuildSystem = toc;
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', varCol.timeBuildSystem)
-            end
-        case 'BA'
-            tic
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building BA matrix ... ')
-            end
-            [A, FF] = bestApproximationVec(varCol);
-
-            dofsToRemove = varCol.dofsToRemove;  
-            noDofs_tot = varCol.noDofs;
-
-            A(dofsToRemove,:) = [];  
-            A(:,dofsToRemove) = [];
-
-            FF(dofsToRemove,:) = [];
-
-            varCol.timeBuildSystem = toc;
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', varCol.timeBuildSystem)
-            end
-        case 'MFS'
-            tic
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building MFS matrix ... ')
-            end
-            dofsToRemove = varCol.dofsToRemove;  
-            [A, FF, varCol] = buildMFSmatrix(varCol);  
-            rmsA = rms(rms(A))
-            condA = cond(A)
-            noDofs_tot = varCol.noDofs;
-            varCol.timeBuildSystem = toc;
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', varCol.timeBuildSystem)
-            end
-    end
-    switch method
-        case {'IE','IENSG','BEM','BA','ABC','MFS'}
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Total time building system ... ')
-                fprintf(' was  %12f seconds.', varCol.timeBuildSystem)
-            end
-            % condA = condest(A)
-            %% SOLVE SYSTEM
-            if 0 %strcmp(BC,'SHBC') && (strcmp(method,'IE') || strcmp(method,'ABC')) && M > 6 && ~strcmp(coreMethod,'IGA') && ~(strcmp(coreMethod,'linear_FEM') && M == 7)
-            %     solver = 'cg';
-                solver = 'gmres';
-                % solver = 'cgs';
-            %     solver = 'LU';
-            else
-                solver = 'LU';
-            end
-            if strcmp(BC,'SHBC')
-                if useROM && ~strcmp(method,'BA')
-                    A_M = rho_f(1)*omega^2*A_M;
-                    A_K = rho_f(1)*omega^2*A_K;
-                    A_gamma_a = rho_f(1)*omega^2*A_gamma_a;
-                    A2_gamma_a = rho_f(1)*omega^2*A2_gamma_a;
-                    A3_gamma_a = rho_f(1)*omega^2*A3_gamma_a;
-                    FF = rho_f(1)*omega^2*FF;
-                else
-                    A = rho_f(1)*omega^2*A;
-                    FF = rho_f(1)*omega^2*FF;
-                end
-            end
-            if ~strcmp(solver,'LU')
+                FF(dofsToRemove,:) = [];
+            case 'BEM'
                 tic
-                preconditioner = 'ilu';
-            %     preconditioner = 'SSOR';
                 if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], ['Creating preconditioner (' preconditioner ') ... '])
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building BEM matrix ... ')
                 end
-                switch preconditioner
-                    case 'ilu'
-    %                     [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-4));
-            %             [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-3));
-                        [L_A,U_A] = ilu(A,struct('type','nofill'));
-                    %     [L_A,U_A] = lu(A);
-                    case 'SSOR'
-                        D_SSOR = spdiags(spdiags(A,0),0,size(A,1),size(A,2));
-                        D_SSORinv = spdiags(1./spdiags(A,0),0,size(A,1),size(A,2));
-                        F_SSOR = -triu(A);
-                        E_SSOR = -tril(A);
-                        omega_SSOR = 1.5;
-                        L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
-                        U_A = D_SSOR-omega_SSOR*F_SSOR;
+                dofsToRemove = varCol.dofsToRemove;  
+                switch formulation(1)
+                    case 'G' % Galerkin
+                        switch formulation(2)
+                            case 'R' % Regularized
+    %                             [A, FF] = buildRBEMmatrix_galerkin(varCol);  
+                                [A, FF] = buildRBEMmatrix_galerkinVec(varCol);  
+                            otherwise
+    %                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
+                                [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
+                        end
+                        A(dofsToRemove,:) = [];
+                        FF(dofsToRemove,:) = [];
+                    case 'C' % Collocation
+                        switch formulation(2)
+                            case 'R' % Regularized
+                                [A, FF] = buildRBEMmatrixVec(varCol);  
+    %                             [A, FF] = buildRBEMmatrix(varCol);  
+                            otherwise
+                                [A, FF] = buildBEMmatrixVec(varCol);  
+        %                         [A, FF] = buildBEMmatrix(varCol);  
+                        end
+                end 
+
+                A(:,dofsToRemove) = [];
+                noDofs_tot = varCol.noDofs;
+                varCol.timeBuildSystem = toc;
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', varCol.timeBuildSystem)
+                end
+            case 'BA'
+                tic
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building BA matrix ... ')
+                end
+                [A, FF] = bestApproximationVec(varCol);
+
+                dofsToRemove = varCol.dofsToRemove;  
+                noDofs_tot = varCol.noDofs;
+
+                A(dofsToRemove,:) = [];  
+                A(:,dofsToRemove) = [];
+
+                FF(dofsToRemove,:) = [];
+
+                varCol.timeBuildSystem = toc;
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', varCol.timeBuildSystem)
+                end
+            case 'MFS'
+                tic
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building MFS matrix ... ')
+                end
+                dofsToRemove = varCol.dofsToRemove;  
+                [A, FF, varCol] = buildMFSmatrix(varCol);  
+                rmsA = rms(rms(A))
+                condA = cond(A)
+                noDofs_tot = varCol.noDofs;
+                varCol.timeBuildSystem = toc;
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', varCol.timeBuildSystem)
+                end
+        end
+        switch method
+            case {'IE','IENSG','BEM','BA','ABC','MFS'}
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Total time building system ... ')
+                    fprintf(' was  %12f seconds.', varCol.timeBuildSystem)
+                end
+                % condA = condest(A)
+                %% SOLVE SYSTEM
+                if 0 %strcmp(BC,'SHBC') && (strcmp(method,'IE') || strcmp(method,'ABC')) && M > 6 && ~strcmp(coreMethod,'IGA') && ~(strcmp(coreMethod,'linear_FEM') && M == 7)
+                %     solver = 'cg';
+                    solver = 'gmres';
+                    % solver = 'cgs';
+                %     solver = 'LU';
+                else
+                    solver = 'LU';
+                end
+                if strcmp(BC,'SHBC')
+                    if useROM && ~strcmp(method,'BA')
+                        A_M = rho_f(1)*omega^2*A_M;
+                        A_K = rho_f(1)*omega^2*A_K;
+                        A_gamma_a = rho_f(1)*omega^2*A_gamma_a;
+                        A2_gamma_a = rho_f(1)*omega^2*A2_gamma_a;
+                        A3_gamma_a = rho_f(1)*omega^2*A3_gamma_a;
+                        FF = rho_f(1)*omega^2*FF;
+                    else
+                        A = rho_f(1)*omega^2*A;
+                        FF = rho_f(1)*omega^2*FF;
+                    end
+                end
+                if ~strcmp(solver,'LU')
+                    tic
+                    preconditioner = 'ilu';
+                %     preconditioner = 'SSOR';
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], ['Creating preconditioner (' preconditioner ') ... '])
+                    end
+                    switch preconditioner
+                        case 'ilu'
+        %                     [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-4));
+                %             [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-3));
+                            [L_A,U_A] = ilu(A,struct('type','nofill'));
+                        %     [L_A,U_A] = lu(A);
+                        case 'SSOR'
+                            D_SSOR = spdiags(spdiags(A,0),0,size(A,1),size(A,2));
+                            D_SSORinv = spdiags(1./spdiags(A,0),0,size(A,1),size(A,2));
+                            F_SSOR = -triu(A);
+                            E_SSOR = -tril(A);
+                            omega_SSOR = 1.5;
+                            L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
+                            U_A = D_SSOR-omega_SSOR*F_SSOR;
+                    end
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                end
+                tic
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Solving system of equations ... ')
+                end
+                switch solver
+                    case 'cg'
+                %         [UU,~,~,it1,rv1] = bicgstab(A,FF,1e-20,1000,L_A,U_A);
+                %         [UU,~,~,it1,rv1] = bicgstabl(A,FF,1e-20,1000,L_A,U_A);
+                        [UU,~,~,it1,rv1] = lsqr(A,FF,1e-20,1000,L_A,U_A);
+                %         [UU,~,~,it1,rv1] = bicg(A,FF,1e-20,1000,L_A,U_A);
+                %         [UU,~,~,it1,rv1] = cgs(A,FF,1e-20,1000,L_A,U_A);
+                        if clearGlobalMatrices
+                            clear L_A U_A
+                        end
+                    case 'gmres'
+                        noRestarts = []; % change this to save memory
+                        % noRestarts = 2;
+                        [UU,~,~,it1,rv1] = gmres(A,FF,noRestarts,1e-20,1000,L_A,U_A);
+                        if clearGlobalMatrices
+                            clear L_A U_A
+                        end
+                    case 'LU'
+                        if useROM
+                            switch method
+                                case 'BA'
+                                    UU = A\FF;
+                                otherwise
+                                    A = A_K - k_1^2*A_M + A_gamma_a;
+                                    A2 = - 2*k_1*A_M + A2_gamma_a;
+                                    A3 = - 2*A_M + A3_gamma_a;
+                                    UU = zeros(size(FF));
+                %                     [L_A,U_A,P] = lu(A);
+                                    dA = decomposition(A,'lu');
+            %                         fprintf('using %12f seconds.', toc)
+            %                         fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
+                                    for i = 1:noVecs
+                                        j = i-1;
+                                        b = FF(:,i);
+                                        if j > 0
+                                            b = b - j*A2*UU(:,i-1);
+                                        end
+                                        if j > 1
+                                            b = b - j*(j-1)/2*A3*UU(:,i-2);
+                                        end
+                %                         UU(:,i) = U_A\(L_A\(P*b));
+                                        UU(:,i) = dA\b;
+                %                         i
+                                    end
+                            end
+    %                         fprintf('using %12f seconds.', toc)
+                        else
+                            UU = A\FF;
+                        end
                 end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
-            end
-            tic
-            if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Solving system of equations ... ')
-            end
-            switch solver
-                case 'cg'
-            %         [UU,~,~,it1,rv1] = bicgstab(A,FF,1e-20,1000,L_A,U_A);
-            %         [UU,~,~,it1,rv1] = bicgstabl(A,FF,1e-20,1000,L_A,U_A);
-                    [UU,~,~,it1,rv1] = lsqr(A,FF,1e-20,1000,L_A,U_A);
-            %         [UU,~,~,it1,rv1] = bicg(A,FF,1e-20,1000,L_A,U_A);
-            %         [UU,~,~,it1,rv1] = cgs(A,FF,1e-20,1000,L_A,U_A);
-                    if clearGlobalMatrices
-                        clear L_A U_A
-                    end
-                case 'gmres'
-                    noRestarts = []; % change this to save memory
-                    % noRestarts = 2;
-                    [UU,~,~,it1,rv1] = gmres(A,FF,noRestarts,1e-20,1000,L_A,U_A);
-                    if clearGlobalMatrices
-                        clear L_A U_A
-                    end
-                case 'LU'
-                    if useROM
-                        switch method
-                            case 'BA'
-                                UU = A\FF;
-                            otherwise
-                                A = A_K - k_1^2*A_M + A_gamma_a;
-                                A2 = - 2*k_1*A_M + A2_gamma_a;
-                                A3 = - 2*A_M + A3_gamma_a;
-                                UU = zeros(size(FF));
-            %                     [L_A,U_A,P] = lu(A);
-                                dA = decomposition(A,'lu');
-        %                         fprintf('using %12f seconds.', toc)
-        %                         fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
-                                for i = 1:noVecs
-                                    j = i-1;
-                                    b = FF(:,i);
-                                    if j > 0
-                                        b = b - j*A2*UU(:,i-1);
-                                    end
-                                    if j > 1
-                                        b = b - j*(j-1)/2*A3*UU(:,i-2);
-                                    end
-            %                         UU(:,i) = U_A\(L_A\(P*b));
-                                    UU(:,i) = dA\b;
-            %                         i
-                                end
-                        end
-%                         fprintf('using %12f seconds.', toc)
-                    else
-                        UU = A\FF;
-                    end
-            end
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', toc)
-            end
-            varCol.timeSolveSystem = toc;
-            % it1(end),rv1(end)
-            % UU2 = UU;
-            % load('UU');
-            % norm(UU-UU2)/norm(UU)
-            % keyboard
-            % normUU = norm(UU)
-            % condest(A)
-            % keyboard
-            if computeCondNumber
-                rng('default') % for reproducibility in condest
-                condNumber = condest(A);
-    %             condNumber = cond(full(A))
-            else
-                condNumber = NaN;
-            end
-            % condNumber
-            task.results.cond_number = condNumber;
-            % condest(A)
-            % [L_A,U_A] = ilu(A,struct('type','nofill'));
-            % [L_A,U_A] = ilu(A,struct('type','crout','milu','row','droptol',0.1));
-            % condest(A)
-            % issymmetric2(A,1e-10)
-            % keyboard
-            % condSparse = condest(A)
-            % condFull = cond(full(A))
-            % keyboard
-
-            % switch solver
-            %     case 'cg'
-            %         figure(47)
-            %         semilogy(0:length(rv1)-1,rv1,'-o');
-            %         xlabel('Iteration number');
-            %         ylabel('Residual');
-            %     case 'gmres'
-            %         figure(47)
-            %         semilogy(0:length(rv1)-1,rv1,'-o');
-            %         xlabel('Iteration number');
-            %         ylabel('Residual');
-            % end
-            % savefig('residualErrors')
-            % figure(48)
-            % spy2(A)
-            % condest((L_A*U_A)\A)
-            % tic; UU2 = A\FF; toc
-            % max(abs(UU-UU2)./abs(UU2))
-            % return
-
-            if useSolidDomain 
-                UU = P1*UU;
-            end
-
-            actualNoDofs = size(A,1);
-            if ~runTasksInParallel
-                fprintf('\nNumber of degrees of freedom = %d', actualNoDofs)
-            end
-            % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*varCol.noElems)/nnz(A_fluid_o))
-            varCol.actualNoDofs = actualNoDofs;
-            % nXn = varCol.nurbs.number(1);
-            % nEn = varCol.nurbs.number(2);
-            % nZn = varCol.nurbs.number(3);
-            % nXn*nEn*(nZn+N-1) - (nZn+N-1)*(nEn-2) - 2*(nXn-1)*(nZn+N-1)
-            if clearGlobalMatrices
-                clear A FF P1
-            end
-
-            %% Sort data from U into U_fluid_o, U_solid, and U_fluid_i
-            if strcmp(method,'MFS')
-                U_fluid_o = UU;
-            else
-                U = zeros(noDofs_tot,size(UU,2),size(UU,3));
-                U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU;   
-
-                if ~useSolidDomain
-                %         U_fluid_o = U(1:varCol_fluid_o.noDofs,:,:); 
-                    U_fluid_o = U; 
-                    U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
-                elseif useSolidDomain && ~useInnerFluidDomain
-                    U_fluid_o = U((varCol_solid.noDofs+1):end,:,:);
-                    U_solid = U(1:varCol_solid.noDofs,:,:); 
-
-                    U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
-                    U_solid = addSolutionToRemovedNodes_new(U_solid, varCol_solid);
+                varCol.timeSolveSystem = toc;
+                % it1(end),rv1(end)
+                % UU2 = UU;
+                % load('UU');
+                % norm(UU-UU2)/norm(UU)
+                % keyboard
+                % normUU = norm(UU)
+                % condest(A)
+                % keyboard
+                if computeCondNumber
+                    rng('default') % for reproducibility in condest
+                    condNumber = condest(A);
+        %             condNumber = cond(full(A))
                 else
-                    U_fluid_o = U((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):end,:,:); 
-                    U_solid = U((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs + varCol_solid.noDofs),:,:);
-                    U_fluid_i = U(1:varCol_fluid_i.noDofs,:,:);
+                    condNumber = NaN;
+                end
+                % condNumber
+                task.results.cond_number = condNumber;
+                % condest(A)
+                % [L_A,U_A] = ilu(A,struct('type','nofill'));
+                % [L_A,U_A] = ilu(A,struct('type','crout','milu','row','droptol',0.1));
+                % condest(A)
+                % issymmetric2(A,1e-10)
+                % keyboard
+                % condSparse = condest(A)
+                % condFull = cond(full(A))
+                % keyboard
 
-                    U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
-                    U_solid = addSolutionToRemovedNodes_new(U_solid, varCol_solid);
-                    U_fluid_i = addSolutionToRemovedNodes_new(U_fluid_i, varCol_fluid_i);
-                end
-                % save([resultsFolderName '/' saveName  '_' coreMethod method '_mesh' num2str(M) '_degree' num2str(max(varCol.nurbs.degree)) ...
-                %                         '_formulation' varCol.formulation '.mat'], 'varCol', 'U_fluid_o')
-            end
-            varCol.tot_time = varCol.timeSolveSystem + varCol.timeBuildSystem;
+                % switch solver
+                %     case 'cg'
+                %         figure(47)
+                %         semilogy(0:length(rv1)-1,rv1,'-o');
+                %         xlabel('Iteration number');
+                %         ylabel('Residual');
+                %     case 'gmres'
+                %         figure(47)
+                %         semilogy(0:length(rv1)-1,rv1,'-o');
+                %         xlabel('Iteration number');
+                %         ylabel('Residual');
+                % end
+                % savefig('residualErrors')
+                % figure(48)
+                % spy2(A)
+                % condest((L_A*U_A)\A)
+                % tic; UU2 = A\FF; toc
+                % max(abs(UU-UU2)./abs(UU2))
+                % return
 
-            %% Find h_max and store results
-            if i_k == 1
-                h_max_fluid = findMaxElementDiameter(varCol.patches);
-                h_max = h_max_fluid;
-                if useSolidDomain
-                    h_max_solid = findMaxElementDiameter(varCol_solid.patches);
-                    h_max = max([h_max, h_max_solid]);
+                if useSolidDomain 
+                    UU = P1*UU;
                 end
-                if useInnerFluidDomain
-                    h_max_fluid_i = findMaxElementDiameter(varCol_fluid_i.patches);
-                    h_max = max([h_max, h_max_fluid_i]);
+
+                actualNoDofs = size(A,1);
+                if ~runTasksInParallel
+                    fprintf('\nNumber of degrees of freedom = %d', actualNoDofs)
                 end
-                varCol.h_max = h_max;
-                varCol.nepw = lambda(1)./h_max;
-                varCol.dofs = actualNoDofs;
-                if storeSolution
-                    varCol.U = U_fluid_o;
+                % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*varCol.noElems)/nnz(A_fluid_o))
+                varCol.actualNoDofs = actualNoDofs;
+                % nXn = varCol.nurbs.number(1);
+                % nEn = varCol.nurbs.number(2);
+                % nZn = varCol.nurbs.number(3);
+                % nXn*nEn*(nZn+N-1) - (nZn+N-1)*(nEn-2) - 2*(nXn-1)*(nZn+N-1)
+                if clearGlobalMatrices
+                    clear A FF P1
                 end
-            end
-    end
-    if strcmp(scatteringCase,'Sweep')
-        U_sweep{i_k} = U_fluid_o(1:varCol.noDofs,:);
-        if ~strcmp(BC,'SHBC')
-            error('not implemented due to noDofs')
+
+                %% Sort data from U into U_fluid_o, U_solid, and U_fluid_i
+                if strcmp(method,'MFS')
+                    U_fluid_o = UU;
+                else
+                    U = zeros(noDofs_tot,size(UU,2),size(UU,3));
+                    U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU;   
+
+                    if ~useSolidDomain
+                    %         U_fluid_o = U(1:varCol_fluid_o.noDofs,:,:); 
+                        U_fluid_o = U; 
+                        U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
+                    elseif useSolidDomain && ~useInnerFluidDomain
+                        U_fluid_o = U((varCol_solid.noDofs+1):end,:,:);
+                        U_solid = U(1:varCol_solid.noDofs,:,:); 
+
+                        U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
+                        U_solid = addSolutionToRemovedNodes_new(U_solid, varCol_solid);
+                    else
+                        U_fluid_o = U((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):end,:,:); 
+                        U_solid = U((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs + varCol_solid.noDofs),:,:);
+                        U_fluid_i = U(1:varCol_fluid_i.noDofs,:,:);
+
+                        U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
+                        U_solid = addSolutionToRemovedNodes_new(U_solid, varCol_solid);
+                        U_fluid_i = addSolutionToRemovedNodes_new(U_fluid_i, varCol_fluid_i);
+                    end
+                    % save([resultsFolderName '/' saveName  '_' coreMethod method '_mesh' num2str(M) '_degree' num2str(max(varCol.nurbs.degree)) ...
+                    %                         '_formulation' varCol.formulation '.mat'], 'varCol', 'U_fluid_o')
+                end
+                varCol.tot_time = varCol.timeSolveSystem + varCol.timeBuildSystem;
+
+                %% Find h_max and store results
+                if i_k == 1
+                    h_max_fluid = findMaxElementDiameter(varCol.patches);
+                    h_max = h_max_fluid;
+                    if useSolidDomain
+                        h_max_solid = findMaxElementDiameter(varCol_solid.patches);
+                        h_max = max([h_max, h_max_solid]);
+                    end
+                    if useInnerFluidDomain
+                        h_max_fluid_i = findMaxElementDiameter(varCol_fluid_i.patches);
+                        h_max = max([h_max, h_max_fluid_i]);
+                    end
+                    varCol.h_max = h_max;
+                    varCol.nepw = lambda(1)./h_max;
+                    varCol.dofs = actualNoDofs;
+                    if storeSolution
+                        varCol.U = U_fluid_o;
+                    end
+                end
         end
-    end
-    if strcmp(scatteringCase,'Sweep')
-        fprintf('\nTotal time spent on frequency: %12f', toc(t_freq))  
+        if strcmp(scatteringCase,'Sweep')
+            U_sweep{i_k} = U_fluid_o(1:varCol.noDofs,:);
+            if ~strcmp(BC,'SHBC')
+                error('not implemented due to noDofs')
+            end
+        end
+        if strcmp(scatteringCase,'Sweep')
+            fprintf('\nTotal time spent on frequency: %12f', toc(t_freq))  
+        end
+        if ~useROM
+            calculateErrors
+        end
     end
 end
 if useROM
@@ -850,10 +885,6 @@ end
 if ~useROM
     switch scatteringCase
         case {'BI', 'Sweep','Ray'}    
-            %% Calculate Errors
-            for i_k = 1:size(k,2)
-            calculateErrors
-
     %         keyboard
             plotError = analyticSolutionExist && ~plotTimeOscillation; 
 
@@ -960,7 +991,7 @@ if ~useROM
                     createVTKmeshFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options)
                 end
 
-                delta = 5;
+                delta = 0.5;
                 xb = [-65,20]+pi*1e-6;
                 yb = [-15,15]+pi*1e-6;
                 zb = [-10,10]+pi*1e-6;
