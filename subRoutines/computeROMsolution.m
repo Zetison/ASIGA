@@ -227,24 +227,33 @@ for i_b = 1:numel(basisROMcell)
             tasks(i_task,task_ROM,i_b).task = task;
             switch basisROM
                 case {'Taylor','Pade'}
-                    [temp_error,temp_k_ROM] = insertNaN(k_ROM,task.results.surfaceError,k_P);
-                    tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = temp_k_ROM;
-                    tasks(i_task,task_ROM,i_b).task.results.surfaceError = temp_error;
-                    temp_error = insertNaN(k_ROM,task.results.energyError,k_P);
-                    tasks(i_task,task_ROM,i_b).task.results.energyError = temp_error;
-                    temp_error = insertNaN(k_ROM,task.results.L2Error,k_P);
-                    tasks(i_task,task_ROM,i_b).task.results.L2Error = temp_error;
-                    temp_error = insertNaN(k_ROM,task.results.H1Error,k_P);
-                    tasks(i_task,task_ROM,i_b).task.results.H1Error = temp_error;
-                    temp_error = insertNaN(k_ROM,task.results.H1sError,k_P);
-                    tasks(i_task,task_ROM,i_b).task.results.H1sError = temp_error;
+                    if calculateSurfaceError
+                        [temp_error,temp_k_ROM] = insertNaN(k_ROM,task.results.surfaceError,k_P);
+                        tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = temp_k_ROM;
+                        tasks(i_task,task_ROM,i_b).task.results.surfaceError = temp_error;
+                    end
+                    if calculateVolumeError
+                        [temp_error,temp_k_ROM] = insertNaN(k_ROM,task.results.energyError,k_P);
+                        tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = temp_k_ROM;
+                        tasks(i_task,task_ROM,i_b).task.results.energyError = temp_error;
+                        temp_error = insertNaN(k_ROM,task.results.L2Error,k_P);
+                        tasks(i_task,task_ROM,i_b).task.results.L2Error = temp_error;
+                        temp_error = insertNaN(k_ROM,task.results.H1Error,k_P);
+                        tasks(i_task,task_ROM,i_b).task.results.H1Error = temp_error;
+                        temp_error = insertNaN(k_ROM,task.results.H1sError,k_P);
+                        tasks(i_task,task_ROM,i_b).task.results.H1sError = temp_error;
+                    end
                 otherwise
-                    tasks(i_task,task_ROM,i_b).task.results.surfaceError = surfaceErrorArr;
-                    tasks(i_task,task_ROM,i_b).task.results.energyError = energyError;
-                    tasks(i_task,task_ROM,i_b).task.results.L2Error = L2Error;
-                    tasks(i_task,task_ROM,i_b).task.results.H1Error = H1Error;
-                    tasks(i_task,task_ROM,i_b).task.results.H1sError = H1sError;
-                    tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = k_ROM;
+                    if calculateSurfaceError
+                        tasks(i_task,task_ROM,i_b).task.results.surfaceError = surfaceErrorArr;
+                    end
+                    if calculateVolumeError
+                        tasks(i_task,task_ROM,i_b).task.results.energyError = energyError;
+                        tasks(i_task,task_ROM,i_b).task.results.L2Error = L2Error;
+                        tasks(i_task,task_ROM,i_b).task.results.H1Error = H1Error;
+                        tasks(i_task,task_ROM,i_b).task.results.H1sError = H1sError;
+                        tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = k_ROM;
+                    end
             end
             tasks(i_task,task_ROM,i_b).task.noVecs = noVecs;
             tasks(i_task,task_ROM,i_b).task.basisROM = basisROM;
