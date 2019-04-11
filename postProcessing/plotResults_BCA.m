@@ -19,7 +19,13 @@ alpha = studies(1).tasks.task.alpha;
 alpha = alpha(1:end-1);
 % for res = [4,8]
 l2errorCOMSOL = zeros(1,4);
+l2errorCOMSOL2 = zeros(1,4);
 p_ref = studies(1).tasks.task.results.abs_p;
+T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(80) '_noPMLayers_' num2str(10) '_A' num2str(240) '_F' num2str(100) '.txt'],'FileType','text', 'HeaderLines',8);
+%             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
+x = T.Var1;
+y = T.Var2;
+p_ref2 = 10.^(y/20);
 counter = 1;
 for res = [10,20,40,80]
 %     f = 1000;
@@ -37,14 +43,15 @@ for res = [10,20,40,80]
 %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
     l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
+    l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
     counter = counter + 1;
     printResultsToFile2(['../results/BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
     figure(42)
     semilogy(180/pi*alpha,Error,'DisplayName',['COMSOL res' num2str(res)])
     hold on
-    
 end
 l2errorCOMSOL %  1.6563    0.3034    0.2532    0.2420
+l2errorCOMSOL2 %  1.3668    0.1561    0.0541
 savefig([options.subFolderName '/_comparison'])
 figure(42)
 p_ref = studies(1).tasks.task.results.abs_p;
