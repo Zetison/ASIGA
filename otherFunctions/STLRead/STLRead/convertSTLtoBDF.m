@@ -1,8 +1,17 @@
-function convertSTLtoBDF(filename)
-fv = stlread([filename '.stl']);
+function convertSTLtoBDF(filename,fv,useSingle)
+if nargin < 2
+    fv = stlread([filename '.stl']); 
+end
+if nargin < 3
+    useSingle = false;
+end
 
 F = fv.faces;
-X = single(fv.vertices);
+if useSingle
+    X = single(fv.vertices);
+else
+    X = fv.vertices;
+end
 nX = size(X,1);
 nF = size(F,1);
 T = table(repmat({'GRID'},nX,1),...

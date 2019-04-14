@@ -57,18 +57,21 @@ figure(42)
 p_ref = studies(1).tasks.task.results.abs_p;
 alpha = studies(1).tasks.task.alpha;
 l2errorIGA = zeros(1,6);
+l2errorIGA2 = zeros(1,6);
 for task_i = 1:6 
     p = studies(2).tasks(task_i).task.results.abs_p;
     degree = studies(2).tasks(task_i).task.degree;
     M = studies(2).tasks(task_i).task.M;
     Error = 100*abs(p-p_ref)./max(p_ref);
     l2errorIGA(task_i) = 100*sqrt(sum((p-p_ref).^2)./sum(p_ref.^2));
+    l2errorIGA2(task_i) = 100*sqrt(sum((p(1:end-1)-p_ref2).^2)./sum(p_ref2.^2));
     filename = ['M' num2str(M) 'degree' num2str(degree) 'f100'];
     printResultsToFile2(['../results/BCA/BCA_BEM_IGA_CCBIE_' filename], 180/pi*alpha.', Error)
     semilogy(180/pi*alpha,Error,'DisplayName',filename)
     hold on
 end
 l2errorIGA % 0.1226    0.0412    0.0600    0.0206    0.0347    0.0089
+l2errorIGA2 % 0.1226    0.0412    0.0600    0.0206    0.0347    0.0089
 yLabel = '$$\frac{||p|-|p_h||}{|p|} [\%]$$';
 ylabel(yLabel,'interpreter','latex')
 xlabel('$$\alpha$$','interpreter','latex')
@@ -78,7 +81,16 @@ savefig([options.subFolderName '/_error'])
 
 fprintf('\n\n')
 for i = 1:6
-    fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & %g & %d\\\\\n', studies(2).tasks(i).task.M, studies(2).tasks(i).task.degree, studies(2).tasks(i).task.degree-1, studies(2).tasks(i).task.varCol.noElems, studies(2).tasks(i).task.varCol.dofs, studies(2).tasks(i).task.varCol.h_max, studies(2).tasks(i).task.varCol.nepw, l2errorIGA(i), round(studies(2).tasks(i).task.varCol.tot_time)); 
+    fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & %g & %d\\\\\n', ...
+        studies(2).tasks(i).task.M, ...
+        studies(2).tasks(i).task.degree, ...
+        studies(2).tasks(i).task.degree-1, ...
+        studies(2).tasks(i).task.varCol.noElems, ...
+        studies(2).tasks(i).task.varCol.dofs, ...
+        studies(2).tasks(i).task.varCol.h_max, ...
+        studies(2).tasks(i).task.varCol.nepw, ...
+        l2errorIGA(i), ...
+        round(studies(2).tasks(i).task.varCol.tot_time)); 
 end
 i = 1;
 fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & 0 & %d\\\\\n', studies(1).tasks(i).task.M, studies(1).tasks(i).task.degree, studies(1).tasks(i).task.degree-1, studies(1).tasks(i).task.varCol.noElems, studies(1).tasks(i).task.varCol.dofs, studies(1).tasks(i).task.varCol.h_max, studies(1).tasks(i).task.varCol.nepw, round(studies(1).tasks(i).task.varCol.tot_time)); 

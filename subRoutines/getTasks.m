@@ -50,9 +50,9 @@ getDefaultTaskValues
 % getTask_articleBEM_S1manufactored
 % getTask_articleBEM_BCA
 % getTask_articleBEM_BCA_MS
-getTask_articleBEM_BCA_P
+% getTask_articleBEM_BCA_P
 % getTask_articleBEM_BCA_P_sweep
-% getTask_articleBEM_BCA_BA
+getTask_articleBEM_BCA_BA
 % getTask_articleBEM_BCA_Pgp
 % getTask_BC_P_paraview
 % getTask_BC_P

@@ -69,10 +69,10 @@ for study_i = 1:numel(studies)
             save([subFolderName '/_studies'], 'studies', '-v7.3')
         end
         if useROM
-            studies.loopParameters{end+1} = 'noVecs';
-            studies.loopParametersArr{end+1} = noVecsArr;
-            studies.loopParameters{end+1} = 'basisROM';
-            studies.loopParametersArr{end+1} = basisROMcell;
+            studies(study_i).loopParameters{end+1} = 'noVecs';
+            studies(study_i).loopParametersArr{end+1} = noVecsArr;
+            studies(study_i).loopParameters{end+1} = 'basisROM';
+            studies(study_i).loopParametersArr{end+1} = basisROMcell;
             studies(study_i).tasks = tasks(:);
         end
         save([subFolderName '/_studies'], 'studies', '-v7.3')

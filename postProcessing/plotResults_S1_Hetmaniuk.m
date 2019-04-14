@@ -13,12 +13,12 @@ for study_i = 1:numel(studies)
                      'legendEntries',   {{'method','coreMethod','formulation','M','degree','basisROM','noVecs'}}, ...
                      'noXLoopPrms',     0); 
 
-%     figure(2)
-%     printResultsToTextFiles(study,options)
-    options.xname = 'k';
-    options.legendEntries = {'method','coreMethod','formulation','M','degree'};
-    figure(3)
+    figure(2)
     printResultsToTextFiles(study,options)
+%     options.xname = 'k';
+%     options.legendEntries = {'method','coreMethod','formulation','M','degree'};
+%     figure(3)
+%     printResultsToTextFiles(study,options)
 end
 
 % 
