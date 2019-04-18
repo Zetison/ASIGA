@@ -101,8 +101,8 @@ for patch = 1:noPatches
         else
             eps_greville_xi = 1/(2*p_xi);
             eps_greville_eta = 1/(2*p_eta);
-            eps_greville_xi = 0;
-            eps_greville_eta = 0;
+%             eps_greville_xi = 0;
+%             eps_greville_eta = 0;
         end
         for j = 1:n_eta
             eta_bar = sum(Eta(j+1:j+p_eta))/p_eta;

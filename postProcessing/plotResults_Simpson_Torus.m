@@ -15,11 +15,11 @@ for study_i = 1:numel(studies)
 
     figure(2)
     printResultsToTextFiles(study,options)
-% 
-%             options.xname = 'tot_time';
-%             options.axisType = 'loglog';
-%             figure(3)
-%             printResultsToTextFiles(study,options)
+
+    options.xname = 'nepw';
+    options.yScale = 1;
+    figure(3)
+    printResultsToTextFiles(study,options)
 % 
 %             options.xname = 'dofs';
 %             options.yname = 'cond_number';
@@ -27,6 +27,7 @@ for study_i = 1:numel(studies)
 %             printResultsToTextFiles(study,options)
 end
 
+figure(2)
 error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p2.csv');
 semilogy(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 2');
 error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p3.csv');
