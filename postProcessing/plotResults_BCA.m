@@ -28,6 +28,7 @@ y = T.Var2;
 p_ref2 = 10.^(y/20);
 counter = 1;
 for res = [10,20,40,80]
+% for res = [10,20,40]
 %     f = 1000;
     f = 100;
     alpha_s = 240;
@@ -48,6 +49,30 @@ for res = [10,20,40,80]
     printResultsToFile2(['../results/BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
     figure(42)
     semilogy(180/pi*alpha,Error,'DisplayName',['COMSOL res' num2str(res)])
+    hold on
+end
+for res = [10,20,40,80]
+%     f = 1000;
+    f = 100;
+    alpha_s = 240;
+    T = readtable(['../../comsol/models/BC/BeTSSi_BEM_output/BC_resolution_' num2str(res) '.txt'],'FileType','text', 'HeaderLines',8);
+%             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
+    x = T.Var1;
+    y = T.Var2;
+    figure(1)
+    plot(x,y,'DisplayName',['COMSOL, M = ' num2str(res) ', BEM'])
+    legend('off');
+    legend('show');
+    hold on
+%     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
+%     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
+    Error = 100*abs(10.^(y/20)-p_ref2)./max(p_ref2);
+%     l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
+%     l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
+    counter = counter + 1;
+%     printResultsToFile2(['../results/BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
+    figure(42)
+    semilogy(180/pi*alpha,Error,'DisplayName',['COMSOL res' num2str(res) ', BEM'])
     hold on
 end
 l2errorCOMSOL %  1.6563    0.3034    0.2532    0.2420

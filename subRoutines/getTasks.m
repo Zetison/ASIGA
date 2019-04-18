@@ -33,7 +33,7 @@ getDefaultTaskValues
 % getTask_S5
 % getTask_Fillinger
 % getTask_testIE
-% getTask_Hetmaniuk
+getTask_Hetmaniuk
 % getTask_articleIGA
 % getTask_articleIGA_convergenceAnalysis
 % getTask_articleIGA_Ihlenburg
@@ -52,7 +52,7 @@ getDefaultTaskValues
 % getTask_articleBEM_BCA_MS
 % getTask_articleBEM_BCA_P
 % getTask_articleBEM_BCA_P_sweep
-getTask_articleBEM_BCA_BA
+% getTask_articleBEM_BCA_BA
 % getTask_articleBEM_BCA_Pgp
 % getTask_BC_P_paraview
 % getTask_BC_P

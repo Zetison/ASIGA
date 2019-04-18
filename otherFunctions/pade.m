@@ -45,38 +45,57 @@ for i=1:length(fields)
 end
 
 % Calculate the n+m derivatives at xo
-a=f(xo,0:(n+m))./factorial(0:(n+m)); 
-a=a.';
+a=f(xo,0:(n+m)); 
+a=(a./repmat(factorial(cast(0:(n+m),class(xo))),size(a,1),1)).';
 
 % Calculation of Padè coefficients.
-pq = zeros(n+m,size(a,2));
-for i = 1:size(a,2)
-    pq(:,i) =cat(2,cat(1,speye(n+1),zeros(m,n+1)),...
-        spdiags(repmat(reshape(-cat(1,a(end:-1:1,i),0),1,[]),n+m+1,1),...
-        -(n+m+1):0,n+m+1,n))\a(:,i);
+useHP = isa(xo,'mp');
+if useHP
+    d = mp.Digits;
+else
+    d = NaN;
+end
+pq = zeros(n+m+1,size(a,2),class(xo));
+% for i = 1:size(a,2)
+parfor i = 1:size(a,2)
+    if useHP
+        mp.Digits(d);
+    end
+    B = zeros(n+m+1,m,class(xo));
+    for j = 1:m
+        B(:,j) = [zeros(j,1); -a(1:n+m+1-j,i)];
+    end
+    pq(:,i) = cat(2,cat(1,speye(n+1),zeros(m,n+1)),B)\a(:,i);
+%     pq(:,i) =cat(2,cat(1,speye(n+1),zeros(m,n+1)),...
+%         spdiags(repmat(reshape(-cat(1,a(end:-1:1,i),0),1,[]),n+m+1,1),...
+%         -(n+m+1):0,n+m+1,n))\a(:,i);
 end
 
 % Rewrite the output as evaluable polynomial forms.
-p = zeros(n+1,size(a,2));
-q = zeros(m,size(a,2));
-for i = 1:size(a,2)
-    p(:,i)=shiftpoly(pq(n+1:-1:1,i),xo); 
-    q(:,i)=shiftpoly(cat(1,pq(end:-1:n+2,i),1),xo);
-end
+p = zeros(n+1,size(a,2),class(xo));
+q = zeros(m+1,size(a,2),class(xo));
+% for i = 1:size(a,2)
+parfor i = 1:size(a,2)
+    if useHP
+        mp.Digits(d);
+    end
+    p(:,i) = shiftpoly(pq(n+1:-1:1,i),xo); 
+    q(:,i) = shiftpoly([pq(end:-1:n+2,i); ones(1,class(xo))],xo);
 end
 
 
-function ps=shiftpoly(p,xo)
+function ps = shiftpoly(p, xo)
 % Displaces the origin of -xo
 
 % Initialize values.
-ps=zeros(size(p)); q=1; base=[1;-xo]; ps(end)=p(end);
+ps = zeros(size(p),class(xo)); 
+q = ones(1,class(xo)); 
+base = [1;-xo]; 
+ps(end) = p(end);
 
 % Substitute the base polynomial in the original polynomial form.
-for n=1:(length(p)-1)
-    q=conv(q,base);
-    ps(end-n:end)=ps(end-n:end)+p(end-n)*q;
-end
-
+for n = 1:(length(p)-1)
+    q = conv(q,base);
+    ps(end-n:end) = ps(end-n:end)+p(end-n)*q;
 end
     

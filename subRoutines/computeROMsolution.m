@@ -26,11 +26,20 @@ for i_b = 1:numel(basisROMcell)
             case 'Pade'
                 p = cell(P,1);
                 q = cell(P,1);
+                useHP = 1;
+                if useHP
+                    mp.Digits(100);
+                end
                 for i = 1:P
-                    f = @(x,n) U_P{i}(:,n+1);
                     n = ceil(noVecs/2)-1;
                     m = floor(noVecs/2);
-                    [p{i},q{i}] = pade(f,k_P(i),n,m); 
+                    if useHP
+                        f = @(x,n) mp(U_P{i}(:,n+1));
+                        [p{i},q{i}] = pade(f,mp(k_P(i)),n,m); 
+                    else
+                        f = @(x,n) U_P{i}(:,n+1);
+                        [p{i},q{i}] = pade(f,k_P(i),n,m); 
+                    end
                 end
                 
             case 'Splines'
@@ -67,7 +76,7 @@ for i_b = 1:numel(basisROMcell)
                 p_ROM = P*noVecs-1;
                 useHP = 1;
                 if useHP
-                    mp.Digits(400);
+%                     mp.Digits(400);
                     p_ROM = mp(p_ROM);
                 end
                 k_P = convert(k_P,class(p_ROM));
@@ -202,7 +211,11 @@ for i_b = 1:numel(basisROMcell)
             k_ROM = double(unique(sort([k_P,k_ROM])));
             switch basisROM
                 case 'Pade'
-                    U_fluid_oArr = interPade(k_ROM,k_P,p,q);
+                    if useHP
+                        U_fluid_oArr = double(interPade(mp(k_ROM),mp(k_P),p,q));
+                    else
+                        U_fluid_oArr = interPade(k_ROM,k_P,p,q);
+                    end
                 case 'Bernstein'
                     B = bernsteinBasis(double((k_ROM-k_start)/(k_end - k_start)),double(p_ROM),0);
                     U_fluid_oArr = (B*a).';

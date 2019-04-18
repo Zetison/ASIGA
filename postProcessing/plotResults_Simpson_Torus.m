@@ -31,3 +31,4 @@ error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p2.csv');
 semilogy(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 2');
 error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p3.csv');
 semilogy(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 3');
+

@@ -640,8 +640,8 @@ elseif strcmp(nurbs.type, '3Dsurface')
             C{e} = zeros(400,400);
         end
         hold on
-        parfor e = 1:noElems
-%         for e = 1:noElems
+%         parfor e = 1:noElems
+        for e = 1:noElems
             idXi = index(e,1);
             idEta = index(e,2);
 
@@ -672,19 +672,35 @@ elseif strcmp(nurbs.type, '3Dsurface')
             X{e} = reshape(v(:,1),noXiValues,noEtaValues);
             Y{e} = reshape(v(:,2),noXiValues,noEtaValues);
             Z{e} = reshape(v(:,3),noXiValues,noEtaValues); 
-            C{e} = reshape(colorFun(v),noXiValues,noEtaValues);
+            if plotSolution
+                C{e} = reshape(colorFun(v),noXiValues,noEtaValues);
+            end
 %             C{e} = zeros(noXiValues,noEtaValues);
             maxC(e) = max(max(C{e}));
         end
         for e = 1:noElems
-            if plotElementEdges
-                surf(X{e},Y{e},Z{e}, C{e}, 'EdgeColor','none','LineStyle','none')
+            if plotSolution
+                if plotElementEdges
+                    surf(X{e},Y{e},Z{e}, C{e}, 'EdgeColor','none','LineStyle','none')
+                else
+                    surf(X{e},Y{e},Z{e}, C{e})
+                end
             else
-                surf(X{e},Y{e},Z{e}, C{e})
+                if plotElementEdges
+                    if alphaValue < 1
+                        surf(X{e},Y{e},Z{e}, 'FaceColor', color,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', 'none')
+                    else
+                        surf(X{e},Y{e},Z{e}, 'FaceColor', color,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue)
+                    end
+                else
+                    surf(X{e},Y{e},Z{e})
+                end
             end
         end
-        maxC = max(maxC);
-        colorbar
+        if plotSolution
+            maxC = max(maxC);
+            colorbar
+        end
     end
     if plotElementEdges        
         x = zeros(length(Xi_values),1);

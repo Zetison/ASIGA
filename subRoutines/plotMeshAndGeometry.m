@@ -25,10 +25,11 @@ if plot3Dgeometry
                     if 0
                         colorFun = @(v) abs(varCol.analytic(v));
 %                         colorFun = @(v) real(varCol.analytic(v));
-                        plotNURBS(fluid{i},{'resolution',[10 10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
+                        plotNURBS(fluid{i},{'resolution',[10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
                                                         'samplingDistance',0.1});
                     else
-                        plotNURBS(fluid{i},{'resolution',[100 100 10]});
+%                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
+                        plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
                     end
             end
         else
@@ -80,6 +81,7 @@ if plot3Dgeometry
 %     view(-70,30)
 %     view(120,10)
     view(18,10)
+    view(62,43)
 %     view(0,0)
     camproj('perspective')
     ax = gca;               % get the current axis
@@ -88,9 +90,10 @@ if plot3Dgeometry
 %     keyboard 
 %     plotControlPts(fluid,'red','red','red','red')
     figureFullScreen(gcf)
-% 	export_fig(['../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r300')
-% 	export_fig(['../graphics/S1/S13D_' coreMethod], '-png', '-transparent', '-r300')
-% 	export_fig(['../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
+% 	export_fig(['../../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r300')
+% 	export_fig(['../../graphics/S1/S13D_' coreMethod], '-png', '-transparent', '-r300')
+% 	export_fig('../../graphics/Torus', '-png', '-transparent', '-r300')
+% 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
 % 	export_fig('C:\Users\jonvegar\Desktop\trond\mesh3D', '-png', '-transparent', '-r300')
            
 
