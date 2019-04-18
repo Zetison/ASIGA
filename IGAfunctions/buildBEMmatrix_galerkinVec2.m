@@ -159,6 +159,7 @@ parfor e_x = 1:noElems
 
             if useCBIE
                 CBIE = zeros(1, n_en);
+%                 CBIE2 = zeros(1, n_en);
             end
             if useHBIE
                 HBIE = zeros(1, n_en);
@@ -241,10 +242,11 @@ parfor e_x = 1:noElems
                     end
                     dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
 
-                    dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
+%                     dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
                     if useCBIE
 %                         CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
-                        CBIE = CBIE + fact_y.'*(dPhi_kdny(xmy,r,ny)*R_y - dPhi_0dny_*R_x);
+                        CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
+%                         CBIE2 = CBIE2 - fact_y.'*(Phi_0dny_*R_x);
                     end
                     if useHBIE
                         d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
@@ -307,8 +309,8 @@ parfor e_x = 1:noElems
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
                 dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
                 if useCBIE
-%                     CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
-                    CBIE = CBIE + fact_y.'*(dPhi_kdny(xmy,r,ny)*R_y - dPhi_0dny_*R_x);
+                    CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
+%                     CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
                 end
                 if useHBIE
                     d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
@@ -328,8 +330,8 @@ parfor e_x = 1:noElems
             end
         end
         if useCBIE
-%             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn) + dPhi_0dny_integral)*fact_x;
-            A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn))*fact_x;
+            A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn) + dPhi_0dny_integral)*fact_x;
+%             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn))*fact_x;
         end
         if useHBIE
             temp = (dXIdv(1,:)*(v_1*ugly_integral) + dXIdv(2,:)*(v_2*ugly_integral))*[dR_xdxi; dR_xdeta];
