@@ -42,3 +42,15 @@ for study_i = 1:numel(studies)
     figure(6)
     printResultsToTextFiles(study,options)
 end
+
+
+figure(5)
+error_simpson = importdata('../results/Simpson/imageData/Fig17_M1.csv');
+loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson M = 1');
+error_simpson = importdata('../results/Simpson/imageData/Fig17_M2.csv');
+loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson M = 2');
+error_simpson = importdata('../results/Simpson/imageData/Fig17_M3.csv');
+loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson M = 3');
+
+
+

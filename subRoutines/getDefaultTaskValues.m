@@ -47,6 +47,7 @@ plotResultsInParaview = false;	% Only if scatteringCase == 'Bi'
 plotTimeOscillation   = false;	% Create 30 paraview files in order to visualize a dynamic result
 plotMesh              = false;	% Create additional Paraview files to visualize IGA mesh
 plotFarField          = true;	% If false, plots the near-field instead
+useNeumanProj         = false;
 calculateFarFieldPattern = true;
 computeCondNumber = false;
 storeSolution = false;

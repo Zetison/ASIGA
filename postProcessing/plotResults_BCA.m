@@ -51,6 +51,10 @@ for res = [10,20,40,80]
     semilogy(180/pi*alpha,Error,'DisplayName',['COMSOL res' num2str(res)])
     hold on
 end
+l2errorCOMSOL_BEM = zeros(1,4);
+l2errorCOMSOL_BEM2 = zeros(1,4);
+
+counter = 1;
 for res = [10,20,40,80]
 %     f = 1000;
     f = 100;
@@ -67,6 +71,8 @@ for res = [10,20,40,80]
 %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
 %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
     Error = 100*abs(10.^(y/20)-p_ref2)./max(p_ref2);
+    l2errorCOMSOL_BEM(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
+    l2errorCOMSOL_BEM2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
 %     l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
 %     l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
     counter = counter + 1;
@@ -75,6 +81,8 @@ for res = [10,20,40,80]
     semilogy(180/pi*alpha,Error,'DisplayName',['COMSOL res' num2str(res) ', BEM'])
     hold on
 end
+l2errorCOMSOL_BEM %  1.6563    0.3034    0.2532    0.2420
+l2errorCOMSOL_BEM2 %  1.6563    0.3034    0.2532    0.2420
 l2errorCOMSOL %  1.6563    0.3034    0.2532    0.2420
 l2errorCOMSOL2 %  1.3668    0.1561    0.0541
 savefig([options.subFolderName '/_comparison'])
@@ -93,6 +101,7 @@ for task_i = 1:6
     filename = ['M' num2str(M) 'degree' num2str(degree) 'f100'];
     printResultsToFile2(['../results/BCA/BCA_BEM_IGA_CCBIE_' filename], 180/pi*alpha.', Error)
     semilogy(180/pi*alpha,Error,'DisplayName',filename)
+    counter = counter + 1;
     hold on
 end
 l2errorIGA % 0.1226    0.0412    0.0600    0.0206    0.0347    0.0089
@@ -103,19 +112,19 @@ xlabel('$$\alpha$$','interpreter','latex')
 legend show
 xlim([0,360])
 savefig([options.subFolderName '/_error'])
-
-fprintf('\n\n')
-for i = 1:6
-    fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & %g & %d\\\\\n', ...
-        studies(2).tasks(i).task.M, ...
-        studies(2).tasks(i).task.degree, ...
-        studies(2).tasks(i).task.degree-1, ...
-        studies(2).tasks(i).task.varCol.noElems, ...
-        studies(2).tasks(i).task.varCol.dofs, ...
-        studies(2).tasks(i).task.varCol.h_max, ...
-        studies(2).tasks(i).task.varCol.nepw, ...
-        l2errorIGA(i), ...
-        round(studies(2).tasks(i).task.varCol.tot_time)); 
-end
-i = 1;
-fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & 0 & %d\\\\\n', studies(1).tasks(i).task.M, studies(1).tasks(i).task.degree, studies(1).tasks(i).task.degree-1, studies(1).tasks(i).task.varCol.noElems, studies(1).tasks(i).task.varCol.dofs, studies(1).tasks(i).task.varCol.h_max, studies(1).tasks(i).task.varCol.nepw, round(studies(1).tasks(i).task.varCol.tot_time)); 
+% 
+% fprintf('\n\n')
+% for i = 1:6
+%     fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & %g & %d\\\\\n', ...
+%         studies(2).tasks(i).task.M, ...
+%         studies(2).tasks(i).task.degree, ...
+%         studies(2).tasks(i).task.degree-1, ...
+%         studies(2).tasks(i).task.varCol.noElems, ...
+%         studies(2).tasks(i).task.varCol.dofs, ...
+%         studies(2).tasks(i).task.varCol.h_max, ...
+%         studies(2).tasks(i).task.varCol.nepw, ...
+%         l2errorIGA(i), ...
+%         round(studies(2).tasks(i).task.varCol.tot_time)); 
+% end
+% i = 1;
+% fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & 0 & %d\\\\\n', studies(1).tasks(i).task.M, studies(1).tasks(i).task.degree, studies(1).tasks(i).task.degree-1, studies(1).tasks(i).task.varCol.noElems, studies(1).tasks(i).task.varCol.dofs, studies(1).tasks(i).task.varCol.h_max, studies(1).tasks(i).task.varCol.nepw, round(studies(1).tasks(i).task.varCol.tot_time)); 

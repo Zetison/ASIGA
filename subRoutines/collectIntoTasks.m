@@ -43,6 +43,7 @@ task.exteriorProblem = exteriorProblem;
 task.initMeshFactXi = initMeshFactXi;
 task.initMeshFactZeta = initMeshFactZeta;
 task.method = method;
+task.useNeumanProj = useNeumanProj;
 if exist('r_a','var')
     task.r_a = r_a;
 end

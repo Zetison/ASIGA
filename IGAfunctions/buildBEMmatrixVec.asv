@@ -152,7 +152,53 @@ for patch = 1:noPatches
     end
 end
 if useNeumanProj
-    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+    if SHBC
+        if useCBIE
+            varCol2 = varCol;
+            varCol2.formulation = 'SL2E';
+            varCol2.analytic = p_inc;
+            [A, FF] = bestApproximationVec(varCol2);
+            noDofs_tot = varCol.noDofs;
+
+            A(dofsToRemove,:) = [];  
+            A(:,dofsToRemove) = [];
+
+            FF(dofsToRemove,:) = [];
+            UU = A\FF;
+            U = zeros(noDofs_tot,size(UU,2),size(UU,3));
+            U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU; 
+        end
+        if useHBIE
+            varCol2 = varCol;
+            varCol2.formulation = 'SL2E';
+            varCol2.analytic = dp_inc;
+            [A, FF] = bestApproximationVec(varCol2);
+            noDofs_tot = varCol.noDofs;
+
+            A(dofsToRemove,:) = [];  
+            A(:,dofsToRemove) = [];
+
+            FF(dofsToRemove,:) = [];
+            dUU = A\FF;
+            dU = zeros(noDofs_tot,size(dUU,2),size(dUU,3));
+            dU(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = dUU; 
+        end
+    else
+        varCol2 = varCol;
+        varCol2.formulation = 'SL2E';
+        varCol2.analytic = dpdn;
+        [A, FF] = bestApproximationVec(varCol2);
+        noDofs_tot = varCol.noDofs;
+
+        A(dofsToRemove,:) = [];  
+        A(:,dofsToRemove) = [];
+
+        FF(dofsToRemove,:) = [];
+        UU = A\FF;
+        U = zeros(noDofs_tot,size(UU,2),size(UU,3));
+        U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU;   
+        dU = NaN;
+    end
 else
     U = NaN;
     dU = NaN;
@@ -247,13 +293,13 @@ parfor i = 1:n_cp
     if useNeumanProj
         if SHBC
             if useCBIE
-                p_inc_x = R_x*U(sctr_x,:);
+                p_inc_x = R_x*U(sctr_x);
             end
             if useHBIE
-                dp_inc_x = R_x*dU(sctr_x,:);
+                dp_inc_x = R_x*dU(sctr_x);
             end
         else
-            dpdn_x = R_x*U(sctr_x,:);
+            dpdn_x = R_x*U(sctr_x);
         end
     end
 %     Phi_k_integralExp = 0;
@@ -638,17 +684,14 @@ parfor i = 1:n_cp
     if SHBC
         if useCBIE
             if useNeumanProj
-                FF(i,:) = FF(i,:) - p_inc_x;
+                FF(i,:) = FF(i,:) - p_inc_y;
             else
                 FF(i,:) = FF(i,:) - p_inc(x).';
+                dpdn_y = R_y*U(sctr);
             end
         end
         if useHBIE
-            if useNeumanProj
-                FF(i,:) = FF(i,:) - alpha*dp_inc_x;
-            else
-                FF(i,:) = FF(i,:) - alpha*dp_inc(x,nx).';
-            end
+            FF(i,:) = FF(i,:) - alpha*dp_inc(x,nx).';
         end
     else 
         FF(i,:) = FF(i,:) + FF_temp;

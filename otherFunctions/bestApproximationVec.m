@@ -41,6 +41,8 @@ switch varCol.formulation
         Qxi = Q2D(:,1);
         Qeta = Q2D(:,2);
         v_values   = zeros(size(W2D,1),noElems,3); 
+        n_values   = zeros(size(W2D,1),noElems,3); 
+        J_1_values   = zeros(size(W2D,1),noElems,1); 
 
 
         %% Find nodes at which to evaluate the exact solution
@@ -62,13 +64,26 @@ switch varCol.formulation
 
             xi   = parent2ParametricSpace(Xi_e,  Qxi);
             eta  = parent2ParametricSpace(Eta_e, Qeta);
-            R = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
+            [R, dRdxi, dRdeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
                 
+            J1 = dRdxi*pts;
+            J2 = dRdeta*pts;
+            crossProd = cross(J1,J2,2);
+            J_1 = norm2(crossProd);
+            n_values(:,e,:) = crossProd./J_1;
             v_values(:,e,:) = R*pts;
+            J_1_values(:,e) = J_1;
         end
         v_values = reshape(v_values, size(W2D,1)*noElems, 3);
-        analytic_values = varCol.analytic(v_values);
-        analytic_values = reshape(analytic_values, size(W2D,1), noElems);
+        n_values = reshape(n_values, size(W2D,1)*noElems, 3);
+        if nargin(varCol.analytic) == 2
+            analytic_values = varCol.analytic(v_values,n_values);
+        else
+            analytic_values = varCol.analytic(v_values);
+        end
+            
+        no_funcs = size(analytic_values,2);
+        analytic_values = reshape(analytic_values, size(W2D,1), noElems, no_funcs);
 
 
         %% Build global matrices
@@ -77,7 +92,7 @@ switch varCol.formulation
         spIdxCol = zeros(sizeMe,noElems);
 
         Mvalues = zeros(sizeMe,noElems); 
-        Fvalues   = zeros(n_en,noElems); 
+        Fvalues   = zeros(n_en,noElems,no_funcs); 
         F_indices = zeros(n_en,noElems); 
 
 %         for e = 1:noElems
@@ -102,12 +117,13 @@ switch varCol.formulation
             xi   = parent2ParametricSpace(Xi_e,  Qxi);
             eta  = parent2ParametricSpace(Eta_e, Qeta);
 
-            [R, dRdxi, dRdeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
+            R = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
 
-            J1 = dRdxi*pts;
-            J2 = dRdeta*pts;
-            crossProd = cross(J1,J2,2);
-            J_1 = norm2(crossProd);
+%             J1 = dRdxi*pts;
+%             J2 = dRdeta*pts;
+%             crossProd = cross(J1,J2,2);
+%             J_1 = norm2(crossProd);
+            J_1 = J_1_values(:,e);
 
             y = R*pts;
             if useEnrichedBfuns
@@ -118,15 +134,13 @@ switch varCol.formulation
             for i = 1:numel(W2D)
                 m_e = m_e + R(i,:)'*R(i,:) * abs(J_1(i)) * J_2 * W2D(i);  
             end
-
-            F_e = R.'*(analytic_values(:,e).*abs(J_1)*J_2.*W2D); 
             
             spIdxRow(:,e) = reshape(repmat(sctr',1,n_en),n_en^2,1);
             spIdxCol(:,e) = reshape(repmat(sctr,n_en,1),n_en^2,1);
             Mvalues(:,e) = reshape(m_e, sizeMe, 1);
 
             F_indices(:,e) = sctr';
-            Fvalues(:,e) = F_e;
+            Fvalues(:,e,:) = R.'*(analytic_values(:,e).*repmat(abs(J_1)*J_2.*W2D,1,1,no_funcs));
         end
     case 'VL2E'
         elRangeZeta = varCol.elRange{3};
@@ -170,7 +184,8 @@ switch varCol.formulation
         end
         v_values = reshape(v_values, size(W3D,1)*noElems, 3);
         analytic_values = varCol.analytic(v_values);
-        analytic_values = reshape(analytic_values, size(W3D,1),noElems);
+        no_funcs = size(analytic_values,2);
+        analytic_values = reshape(analytic_values, size(W3D,1),noElems,no_funcs);
 
 
         %% Build global matrices
@@ -179,7 +194,7 @@ switch varCol.formulation
         spIdxCol = zeros(sizeMe,noElems);
 
         Mvalues = zeros(sizeMe,noElems); 
-        Fvalues   = zeros(n_en,noElems); 
+        Fvalues   = zeros(n_en,noElems,no_funcs); 
         F_indices = zeros(n_en,noElems); 
 
         parfor e = 1:noElems
@@ -224,14 +239,13 @@ switch varCol.formulation
                 m_e = m_e + R(i,:)'*R(i,:) * abs(J_1(i)) * J_2 * W3D(i);  
             end
 
-            F_e = R.'*(analytic_values(:,e).*abs(J_1)*J_2.*W3D); 
             
             spIdxRow(:,e) = reshape(repmat(sctr',1,n_en),n_en^2,1);
             spIdxCol(:,e) = reshape(repmat(sctr,n_en,1),n_en^2,1);
             Mvalues(:,e) = reshape(m_e, sizeMe, 1);
 
             F_indices(:,e) = sctr';
-            Fvalues(:,e) = F_e;
+            Fvalues(:,e,:) = R.'*(analytic_values(:,e).*repmat(abs(J_1)*J_2.*W3D,1,1,no_funcs));
         end
 end
         

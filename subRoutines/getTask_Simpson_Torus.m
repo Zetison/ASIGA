@@ -2,16 +2,17 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 BC = 'NBC';
 model = 'Torus';
 method = {'BEM'};
-formulation = {'GCBIE','CBM','CCBIE','GBM'};
-formulation = {'GBM'};
-formulation = {'GCBIE'};
+formulation = {'CCBIE','CBM','GCBIE','GBM'};
+% formulation = {'GBM'};
+% formulation = {'GCBIE'};
+formulation = {'CCBIE'};
 k = 2;
 % f = 1e2;             % Frequency
 f = k*1500/(2*pi);
 M = 1:5;
 % M = 5; 
-degree = 2:4;
-degree = 4;
+degree = 2:5;
+% degree = 2;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 % extraGPBEM = [0,4];
@@ -24,8 +25,9 @@ applyLoad = 'SimpsonTorus';
 exteriorProblem = false;
 % agpBEM = [1,2,4,8]; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
+useNeumanProj = [0,1];
 
-loopParameters = {'method','formulation','M','degree','extraGP','extraGPBEM','agpBEM'};
+loopParameters = {'method','formulation','M','degree','extraGP','extraGPBEM','agpBEM','useNeumanProj'};
 
 % applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
 collectIntoTasks
@@ -35,7 +37,6 @@ collectIntoTasks
 % degree = 2;
 agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 M = 1:7;
-degree = [2,3,4];
 method = {'BA'};
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks

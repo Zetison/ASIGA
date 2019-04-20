@@ -35,6 +35,7 @@ else % reproduce plot in Simpson2014aib
     degree = 3;
 end
 N = 4;
+useNeumanProj = true;
 
 loopParameters = {'M','method','formulation'};
 parm = 1;

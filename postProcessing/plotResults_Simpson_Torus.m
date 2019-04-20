@@ -13,12 +13,18 @@ for study_i = 1:numel(studies)
                      'legendEntries',   {{'method','coreMethod','formulation','degree','extraGP','extraGPBEM','agpBEM'}}, ...
                      'noXLoopPrms',     1); 
 
-    figure(2)
-    printResultsToTextFiles(study,options)
+%     figure(2)
+%     printResultsToTextFiles(study,options)
+% 
+%     options.xname = 'nepw';
+%     options.yScale = 1;
+%     figure(3)
+%     printResultsToTextFiles(study,options)
 
-    options.xname = 'nepw';
-    options.yScale = 1;
-    figure(3)
+    options.xname = 'h_max';
+    options.yScale = 1/100;
+%     options.xScale = 0.2874/3.7417;
+    figure(4)
     printResultsToTextFiles(study,options)
 % 
 %             options.xname = 'dofs';
@@ -27,9 +33,18 @@ for study_i = 1:numel(studies)
 %             printResultsToTextFiles(study,options)
 end
 
-figure(2)
-error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p2.csv');
-semilogy(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 2');
-error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p3.csv');
-semilogy(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 3');
+% figure(2)
+% error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p2.csv');
+% loglog(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 2');
+% error_simpson = importdata('../results/Simpson_Torus/imageData/Fig24_p3.csv');
+% loglog(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 3');
 
+figure(4)
+error_simpson = importdata('../results/Simpson_Torus/imageData/Fig23_p2_mod.csv');
+loglog(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 2');
+error_simpson = importdata('../results/Simpson_Torus/imageData/Fig23_p3_mod.csv');
+loglog(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 3');
+error_simpson = importdata('../results/Simpson_Torus/imageData/Fig23_p4_mod.csv');
+loglog(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 4');
+error_simpson = importdata('../results/Simpson_Torus/imageData/Fig23_p5_mod.csv');
+loglog(error_simpson(:,1),error_simpson(:,2),'*-','DisplayName','Simpson p = 5');
