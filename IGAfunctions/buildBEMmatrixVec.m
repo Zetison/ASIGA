@@ -159,24 +159,25 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% figure(42)
-% for patch = 1:numel(patches)
-%     plotNURBS(patches{patch}.nurbs,{'resolution',[40 40]});
-% end
-% axis equal
-% axis off
-% set(gca, 'Color', 'none');
-% view(-100,20)
-% drawnow
-% hold on
-% cp = zeros(size(cp_p,1),3);
-% for i = 1:size(cp_p,1)
-%     patch = patchIdx(i);
-%     cp(i,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(i,:));
-%     plot3(cp(i,1),cp(i,2),cp(i,3), '*', 'color','red')
-% end
-% ax = gca;               % get the current axis
-% ax.Clipping = 'off';    % turn clipping off
+figure(42)
+for patch = 1:numel(patches)
+    plotNURBS(patches{patch}.nurbs,{'resolution',[10 10]});
+end
+axis equal
+axis off
+set(gca, 'Color', 'none');
+view(-100,20)
+drawnow
+hold on
+cp = zeros(size(cp_p,1),3);
+for i = 1:size(cp_p,1)
+    patch = patchIdx(i);
+    cp(i,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(i,:));
+    plot3(cp(i,1),cp(i,2),cp(i,3), '*', 'color','red')
+end
+ax = gca;               % get the current axis
+ax.Clipping = 'off';    % turn clipping off
+keyboard
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -469,9 +470,9 @@ parfor i = 1:n_cp
                     R_y = R_y.*temp(:,ones(1,noGp));
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                     hold on
-%                     plot3(X(1),X(2),X(3),'*')
-%                     hold off
+                hold on
+                plot3(X(1),X(2),X(3),'*','color','blue')
+                hold off
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
@@ -546,6 +547,11 @@ parfor i = 1:n_cp
                 temp = exp(1i*k*(y*d_vec));
                 R_y = R_y.*temp(:,ones(1,noGp));
             end
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            hold on
+            plot3(X(1),X(2),X(3),'*','color','blue')
+            hold off
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             xmy = x(ones(noGp,1),:)-y;
             r = norm2(xmy);
 

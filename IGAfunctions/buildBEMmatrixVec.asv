@@ -23,7 +23,6 @@ extraGP = varCol.extraGP;
 extraGPBEM = varCol.extraGPBEM;
 agpBEM = varCol.agpBEM;
 exteriorProblem = varCol.exteriorProblem;
-useNeumanProj = varCol.useNeumanProj;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -151,78 +150,34 @@ for patch = 1:noPatches
         end
     end
 end
+useNeumanProj = varCol.useNeumanProj;
 if useNeumanProj
-    if SHBC
-        if useCBIE
-            varCol2 = varCol;
-            varCol2.formulation = 'SL2E';
-            varCol2.analytic = p_inc;
-            [A, FF] = bestApproximationVec(varCol2);
-            noDofs_tot = varCol.noDofs;
-
-            A(dofsToRemove,:) = [];  
-            A(:,dofsToRemove) = [];
-
-            FF(dofsToRemove,:) = [];
-            UU = A\FF;
-            U = zeros(noDofs_tot,size(UU,2),size(UU,3));
-            U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU; 
-        end
-        if useHBIE
-            varCol2 = varCol;
-            varCol2.formulation = 'SL2E';
-            varCol2.analytic = dp_inc;
-            [A, FF] = bestApproximationVec(varCol2);
-            noDofs_tot = varCol.noDofs;
-
-            A(dofsToRemove,:) = [];  
-            A(:,dofsToRemove) = [];
-
-            FF(dofsToRemove,:) = [];
-            dUU = A\FF;
-            dU = zeros(noDofs_tot,size(dUU,2),size(dUU,3));
-            dU(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = dUU; 
-        end
-    else
-        varCol2 = varCol;
-        varCol2.formulation = 'SL2E';
-        varCol2.analytic = dpdn;
-        [A, FF] = bestApproximationVec(varCol2);
-        noDofs_tot = varCol.noDofs;
-
-        A(dofsToRemove,:) = [];  
-        A(:,dofsToRemove) = [];
-
-        FF(dofsToRemove,:) = [];
-        UU = A\FF;
-        U = zeros(noDofs_tot,size(UU,2),size(UU,3));
-        U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU;   
-        dU = NaN;
-    end
+    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
 else
     U = NaN;
     dU = NaN;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% figure(42)
-% for patch = 1:numel(patches)
-%     plotNURBS(patches{patch}.nurbs,{'resolution',[40 40]});
-% end
-% axis equal
-% axis off
-% set(gca, 'Color', 'none');
-% view(-100,20)
-% drawnow
-% hold on
-% cp = zeros(size(cp_p,1),3);
-% for i = 1:size(cp_p,1)
-%     patch = patchIdx(i);
-%     cp(i,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(i,:));
-%     plot3(cp(i,1),cp(i,2),cp(i,3), '*', 'color','red')
-% end
-% ax = gca;               % get the current axis
-% ax.Clipping = 'off';    % turn clipping off
+figure(42)
+for patch = 1:numel(patches)
+    plotNURBS(patches{patch}.nurbs,{'resolution',[10 10]});
+end
+axis equal
+axis off
+set(gca, 'Color', 'none');
+view(-100,20)
+drawnow
+hold on
+cp = zeros(size(cp_p,1),3);
+for i = 1:size(cp_p,1)
+    patch = patchIdx(i);
+    cp(i,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(i,:));
+    plot3(cp(i,1),cp(i,2),cp(i,3), '*', 'color','red')
+end
+ax = gca;               % get the current axis
+ax.Clipping = 'off';    % turn clipping off
+keyboard
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -290,18 +245,6 @@ parfor i = 1:n_cp
         nx = NaN;        
     end
     x = R_x*pts_x;
-    if useNeumanProj
-        if SHBC
-            if useCBIE
-                p_inc_x = R_x*U(sctr_x);
-            end
-            if useHBIE
-                dp_inc_x = R_x*dU(sctr_x);
-            end
-        else
-            dpdn_x = R_x*U(sctr_x);
-        end
-    end
 %     Phi_k_integralExp = 0;
 %     d2Phi_kdnxdny_integral = 0;
     dPhi_0dny_integral = complex(0);
@@ -527,9 +470,9 @@ parfor i = 1:n_cp
                     R_y = R_y.*temp(:,ones(1,noGp));
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                     hold on
-%                     plot3(X(1),X(2),X(3),'*')
-%                     hold off
+                hold on
+                plot3(X(1),X(2),X(3),'*','color','blue')
+                hold off
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
@@ -537,21 +480,15 @@ parfor i = 1:n_cp
 
                 if ~SHBC
                     if useNeumanProj
-                        dpdn_y = R_y*U(sctr);
+                        dpdn_y = R_y*U(sctr,:);
+                    else
+                        dpdn_y = dpdn(y,ny);
                     end
                     if useCBIE
-                        if useNeumanProj
-                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
-                        else
-                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact);
-                        end
+                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
                     end
                     if useHBIE
-                        if useNeumanProj
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
-                        else
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact);
-                        end
+                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
                     end
                 end
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -616,23 +553,18 @@ parfor i = 1:n_cp
 
             if ~SHBC
                 if useNeumanProj
-                    dpdn_y = R_y*U(sctr);
+                    dpdn_y = R_y*U(sctr,:);
+                else
+                    dpdn_y = dpdn(y,ny);
                 end
                 if useCBIE
-                    if useNeumanProj
-                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
-                    else
-                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact);
-                    end
+                    FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
                 end
                 if useHBIE
-                    if useNeumanProj
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
-                    else
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact);
-                    end
+                    FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
                 end
             end
+
             dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
             dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact); 
             if useCBIE
@@ -681,26 +613,42 @@ parfor i = 1:n_cp
         end
     end
     A(i,:) = A_row;
-    if SHBC
-        if useCBIE
-            if useNeumanProj
-                FF(i,:) = FF(i,:) - p_inc_y;
-            else
-                FF(i,:) = FF(i,:) - p_inc(x).';
-                dpdn_y = R_y*U(sctr);
+    if useNeumanProj
+        if SHBC
+            if useCBIE
+                p_inc_x = R_x*U(sctr_x,:);
+            end
+            if useHBIE
+                dp_inc_x = R_x*dU(sctr_x,:);
+            end
+        else
+            dpdn_x = R_x*U(sctr_x,:);
+        end
+    else
+        if SHBC
+            if useCBIE
+                p_inc_x = p_inc(x);
+            end
+            if useHBIE
+                dp_inc_x = dp_inc(x,nx);
+            end
+        else
+            if useHBIE
+                dpdn_x = dpdn(x,nx);
             end
         end
+    end
+    if SHBC
+        if useCBIE
+            FF(i,:) = FF(i,:) - p_inc_x;
+        end
         if useHBIE
-            FF(i,:) = FF(i,:) - alpha*dp_inc(x,nx).';
+            FF(i,:) = FF(i,:) - alpha*dp_inc_x;
         end
     else 
         FF(i,:) = FF(i,:) + FF_temp;
         if useHBIE
-            if useNeumanProj
-                FF(i,:) = FF(i,:) + alpha*dpdn_x*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
-            else
-                FF(i,:) = FF(i,:) + alpha*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
-            end
+            FF(i,:) = FF(i,:) + alpha*dpdn_x*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
         end
     end
 %     dPhi_0dny_integral+0.5
