@@ -150,6 +150,13 @@ for patch = 1:noPatches
     end
 end
 
+useNeumanProj = varCol.useNeumanProj;
+if useNeumanProj
+    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+else
+    U = NaN;
+    dU = NaN;
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % figure(42)
 % for patch = 1:numel(patches)
@@ -209,6 +216,18 @@ parfor i = 1:n_cp
     m_2 = J_temp(2,:);
     crossProd_x = cross(m_1,m_2);
     x = R_x*pts_x;
+    if useNeumanProj
+        if SHBC
+            if useCBIE
+                p_inc_x = R_x*U(sctr_x,:);
+            end
+            if useHBIE
+                dp_inc_x = R_x*dU(sctr_x,:);
+            end
+        else
+            dpdn_x = R_x*U(sctr_x,:);
+        end
+    end
     if true
         e_xi = m_1/norm(m_1);
         e_eta = m_2/norm(m_2);
@@ -458,9 +477,16 @@ parfor i = 1:n_cp
                 if useCBIE
                     Phi_kTemp = Phi_k(r);
                 end
-                if radialPulsation
+                if ~SHBC
+                    if useNeumanProj
+                        dpdn_y = R_y*U(sctr);
+                    end
                     if useCBIE
-                        FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
+                        if useNeumanProj
+                            FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
+                        else
+                            FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
+                        end
                     end
                 end
                 if useCBIE
@@ -547,9 +573,16 @@ parfor i = 1:n_cp
             if useCBIE
                 Phi_kTemp = Phi_k(r);
             end
-            if radialPulsation
+            if ~SHBC
+                if useNeumanProj
+                    dpdn_y = R_y*U(sctr);
+                end
                 if useCBIE
-                    FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
+                    if useNeumanProj
+                        FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
+                    else
+                        FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
+                    end
                 end
             end
             if useCBIE

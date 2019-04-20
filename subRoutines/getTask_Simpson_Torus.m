@@ -25,7 +25,7 @@ applyLoad = 'SimpsonTorus';
 exteriorProblem = false;
 % agpBEM = [1,2,4,8]; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
-useNeumanProj = [0,1];
+useNeumanProj = [1,0];
 
 loopParameters = {'method','formulation','M','degree','extraGP','extraGPBEM','agpBEM','useNeumanProj'};
 

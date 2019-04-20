@@ -1,12 +1,13 @@
 function [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE)
 
+dofsToRemove = varCol.dofsToRemove;
 if SHBC
     U = NaN;
     dU = NaN;
     if useCBIE
         varCol2 = varCol;
         varCol2.formulation = 'SL2E';
-        varCol2.analytic = p_inc;
+        varCol2.analytic = varCol.p_inc;
         [A, FF] = bestApproximationVec(varCol2);
         noDofs_tot = varCol.noDofs;
 
@@ -21,7 +22,7 @@ if SHBC
     if useHBIE
         varCol2 = varCol;
         varCol2.formulation = 'SL2E';
-        varCol2.analytic = dp_inc;
+        varCol2.analytic = varCol.dp_inc;
         [A, FF] = bestApproximationVec(varCol2);
         noDofs_tot = varCol.noDofs;
 
@@ -36,7 +37,7 @@ if SHBC
 else
     varCol2 = varCol;
     varCol2.formulation = 'SL2E';
-    varCol2.analytic = dpdn;
+    varCol2.analytic = varCol.dpdn;
     [A, FF] = bestApproximationVec(varCol2);
     noDofs_tot = varCol.noDofs;
 
