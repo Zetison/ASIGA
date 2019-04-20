@@ -244,18 +244,6 @@ parfor i = 1:n_cp
         nx = NaN;        
     end
     x = R_x*pts_x;
-    if useNeumanProj
-        if SHBC
-            if useCBIE
-                p_inc_x = R_x*U(sctr_x,:);
-            end
-            if useHBIE
-                dp_inc_x = R_x*dU(sctr_x,:);
-            end
-        else
-            dpdn_x = R_x*U(sctr_x,:);
-        end
-    end
 %     Phi_k_integralExp = 0;
 %     d2Phi_kdnxdny_integral = 0;
     dPhi_0dny_integral = complex(0);
@@ -491,21 +479,15 @@ parfor i = 1:n_cp
 
                 if ~SHBC
                     if useNeumanProj
-                        dpdn_y = R_y*U(sctr);
+                        dpdn_y = R_y*U(sctr,:);
+                    else
+                        dpdn_y = dpdn(y,ny);
                     end
                     if useCBIE
-                        if useNeumanProj
-                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
-                        else
-                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact);
-                        end
+                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
                     end
                     if useHBIE
-                        if useNeumanProj
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
-                        else
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact);
-                        end
+                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
                     end
                 end
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -570,23 +552,18 @@ parfor i = 1:n_cp
 
             if ~SHBC
                 if useNeumanProj
-                    dpdn_y = R_y*U(sctr);
+                    dpdn_y = R_y*U(sctr,:);
+                else
+                    dpdn_y = dpdn(y,ny);
                 end
                 if useCBIE
-                    if useNeumanProj
-                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
-                    else
-                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact);
-                    end
+                    FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact);
                 end
                 if useHBIE
-                    if useNeumanProj
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
-                    else
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact);
-                    end
+                    FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact);
                 end
             end
+
             dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
             dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact); 
             if useCBIE
@@ -635,29 +612,42 @@ parfor i = 1:n_cp
         end
     end
     A(i,:) = A_row;
-    if SHBC
-        if useCBIE
-            if useNeumanProj
-                FF(i,:) = FF(i,:) - p_inc_x;
-            else
-                FF(i,:) = FF(i,:) - p_inc(x).';
+    if useNeumanProj
+        if SHBC
+            if useCBIE
+                p_inc_x = R_x*U(sctr_x,:);
+            end
+            if useHBIE
+                dp_inc_x = R_x*dU(sctr_x,:);
+            end
+        else
+            dpdn_x = R_x*U(sctr_x,:);
+        end
+    else
+        if SHBC
+            if useCBIE
+                p_inc_x = p_inc(x);
+            end
+            if useHBIE
+                dp_inc_x = dp_inc(x,nx);
+            end
+        else
+            if useHBIE
+                dpdn_x = dpdn(x,nx);
             end
         end
+    end
+    if SHBC
+        if useCBIE
+            FF(i,:) = FF(i,:) - p_inc_x;
+        end
         if useHBIE
-            if useNeumanProj
-                FF(i,:) = FF(i,:) - alpha*dp_inc_x;
-            else
-                FF(i,:) = FF(i,:) - alpha*dp_inc(x,nx).';
-            end
+            FF(i,:) = FF(i,:) - alpha*dp_inc_x;
         end
     else 
         FF(i,:) = FF(i,:) + FF_temp;
         if useHBIE
-            if useNeumanProj
-                FF(i,:) = FF(i,:) + alpha*dpdn_x*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
-            else
-                FF(i,:) = FF(i,:) + alpha*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
-            end
+            FF(i,:) = FF(i,:) + alpha*dpdn_x*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
         end
     end
 %     dPhi_0dny_integral+0.5

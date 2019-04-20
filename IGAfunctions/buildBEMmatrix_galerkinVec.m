@@ -68,6 +68,14 @@ else
     sgn = 1;
 end
 
+useNeumanProj = varCol.useNeumanProj;
+if useNeumanProj
+    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+else
+    U = NaN;
+    dU = NaN;
+end
+
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
 
@@ -232,11 +240,16 @@ parfor e_x = 1:noElems
 
 
                     if ~SHBC
+                        if useNeumanProj
+                            dpdn_y = R_y*U(sctr_y,:);
+                        else
+                            dpdn_y = dpdn(y,ny);
+                        end
                         if useCBIE
-                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact_y);
+                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
                         end
                         if useHBIE
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact_y);
+                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
                         end
                     end
                     dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -296,11 +309,16 @@ parfor e_x = 1:noElems
                 r = norm2(xmy);
 
                 if ~SHBC
+                    if useNeumanProj
+                        dpdn_y = R_y*U(sctr_y,:);
+                    else
+                        dpdn_y = dpdn(y,ny);
+                    end
                     if useCBIE
-                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact_y);
+                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
                     end
                     if useHBIE
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact_y);
+                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
                     end
                 end
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -332,17 +350,42 @@ parfor e_x = 1:noElems
             temp = (dXIdv(1,:)*(v_1*ugly_integral) + dXIdv(2,:)*(v_2*ugly_integral))*[dR_xdxi; dR_xdeta];
             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + alpha*R_x.'*(-R_x*d2Phi_0dnxdny_integral + temp)*fact_x;
         end
+        if useNeumanProj
+            if SHBC
+                if useCBIE
+                    p_inc_x = R_x*U(sctr_x,:);
+                end
+                if useHBIE
+                    dp_inc_x = R_x*dU(sctr_x,:);
+                end
+            else
+                dpdn_x = R_x*U(sctr_x,:);
+            end
+        else
+            if SHBC
+                if useCBIE
+                    p_inc_x = p_inc(x);
+                end
+                if useHBIE
+                    dp_inc_x = dp_inc(x,nx);
+                end
+            else
+                if useHBIE
+                    dpdn_x = dpdn(x,nx);
+                end
+            end
+        end
         if SHBC
             if useCBIE
-                F_e = F_e - R_x.'*p_inc(x).'*fact_x;
+                F_e = F_e - R_x.'*p_inc_x*fact_x;
             end
             if useHBIE
-                F_e = F_e - alpha*R_x.'*dp_inc(x,nx).'*fact_x;
+                F_e = F_e - alpha*R_x.'*dp_inc_x*fact_x;
             end
         else
             F_e = F_e + R_x.'*FF_temp*fact_x;
             if useHBIE
-                F_e = F_e + alpha*R_x.'*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral)*fact_x;
+                F_e = F_e + alpha*R_x.'*dpdn_x*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral)*fact_x;
             end
         end
     end

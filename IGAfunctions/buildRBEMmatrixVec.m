@@ -60,15 +60,15 @@ dPhi_kdnx = @(xmy,r,nx) -Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*nx);
 d2Phi_0dnxdny = @(xmy,r,nx,ny) Phi_0(r)./r.^2.*((ny*nx)           - 3./r.^2                .*(xmy*nx).*sum(xmy.*ny,2));
 d2Phi_kdnxdny = @(xmy,r,nx,ny) Phi_k(r)./r.^2.*((ny*nx).*(1-1i*k*r)+(k^2+3./r.^2.*(1i*k*r-1)).*(xmy*nx).*sum(xmy.*ny,2));
 
-radialPulsation = strcmp(varCol.applyLoad, 'radialPulsation');
-if radialPulsation
-    no_angles = 1;
-    p_inc = NaN;
-    dp_inc = NaN;
-else
+SHBC = strcmp(varCol.BC, 'SHBC');
+if SHBC
     no_angles = length(varCol.alpha_s);
     p_inc = varCol.p_inc;
     dp_inc = varCol.dp_inc;
+else
+    no_angles = 1;
+    p_inc = NaN;
+    dp_inc = NaN;
 end
 dpdn = varCol.dpdn;
 
@@ -216,18 +216,6 @@ parfor i = 1:n_cp
     m_2 = J_temp(2,:);
     crossProd_x = cross(m_1,m_2);
     x = R_x*pts_x;
-    if useNeumanProj
-        if SHBC
-            if useCBIE
-                p_inc_x = R_x*U(sctr_x,:);
-            end
-            if useHBIE
-                dp_inc_x = R_x*dU(sctr_x,:);
-            end
-        else
-            dpdn_x = R_x*U(sctr_x,:);
-        end
-    end
     if true
         e_xi = m_1/norm(m_1);
         e_eta = m_2/norm(m_2);
@@ -239,7 +227,6 @@ parfor i = 1:n_cp
     else
         nx = crossProd_x/norm(crossProd_x);
     end
-    
     x1 = x - 0.5*nx;
     x2 = x - nx;
     r1x = norm(x1-x);
@@ -469,6 +456,8 @@ parfor i = 1:n_cp
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
+                
+                
                 x1my = x1(ones(noGp,1),:)-y;
                 x2my = x2(ones(noGp,1),:)-y;
 
@@ -479,14 +468,12 @@ parfor i = 1:n_cp
                 end
                 if ~SHBC
                     if useNeumanProj
-                        dpdn_y = R_y*U(sctr);
+                        dpdn_y = R_y*U(sctr,:);
+                    else
+                        dpdn_y = dpdn(y,ny);
                     end
                     if useCBIE
-                        if useNeumanProj
-                            FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
-                        else
-                            FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
-                        end
+                        FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
                     end
                 end
                 if useCBIE
@@ -575,14 +562,12 @@ parfor i = 1:n_cp
             end
             if ~SHBC
                 if useNeumanProj
-                    dpdn_y = R_y*U(sctr);
+                    dpdn_y = R_y*U(sctr,:);
+                else
+                    dpdn_y = dpdn(y,ny);
                 end
                 if useCBIE
-                    if useNeumanProj
-                        FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
-                    else
-                        FF_temp = FF_temp + sum(Phi_kTemp.*dpdn(y,ny).*fact);
-                    end
+                    FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
                 end
             end
             if useCBIE
@@ -641,17 +626,37 @@ parfor i = 1:n_cp
         end
     end
     A(i,:) = A_row;
+    
+    if useNeumanProj
+        if SHBC
+            if useCBIE
+                p_inc_x = R_x*U(sctr_x,:);
+            end
+        else
+            dpdn_x = R_x*U(sctr_x,:);
+        end
+    else
+        if SHBC
+            if useCBIE
+                p_inc_x = p_inc(x);
+            end
+        else
+            if useHBIE
+                dpdn_x = dpdn(x,nx);
+            end
+        end
+    end
     if radialPulsation
         if psiType == 1
-            FF(i,:) = FF(i,:) + FF_temp + dpdn(x,nx)*(Psi2_integral - dPsi2dny_integral + 2*pi*1i/(k*b)*(1-exp(2*1i*k*a))/(4*pi));
-%             FF(i,:) = FF(i,:) + FF_temp + dpdn(x,nx)*(Psi1_integral - dPsi1dny_integral);
+            FF(i,:) = FF(i,:) + FF_temp + dp_inc_x*(Psi2_integral - dPsi2dny_integral + 2*pi*1i/(k*b)*(1-exp(2*1i*k*a))/(4*pi));
+%             FF(i,:) = FF(i,:) + FF_temp + dp_inc_x*(Psi1_integral - dPsi1dny_integral);
         else
-            FF(i,:) = FF(i,:) + FF_temp + dpdn(x,nx)*(Psi2_integral - dPsi2dny_integral);
+            FF(i,:) = FF(i,:) + FF_temp + dp_inc_x*(Psi2_integral - dPsi2dny_integral);
         end
     else
 %         FF(i,:) = FF(i,:) + FF_temp - dp_inc(x,nx).'*(Psi1_integral - dPsi1dy_integral);
         if useCBIE
-            FF(i,:) = FF(i,:) - p_inc(x).';
+            FF(i,:) = FF(i,:) - p_inc_x;
         end
     end
 %     dPhi_0dny_integral+0.5

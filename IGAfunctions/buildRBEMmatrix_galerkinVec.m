@@ -51,14 +51,30 @@ d2Phi_0dnxdny = @(xmy,r,nx,ny) Phi_0(r)./r.^2.*((ny*nx)           - 3./r.^2     
 d2Phi_kdnxdny = @(xmy,r,nx,ny) Phi_k(r)./r.^2.*((ny*nx).*(1-1i*k*r)+(k^2+3./r.^2.*(1i*k*r-1)).*(xmy*nx).*sum(xmy.*ny,2));
 
 no_angles = length(varCol.alpha_s);
-p_inc = varCol.p_inc;
-dp_inc = varCol.dp_inc;
+SHBC = strcmp(varCol.BC, 'SHBC');
+if SHBC
+    no_angles = length(varCol.alpha_s);
+    p_inc = varCol.p_inc;
+    dp_inc = varCol.dp_inc;
+else
+    no_angles = 1;
+    p_inc = NaN;
+    dp_inc = NaN;
+end
 
 exteriorProblem = true;
 if exteriorProblem
     sgn = -1;
 else
     sgn = 1;
+end
+
+useNeumanProj = varCol.useNeumanProj;
+if useNeumanProj
+    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+else
+    U = NaN;
+    dU = NaN;
 end
 
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
@@ -370,6 +386,31 @@ parfor e_x = 1:noElems
                 A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*CBIE*fact_x;
             end
         end
+        if useNeumanProj
+            if SHBC
+                if useCBIE
+                    p_inc_x = R_x*U(sctr_x,:);
+                end
+                if useHBIE
+                    dp_inc_x = R_x*dU(sctr_x,:);
+                end
+            else
+                dpdn_x = R_x*U(sctr_x,:);
+            end
+        else
+            if SHBC
+                if useCBIE
+                    p_inc_x = p_inc(x);
+                end
+                if useHBIE
+                    dp_inc_x = dp_inc(x,nx);
+                end
+            else
+                if useHBIE
+                    dpdn_x = dpdn(x,nx);
+                end
+            end
+        end
         if useCBIE  
             switch psiType
                 case 1        
@@ -379,7 +420,7 @@ parfor e_x = 1:noElems
                 case 3          
                     A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + R_x.'*R_x*(dPsi1dny_integral - Psi1_integral - 1)*fact_x;
             end
-            F_e = F_e - R_x.'*p_inc(x).'*fact_x;
+            F_e = F_e - R_x.'*p_inc_x*fact_x;
         end
     end
     
