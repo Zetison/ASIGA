@@ -24,6 +24,8 @@ extraGPBEM = varCol.extraGPBEM;
 agpBEM = varCol.agpBEM;
 exteriorProblem = varCol.exteriorProblem;
 
+Eps = 10*eps;
+
 k = varCol.k;
 alpha = 1i/k;
 
@@ -157,11 +159,10 @@ else
     U = NaN;
     dU = NaN;
 end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure(42)
+close all
 for patch = 1:numel(patches)
-    plotNURBS(patches{patch}.nurbs,{'resolution',[10 10]});
+    plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
 end
 axis equal
 axis off
@@ -169,17 +170,22 @@ set(gca, 'Color', 'none');
 view(-100,20)
 drawnow
 hold on
-cp = zeros(size(cp_p,1),3);
-for i = 1:size(cp_p,1)
-    patch = patchIdx(i);
-    cp(i,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(i,:));
-    plot3(cp(i,1),cp(i,2),cp(i,3), '*', 'color','red')
+if false
+    cp = zeros(size(cp_p,1),3);
+    for j = 1:size(cp_p,1)
+        patch = patchIdx(j);
+        cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
+        plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
+    end
 end
 ax = gca;               % get the current axis
 ax.Clipping = 'off';    % turn clipping off
-keyboard
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+h = findobj('type','line');
+noLines = numel(h);
+% keyboard
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+createElementTopology
 
 n_en = (p_xi+1)*(p_eta+1);
 
@@ -189,10 +195,9 @@ p_max = max(p_xi,p_eta);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-% for i = 1:n_cp
-parfor i = 1:n_cp
+for i = 1:n_cp
+% parfor i = 1:n_cp
 %     totArea = 0;
-
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New
     Eta = knotVecs{patch}{2}; % New
@@ -209,6 +214,9 @@ parfor i = 1:n_cp
     xi_idx = findKnotSpan(noElementsXi, 0, xi_x, uniqueXi);
     eta_idx = findKnotSpan(noElementsEta, 0, eta_x, uniqueEta);
     e_x = sum(noElemsPatch(1:patch-1)) + xi_idx + noElementsXi*(eta_idx-1);
+    
+    adjacentElements = getAdjacentElements(e_x,index,elRangeXi,elRangeEta,eNeighbour);
+%         
     sctr_x = element(e_x,:);
     pts_x = controlPts(sctr_x,:);
     wgts = weights(element2(e_x,:),:); % New
@@ -251,6 +259,25 @@ parfor i = 1:n_cp
     d2Phi_0dnxdny_integral = complex(0);
     ugly_integral = complex(zeros(3,1));
     FF_temp = complex(zeros(1, no_angles));
+    
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    keyboard
+    foundMarker = true;
+    while foundMarker
+        foundMarker = false;
+        h = findobj('type','line');
+        for i_h = 1:numel(h)
+            if strcmp(h(i_h).Marker,'*')
+                delete(h(i_h));
+                foundMarker = true;
+                break
+            end
+        end
+    end
+    plot3(x(1),x(2),x(3), '*', 'color','red')
+    % keyboard
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % %             nx = x.'/norm(x);        
@@ -392,7 +419,7 @@ parfor i = 1:n_cp
 %         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         if false
-        if e_x == e
+        if ismember(e,adjacentElements)
             noGp = size(Q2D_2,1);
             xi_x_t = parametric2parentSpace(Xi_e, xi_x);
             eta_x_t = parametric2parentSpace(Eta_e, eta_x);
@@ -406,22 +433,22 @@ parfor i = 1:n_cp
             for area = {'South', 'East', 'North', 'West'}
                 switch area{1}
                     case 'South'
-                        if abs(eta_x - Eta_e(1)) < 10*eps
+                        if abs(eta_x - Eta_e(1)) < Eps
                             continue
                         end
                         thetaRange = [theta_x3 theta_x4];
                     case 'East'
-                        if abs(xi_x - Xi_e(2)) < 10*eps
+                        if abs(xi_x - Xi_e(2)) < Eps
                             continue
                         end
                         thetaRange = [theta_x4 theta_x1];
                     case 'North'
-                        if abs(eta_x - Eta_e(2)) < 10*eps
+                        if abs(eta_x - Eta_e(2)) < Eps
                             continue
                         end
                         thetaRange = [theta_x1 theta_x2];
                     case 'West'
-                        if abs(xi_x - Xi_e(1)) < 10*eps
+                        if abs(xi_x - Xi_e(1)) < Eps
                             continue
                         end
                         if theta_x3 < 0
@@ -470,9 +497,10 @@ parfor i = 1:n_cp
                     R_y = R_y.*temp(:,ones(1,noGp));
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                hold on
-                plot3(X(1),X(2),X(3),'*','color','blue')
-                hold off
+                if 1 %i == 35
+                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+%                     keyboard
+                end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
@@ -548,9 +576,10 @@ parfor i = 1:n_cp
                 R_y = R_y.*temp(:,ones(1,noGp));
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            hold on
-            plot3(X(1),X(2),X(3),'*','color','blue')
-            hold off
+            if 1 %i == 35
+                plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+%                 keyboard
+            end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             xmy = x(ones(noGp,1),:)-y;
             r = norm2(xmy);

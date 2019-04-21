@@ -72,30 +72,31 @@ parfor i = 1:size(a,2)
 end
 
 % Rewrite the output as evaluable polynomial forms.
-p = zeros(n+1,size(a,2),class(xo));
-q = zeros(m+1,size(a,2),class(xo));
-% for i = 1:size(a,2)
-parfor i = 1:size(a,2)
-    if useHP
-        mp.Digits(d);
-    end
-    p(:,i) = shiftpoly(pq(n+1:-1:1,i),xo); 
-    q(:,i) = shiftpoly([pq(end:-1:n+2,i); ones(1,class(xo))],xo);
-end
-
-
-function ps = shiftpoly(p, xo)
-% Displaces the origin of -xo
-
-% Initialize values.
-ps = zeros(size(p),class(xo)); 
-q = ones(1,class(xo)); 
-base = [1;-xo]; 
-ps(end) = p(end);
-
-% Substitute the base polynomial in the original polynomial form.
-for n = 1:(length(p)-1)
-    q = conv(q,base);
-    ps(end-n:end) = ps(end-n:end)+p(end-n)*q;
-end
-    
+p = pq(1:n+1,:);
+q = [ones(1,size(a,2),class(xo)); pq(n+2:end,:)];
+% q = zeros(m+1,size(a,2),class(xo));
+% % for i = 1:size(a,2)
+% parfor i = 1:size(a,2)
+%     if useHP
+%         mp.Digits(d);
+%     end
+%     p(:,i) = shiftpoly(pq(n+1:-1:1,i),xo); 
+%     q(:,i) = shiftpoly([pq(end:-1:n+2,i); ones(1,class(xo))],xo);
+% end
+% 
+% 
+% function ps = shiftpoly(p, xo)
+% % Displaces the origin of -xo
+% 
+% % Initialize values.
+% ps = zeros(size(p),class(xo)); 
+% q = ones(1,class(xo)); 
+% base = [1;-xo]; 
+% ps(end) = p(end);
+% 
+% % Substitute the base polynomial in the original polynomial form.
+% for n = 1:(length(p)-1)
+%     q = conv(q,base);
+%     ps(end-n:end) = ps(end-n:end)+p(end-n)*q;
+% end
+%     

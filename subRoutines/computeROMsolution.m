@@ -223,8 +223,9 @@ for i_b = 1:numel(basisROMcell)
                     U_fluid_oArr = interTaylor(k_ROM,k_P,U_P,noVecs-1);
             end
             surfaceErrorArr = zeros(size(k_ROM));
-            runTasksInParallel = 0; % to avoid printing elapsed time
+            runTasksInParallel = 1; % to avoid printing elapsed time
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
+            t_startROM = tic;
             for i_k = 1:numel(k_ROM)
                 k = k_ROM(i_k);
                 varCol.k = k;
@@ -235,8 +236,7 @@ for i_b = 1:numel(basisROMcell)
                 varCol.analytic = @(x)analytic_(x,e3Dss_options);
                 calculateErrors
             end
-            fprintf('using %12f seconds.', toc)
-            runTasksInParallel = false;
+            fprintf('using %12f seconds.', toc(t_startROM))
             tasks(i_task,task_ROM,i_b).task = task;
             switch basisROM
                 case {'Taylor','Pade'}
