@@ -51,12 +51,32 @@ if varCol.boundaryMethod
     noNewZetaKnots = initMeshFactZeta*2^(M-1);
     if varCol.parm(1) == 1
         solid = getEllipsoidalShellData(c_xy,c_xy,c_z,t,alignWithAxis);
+        varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
+        varCol.patchTop{1}(2,2) = NaN;
+        varCol.patchTop{1}(4,2) = NaN;
     else
         solid = getSphericalShellDataPatched(c_z, t); 
         solid = elevateDegreeInPatches(solid,[0 0 3]);
+        varCol.patchTop = cell(6,1);
+        varCol.patchTop{1} = [2 0;
+                              6 0;
+                              4 0;
+                              5 0];
+        varCol.patchTop{2} = [3 0;
+                              6 3;
+                              1 0;
+                              5 1];
+        varCol.patchTop{3} = [4 0;
+                              6 2;
+                              2 0;
+                              5 2];
+        varCol.patchTop{4} = [4 0;
+                              6 2;
+                              2 0;
+                              5 2];
     end
-    solid = explodeNURBS(solid,'eta');
-    solid = explodeNURBS(solid,'xi');
+%     solid = explodeNURBS(solid,'eta');
+%     solid = explodeNURBS(solid,'xi');
     nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
     degree = max(degree,nurbsDegree);
     solid = elevateDegreeInPatches(solid,[1 1 1]*(degree-nurbsDegree));

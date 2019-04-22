@@ -1,4 +1,4 @@
-function adjacentElements = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps)
+function adjacentElements = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour)
 idXi_x = index(e_x,1);
 idEta_x = index(e_x,2);
 
@@ -14,9 +14,9 @@ elseif abs(xi_x-Xi_e_x(2)) < Eps
     pointIsInEast = true;
 end
 if abs(eta_x-Eta_e_x(1)) < Eps
-    pointIsInSouth = true;
-elseif abs(eta_x-Eta_e_x(2)) < Eps
     pointIsInNorth = true;
+elseif abs(eta_x-Eta_e_x(2)) < Eps
+    pointIsInSouth = true;
 end
 adjacentElements = NaN(1,8); % assume a maximum of 8 extraordinary vertex
 adjacentElements(1) = e_x;

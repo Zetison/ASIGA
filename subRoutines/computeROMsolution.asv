@@ -29,7 +29,7 @@ for i_b = 1:numel(basisROMcell)
                 q = cell(P,1);
                 useHP = 1;
                 if useHP
-                    mp.Digits(400);
+                    mp.Digits(100);
                 end
                 for i = 1:P
                     n = ceil(noVecs/2)-1;
@@ -210,8 +210,6 @@ for i_b = 1:numel(basisROMcell)
         calculateSurfaceError = 1;
         if calculateSurfaceError
             k_ROM = double(unique(sort([k_P,k_ROM])));
-            fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
-            t_startROM = tic;
             switch basisROM
                 case 'Pade'
                     if useHP
@@ -225,7 +223,6 @@ for i_b = 1:numel(basisROMcell)
                 case 'Taylor'
                     U_fluid_oArr = interTaylor(k_ROM,k_P,U_P,noVecs-1);
             end
-            fprintf('using %12f seconds.', toc(t_startROM))
             surfaceErrorArr = zeros(size(k_ROM));
             runTasksInParallel = 1; % to avoid printing elapsed time
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
@@ -240,6 +237,7 @@ for i_b = 1:numel(basisROMcell)
                 varCol.analytic = @(x)analytic_(x,e3Dss_options);
                 calculateErrors
             end
+            runTasksInParallel = 0; % to avoid printing elapsed time
             fprintf('using %12f seconds.', toc(t_startROM))
             tasks(i_task,task_ROM,i_b).task = task;
             switch basisROM
@@ -284,7 +282,6 @@ for i_b = 1:numel(basisROMcell)
 %     legend show
     % savefig('ROM')
 end
-runTasksInParallel = runTasksInParallelOld;
 
 function [y,x] = insertNaN(x,y,a)
 inter = (a(2:end)+a(1:end-1))/2;

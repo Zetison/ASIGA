@@ -1,4 +1,4 @@
-
+patchTop = varCol.patchTop;
 counter = 1;
 for patch = 1:numel(patches)
     Xi = knotVecs{patch}{1}; % New
@@ -8,8 +8,8 @@ for patch = 1:numel(patches)
     noElementsXi = length(uniqueXi)-1;
     noElementsEta = length(uniqueEta)-1;
     eMap = zeros(noElementsXi,noElementsEta);
-    for i_xi = 1:noElementsXi
-        for i_eta = 1:noElementsEta
+    for i_eta = 1:noElementsEta
+        for i_xi = 1:noElementsXi
             eMap(i_xi,i_eta) = counter;
             counter = counter + 1;
         end
@@ -27,7 +27,58 @@ for patch = 1:numel(patches)
     eNeighbourPatch(2:end,:,3) = eMap(1:end-1,:); % west
     eNeighbourPatch(:,2:end,4) = eMap(:,1:end-1); % south
     
-    eNeighbourPatch(end,:,1) = patches{patchTop(1)}.eMap;
+    Dir = 1; % east
+    twist = patchTop{patch}(Dir,2);
+    neighbourPatchIdx = patchTop{patch}(Dir,1);
+    switch twist
+        case 0
+            eNeighbourPatch(end,:,Dir) = patches{neighbourPatchIdx}.eMap(1,:);
+        case 1
+            eNeighbourPatch(end,:,Dir) = patches{neighbourPatchIdx}.eMap(:,end);
+        case 2
+            eNeighbourPatch(end,:,Dir) = patches{neighbourPatchIdx}.eMap(end,end:-1:1);
+        case 3
+            eNeighbourPatch(end,:,Dir) = patches{neighbourPatchIdx}.eMap(end:-1:1,1);
+    end
+    Dir = 2; % north
+    twist = patchTop{patch}(Dir,2);
+    neighbourPatchIdx = patchTop{patch}(Dir,1);
+    switch twist
+        case 0
+            eNeighbourPatch(:,end,Dir) = patches{neighbourPatchIdx}.eMap(:,1);
+        case 1
+            eNeighbourPatch(:,end,Dir) = patches{neighbourPatchIdx}.eMap(1,end:-1:1);
+        case 2
+            eNeighbourPatch(:,end,Dir) = patches{neighbourPatchIdx}.eMap(end:-1:1,end);
+        case 3
+            eNeighbourPatch(:,end,Dir) = patches{neighbourPatchIdx}.eMap(end,:);
+    end
+    Dir = 3; % west
+    twist = patchTop{patch}(Dir,2);
+    neighbourPatchIdx = patchTop{patch}(Dir,1);
+    switch twist
+        case 0
+            eNeighbourPatch(1,:,Dir) = patches{neighbourPatchIdx}.eMap(end,:);
+        case 1
+            eNeighbourPatch(1,:,Dir) = patches{neighbourPatchIdx}.eMap(:,1);
+        case 2
+            eNeighbourPatch(1,:,Dir) = patches{neighbourPatchIdx}.eMap(1,end:-1:1);
+        case 3
+            eNeighbourPatch(1,:,Dir) = patches{neighbourPatchIdx}.eMap(end:-1:1,end);
+    end
+    Dir = 4; % south
+    twist = patchTop{patch}(Dir,2);
+    neighbourPatchIdx = patchTop{patch}(Dir,1);
+    switch twist
+        case 0
+            eNeighbourPatch(:,1,Dir) = patches{neighbourPatchIdx}.eMap(:,end);
+        case 1
+            eNeighbourPatch(:,1,Dir) = patches{neighbourPatchIdx}.eMap(end,end:-1:1);
+        case 2
+            eNeighbourPatch(:,1,Dir) = patches{neighbourPatchIdx}.eMap(end:-1:1,1);
+        case 3
+            eNeighbourPatch(:,1,Dir) = patches{neighbourPatchIdx}.eMap(1,:);
+    end
     patches{patch}.eNeighbourPatch = eNeighbourPatch;
 end
 
@@ -41,8 +92,8 @@ for patch = 1:numel(patches)
     noElementsXi = length(uniqueXi)-1;
     noElementsEta = length(uniqueEta)-1;
     eNeighbourPatch = patches{patch}.eNeighbourPatch;
-    for i_xi = 1:noElementsXi
-        for i_eta = 1:noElementsEta
+    for i_eta = 1:noElementsEta
+        for i_xi = 1:noElementsXi
             eNeighbour(counter,:) = eNeighbourPatch(i_xi,i_eta,:);
             counter = counter + 1;
         end

@@ -196,6 +196,7 @@ p_max = max(p_xi,p_eta);
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
 for i = 1:n_cp
+    keyboard
 % parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
@@ -215,7 +216,6 @@ for i = 1:n_cp
     eta_idx = findKnotSpan(noElementsEta, 0, eta_x, uniqueEta);
     e_x = sum(noElemsPatch(1:patch-1)) + xi_idx + noElementsXi*(eta_idx-1);
     
-    adjacentElements = getAdjacentElements(e_x,index,elRangeXi,elRangeEta,eNeighbour);
 %         
     sctr_x = element(e_x,:);
     pts_x = controlPts(sctr_x,:);
@@ -262,7 +262,6 @@ for i = 1:n_cp
     
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    keyboard
     foundMarker = true;
     while foundMarker
         foundMarker = false;
@@ -279,6 +278,7 @@ for i = 1:n_cp
     % keyboard
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+    adjacentElements = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % %             nx = x.'/norm(x);        
 % % %             quiver3([nx(1),0,nx(1),0,0],[nx(2),0,nx(2),0,0],[nx(3),0,nx(3),0,0],...
@@ -419,7 +419,8 @@ for i = 1:n_cp
 %         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         if false
-        if ismember(e,adjacentElements)
+        [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
+        if collocationPointIsInElement % use polar integration
             noGp = size(Q2D_2,1);
             xi_x_t = parametric2parentSpace(Xi_e, xi_x);
             eta_x_t = parametric2parentSpace(Eta_e, eta_x);
