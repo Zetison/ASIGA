@@ -185,6 +185,7 @@ end
 % % keyboard
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+eNeighbour = NaN; % to avoid transparency "bug"
 createElementTopology
 
 n_en = (p_xi+1)*(p_eta+1);
