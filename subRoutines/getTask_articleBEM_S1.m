@@ -36,11 +36,12 @@ formulation = {'SL2E'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 method = {'BEM'};
-M = 4;
-parm = 2;
+M = 2;
+degree = 3;
+parm = 1;
 extraGPBEM = 0;
 extraGP = 0;
 % formulation = {'CRCBIE1', 'CRCBIE2', 'CRCBIE3', 'GRCBIE1', 'GRCBIE2', 'GRCBIE3', 'CCBIE', 'GCBIE', 'CHBIE', 'GHBIE', 'CBM', 'GBM'};
-formulation = {'CBM','GBM'};
-
+% formulation = {'CBM','GBM'};
+formulation = {'CCBIE'};
 collectIntoTasks

@@ -54,6 +54,7 @@ if varCol.boundaryMethod
         varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
         varCol.patchTop{1}(2,2) = NaN;
         varCol.patchTop{1}(4,2) = NaN;
+        nurbsDegree = solid.degree(1); % assume all degrees are equal
     else
         solid = getSphericalShellDataPatched(c_z, t); 
         solid = elevateDegreeInPatches(solid,[0 0 3]);
@@ -70,14 +71,22 @@ if varCol.boundaryMethod
                               6 2;
                               2 0;
                               5 2];
-        varCol.patchTop{4} = [4 0;
-                              6 2;
-                              2 0;
-                              5 2];
+        varCol.patchTop{4} = [1 0;
+                              6 1;
+                              3 0;
+                              5 3];
+        varCol.patchTop{5} = [2 3;
+                              1 0;
+                              4 1;
+                              3 2];
+        varCol.patchTop{6} = [2 1;
+                              3 2;
+                              4 3;
+                              1 0];
+        nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
     end
 %     solid = explodeNURBS(solid,'eta');
 %     solid = explodeNURBS(solid,'xi');
-    nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
     degree = max(degree,nurbsDegree);
     solid = elevateDegreeInPatches(solid,[1 1 1]*(degree-nurbsDegree));
     solid = insertKnotsInPatches(solid,noNewXiKnots,noNewEtaKnots,noNewZetaKnots);

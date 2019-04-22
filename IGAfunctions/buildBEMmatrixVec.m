@@ -160,29 +160,29 @@ else
     dU = NaN;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-close all
-for patch = 1:numel(patches)
-    plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
-end
-axis equal
-axis off
-set(gca, 'Color', 'none');
-view(-100,20)
-drawnow
-hold on
-if false
-    cp = zeros(size(cp_p,1),3);
-    for j = 1:size(cp_p,1)
-        patch = patchIdx(j);
-        cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
-        plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
-    end
-end
-ax = gca;               % get the current axis
-ax.Clipping = 'off';    % turn clipping off
-h = findobj('type','line');
-noLines = numel(h);
-% keyboard
+% close all
+% for patch = 1:numel(patches)
+%     plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
+% end
+% axis equal
+% axis off
+% set(gca, 'Color', 'none');
+% view(-100,20)
+% drawnow
+% hold on
+% if false
+%     cp = zeros(size(cp_p,1),3);
+%     for j = 1:size(cp_p,1)
+%         patch = patchIdx(j);
+%         cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
+%         plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
+%     end
+% end
+% ax = gca;               % get the current axis
+% ax.Clipping = 'off';    % turn clipping off
+% h = findobj('type','line');
+% noLines = numel(h);
+% % keyboard
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 createElementTopology
@@ -195,9 +195,9 @@ p_max = max(p_xi,p_eta);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-for i = 1:n_cp
-    keyboard
-% parfor i = 1:n_cp
+% for i = 1:n_cp
+%     keyboard
+parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New
@@ -262,23 +262,23 @@ for i = 1:n_cp
     
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    foundMarker = true;
-    while foundMarker
-        foundMarker = false;
-        h = findobj('type','line');
-        for i_h = 1:numel(h)
-            if strcmp(h(i_h).Marker,'*')
-                delete(h(i_h));
-                foundMarker = true;
-                break
-            end
-        end
-    end
-    plot3(x(1),x(2),x(3), '*', 'color','red')
-    % keyboard
+%     foundMarker = true;
+%     while foundMarker
+%         foundMarker = false;
+%         h = findobj('type','line');
+%         for i_h = 1:numel(h)
+%             if strcmp(h(i_h).Marker,'*')
+%                 delete(h(i_h));
+%                 foundMarker = true;
+%                 break
+%             end
+%         end
+%     end
+%     plot3(x(1),x(2),x(3), '*', 'color','red')
+%     % keyboard
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    adjacentElements = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps);
+    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % %             nx = x.'/norm(x);        
 % % %             quiver3([nx(1),0,nx(1),0,0],[nx(2),0,nx(2),0,0],[nx(3),0,nx(3),0,0],...
@@ -422,8 +422,10 @@ for i = 1:n_cp
         [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
         if collocationPointIsInElement % use polar integration
             noGp = size(Q2D_2,1);
-            xi_x_t = parametric2parentSpace(Xi_e, xi_x);
-            eta_x_t = parametric2parentSpace(Eta_e, eta_x);
+%             xi_x_t = parametric2parentSpace(Xi_e, xi_x);
+%             eta_x_t = parametric2parentSpace(Eta_e, eta_x);
+            xi_x_t = xi_x_tArr(idx);
+            eta_x_t = eta_x_tArr(idx);
             theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
             theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
             theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);
@@ -434,22 +436,22 @@ for i = 1:n_cp
             for area = {'South', 'East', 'North', 'West'}
                 switch area{1}
                     case 'South'
-                        if abs(eta_x - Eta_e(1)) < Eps
+                        if abs(eta_x_t - (-1)) < Eps
                             continue
                         end
                         thetaRange = [theta_x3 theta_x4];
                     case 'East'
-                        if abs(xi_x - Xi_e(2)) < Eps
+                        if abs(xi_x_t - 1) < Eps
                             continue
                         end
                         thetaRange = [theta_x4 theta_x1];
                     case 'North'
-                        if abs(eta_x - Eta_e(2)) < Eps
+                        if abs(eta_x_t - 1) < Eps
                             continue
                         end
                         thetaRange = [theta_x1 theta_x2];
                     case 'West'
-                        if abs(xi_x - Xi_e(1)) < Eps
+                        if abs(xi_x_t - (-1)) < Eps
                             continue
                         end
                         if theta_x3 < 0
@@ -498,10 +500,10 @@ for i = 1:n_cp
                     R_y = R_y.*temp(:,ones(1,noGp));
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if 1 %i == 35
-                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-%                     keyboard
-                end
+%                 if 1 %i == 35
+%                     plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+% %                     keyboard
+%                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
@@ -577,10 +579,10 @@ for i = 1:n_cp
                 R_y = R_y.*temp(:,ones(1,noGp));
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if 1 %i == 35
-                plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-%                 keyboard
-            end
+%             if 1 %i == 35
+%                 plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+% %                 keyboard
+%             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             xmy = x(ones(noGp,1),:)-y;
             r = norm2(xmy);

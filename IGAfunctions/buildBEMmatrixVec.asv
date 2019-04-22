@@ -196,7 +196,9 @@ p_max = max(p_xi,p_eta);
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
 for i = 1:n_cp
-    keyboard
+    if i >= 95
+        keyboard
+    end
 % parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
@@ -278,7 +280,7 @@ for i = 1:n_cp
     % keyboard
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    adjacentElements = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps);
+    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps);
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % %             nx = x.'/norm(x);        
 % % %             quiver3([nx(1),0,nx(1),0,0],[nx(2),0,nx(2),0,0],[nx(3),0,nx(3),0,0],...
@@ -419,11 +421,13 @@ for i = 1:n_cp
 %         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         if false
-        [inElement,idx] = ismember(e,adjacentElements);
-        if inElement
+        [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
+        if collocationPointIsInElement % use polar integration
             noGp = size(Q2D_2,1);
-            xi_x_t = parametric2parentSpace(Xi_e, xi_x);
-            eta_x_t = parametric2parentSpace(Eta_e, eta_x);
+%             xi_x_t = parametric2parentSpace(Xi_e, xi_x);
+%             eta_x_t = parametric2parentSpace(Eta_e, eta_x);
+            xi_x_t = xi_x_tArr(idx);
+            eta_x_t = eta_x_tArr(idx);
             theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
             theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
             theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);
@@ -434,22 +438,22 @@ for i = 1:n_cp
             for area = {'South', 'East', 'North', 'West'}
                 switch area{1}
                     case 'South'
-                        if abs(eta_x - Eta_e(1)) < Eps
+                        if abs(eta_x_t - (-1)) < Eps
                             continue
                         end
                         thetaRange = [theta_x3 theta_x4];
                     case 'East'
-                        if abs(xi_x - Xi_e(2)) < Eps
+                        if abs(xi_x_t - 1) < Eps
                             continue
                         end
                         thetaRange = [theta_x4 theta_x1];
                     case 'North'
-                        if abs(eta_x - Eta_e(2)) < Eps
+                        if abs(eta_x_t - 1) < Eps
                             continue
                         end
                         thetaRange = [theta_x1 theta_x2];
                     case 'West'
-                        if abs(xi_x - Xi_e(1)) < Eps
+                        if abs(xi_x_t - (-1)) < Eps
                             continue
                         end
                         if theta_x3 < 0
