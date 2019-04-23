@@ -81,6 +81,27 @@ else
 end
 
 %% Create collocation points
+geometricSingularity = false;
+collocationC0 = false;
+if p_xi == 1 && p_eta == 1
+    eps_greville_xi = 1/(4*p_xi);
+    eps_greville_eta = 1/(4*p_eta);
+else
+    switch model
+        case {'SS','SS_P','S1','S3','S5','MS','TAP'}
+            eps_greville_xi = 0;
+            eps_greville_eta = 0;
+            geometricSingularity = true;
+            collocationC0 = true;
+        case 'Torus'
+            eps_greville_xi = 0;
+            eps_greville_eta = 0;
+            collocationC0 = true;
+        otherwise
+            eps_greville_xi = 1/(2*p_xi);
+            eps_greville_eta = 1/(2*p_eta);
+    end
+end
 n_cp = noDofs - length(dofsToRemove);
 counter2 = 1;
 counter = 1;
@@ -97,15 +118,6 @@ for patch = 1:noPatches
     Eta = nurbs.knots{2};
     
     if 1
-        if p_xi == 1 && p_eta == 1
-            eps_greville_xi = 1/(4*p_xi);
-            eps_greville_eta = 1/(4*p_eta);
-        else
-            eps_greville_xi = 1/(2*p_xi);
-            eps_greville_eta = 1/(2*p_eta);
-            eps_greville_xi = 0;
-            eps_greville_eta = 0;
-        end
         for j = 1:n_eta
             eta_bar = sum(Eta(j+1:j+p_eta))/p_eta;
             if Eta(j+1) == Eta(j+p_eta)
@@ -160,29 +172,32 @@ else
     dU = NaN;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% close all
-% for patch = 1:numel(patches)
-%     plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
-% end
-% axis equal
-% axis off
-% set(gca, 'Color', 'none');
-% view(-100,20)
-% drawnow
-% hold on
-% if false
-%     cp = zeros(size(cp_p,1),3);
-%     for j = 1:size(cp_p,1)
-%         patch = patchIdx(j);
-%         cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
-%         plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
-%     end
-% end
-% ax = gca;               % get the current axis
-% ax.Clipping = 'off';    % turn clipping off
-% h = findobj('type','line');
-% noLines = numel(h);
-% % keyboard
+plotGP = false;
+if plotGP
+    close all
+    for patch = 1:numel(patches)
+        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
+    end
+    axis equal
+    axis off
+    set(gca, 'Color', 'none');
+    view(-100,20)
+    drawnow
+    hold on
+    if false
+        cp = zeros(size(cp_p,1),3);
+        for j = 1:size(cp_p,1)
+            patch = patchIdx(j);
+            cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
+            plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
+        end
+    end
+    ax = gca;               % get the current axis
+    ax.Clipping = 'off';    % turn clipping off
+    h = findobj('type','line');
+    noLines = numel(h);
+    % keyboard
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 eNeighbour = NaN; % to avoid transparency "bug"
@@ -233,8 +248,7 @@ parfor i = 1:n_cp
         e_xi = m_1/h_xi;
         e_eta = m_2/h_eta;
 
-        if (eta_x == 0 || eta_x == 1) && (strcmp(model,'SS') || strcmp(model,'SS_P') || strcmp(model,'S1') || strcmp(model,'S3') ...
-                || strcmp(model,'S5')  || strcmp(model,'MS') || strcmp(model,'MS_P') || strcmp(model,'EL'))
+        if geometricSingularity
             v_2 = m_2/h_eta;
             nx = x.'/norm(x);
             v_3 = nx.';
@@ -263,23 +277,25 @@ parfor i = 1:n_cp
     
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     foundMarker = true;
-%     while foundMarker
-%         foundMarker = false;
-%         h = findobj('type','line');
-%         for i_h = 1:numel(h)
-%             if strcmp(h(i_h).Marker,'*')
-%                 delete(h(i_h));
-%                 foundMarker = true;
-%                 break
-%             end
-%         end
-%     end
-%     plot3(x(1),x(2),x(3), '*', 'color','red')
-%     % keyboard
+    if plotGP
+        foundMarker = true;
+        while foundMarker
+            foundMarker = false;
+            h = findobj('type','line');
+            for i_h = 1:numel(h)
+                if strcmp(h(i_h).Marker,'*')
+                    delete(h(i_h));
+                    foundMarker = true;
+                    break
+                end
+            end
+        end
+        plot3(x(1),x(2),x(3), '*', 'color','red')
+    end
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps);
+    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps,collocationC0);
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % %             nx = x.'/norm(x);        
 % % %             quiver3([nx(1),0,nx(1),0,0],[nx(2),0,nx(2),0,0],[nx(3),0,nx(3),0,0],...
@@ -423,8 +439,6 @@ parfor i = 1:n_cp
         [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
         if collocationPointIsInElement % use polar integration
             noGp = size(Q2D_2,1);
-%             xi_x_t = parametric2parentSpace(Xi_e, xi_x);
-%             eta_x_t = parametric2parentSpace(Eta_e, eta_x);
             xi_x_t = xi_x_tArr(idx);
             eta_x_t = eta_x_tArr(idx);
             theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
@@ -501,10 +515,9 @@ parfor i = 1:n_cp
                     R_y = R_y.*temp(:,ones(1,noGp));
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                 if 1 %i == 35
-%                     plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-% %                     keyboard
-%                 end
+                if plotGP
+                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
@@ -580,10 +593,9 @@ parfor i = 1:n_cp
                 R_y = R_y.*temp(:,ones(1,noGp));
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             if 1 %i == 35
-%                 plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-% %                 keyboard
-%             end
+            if plotGP
+                plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+            end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             xmy = x(ones(noGp,1),:)-y;
             r = norm2(xmy);

@@ -80,6 +80,27 @@ else
 end
 
 %% Create collocation points
+geometricSingularity = false;
+collocationC0 = false;
+if p_xi == 1 && p_eta == 1
+    eps_greville_xi = 1/(4*p_xi);
+    eps_greville_eta = 1/(4*p_eta);
+else
+    switch model
+        case {'SS','SS_P','S1','S3','S5','MS','TAP'}
+            eps_greville_xi = 0;
+            eps_greville_eta = 0;
+            geometricSingularity = true;
+            collocationC0 = true;
+        case 'Torus'
+            eps_greville_xi = 0;
+            eps_greville_eta = 0;
+            collocationC0 = true;
+        otherwise
+            eps_greville_xi = 1/(2*p_xi);
+            eps_greville_eta = 1/(2*p_eta);
+    end
+end
 n_cp = noDofs - length(dofsToRemove);
 counter2 = 1;
 counter = 1;
@@ -96,13 +117,6 @@ for patch = 1:noPatches
     Eta = nurbs.knots{2};
     
     if 1
-        if p_xi == 1 && p_eta == 1
-            eps_greville_xi = 1/(4*p_xi);
-            eps_greville_eta = 1/(4*p_eta);
-        else
-            eps_greville_xi = 1/(2*p_xi);
-            eps_greville_eta = 1/(2*p_eta);
-        end
         for j = 1:n_eta
             eta_bar = sum(Eta(j+1:j+p_eta))/p_eta;
             if Eta(j+1) == Eta(j+p_eta)
@@ -149,7 +163,6 @@ for patch = 1:noPatches
         end
     end
 end
-
 useNeumanProj = varCol.useNeumanProj;
 if useNeumanProj
     [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
@@ -157,26 +170,6 @@ else
     U = NaN;
     dU = NaN;
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% figure(42)
-% for patch = 1:numel(patches)
-%     plotNURBS(patches{patch}.nurbs,{'resolution',[40 40]});
-% end
-% axis equal
-% axis off
-% set(gca, 'Color', 'none');
-% view(-100,20)
-% drawnow
-% hold on
-% cp = zeros(size(cp_p,1),3);
-% for i = 1:size(cp_p,1)
-%     patch = patchIdx(i);
-%     cp(i,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(i,:));
-%     plot3(cp(i,1),cp(i,2),cp(i,3), '*', 'color','red')
-% end
-% ax = gca;               % get the current axis
-% ax.Clipping = 'off';    % turn clipping off
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 n_en = (p_xi+1)*(p_eta+1);
 
@@ -257,6 +250,9 @@ parfor i = 1:n_cp
     dPsi1dny_integral = complex(0);
     dPsi2dny_integral = complex(0);
     FF_temp = zeros(1, no_angles);
+    
+    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps,collocationC0);
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     quiver3([nx(1),0,nx(1),0,0],[nx(2),0,nx(2),0,0],[nx(3),0,nx(3),0,0],...
 %             [d1(1),d2(1),d3(1),d4(1),nx(1)],[d1(2),d2(2),d3(2),d4(2),nx(2)],[d1(3),d2(3),d3(3),d4(3),nx(3)],'AutoScale','off')
@@ -373,10 +369,11 @@ parfor i = 1:n_cp
             CBIE = complex(zeros(1, n_en));
         end
         
-        if e_x == e
+        [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
+        if collocationPointIsInElement % use polar integration
             noGp = size(Q2D_2,1);
-            xi_x_t = parametric2parentSpace(Xi_e, xi_x);
-            eta_x_t = parametric2parentSpace(Eta_e, eta_x);
+            xi_x_t = xi_x_tArr(idx);
+            eta_x_t = eta_x_tArr(idx);
             theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
             theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
             theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);

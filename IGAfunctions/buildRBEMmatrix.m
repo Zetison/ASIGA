@@ -72,21 +72,27 @@ end
 dpdn = varCol.dpdn;
 
 %% Create collocation points based on the Greville abscissae
-switch varCol.model
-    case {'SS', 'SS_P', 'S1', 'S1_P', 'S1_P2', 'S3', 'S5', 'MS', 'MS_P', 'EL'}
-        if 0
+geometricSingularity = false;
+collocationC0 = false;
+if p_xi == 1 && p_eta == 1
+    eps_greville_xi = 1/(4*p_xi);
+    eps_greville_eta = 1/(4*p_eta);
+else
+    switch model
+        case {'SS','SS_P','S1','S3','S5','MS','TAP'}
             eps_greville_xi = 0;
             eps_greville_eta = 0;
-        else
+            geometricSingularity = true;
+            collocationC0 = true;
+        case 'Torus'
+            eps_greville_xi = 0;
+            eps_greville_eta = 0;
+            collocationC0 = true;
+        otherwise
             eps_greville_xi = 1/(2*p_xi);
             eps_greville_eta = 1/(2*p_eta);
-        end
-    otherwise
-        eps_greville_xi = 1/(2*p_xi);
-        eps_greville_eta = 1/(2*p_eta);
+    end
 end
-% eps_greville_xi = 1/(2*p_xi);
-% eps_greville_eta = 1/(2*p_eta);
 n_cp = noDofs - length(dofsToRemove);
 counter2 = 1;
 counter = 1;
@@ -148,10 +154,13 @@ for patch = 1:noPatches
 %                 counter = counter + 1;
 %             end
 %         end
-    if p_xi == 1 && p_eta == 1
-        eta_bar = eta_bar + 0.5*eps_greville_eta*(Eta(j+p_eta+1)-Eta(j));
-        cp_p(end,:) = [xi_bar, eta_bar];
-    end
+end
+useNeumanProj = varCol.useNeumanProj;
+if useNeumanProj
+    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+else
+    U = NaN;
+    dU = NaN;
 end
 
 
@@ -191,6 +200,8 @@ end
 
 psiType = 4;
     
+eNeighbour = NaN; % to avoid transparency "bug"
+createElementTopology
 % keyboard
 %% Calculate contribution from infinite elements
 n_en = (p_xi+1)*(p_eta+1);
@@ -254,6 +265,8 @@ parfor i = 1:n_cp
     else
         nx = crossProd_x'/norm(crossProd_x);
     end
+    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps,collocationC0);
+    
 
     if 0
 %         iiPts = 1;
@@ -443,9 +456,10 @@ parfor i = 1:n_cp
             CBIE = zeros(1, n_en);
         end
         
-        if e_x == e
-            xi_x_t = parametric2parentSpace(Xi_e, xi_x);
-            eta_x_t = parametric2parentSpace(Eta_e, eta_x);
+        [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
+        if collocationPointIsInElement % use polar integration
+            xi_x_t = xi_x_tArr(idx);
+            eta_x_t = eta_x_tArr(idx);
             theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
             theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
             theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);

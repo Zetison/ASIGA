@@ -1,15 +1,18 @@
-function [adjacentElements,xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps)
+function [adjacentElements,xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps,collocationC0)
 idXi_x = index(e_x,1);
 idEta_x = index(e_x,2);
 
 Xi_e_x = elRangeXi(idXi_x,:);
 Eta_e_x = elRangeEta(idEta_x,:);
 adjacentElements = NaN(1,8); % assume a maximum of 8 extraordinary vertex
+adjacentElements(1) = e_x;
 xi_x_tArr = NaN(1,8);
 eta_x_tArr = NaN(1,8);
 xi_x_tArr(1) = parametric2parentSpace(Xi_e_x, xi_x);
 eta_x_tArr(1) = parametric2parentSpace(Eta_e_x, eta_x);
-
+if ~collocationC0
+    return
+end
 pointIsInEast = false;
 pointIsInNorth = false;
 pointIsInWest = false;
@@ -28,7 +31,6 @@ cornerPoints = [ 1, 1;
                 -1, 1;
                 -1,-1;
                  1,-1];
-adjacentElements(1) = e_x;
 counter = 2;
 if pointIsInEast && pointIsInNorth % top right corner (xi_x_t = 1, eta_x_t = 1)
     counter3 = 1;

@@ -31,6 +31,10 @@ if varCol.boundaryMethod
     principalLengthEtaDir = R_o*pi/2 + R_o + L;
 
     fluid = extractOuterSurface(solid);
+    
+    varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
+    varCol.patchTop{1}(2,2) = NaN;
+    varCol.patchTop{1}(4,2) = NaN;
 end
 switch method
     case {'IE','IENSG'}

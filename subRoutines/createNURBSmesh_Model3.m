@@ -53,6 +53,9 @@ if varCol.boundaryMethod
                                       insertUniform2(solid.knots{2}, nn) []});
 
     fluid = extractOuterSurface(solid);
+    varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
+    varCol.patchTop{1}(2,2) = NaN;
+    varCol.patchTop{1}(4,2) = NaN;
 else
     R_max = max(R_o1,R_o2);
     s = 0.25 + 0.05*(L-R_max)/R_max;

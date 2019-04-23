@@ -50,6 +50,10 @@ if varCol.boundaryMethod
                                       insertUniform2(solid.knots{2}, nn) []});
 
     fluid = extractOuterSurface(solid);
+
+    varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
+    varCol.patchTop{1}(2,2) = NaN;
+    varCol.patchTop{1}(4,2) = NaN;
 else
     s = 0.25 + 0.05*(L-R_o)/R_o;
     c_z = (L+2*R_o)/2 + s*R_o;
