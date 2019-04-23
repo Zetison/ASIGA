@@ -49,13 +49,13 @@ basisROMcell = {'Pade','Taylor'};  % do not put basisROMcell in loopParameters (
 % k_arr = 1/2*(a+b)+1/2*(b-a)*cos((2*n-2*j+1)*pi/(2*n));
 % k = k_arr(round(linspace(1,n,P)));
 k = [9, 22.5, 36];
-% k = [9, 22.5, 36]/10;
-k_ROM = k(1):0.05:k(end);
-% k_ROM = k(1):0.005:k(end);
+k = [9, 22.5, 36]/10;
+% k_ROM = k(1):0.05:k(end);
+k_ROM = k(1):0.005:k(end);
 % k_ROM = k(1):0.5:k(end);
 c_f = 1500;
 f = k*c_f/(2*pi);
-M = 5; % 5
+M = 4; % 5
 N = 9; % 9
 % M = 1; 
 % N = 2;
@@ -77,7 +77,7 @@ f = k*c_f/(2*pi);
 useROM = false;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'hp_FEM'};
-M = 4; 
+M = 3; 
 method = {'BA'};
 formulation = {'VL2E'};
 collectIntoTasks
@@ -87,7 +87,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'IGA'};
-M = 5; 
+M = 4; 
 formulation = {'VL2E'};
 collectIntoTasks
 
