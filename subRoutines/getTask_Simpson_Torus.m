@@ -9,10 +9,10 @@ formulation = {'CCBIE'};
 k = 2;
 % f = 1e2;             % Frequency
 f = k*1500/(2*pi);
-M = 1:5;
+M = 1:4;
 % M = 3; 
 degree = 2:5;
-% degree = 3;
+degree = 2;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 % extraGPBEM = [0,3];
@@ -27,6 +27,7 @@ exteriorProblem = false;
 % agpBEM = [1,2,4,8]; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 useNeumanProj = [1,0];
+useNeumanProj = 1;
 computeCondNumber = true;
 
 loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','agpBEM','useNeumanProj'};
@@ -44,6 +45,6 @@ agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities
 M = 1:7;
 method = {'BA'};
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 

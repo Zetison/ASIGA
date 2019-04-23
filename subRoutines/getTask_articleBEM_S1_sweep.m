@@ -5,9 +5,7 @@ model = 'S1';  % Spherical shell
 coreMethod = 'IGA';
 % coreMethod = {'IGA'};
 method = {'BEM'};
-if strcmp(method, 'BEM')
-    formulation = {'CCBIE', 'CRCBIE', 'CBM', 'CHBIE'};
-end
+formulation = {'CCBIE', 'CBM', 'CHBIE'};
 
 
 % Eigenfrequencies from Zheng2015itb
@@ -47,8 +45,9 @@ alpha = 240*pi/180;
 beta = 30*pi/180;   
 
 degree = 4;
-M = 3;
+M = 4;
 parm = [1,2];
+parm = 2;
 calculateSurfaceError = 1;
 loopParameters = {'parm','method','formulation'};
 
