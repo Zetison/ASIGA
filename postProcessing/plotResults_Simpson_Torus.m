@@ -13,8 +13,8 @@ for study_i = 1:numel(studies)
                      'legendEntries',   {{'method','coreMethod','formulation','degree','extraGP','extraGPBEM','agpBEM','useNeumanProj'}}, ...
                      'noXLoopPrms',     1); 
 
-%     figure(2)
-%     printResultsToTextFiles(study,options)
+    figure(2)
+    printResultsToTextFiles(study,options)
 % 
 %     options.xname = 'nepw';
 %     options.yScale = 1;

@@ -172,7 +172,7 @@ else
     dU = NaN;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-plotGP = false;
+plotGP = 1;
 if plotGP
     close all
     for patch = 1:numel(patches)
@@ -211,9 +211,9 @@ p_max = max(p_xi,p_eta);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-% for i = 1:n_cp
-%     keyboard
-parfor i = 1:n_cp
+for i = 1:n_cp
+    keyboard
+% parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New

@@ -23,6 +23,8 @@ for i_b = 1:numel(basisROMcell)
     for task_ROM = 1:numel(noVecsArr)
         noVecs = noVecsArr(task_ROM);
 
+        fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
+        t_startROM = tic;
         switch basisROM
             case 'Pade'
                 p = cell(P,1);
@@ -154,6 +156,7 @@ for i_b = 1:numel(basisROMcell)
                 cond(V)
                 a = V\b;
         end  
+        fprintf('using %12f seconds.', toc(t_startROM))
     %     k_arr3 = linspace(k_start,k_end,100);
     %     k_arr3 = sort(unique([k_P, k_arr3]));
     %     nPts = numel(k_arr3);
@@ -210,7 +213,7 @@ for i_b = 1:numel(basisROMcell)
         calculateSurfaceError = 1;
         if calculateSurfaceError
             k_ROM = double(unique(sort([k_P,k_ROM])));
-            fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
+            fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
             t_startROM = tic;
             switch basisROM
                 case 'Pade'

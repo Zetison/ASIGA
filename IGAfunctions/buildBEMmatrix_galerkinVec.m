@@ -79,6 +79,35 @@ end
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+plotGP = 0;
+if plotGP
+    close all
+    for patch = 1:numel(patches)
+        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
+    end
+    axis equal
+    axis off
+    set(gca, 'Color', 'none');
+    view(-100,20)
+    drawnow
+    hold on
+    if false
+        cp = zeros(size(cp_p,1),3);
+        for j = 1:size(cp_p,1)
+            patch = patchIdx(j);
+            cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
+            plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
+        end
+    end
+    ax = gca;               % get the current axis
+    ax.Clipping = 'off';    % turn clipping off
+    h = findobj('type','line');
+    noLines = numel(h);
+    % keyboard
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 n_en = (p_xi+1)*(p_eta+1);
 % 
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
@@ -143,6 +172,24 @@ parfor e_x = 1:noElems
             sinT = dot(v_2,e_eta);
             dXIdv = [1/h_xi, 0; -cosT/sinT/h_xi, 1/h_eta/sinT];
         end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         keyboard
+        if plotGP
+            foundMarker = true;
+            while foundMarker
+                foundMarker = false;
+                h = findobj('type','line');
+                for i_h = 1:numel(h)
+                    if strcmp(h(i_h).Marker,'*')
+                        delete(h(i_h));
+                        foundMarker = true;
+                        break
+                    end
+                end
+            end
+            plot3(x(1),x(2),x(3), '*', 'color','red')
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         dPhi_0dny_integral = 0;
         d2Phi_0dnxdny_integral = 0;
@@ -238,6 +285,11 @@ parfor e_x = 1:noElems
                     xmy = x(ones(noGp,1),:)-y;
                     r = norm2(xmy);
 
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    if plotGP
+                        plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                    end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
                     if ~SHBC
                         if useNeumanProj
@@ -308,6 +360,11 @@ parfor e_x = 1:noElems
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
 
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                if plotGP
+                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 if ~SHBC
                     if useNeumanProj
                         dpdn_y = R_y*U(sctr_y,:);

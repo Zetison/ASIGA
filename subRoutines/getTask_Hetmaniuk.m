@@ -64,7 +64,7 @@ storeFullVarCol = false;
 loopParameters = {'method','coreMethod','formulation','M','degree','parm'};
 collectIntoTasks
 
-M = 4; 
+M = M-1; 
 coreMethod = {'hp_FEM'};
 collectIntoTasks
 
@@ -77,7 +77,6 @@ f = k*c_f/(2*pi);
 useROM = false;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'hp_FEM'};
-M = 3; 
 method = {'BA'};
 formulation = {'VL2E'};
 collectIntoTasks
@@ -87,7 +86,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'IGA'};
-M = 4; 
+M = M+1; 
 formulation = {'VL2E'};
 collectIntoTasks
 
