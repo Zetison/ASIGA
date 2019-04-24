@@ -33,6 +33,8 @@ if varCol.boundaryMethod
                                       insertUniform2(solid.knots{2}, noNewEtaKnots) ...
                                       insertUniform2(solid.knots{3}, noNewZetaKnots)});
     fluid = extractOuterSurface(solid);
+%     fluid = explodeNURBS(fluid,'eta');
+%     fluid = explodeNURBS(fluid,'xi');
     
     varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
 end

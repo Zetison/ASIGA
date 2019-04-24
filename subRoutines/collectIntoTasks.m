@@ -65,6 +65,10 @@ task.beta = beta;
 if exist('parm','var')
     task.parm = parm;
 end
+if exist('colBEM_C0','var')
+    task.colBEM_C0 = colBEM_C0;
+end
+
 task.computeCondNumber = computeCondNumber;
 if ~exist('loopParameters','var')
     loopParameters = {};

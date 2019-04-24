@@ -7,6 +7,7 @@ getDefaultTaskValues
 % getTask_test2
 % getTask_Simpson
 % getTask_Simpson_Torus
+getTask_Simpson_Torus_gp
 % getTask_Simpson_PS
 % getTask_Simpson_sweep
 % getTask_BeTSSi_IIb
@@ -33,7 +34,7 @@ getDefaultTaskValues
 % getTask_S5
 % getTask_Fillinger
 % getTask_testIE
-getTask_Hetmaniuk
+% getTask_Hetmaniuk
 % getTask_articleIGA
 % getTask_articleIGA_convergenceAnalysis
 % getTask_articleIGA_Ihlenburg

@@ -22,7 +22,7 @@ if plot3Dgeometry
                     else 
                         resolution = [10,10];
                     end
-                    if 0
+                    if 1
                         colorFun = @(v) abs(varCol.analytic(v));
 %                         colorFun = @(v) real(varCol.analytic(v));
                         plotNURBS(fluid{i},{'resolution',[10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
@@ -30,6 +30,8 @@ if plot3Dgeometry
                     else
 %                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
                         plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',[40 40], 'elementBasedSamples',true,'samplingDistance',0.1});
                     end
             end
         else
@@ -82,22 +84,24 @@ if plot3Dgeometry
 %     view(120,10)
     view(18,10)
     view(62,43)
+%     view(106,26)
 %     view(0,0)
     camproj('perspective')
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
     camlight
 %     keyboard 
-%     plotControlPts(fluid,'red','red','red','red')
+%     plotControlPts(fluid{8},'red','red','red','black')
     figureFullScreen(gcf)
 % 	export_fig(['../../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/S1/S13D_' coreMethod], '-png', '-transparent', '-r300')
-% 	export_fig('../../graphics/Torus', '-png', '-transparent', '-r300')
+% 	export_fig('../../graphics/TorusControlPts', '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
 % 	export_fig('C:\Users\jonvegar\Desktop\trond\mesh3D', '-png', '-transparent', '-r300')
+% 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
            
 
-%     export_fig(['../graphics/sphericalShell/patchedShellMesh' num2str(M)], '-png', '-transparent')
+%     export_fig('../../graphics/sphericalShell/Sphere1controlPolygon' , '-png', '-transparent')
 end   
 if plot2Dgeometry && ~boundaryMethod
 %     figure(20+M)

@@ -1,4 +1,4 @@
-% function task = aGeneralProgram_sub(task,loopParameters,runTasksInParallel)
+function task = aGeneralProgram_sub(task,loopParameters,runTasksInParallel)
 % function [cond_number,p,abs_p,TS,p_ref,abs_p_ref,TS_ref,error_pAbs,error_p,energyError,L2Error,H1Error,surfaceError, ...
 %             k, f, dofs, nepw, tot_time, N, h_max, timeBuildSystem, analyticSolutionExist] = aGeneralProgram_sub(task,loopParameters,runTasksInParallel)
 % 

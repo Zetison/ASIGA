@@ -81,25 +81,27 @@ else
 end
 
 %% Create collocation points
-geometricSingularity = false;
-collocationC0 = false;
+colBEM_C0 = varCol.colBEM_C0;
 if p_xi == 1 && p_eta == 1
-    eps_greville_xi = 1/(4*p_xi);
-    eps_greville_eta = 1/(4*p_eta);
+%     eps_greville_xi = 1/(4*p_xi);
+%     eps_greville_eta = 1/(4*p_eta);
+    eps_greville_xi = 1/(colBEM_C0*p_xi);
+    eps_greville_eta = 1/(colBEM_C0*p_eta);
 else
     switch model
-        case {'SS','SS_P','S1','S3','S5','MS','TAP'}
-            eps_greville_xi = 0;
-            eps_greville_eta = 0;
-            geometricSingularity = true;
-            collocationC0 = true;
-        case 'Torus'
-            eps_greville_xi = 0;
-            eps_greville_eta = 0;
-            collocationC0 = true;
+        case {'SS','SS_P','S1','S3','S5','MS','TAP','Torus'}
+            if useHBIE
+                eps_greville_xi = 1/(colBEM_C0*p_xi);
+                eps_greville_eta = 1/(colBEM_C0*p_eta);
+            else
+                eps_greville_xi = 0;
+                eps_greville_eta = 0;
+            end
         otherwise
-            eps_greville_xi = 1/(2*p_xi);
-            eps_greville_eta = 1/(2*p_eta);
+%             eps_greville_xi = 1/(2*p_xi);
+%             eps_greville_eta = 1/(2*p_eta);
+            eps_greville_xi = 1/(colBEM_C0*p_xi);
+            eps_greville_eta = 1/(colBEM_C0*p_eta);
     end
 end
 n_cp = noDofs - length(dofsToRemove);
@@ -172,7 +174,7 @@ else
     dU = NaN;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-plotGP = 1;
+plotGP = 0;
 if plotGP
     close all
     for patch = 1:numel(patches)
@@ -211,9 +213,9 @@ p_max = max(p_xi,p_eta);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-for i = 1:n_cp
-    keyboard
-% parfor i = 1:n_cp
+% for i = 1:n_cp
+%     keyboard
+parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New
@@ -232,13 +234,19 @@ for i = 1:n_cp
     eta_idx = findKnotSpan(noElementsEta, 0, eta_x, uniqueEta);
     e_x = sum(noElemsPatch(1:patch-1)) + xi_idx + noElementsXi*(eta_idx-1);
     
+    idXi_x = index(e_x,1);
+    idEta_x = index(e_x,2);
+
+    Xi_e_x = elRangeXi(idXi_x,:);
+    Eta_e_x = elRangeEta(idEta_x,:);
 %         
     sctr_x = element(e_x,:);
     pts_x = controlPts(sctr_x,:);
     wgts = weights(element2(e_x,:),:); % New
 
-    if useHBIE
+    if useHBIE            
         [R_x, dR_xdxi, dR_xdeta] = NURBS2DBasis(xi_x, eta_x, p_xi, p_eta, Xi, Eta, wgts);
+        x = R_x*pts_x;
         J_temp = [dR_xdxi; dR_xdeta]*pts_x;
         m_1 = J_temp(1,:);
         m_2 = J_temp(2,:);
@@ -248,26 +256,18 @@ for i = 1:n_cp
         e_xi = m_1/h_xi;
         e_eta = m_2/h_eta;
 
-        if geometricSingularity
-            v_2 = m_2/h_eta;
-            nx = x.'/norm(x);
-            v_3 = nx.';
-            v_1 = cross(v_2,v_3);
-            J_x = [1, 0; 0, 1/h_eta];
-        else
-            v_1 = m_1/norm(m_1);
-            nx = crossProd_x/norm(crossProd_x);
-            v_3 = nx;
-            v_2 = cross(v_3,v_1);
-            cosT = dot(e_xi,e_eta);
-            sinT = dot(v_2,e_eta);
-            J_x = [1/h_xi, 0; -cosT/sinT/h_xi, 1/h_eta/sinT];
-        end
+        v_1 = m_1/norm(m_1);
+        nx = crossProd_x/norm(crossProd_x);
+        v_3 = nx;
+        v_2 = cross(v_3,v_1);
+        cosT = dot(e_xi,e_eta);
+        sinT = dot(v_2,e_eta);
+        J_x = [1/h_xi, 0; -cosT/sinT/h_xi, 1/h_eta/sinT];
     else
         R_x = NURBS2DBasis(xi_x, eta_x, p_xi, p_eta, Xi, Eta, wgts);
+        x = R_x*pts_x;
         nx = NaN;        
     end
-    x = R_x*pts_x;
 %     Phi_k_integralExp = 0;
 %     d2Phi_kdnxdny_integral = 0;
     dPhi_0dny_integral = complex(0);
@@ -294,7 +294,7 @@ for i = 1:n_cp
     end
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps,collocationC0);
+    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % % %             nx = x.'/norm(x);        
