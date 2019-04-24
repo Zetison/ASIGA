@@ -60,6 +60,7 @@ useROM = false;
 exteriorProblem = true;
 initMeshFactXi = 1;
 initMeshFactZeta = 1;
+colBEM_C0 = 100;
 
 M = 1;
 
