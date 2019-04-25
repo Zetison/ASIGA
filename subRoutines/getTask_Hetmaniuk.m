@@ -49,14 +49,14 @@ basisROMcell = {'Pade','Taylor'};  % do not put basisROMcell in loopParameters (
 % k_arr = 1/2*(a+b)+1/2*(b-a)*cos((2*n-2*j+1)*pi/(2*n));
 % k = k_arr(round(linspace(1,n,P)));
 k = [9, 22.5, 36];
-k = [9, 22.5, 36]/10;
-% k_ROM = k(1):0.05:k(end);
-k_ROM = k(1):0.005:k(end);
+% k = [9, 22.5, 36]/10;
+k_ROM = k(1):0.05:k(end);
+% k_ROM = k(1):0.005:k(end);
 % k_ROM = k(1):0.5:k(end);
 c_f = 1500;
 f = k*c_f/(2*pi);
-M = 4; % 5
-N = 9; % 9
+M = 5; % 5
+N = 7; % 9
 % M = 1; 
 % N = 2;
 useROM = true;
@@ -69,7 +69,7 @@ coreMethod = {'hp_FEM'};
 collectIntoTasks
 
 
-k = 9:0.05:36;
+k = k_ROM;
 % k = (9:1:36)/10;
 % k = 36;
 c_f = 1500;

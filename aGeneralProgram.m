@@ -16,7 +16,7 @@ addpath ../
 % return
 
 getTasks
-runTasksInParallel = 1;
+runTasksInParallel = 0;
 startMatlabPool
 % Create folders
 folderName = '../results';
