@@ -35,8 +35,8 @@ initMeshFactZeta = 4;
 
 noVecsArr = [8,16,24,32,64];        % do not put noVecsArr in loopParameters (this is done automatically)
 basisROMcell = {'Pade','Taylor'};  % do not put basisROMcell in loopParameters (this is done automatically)
-% basisROMcell = {'Pade'};  % do not put basisROMcell in loopParameters (this is done automatically)
-% noVecsArr = [8,16];
+basisROMcell = {'Pade'};  % do not put basisROMcell in loopParameters (this is done automatically)
+noVecsArr = 32;
 % noVecsArr = [8,32,64,128];
 % k_start = 9/10;
 % k_end = 36/10;
@@ -66,7 +66,7 @@ collectIntoTasks
 
 M = M-1; 
 coreMethod = {'hp_FEM'};
-collectIntoTasks
+% collectIntoTasks
 
 
 k = k_ROM;
@@ -79,16 +79,16 @@ useROM = false;
 coreMethod = {'hp_FEM'};
 method = {'BA'};
 formulation = {'VL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'IGA'};
 M = M+1; 
 formulation = {'VL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks

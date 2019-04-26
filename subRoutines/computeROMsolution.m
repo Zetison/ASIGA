@@ -32,6 +32,7 @@ for i_b = 1:numel(basisROMcell)
                 useHP = 1;
                 if useHP
 %                     mp.Digits(400);
+                    mp.Digits(1000);
                 end
                 for i = 1:P
                     n = ceil(noVecs/2)-1;
