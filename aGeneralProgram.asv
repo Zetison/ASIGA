@@ -1,4 +1,5 @@
 close all
+clear all
 
 addpath IGAfunctions
 addpath NURBS
@@ -22,15 +23,15 @@ if ~exist(folderName, 'dir')
     mkdir(folderName);
 end
 
-folderName = [folderName '/_studies'];
+folderName = '../results/_studies';
 if ~exist(folderName, 'dir')
     mkdir(folderName);
 end
-subFolderName = [folderName '/' studyName];
+subFolderName = [folderName '/studies1'];
 i = 1;
 while exist(subFolderName, 'dir')
     i = i + 1;
-    subFolderName = [folderName '/' studyName num2str(i)];
+    subFolderName = [folderName '/studies' num2str(i)];
 end
 mkdir(subFolderName);
 
@@ -58,7 +59,7 @@ for study_i = 1:numel(studies)
             if useROM
                 computeROMsolution
             end
-            studies(study_i).tasks(i_task,1).task = tasks(i_task,1).task;
+            studies(study_i).tasks(i_task,1).task = task;
             studies(study_i).subFolderName = subFolderName;
             fprintf('\nCompleted task %d/%d in study %d/%d\n\n', i_task, noTasks, study_i,length(studies)) 
             save([subFolderName '/_studies'], 'studies', '-v7.3')

@@ -9,6 +9,7 @@ BC = 'SHBC';
 formulation = {'BGU'};
 coreMethod = 'IGA';
 computeCondNumber = 0;
+runTasksInParallel = 1;
 
 c_f = 1500; % Speed of sound in outer fluid
 % k = 100;             % Wave number for outer fluid domain

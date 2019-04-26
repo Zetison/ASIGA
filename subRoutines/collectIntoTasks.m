@@ -81,6 +81,7 @@ end
 
 studies(counter).loopParameters = loopParameters;
 studies(counter).loopParametersArr = loopParametersArr;
+studies(counter).runTasksInParallel = runTasksInParallel;
 
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);
 
