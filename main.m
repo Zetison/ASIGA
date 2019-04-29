@@ -13,7 +13,9 @@ addpath ../export_fig
 addpath ../
 % addpath('/usr/local/AdvanpixMCT/4.6.0.13135')
 % return
-
+if exist('../availableStudies.m', 'file')
+    availableStudies
+end
 getTasks
 startMatlabPool
 % Create folders
@@ -43,7 +45,7 @@ for study_i = 1:numel(studies)
     runTasksInParallel = studies(study_i).runTasksInParallel;
     if runTasksInParallel
         parfor i_task = 1:length(tasks)
-            tasks(i_task).task = aGeneralProgram_sub(tasks(i_task).task,loopParameters,runTasksInParallel);
+            tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel);
             fprintf('\nCompleted task %d/%d in study %d/%d\n\n', i_task, noTasks, study_i,length(studies)) 
         end
         studies(study_i).tasks = tasks;
@@ -51,7 +53,7 @@ for study_i = 1:numel(studies)
         save([subFolderName '/_studies'], 'studies', '-v7.3')
     else
         for i_task = 1:noTasks
-            tasks(i_task).task = aGeneralProgram_sub(tasks(i_task).task,loopParameters,runTasksInParallel);
+            tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel);
             if plot3Dgeometry || plot2Dgeometry
                 return
             end

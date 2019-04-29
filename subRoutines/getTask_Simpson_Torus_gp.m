@@ -32,7 +32,7 @@ useNeumanProj = [0,1];
 computeCondNumber = true;
 plot3Dgeometry = 0;
  
-loopParameters = {'extraGP','extraGPBEM','agpBEM','M','degree','method','formulation','useNeumanProj'};
+loopParameters = {'extraGP','extraGPBEM','agpBEM','useNeumanProj','M','degree','method','formulation'};
 runTasksInParallel = 1;
 
 % applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries

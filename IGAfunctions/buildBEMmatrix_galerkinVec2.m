@@ -68,8 +68,45 @@ else
     sgn = 1;
 end
 
+useNeumanProj = varCol.useNeumanProj;
+if useNeumanProj
+    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+else
+    U = NaN;
+    dU = NaN;
+end
+
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+plotGP = 0;
+if plotGP
+    close all
+    for patch = 1:numel(patches)
+        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
+    end
+    axis equal
+    axis off
+    set(gca, 'Color', 'none');
+    view(-100,20)
+    drawnow
+    hold on
+    if false
+        cp = zeros(size(cp_p,1),3);
+        for j = 1:size(cp_p,1)
+            patch = patchIdx(j);
+            cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
+            plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
+        end
+    end
+    ax = gca;               % get the current axis
+    ax.Clipping = 'off';    % turn clipping off
+    h = findobj('type','line');
+    noLines = numel(h);
+    % keyboard
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 n_en = (p_xi+1)*(p_eta+1);
 % 
@@ -83,8 +120,8 @@ p_max = max(p_xi,p_eta);
 idxRow = zeros(n_en, noElems);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
-parfor e_x = 1:noElems
-% for e_x = 1:noElems
+% parfor e_x = 1:noElems
+for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
     Xi_x = knotVecs{patch_x}{1}; % New
     Eta_x = knotVecs{patch_x}{2}; % New
@@ -135,6 +172,24 @@ parfor e_x = 1:noElems
             sinT = dot(v_2,e_eta);
             dXIdv = [1/h_xi, 0; -cosT/sinT/h_xi, 1/h_eta/sinT];
         end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         keyboard
+        if plotGP
+            foundMarker = true;
+            while foundMarker
+                foundMarker = false;
+                h = findobj('type','line');
+                for i_h = 1:numel(h)
+                    if strcmp(h(i_h).Marker,'*')
+                        delete(h(i_h));
+                        foundMarker = true;
+                        break
+                    end
+                end
+            end
+            plot3(x(1),x(2),x(3), '*', 'color','red')
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         dPhi_0dny_integral = 0;
         d2Phi_0dnxdny_integral = 0;
@@ -159,7 +214,6 @@ parfor e_x = 1:noElems
 
             if useCBIE
                 CBIE = zeros(1, n_en);
-%                 CBIE2 = zeros(1, n_en);
             end
             if useHBIE
                 HBIE = zeros(1, n_en);
@@ -191,8 +245,8 @@ parfor e_x = 1:noElems
                             end
                     end
 
-                    rho_t = parent2ParametricSpace([0, 1],   Q2D_2(:,1));
-                    theta = parent2ParametricSpace(thetaRange,Q2D_2(:,2));
+                    rho_t = parent2ParametricSpace([0, 1],   flipud(Q2D_2(:,2)));
+                    theta = parent2ParametricSpace(thetaRange,flipud(Q2D_2(:,1)));
                     switch area{1}
                         case 'South'
                             rho_hat = (-1 - eta_x_t)./sin(theta);
@@ -224,20 +278,30 @@ parfor e_x = 1:noElems
                     J_3_y = rho;
                     J_4_y = rho_hat;
                     J_5_y = 0.25*(thetaRange(2)-thetaRange(1));
-                    fact_y = J_1_y*J_2_y.*J_3_y.*J_4_y*J_5_y.*W2D_2;
+                    fact_y = J_1_y*J_2_y.*J_3_y.*J_4_y*J_5_y.*flipud(W2D_2);
 
                     y = R_y*pts_y;
 
                     xmy = x(ones(noGp,1),:)-y;
                     r = norm2(xmy);
 
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    if plotGP
+                        plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                    end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
                     if ~SHBC
+                        if useNeumanProj
+                            dpdn_y = R_y*U(sctr_y,:);
+                        else
+                            dpdn_y = dpdn(y,ny);
+                        end
                         if useCBIE
-                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact_y);
+                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
                         end
                         if useHBIE
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact_y);
+                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
                         end
                     end
                     dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -246,15 +310,17 @@ parfor e_x = 1:noElems
                     if useCBIE
 %                         CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
                         CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
-%                         CBIE2 = CBIE2 - fact_y.'*(Phi_0dny_*R_x);
                     end
                     if useHBIE
                         d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
-                        d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
-                        HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact_y).'*R_y;
+%                         d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
+                        HBIE = HBIE + ((d2Phi_kdnxdny(xmy,r,nx.',ny) - d2Phi_0dnxdny_).*fact_y).'*R_y;
+                        temp = ((xmy*v_1.')*dXIdv(1,:) + (xmy*v_2.')*dXIdv(2,:))*[dR_xdxi; dR_xdeta];
+%                         temp = (xmy*v_1.')*(dXIdv(1,1)*dR_xdxi+dXIdv(1,2)*dR_xdeta) ...
+%                              + (xmy*v_2.')*(dXIdv(2,1)*dR_xdxi+dXIdv(2,2)*dR_xdeta);
+                        HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + temp);
                         dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                        ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
-                                                                            + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
+                        ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1).';
                     end
                 end
             else
@@ -298,19 +364,28 @@ parfor e_x = 1:noElems
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
 
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                if plotGP
+                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 if ~SHBC
+                    if useNeumanProj
+                        dpdn_y = R_y*U(sctr_y,:);
+                    else
+                        dpdn_y = dpdn(y,ny);
+                    end
                     if useCBIE
-                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn(y,ny).*fact_y);
+                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
                     end
                     if useHBIE
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn(y,ny).*fact_y);
+                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
                     end
                 end
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
                 dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
                 if useCBIE
                     CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
-%                     CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
                 end
                 if useHBIE
                     d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
@@ -331,23 +406,47 @@ parfor e_x = 1:noElems
         end
         if useCBIE
             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn) + dPhi_0dny_integral)*fact_x;
-%             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn))*fact_x;
         end
         if useHBIE
             temp = (dXIdv(1,:)*(v_1*ugly_integral) + dXIdv(2,:)*(v_2*ugly_integral))*[dR_xdxi; dR_xdeta];
             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + alpha*R_x.'*(-R_x*d2Phi_0dnxdny_integral + temp)*fact_x;
         end
+        if useNeumanProj
+            if SHBC
+                if useCBIE
+                    p_inc_x = R_x*U(sctr_x,:);
+                end
+                if useHBIE
+                    dp_inc_x = R_x*dU(sctr_x,:);
+                end
+            else
+                dpdn_x = R_x*U(sctr_x,:);
+            end
+        else
+            if SHBC
+                if useCBIE
+                    p_inc_x = p_inc(x);
+                end
+                if useHBIE
+                    dp_inc_x = dp_inc(x,nx);
+                end
+            else
+                if useHBIE
+                    dpdn_x = dpdn(x,nx);
+                end
+            end
+        end
         if SHBC
             if useCBIE
-                F_e = F_e - R_x.'*p_inc(x).'*fact_x;
+                F_e = F_e - R_x.'*p_inc_x*fact_x;
             end
             if useHBIE
-                F_e = F_e - alpha*R_x.'*dp_inc(x,nx).'*fact_x;
+                F_e = F_e - alpha*R_x.'*dp_inc_x*fact_x;
             end
         else
             F_e = F_e + R_x.'*FF_temp*fact_x;
             if useHBIE
-                F_e = F_e + alpha*R_x.'*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral)*fact_x;
+                F_e = F_e + alpha*R_x.'*dpdn_x*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral)*fact_x;
             end
         end
     end

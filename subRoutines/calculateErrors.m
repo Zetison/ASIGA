@@ -8,7 +8,7 @@ if boundaryMethod
         surfaceError = calcSurfErrorBndryMethodVec(varCol, U_fluid_o, task.LpOrder);
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)   
-            fprintf('\nSurface error = %g', surfaceError)
+            fprintf('\nSurface error = %.16g', surfaceError)
         end
         if i_k == 1
             task.results.surfaceError = zeros(1,size(k,2));
@@ -24,7 +24,7 @@ else
         surfaceError = calcSurfErrorVec(varCol, U_fluid_o, task.LpOrder);
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc) 
-            fprintf('\nSurface error = %g', surfaceError)
+            fprintf('\nSurface error = %.16g', surfaceError)
         end
         if i_k == 1
             task.results.surfaceError = zeros(1,size(k,2));
@@ -54,9 +54,9 @@ else
         end
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)
-            fprintf('\nVolume L2-error = %f', L2Error)
-            fprintf('\nVolume H1-error = %f', H1Error)
-            fprintf('\nVolume Energy-error = %f', energyError)
+            fprintf('\nVolume L2-error = %.16g', L2Error)
+            fprintf('\nVolume H1-error = %.16g', H1Error)
+            fprintf('\nVolume Energy-error = %.16g', energyError)
         end
         if i_k == 1
             task.results.energyError = zeros(1,size(k,2));

@@ -1,32 +1,5 @@
-function task = aGeneralProgram_sub(task,loopParameters,runTasksInParallel)
+function task = main_sub(task,loopParameters,runTasksInParallel)
 
-% cond_number = 0.0;
-% p = complex(zeros(size(task.alpha)));
-% abs_p = zeros(size(task.alpha));
-% TS = zeros(size(task.alpha));
-% 
-% p_ref = complex(zeros(size(task.alpha)));
-% abs_p_ref = zeros(size(task.alpha));
-% TS_ref = zeros(size(task.alpha));
-% 
-% error_pAbs = zeros(size(task.alpha));
-% error_p = zeros(size(task.alpha));
-% energyError = 0.0;
-% L2Error = 0.0;
-% H1Error = 0.0;
-% surfaceError = 0.0;
-% k = 0.0;
-% f = 0.0;
-% dofs = 0.0;
-% nepw = 0.0;
-% tot_time = 0.0;
-% N = 0.0;
-% h_max = 0.0;
-% timeBuildSystem = 0.0;
-% analyticSolutionExist = false;
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 stringShift = 40;
 extractTaskData
 
