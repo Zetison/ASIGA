@@ -17,7 +17,6 @@ f = omega/(2*pi);
 
 applyLoad = 'radialPulsation';
 
-M = 1:3; 
 M = 1; 
 parm = 2;
 
@@ -47,24 +46,20 @@ extraGPBEM = 2; % extra quadrature points around singularities for BEM formulati
 runTasksInParallel = true;
 method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
-formulation = {'CBM'};
-colBEM_C0 = [2,100,Inf];
+formulation = {'CCBIE','CBM'};
+colBEM_C0 = [2,Inf];
 % colBEM_C0 = Inf;
 extraGP = [0,1,2,4,8,16]; % extra quadrature points
 % extraGP = 4; % extra quadrature points
-extraGPBEM = 0:20; % extra quadrature points around singularities for BEM formulations
+extraGPBEM = 0:32; % extra quadrature points around singularities for BEM formulations
 % extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
 agpBEM = [2,4,8];
 % agpBEM = 8;
 collectIntoTasks
 
-formulation = {'CCBIE'};
-colBEM_C0 = Inf;
-collectIntoTasks
-
 formulation = {'GCBIE','GBM'};
 colBEM_C0 = Inf;
-% collectIntoTasks
+collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,7 +67,7 @@ colBEM_C0 = Inf;
 method = {'BA'};
 formulation = {'SL2E'};
 extraGP = 16; % extra quadrature points
-extraGPBEM = [0,32]; % extra quadrature points around singularities for BEM formulations
+extraGPBEM = [extraGPBEM(1),extraGPBEM(end)]; % extra quadrature points around singularities for BEM formulations
 % extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
 agpBEM = NaN;
 collectIntoTasks

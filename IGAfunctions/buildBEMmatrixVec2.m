@@ -83,27 +83,11 @@ end
 %% Create collocation points
 colBEM_C0 = varCol.colBEM_C0;
 if p_xi == 1 && p_eta == 1
-%     eps_greville_xi = 1/(4*p_xi);
-%     eps_greville_eta = 1/(4*p_eta);
+    eps_greville_xi = 1/(2*colBEM_C0*p_xi);
+    eps_greville_eta = 1/(2*colBEM_C0*p_eta);
+else
     eps_greville_xi = 1/(colBEM_C0*p_xi);
     eps_greville_eta = 1/(colBEM_C0*p_eta);
-else
-    switch model
-        case {'SS','S1','S3','S5','MS','TAP','Torus', ...
-              'SS_P','S1_P','S3_P','S5_P','MS_P','TAP_P','Torus_P'}
-            if useHBIE
-                eps_greville_xi = 1/(colBEM_C0*p_xi);
-                eps_greville_eta = 1/(colBEM_C0*p_eta);
-            else
-                eps_greville_xi = 0;
-                eps_greville_eta = 0;
-            end
-        otherwise
-%             eps_greville_xi = 1/(2*p_xi);
-%             eps_greville_eta = 1/(2*p_eta);
-            eps_greville_xi = 1/(colBEM_C0*p_xi);
-            eps_greville_eta = 1/(colBEM_C0*p_eta);
-    end
 end
 n_cp = noDofs - length(dofsToRemove);
 counter2 = 1;
@@ -176,15 +160,17 @@ else
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plotGP = 0;
+plotPointsAsSpheres = 1;
 if plotGP
     close all
     for patch = 1:numel(patches)
-        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
+        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100], 'elementBasedSamples',true,'samplingDistance',0.1});
     end
     axis equal
     axis off
     set(gca, 'Color', 'none');
-    view(-100,20)
+%     view(-100,20)
+    view(10,20)
     drawnow
     hold on
     if false
@@ -199,6 +185,7 @@ if plotGP
     ax.Clipping = 'off';    % turn clipping off
     h = findobj('type','line');
     noLines = numel(h);
+    camlight
     % keyboard
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -216,9 +203,21 @@ Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
 % for i = 1:n_cp
-%     keyboard
+%     if plotGP
+%         keyboard
+%     end
+% %     if ismember(i,[97,99,116])
+%     if i == 281
+% %     if i == 283
+% %     if i == 392
+% %     if i == NaN
+%         plotGP = true;
+%         keyboard
+%     else
+%         plotGP = false;
+%     end
 parfor i = 1:n_cp
-%     totArea = 0;
+    totArea = 0;
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New
     Eta = knotVecs{patch}{2}; % New
@@ -272,6 +271,10 @@ parfor i = 1:n_cp
         x = R_x*pts_x;
         nx = NaN;        
     end
+%     if norm(x-[0,-1,0]) < 1e-1
+%     if norm(x-[0.44774,-0.8532,0.26754]) < 1e-1
+%         keyboard
+%     end
     if useNeumanProj
         if SHBC
             if useCBIE
@@ -319,7 +322,12 @@ parfor i = 1:n_cp
                 end
             end
         end
-        plot3(x(1),x(2),x(3), '*', 'color','red')
+        if plotPointsAsSpheres
+            [Xs,Ys,Zs] = sphere(50);
+            surf(1e-2*Xs+x(1),1e-2*Ys+x(2),1e-2*Zs+x(3), 'FaceColor', 'blue','EdgeColor','none','LineStyle','none')
+        else
+            plot3(x(1),x(2),x(3), '*', 'color','red')
+        end
     end
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -545,7 +553,14 @@ parfor i = 1:n_cp
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 if plotGP
-                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                    if plotPointsAsSpheres
+                        [Xs,Ys,Zs] = sphere(50);
+                        for ii = 1:size(y,1)
+                            surf(1e-2*Xs+y(ii,1),1e-2*Ys+y(ii,2),1e-2*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
+                        end
+                    else
+                        plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                    end
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
@@ -624,7 +639,14 @@ parfor i = 1:n_cp
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if plotGP
-                plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                if plotPointsAsSpheres
+                    [Xs,Ys,Zs] = sphere(50);
+                    for ii = 1:size(y,1)
+                        surf(1e-2*Xs+y(ii,1),1e-2*Ys+y(ii,2),1e-2*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
+                    end
+                else
+                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                end
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             xmy = x(ones(noGp,1),:)-y;
