@@ -9,7 +9,11 @@ BC = 'NBC';
 formulation = {'BGU'};
 coreMethod = 'IGA';
 
-f = 1/(2*pi);
+
+c_f = 1500;
+k = 1;
+omega = k*c_f;
+f = omega/(2*pi); 
 
 applyLoad = 'radialPulsation';
 
@@ -40,23 +44,27 @@ extraGPBEM = 2; % extra quadrature points around singularities for BEM formulati
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-runTasksInParallel    = true;
+runTasksInParallel = true;
 method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
-formulation = {'CCBIE','CBM'};
+formulation = {'CBM'};
 colBEM_C0 = [2,100,Inf];
 % colBEM_C0 = Inf;
 extraGP = [0,1,2,4,8,16]; % extra quadrature points
-% extraGP = 8; % extra quadrature points
-extraGPBEM = 0:32; % extra quadrature points around singularities for BEM formulations
+% extraGP = 4; % extra quadrature points
+extraGPBEM = 0:20; % extra quadrature points around singularities for BEM formulations
 % extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
 agpBEM = [2,4,8];
 % agpBEM = 8;
 collectIntoTasks
 
-formulation = {'GCBIE','GBM'};
-colBEM_C0 = NaN;
+formulation = {'CCBIE'};
+colBEM_C0 = Inf;
 collectIntoTasks
+
+formulation = {'GCBIE','GBM'};
+colBEM_C0 = Inf;
+% collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
