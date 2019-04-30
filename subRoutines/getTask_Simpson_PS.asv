@@ -25,7 +25,7 @@ plotFarField          = 0;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
-loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation'};
+loopParameters = {'extraGPBEM','extraGP','agpBEM','M', 'method','formulation'};
 
 % collectIntoTasks
 
@@ -58,14 +58,4 @@ formulation = {'GCBIE','GBM'};
 colBEM_C0 = NaN;
 collectIntoTasks
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% BA simulation
-method = {'BA'};
-formulation = {'SL2E'};
-extraGP = 16; % extra quadrature points
-extraGPBEM = [0,32]; % extra quadrature points around singularities for BEM formulations
-% extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
-agpBEM = NaN;
-collectIntoTasks
 

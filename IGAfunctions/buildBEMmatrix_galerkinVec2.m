@@ -113,6 +113,8 @@ n_en = (p_xi+1)*(p_eta+1);
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
 p_max = max(p_xi,p_eta);
 [W2D_2,Q2D_2] = gaussianQuadNURBS(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
+W2D_2 = flipud(W2D_2); % to reduce round-off errors in summation?
+Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 % [W2D,Q2D] = gaussianQuadNURBS(2*p_xi+1,2*p_eta+1);
 % p_max = max(p_xi,p_eta);
 % [W2D_2,Q2D_2] = gaussianQuadNURBS(6*p_max+1,6*p_max+1);
@@ -120,8 +122,8 @@ p_max = max(p_xi,p_eta);
 idxRow = zeros(n_en, noElems);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
-% parfor e_x = 1:noElems
-for e_x = 1:noElems
+parfor e_x = 1:noElems
+% for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
     Xi_x = knotVecs{patch_x}{1}; % New
     Eta_x = knotVecs{patch_x}{2}; % New
@@ -171,6 +173,33 @@ for e_x = 1:noElems
             cosT = dot(e_xi,e_eta);
             sinT = dot(v_2,e_eta);
             dXIdv = [1/h_xi, 0; -cosT/sinT/h_xi, 1/h_eta/sinT];
+            dR_xdv = dXIdv*[dR_xdxi; dR_xdeta];
+            v_dR_xdv = [v_1.', v_2.']*dR_xdv;
+        end
+        if useNeumanProj
+            if SHBC
+                if useCBIE
+                    p_inc_x = R_x*U(sctr_x,:);
+                end
+                if useHBIE
+                    dp_inc_x = R_x*dU(sctr_x,:);
+                end
+            else
+                dpdn_x = R_x*U(sctr_x,:);
+            end
+        else
+            if SHBC
+                if useCBIE
+                    p_inc_x = p_inc(x);
+                end
+                if useHBIE
+                    dp_inc_x = dp_inc(x,nx);
+                end
+            else
+                if useHBIE
+                    dpdn_x = dpdn(x,nx);
+                end
+            end
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         keyboard
@@ -245,8 +274,8 @@ for e_x = 1:noElems
                             end
                     end
 
-                    rho_t = parent2ParametricSpace([0, 1],   flipud(Q2D_2(:,2)));
-                    theta = parent2ParametricSpace(thetaRange,flipud(Q2D_2(:,1)));
+                    rho_t = parent2ParametricSpace([0, 1],    Q2D_2(:,2));
+                    theta = parent2ParametricSpace(thetaRange,Q2D_2(:,1));
                     switch area{1}
                         case 'South'
                             rho_hat = (-1 - eta_x_t)./sin(theta);
@@ -278,12 +307,9 @@ for e_x = 1:noElems
                     J_3_y = rho;
                     J_4_y = rho_hat;
                     J_5_y = 0.25*(thetaRange(2)-thetaRange(1));
-                    fact_y = J_1_y*J_2_y.*J_3_y.*J_4_y*J_5_y.*flipud(W2D_2);
+                    fact_y = J_1_y*J_2_y.*J_3_y.*J_4_y*J_5_y.*W2D_2;
 
                     y = R_y*pts_y;
-
-                    xmy = x(ones(noGp,1),:)-y;
-                    r = norm2(xmy);
 
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     if plotGP
@@ -291,9 +317,14 @@ for e_x = 1:noElems
                     end
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+                    xmy = x(ones(noGp,1),:)-y;
+                    r = norm2(xmy);
+                    
+                    dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
                     if ~SHBC
                         if useNeumanProj
-                            dpdn_y = R_y*U(sctr_y,:);
+                            dpdn_y = R_y*U(sctr,:);
                         else
                             dpdn_y = dpdn(y,ny);
                         end
@@ -301,26 +332,21 @@ for e_x = 1:noElems
                             FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
                         end
                         if useHBIE
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
+                            dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                            d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
+                            FF_temp = FF_temp + alpha*sum((dPhi_kdnx(xmy,r,nx.')+dPhi_0dny_).*dpdn_y.*fact_y);
+                            FF_temp = FF_temp - alpha*sum(dPhi_0dny_.*(dpdn_y-dpdn_x).*fact_y);
+                            FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);
                         end
                     end
-                    dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
 
-%                     dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
                     if useCBIE
-%                         CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
                         CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
                     end
                     if useHBIE
-                        d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
-%                         d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
                         HBIE = HBIE + ((d2Phi_kdnxdny(xmy,r,nx.',ny) - d2Phi_0dnxdny_).*fact_y).'*R_y;
-                        temp = ((xmy*v_1.')*dXIdv(1,:) + (xmy*v_2.')*dXIdv(2,:))*[dR_xdxi; dR_xdeta];
-%                         temp = (xmy*v_1.')*(dXIdv(1,1)*dR_xdxi+dXIdv(1,2)*dR_xdeta) ...
-%                              + (xmy*v_2.')*(dXIdv(2,1)*dR_xdxi+dXIdv(2,2)*dR_xdeta);
-                        HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + temp);
-                        dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                        ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1).';
+                        HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + xmy*v_dR_xdv);
+                        HBIE = HBIE + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1)*v_dR_xdv;
                     end
                 end
             else
@@ -410,31 +436,6 @@ for e_x = 1:noElems
         if useHBIE
             temp = (dXIdv(1,:)*(v_1*ugly_integral) + dXIdv(2,:)*(v_2*ugly_integral))*[dR_xdxi; dR_xdeta];
             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + alpha*R_x.'*(-R_x*d2Phi_0dnxdny_integral + temp)*fact_x;
-        end
-        if useNeumanProj
-            if SHBC
-                if useCBIE
-                    p_inc_x = R_x*U(sctr_x,:);
-                end
-                if useHBIE
-                    dp_inc_x = R_x*dU(sctr_x,:);
-                end
-            else
-                dpdn_x = R_x*U(sctr_x,:);
-            end
-        else
-            if SHBC
-                if useCBIE
-                    p_inc_x = p_inc(x);
-                end
-                if useHBIE
-                    dp_inc_x = dp_inc(x,nx);
-                end
-            else
-                if useHBIE
-                    dpdn_x = dpdn(x,nx);
-                end
-            end
         end
         if SHBC
             if useCBIE

@@ -294,19 +294,18 @@ for i_k = 1:size(k,2)
             if ~runTasksInParallel
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
             end
-            switch BC
-                case 'SHBC'
-                    if ~strcmp(varCol.coreMethod,'SEM')
-                        if useROM
-                            FF = 1/(rho_f(1)*omega^2)*applyHWBC_ROM(varCol,noVecs);
-                        else
-                            FF = 1/(rho_f(1)*omega^2)*applyHWBC(varCol,length(alpha_s));  
-                        end
+            if ~useSolidDomain
+                if ~strcmp(varCol.coreMethod,'SEM')
+                    if useROM
+                        FF = 1/(rho_f(1)*omega^2)*applyHWBC_ROM(varCol,noVecs);
+                    else
+                        FF = 1/(rho_f(1)*omega^2)*applyHWBC(varCol,length(alpha_s));  
                     end
-                otherwise
-                    varCol_solid.p_inc = p_inc;
-                    varCol_solid.dp_inc = dp_inc;
-                    FF = applyNeumannCondition_CoupledProblem(varCol_solid,omega,rho_f(1),length(alpha_s), shift);
+                end
+            else
+                varCol_solid.p_inc = p_inc;
+                varCol_solid.dp_inc = dp_inc;
+                FF = applyNeumannCondition_CoupledProblem(varCol_solid,omega,rho_f(1),length(alpha_s), shift);
             end 
             if ~runTasksInParallel
                 fprintf('using %12f seconds.', toc)
@@ -397,8 +396,8 @@ for i_k = 1:size(k,2)
                             [A, FF] = buildRBEMmatrix_galerkinVec(varCol);  
                         otherwise
 %                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
-                            [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
-%                             [A, FF] = buildBEMmatrix_galerkinVec2(varCol);  
+%                             [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
+                            [A, FF] = buildBEMmatrix_galerkinVec2(varCol);  
                     end
                     A(dofsToRemove,:) = [];
                     FF(dofsToRemove,:) = [];
@@ -408,7 +407,8 @@ for i_k = 1:size(k,2)
                             [A, FF] = buildRBEMmatrixVec(varCol);  
 %                             [A, FF] = buildRBEMmatrix(varCol);  
                         otherwise
-                            [A, FF] = buildBEMmatrixVec(varCol);  
+%                             [A, FF] = buildBEMmatrixVec(varCol);  
+                            [A, FF] = buildBEMmatrixVec2(varCol);  
     %                         [A, FF] = buildBEMmatrix(varCol);  
                     end
             end 
