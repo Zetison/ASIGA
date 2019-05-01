@@ -15,7 +15,7 @@ for study_i = 1:numel(studies)
     figure(4)
     printResultsToTextFiles(study,options)
 end
-if 1
+if 0
     figure(4)
     for res = [4,8]
         f = 1000;
@@ -55,10 +55,10 @@ else
     l2errorCOMSOL2 = zeros(1,4);
     p_ref2 = 10.^(y/20);
     counter = 1;
-    % for res = [10,20,40,80]
-    %     f = 100;
-    for res = [1,2,4,8]
-        f = 1000;
+    for res = [10,20,40,80]
+        f = 100;
+%     for res = [1,2,4,8]
+%         f = 1000;
         alpha_s = 240;
         T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(res) '_noPMLayers_' num2str(10) '_A' num2str(alpha_s) '_F' num2str(f) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
@@ -107,14 +107,14 @@ else
         legend('show');
         hold on
     %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
-    %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
-        Error = 100*abs(10.^(y/20)-p_ref3)./max(p_ref3);
+        Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
+%         Error = 100*abs(10.^(y/20)-p_ref3)./max(p_ref3);
         l2errorWTD71(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
         l2errorWTD712(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
     %     l2errorWTD713(counter) = 100*sqrt(sum((10.^(y/20)-p_ref3).^2)./sum(p_ref(1:end-1).^2));
         counter = counter + 1;
     %     printResultsToFile2(['../results/BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
-        figure(42)
+        figure(44)
         semilogy(180/pi*alpha,Error,'DisplayName',['WTD71 res' num2str(res)])
         hold on
     end

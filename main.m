@@ -14,9 +14,10 @@ addpath ../
 % addpath('/usr/local/AdvanpixMCT/4.6.0.13135')
 % return
 if exist('../availableStudies.m', 'file')
+    clear all %#ok
     availableStudies
 end
-getTasks
+studies = getTasks(studyName);
 startMatlabPool
 % Create folders
 folderName = '../results';

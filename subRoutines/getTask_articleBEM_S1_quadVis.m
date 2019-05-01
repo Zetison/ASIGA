@@ -13,7 +13,7 @@ f = omega/(2*pi);
 
 applyLoad = 'radialPulsation';
 
-M = 1; 
+M = 4; 
 parm = 1;
 
 degree = 2;
@@ -28,7 +28,7 @@ loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulat
 %% BEM simulation
 method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
-formulation = {'CBM'};
+formulation = {'CCBIE'};
 colBEM_C0 = Inf;
 % colBEM_C0 = Inf;
 extraGP = 0; % extra quadrature points

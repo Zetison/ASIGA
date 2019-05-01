@@ -159,8 +159,12 @@ else
     dU = NaN;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% for i = [354,317,319,392]
 plotGP = 0;
 plotPointsAsSpheres = 1;
+pointsRadius = 6e-3;
+lineColor = 'blue';
+lineStyle = '-';
 if plotGP
     close all
     for patch = 1:numel(patches)
@@ -202,20 +206,19 @@ W2D_2 = flipud(W2D_2); % to reduce round-off errors in summation?
 Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-% for i = 1:n_cp
+% for i = 319
+% for i = 392
+% for i = 317
 %     if plotGP
 %         keyboard
 %     end
-% %     if ismember(i,[97,99,116])
-%     if i == 281
-% %     if i == 283
-% %     if i == 392
-% %     if i == NaN
+%     if ismember(i,[97,99,116])
 %         plotGP = true;
 %         keyboard
 %     else
 %         plotGP = false;
 %     end
+% for i = 1:n_cp
 parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
@@ -227,7 +230,6 @@ parfor i = 1:n_cp
     noElementsEta = length(uniqueEta)-1;
     
     A_row = complex(zeros(1, noDofs));
-
     xi_x = cp_p(i,1);
     eta_x = cp_p(i,2);
 
@@ -240,6 +242,10 @@ parfor i = 1:n_cp
 
     Xi_e_x = elRangeXi(idXi_x,:);
     Eta_e_x = elRangeEta(idEta_x,:);
+%     if plotGP && i == 354
+%         xi_x = parent2ParametricSpace(Xi_e_x, Q2D(1,1));
+%         eta_x = parent2ParametricSpace(Eta_e_x, Q2D(1,1));
+%     end
 %         
     sctr_x = element(e_x,:);
     pts_x = controlPts(sctr_x,:);
@@ -293,8 +299,8 @@ parfor i = 1:n_cp
         x = R_x*pts_x;
         nx = NaN;        
     end
-%     if norm(x-[0,-1,0]) < 1e-1
-%     if norm(x-[0.44774,-0.8532,0.26754]) < 1e-1
+%     if norm(x-[0,-1,0]) < 1e-2
+% %     if norm(x-[0.44774,-0.8532,0.26754]) < 1e-1
 %         keyboard
 %     end
     if useNeumanProj
@@ -331,26 +337,26 @@ parfor i = 1:n_cp
     
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if plotGP
-        foundMarker = true;
-        while foundMarker
-            foundMarker = false;
-            h = findobj('type','line');
-            for i_h = 1:numel(h)
-                if strcmp(h(i_h).Marker,'*')
-                    delete(h(i_h));
-                    foundMarker = true;
-                    break
-                end
-            end
-        end
-        if plotPointsAsSpheres
-            [Xs,Ys,Zs] = sphere(50);
-            surf(1e-2*Xs+x(1),1e-2*Ys+x(2),1e-2*Zs+x(3), 'FaceColor', 'blue','EdgeColor','none','LineStyle','none')
-        else
-            plot3(x(1),x(2),x(3), '*', 'color','red')
-        end
-    end
+%     if plotGP
+%         foundMarker = true;
+%         while foundMarker
+%             foundMarker = false;
+%             h = findobj('type','line');
+%             for i_h = 1:numel(h)
+%                 if strcmp(h(i_h).Marker,'*')
+%                     delete(h(i_h));
+%                     foundMarker = true;
+%                     break
+%                 end
+%             end
+%         end
+%         if plotPointsAsSpheres
+%             [Xs,Ys,Zs] = sphere(50);
+%             surf(pointsRadius*Xs+x(1),pointsRadius*Ys+x(2),pointsRadius*Zs+x(3), 'FaceColor', 'blue','EdgeColor','none','LineStyle','none')
+%         else
+%             plot3(x(1),x(2),x(3), '*', 'color','red')
+%         end
+%     end
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
@@ -574,16 +580,38 @@ parfor i = 1:n_cp
                     R_y = R_y.*temp(:,ones(1,noGp));
                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if plotGP
-                    if plotPointsAsSpheres
-                        [Xs,Ys,Zs] = sphere(50);
-                        for ii = 1:size(y,1)
-                            surf(1e-2*Xs+y(ii,1),1e-2*Ys+y(ii,2),1e-2*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
-                        end
-                    else
-                        plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-                    end
-                end
+%                 if plotGP
+%                     if plotPointsAsSpheres
+%                         [Xs,Ys,Zs] = sphere(50);
+%                         for ii = 1:size(y,1)
+%                             surf(pointsRadius*Xs+y(ii,1),pointsRadius*Ys+y(ii,2),pointsRadius*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
+%                         end
+%                     else
+%                         plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+%                     end
+%                     rho_t2 = linspace2(0,1,100).';
+%                     theta2 = thetaRange(1);
+%                     switch area{1}
+%                         case 'South'
+%                             rho_hat2 = (-1 - eta_x_t)./sin(theta2);
+%                         case 'East'
+%                             rho_hat2 = ( 1 - xi_x_t)./cos(theta2);
+%                         case 'North'
+%                             rho_hat2 = ( 1 - eta_x_t)./sin(theta2);
+%                         case 'West'
+%                             rho_hat2 = (-1 - xi_x_t)./cos(theta2);
+%                     end
+%                     rho2 = rho_hat2.*rho_t2;
+% 
+%                     xi_t2  = xi_x_t + rho2.*cos(theta2);
+%                     eta_t2 = eta_x_t + rho2.*sin(theta2);
+%                     xi = parent2ParametricSpace(Xi_e, xi_t2);
+%                     eta = parent2ParametricSpace(Eta_e, eta_t2);
+%                     if ~(all(abs(xi-Xi_e(1)) < Eps) || all(abs(xi-Xi_e(2)) < Eps) || all(abs(eta-Eta_e(1)) < Eps) || all(abs(eta-Eta_e(2)) < Eps))
+%                         yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi,eta]);
+%                         plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
+%                     end
+%                 end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 xmy = x(ones(noGp,1),:)-y;
                 r = norm2(xmy);
@@ -607,7 +635,6 @@ parfor i = 1:n_cp
                         FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);
                     end
                 end
-                
                 if useCBIE
                     CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
                 end
@@ -651,7 +678,6 @@ parfor i = 1:n_cp
             crossProd = cross(J1,J2,2);
             J_1 = norm2(crossProd);
             ny = crossProd./J_1(:,[1,1,1]);
-
             fact_y = J_1*J_2.*W2D_1;
 
             y = R_y*pts;
@@ -660,16 +686,28 @@ parfor i = 1:n_cp
                 R_y = R_y.*temp(:,ones(1,noGp));
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if plotGP
-                if plotPointsAsSpheres
-                    [Xs,Ys,Zs] = sphere(50);
-                    for ii = 1:size(y,1)
-                        surf(1e-2*Xs+y(ii,1),1e-2*Ys+y(ii,2),1e-2*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
-                    end
-                else
-                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-                end
-            end
+%             if plotGP
+%                 if plotPointsAsSpheres
+%                     [Xs,Ys,Zs] = sphere(50);
+%                     for ii = 1:size(y,1)
+%                         surf(pointsRadius*Xs+y(ii,1),pointsRadius*Ys+y(ii,2),pointsRadius*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
+%                     end
+%                 else
+%                     plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+%                 end
+%                 for i_xi = 2:n_div
+%                     xi = Xi_e_arr(i_xi);
+%                     eta = linspace2(Eta_e(1),Eta_e(2),100).';
+%                     yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi(ones(100,1)),eta]);
+%                     plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
+%                 end
+%                 for i_eta = 2:n_div
+%                     eta = Eta_e_arr(i_eta);
+%                     xi = linspace2(Xi_e(1),Xi_e(2),100).';
+%                     yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi,eta(ones(100,1))]);
+%                     plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
+%                 end
+%             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             xmy = x(ones(noGp,1),:)-y;
             r = norm2(xmy);
@@ -756,7 +794,10 @@ parfor i = 1:n_cp
 %     
 %     R_o = 1;
 %     errorInTotArea = abs((totArea-4*pi*R_o^2)/(4*pi*R_o^2))
+%     if plotGP
+%         figureFullScreen(gcf)
+%         export_fig(['../../graphics/BEM/S1_' num2str(i)], '-png', '-transparent', '-r300')
+%     end
 end
-
 
 
