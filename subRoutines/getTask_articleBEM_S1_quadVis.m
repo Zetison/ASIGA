@@ -13,7 +13,7 @@ f = omega/(2*pi);
 
 applyLoad = 'radialPulsation';
 
-M = 4; 
+M = 1; 
 parm = 1;
 
 degree = 2;

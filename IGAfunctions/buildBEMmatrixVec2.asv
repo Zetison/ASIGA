@@ -202,21 +202,21 @@ W2D_2 = flipud(W2D_2); % to reduce round-off errors in summation?
 Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-% for i = 1:n_cp
-%     if plotGP
-%         keyboard
-%     end
-% %     if ismember(i,[97,99,116])
-%     if i == 281
-% %     if i == 283
-% %     if i == 392
-% %     if i == NaN
-%         plotGP = true;
-%         keyboard
-%     else
-%         plotGP = false;
-%     end
-parfor i = 1:n_cp
+for i = 1:n_cp
+    if plotGP
+        keyboard
+    end
+%     if ismember(i,[97,99,116])
+    if i == 281
+%     if i == 283
+%     if i == 392
+%     if i == NaN
+        plotGP = true;
+        keyboard
+    else
+        plotGP = false;
+    end
+% parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New
@@ -262,9 +262,10 @@ parfor i = 1:n_cp
                 else
                     xi_x = xi_x + eps_greville_xi*(Xi_e_x(2)-Xi_e_x(1));
                 end
-                continue
+                singularMapping = true;
+            else
+                singularMapping = false;
             end
-            h_eta = norm(m_2);
             if h_eta < Eps
                 eps_greville_eta = 1/(2*p_eta)*(Eta_e_x(2)-Eta_e_x(1));
                 if eta_x+eps_greville_eta > Eta_e_x(2)
@@ -272,10 +273,12 @@ parfor i = 1:n_cp
                 else
                     eta_x = eta_x + eps_greville_eta*(Eta_e_x(2)-Eta_e_x(1));
                 end
-                continue
+                singularMapping = true;
+            else
+                singularMapping = false;
             end
-            singularMapping = false;
         end
+        h_eta = norm(m_2);
         e_xi = m_1/h_xi;
         e_eta = m_2/h_eta;
 
