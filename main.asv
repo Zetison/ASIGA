@@ -15,10 +15,7 @@ addpath ../
 % return
 if exist('../availableStudies.m', 'file')
     clear all %#ok
-    printAndPlotResults = true;
     availableStudies
-else
-    printAndPlotResults = false;
 end
 studies = getTasks(studyName);
 startMatlabPool
@@ -48,7 +45,6 @@ for study_i = 1:numel(studies)
     tasks = studies(study_i).tasks;
     runTasksInParallel = studies(study_i).runTasksInParallel;
     if runTasksInParallel
-%         for i_task = 1:length(tasks)
         parfor i_task = 1:length(tasks)
             tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel);
             fprintf('\nCompleted task %d/%d in study %d/%d\n\n', i_task, noTasks, study_i,length(studies)) 
@@ -82,8 +78,8 @@ for study_i = 1:numel(studies)
     end
 end
 
-plotFileName = ['plotResults_' studyName];
-if printAndPlotResults && exist(['postProcessing/' plotFileName], 'file')
+plotFileName = ['postProcessing/plotResults' studyName];
+if exist(plotFileName, 'file')
     close all
     eval(plotFileName)
     if isfield(options,'subFolderName') && ~isempty(options.subFolderName)

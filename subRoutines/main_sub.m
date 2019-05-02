@@ -641,7 +641,7 @@ for i_k = 1:size(k,2)
     if ~useROM
         calculateErrors
     end
-    if strcmp(scatteringCase,'Sweep')
+    if strcmp(scatteringCase,'Sweep') && size(k,2) > 1
         fprintf('\nTotal time spent on frequency: %12f', toc(t_freq))  
     end
 end

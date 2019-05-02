@@ -322,6 +322,10 @@ parfor e_x = 1:noElems
                     r = norm2(xmy);
                     
                     dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
+                    if useHBIE
+                        dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                        d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
+                    end
                     if ~SHBC
                         if useNeumanProj
                             dpdn_y = R_y*U(sctr,:);
@@ -332,8 +336,6 @@ parfor e_x = 1:noElems
                             FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
                         end
                         if useHBIE
-                            dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                            d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
                             FF_temp = FF_temp + alpha*sum((dPhi_kdnx(xmy,r,nx.')+dPhi_0dny_).*dpdn_y.*fact_y);
                             FF_temp = FF_temp - alpha*sum(dPhi_0dny_.*(dpdn_y-dpdn_x).*fact_y);
                             FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);

@@ -51,8 +51,9 @@ M = 4;
 % M = 1;
 parm = 2;
 calculateSurfaceError = 1;
+colBEM_C0 = Inf;
 
-runTasksInParallel    = true;
+runTasksInParallel    = 1;
 loopParameters = {'f','parm','method','formulation'};
 
 collectIntoTasks
