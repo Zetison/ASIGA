@@ -398,6 +398,7 @@ for i_k = 1:size(k,2)
 %                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
 %                             [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
                             [A, FF] = buildBEMmatrix_galerkinVec2(varCol);  
+%                             [A, FF] = buildBEMmatrix_galerkinVec3(varCol);  
                     end
                     A(dofsToRemove,:) = [];
                     FF(dofsToRemove,:) = [];
@@ -409,6 +410,7 @@ for i_k = 1:size(k,2)
                         otherwise
 %                             [A, FF] = buildBEMmatrixVec(varCol);  
                             [A, FF] = buildBEMmatrixVec2(varCol);  
+%                             [A, FF] = buildBEMmatrixVec3(varCol);  
     %                         [A, FF] = buildBEMmatrix(varCol);  
                     end
             end 

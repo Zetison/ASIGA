@@ -27,7 +27,19 @@ k = varCol.k;
 psiType = str2double(varCol.formulation(end));    
 Eps = 10*eps;
 
-
+switch varCol.formulation(3:end-1)
+    case 'BM'
+        useCBIE = true;
+        useHBIE = true;
+    case 'CBIE'
+        useCBIE = true;
+        useHBIE = false;
+    case 'HBIE'
+        useCBIE = false;
+        useHBIE = true;
+    otherwise
+        error('Formulation not implemented')
+end
 if strcmp(varCol.coreMethod, 'XI')
     useEnrichedBfuns = true;
     d_vec = varCol.d_vec;
@@ -53,17 +65,35 @@ else
 end
 dpdn = varCol.dpdn;
 
-%% Create collocation points
-colBEM_C0 = varCol.colBEM_C0;
-if p_xi == 1 && p_eta == 1
-    eps_greville_xi = 1/(2*colBEM_C0*p_xi);
-    eps_greville_eta = 1/(2*colBEM_C0*p_eta);
+exteriorProblem = true;
+if exteriorProblem
+    sgn = -1;
 else
-    eps_greville_xi = 1/(colBEM_C0*p_xi);
-    eps_greville_eta = 1/(colBEM_C0*p_eta);
+    sgn = 1;
 end
 
-
+%% Create collocation points
+geometricSingularity = false;
+collocationC0 = false;
+if p_xi == 1 && p_eta == 1
+    eps_greville_xi = 1/(4*p_xi);
+    eps_greville_eta = 1/(4*p_eta);
+else
+    switch model
+        case {'SS','SS_P','S1','S3','S5','MS','TAP'}
+            eps_greville_xi = 0;
+            eps_greville_eta = 0;
+            geometricSingularity = true;
+            collocationC0 = true;
+        case 'Torus'
+            eps_greville_xi = 0;
+            eps_greville_eta = 0;
+            collocationC0 = true;
+        otherwise
+            eps_greville_xi = 1/(2*p_xi);
+            eps_greville_eta = 1/(2*p_eta);
+    end
+end
 n_cp = noDofs - length(dofsToRemove);
 counter2 = 1;
 counter = 1;
@@ -128,7 +158,7 @@ for patch = 1:noPatches
 end
 useNeumanProj = varCol.useNeumanProj;
 if useNeumanProj
-    [U,dU] = projectBC(varCol,SHBC,1,0);
+    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
 else
     U = NaN;
     dU = NaN;
@@ -165,7 +195,6 @@ for i = 1:n_cp
     xi_idx = findKnotSpan(noElementsXi, 0, xi_x, uniqueXi);
     eta_idx = findKnotSpan(noElementsEta, 0, eta_x, uniqueEta);
     e_x = sum(noElemsPatch(1:patch-1)) + xi_idx + noElementsXi*(eta_idx-1);
-    
     idXi_x = index(e_x,1);
     idEta_x = index(e_x,2);
 
@@ -351,7 +380,9 @@ for i = 1:n_cp
         sctr = element(e,:);
         pts = controlPts(sctr,:);
         wgts = weights(element2(e,:)); % New      
-        CBIE = complex(zeros(1, n_en));
+        if useCBIE
+            CBIE = complex(zeros(1, n_en));
+        end
         
         [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
         if collocationPointIsInElement % use polar integration
@@ -571,8 +602,10 @@ for i = 1:n_cp
 
             CBIE = CBIE + (dPhi_kTemp.*fact).'*R_y;
         end
-        for j = 1:n_en
-            A_row(sctr(j)) = A_row(sctr(j)) + CBIE(j);
+        if useCBIE
+            for j = 1:n_en
+                A_row(sctr(j)) = A_row(sctr(j)) + CBIE(j);
+            end
         end
     end
 

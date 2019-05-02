@@ -1,4 +1,4 @@
-function [A, FF] = buildBEMmatrixVec2(varCol)
+function [A, FF] = buildBEMmatrixVec3(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -218,8 +218,8 @@ FF = complex(zeros(n_cp, no_angles));
 %     else
 %         plotGP = false;
 %     end
-% for i = 1:n_cp
-parfor i = 1:n_cp
+for i = 1:n_cp
+% parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New
@@ -242,7 +242,11 @@ parfor i = 1:n_cp
 
     Xi_e_x = elRangeXi(idXi_x,:);
     Eta_e_x = elRangeEta(idEta_x,:);
-    
+%     if plotGP && i == 354
+%         xi_x = parent2ParametricSpace(Xi_e_x, Q2D(1,1));
+%         eta_x = parent2ParametricSpace(Eta_e_x, Q2D(1,1));
+%     end
+%         
     sctr_x = element(e_x,:);
     pts_x = controlPts(sctr_x,:);
     wgts = weights(element2(e_x,:),:); % New
@@ -509,44 +513,63 @@ parfor i = 1:n_cp
 
             J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
 
-            for area = {'South', 'East', 'North', 'West'}
+            for area = {'BottomLeft', 'BottomRight','RightBottom', 'RightTop', 'TopRight', 'TopLeft', ...
+                        'LeftTop', 'LeftBottom'}
                 switch area{1}
-                    case 'South'
+                    case 'BottomLeft'
                         if abs(eta_x_t - (-1)) < Eps
                             continue
                         end
-                        thetaRange = [theta_x3 theta_x4];
-                    case 'East'
+                        thetaRange = [theta_x3 -pi/2];
+                    case 'BottomRight'
+                        if abs(eta_x_t - (-1)) < Eps
+                            continue
+                        end
+                        thetaRange = [-pi/2 theta_x4];
+                    case 'RightBottom'
                         if abs(xi_x_t - 1) < Eps
                             continue
                         end
-                        thetaRange = [theta_x4 theta_x1];
-                    case 'North'
+                        thetaRange = [theta_x4 0];
+                    case 'RightTop'
+                        if abs(xi_x_t - 1) < Eps
+                            continue
+                        end
+                        thetaRange = [0 theta_x1];
+                    case 'TopRight'
                         if abs(eta_x_t - 1) < Eps
                             continue
                         end
-                        thetaRange = [theta_x1 theta_x2];
-                    case 'West'
+                        thetaRange = [theta_x1 pi/2];
+                    case 'TopLeft'
+                        if abs(eta_x_t - 1) < Eps
+                            continue
+                        end
+                        thetaRange = [pi/2 theta_x2];
+                    case 'LeftTop'
                         if abs(xi_x_t - (-1)) < Eps
                             continue
                         end
-                        if theta_x3 < 0
-                            thetaRange = [theta_x2 theta_x3+2*pi];
-                        else
-                            thetaRange = [theta_x2 theta_x3];
+                        thetaRange = [theta_x2 pi];
+                    case 'LeftBottom'
+                        if abs(xi_x_t - (-1)) < Eps
+                            continue
                         end
+                        thetaRange = [-pi theta_x3];
                 end
-
+                if thetaRange(2) < thetaRange(1)
+                    error('thetaRange(2) < thetaRange(1)')
+                end
                 rho_t = parent2ParametricSpace([0, 1],    Q2D_2(:,2));
                 theta = parent2ParametricSpace(thetaRange,Q2D_2(:,1));
                 switch area{1}
-                    case 'South'
+                    case {'BottomLeft','BottomRight'} % South
                         rho_hat = (-1 - eta_x_t)./sin(theta);
-                    case 'East'
+                    case {'RightBottom','RightTop'} % East
                         rho_hat = ( 1 - xi_x_t)./cos(theta);
-                    case 'North'
+                    case {'TopRight','TopLeft'} % North
                         rho_hat = ( 1 - eta_x_t)./sin(theta);
-                    case 'West'
+                    case {'LeftTop','LeftBottom'} % West
                         rho_hat = (-1 - xi_x_t)./cos(theta);
                 end
                 rho = rho_hat.*rho_t;
