@@ -82,6 +82,11 @@ end
 studies(counter).loopParameters = loopParameters;
 studies(counter).loopParametersArr = loopParametersArr;
 studies(counter).runTasksInParallel = runTasksInParallel;
+if exist('basisROMcell','var')
+    studies(counter).basisROMcell = basisROMcell;
+    studies(counter).k_ROM = k_ROM;
+    studies(counter).noVecsArr = noVecsArr;
+end
 
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);
 

@@ -184,6 +184,7 @@ if strcmp(coreMethod,'XI')
     varCol.d_vec = d_vec;
 end
 varCol.dpdn = dpdn;
+varCol.e3Dss_options = e3Dss_options;
 
 
 

@@ -1,6 +1,6 @@
 
-if boundaryMethod
-    if calculateSurfaceError
+if varCol.boundaryMethod
+    if task.calculateSurfaceError
         tic 
         if ~runTasksInParallel
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
@@ -16,7 +16,7 @@ if boundaryMethod
         task.results.surfaceError(i_k) = surfaceError;
     end
 else
-    if calculateSurfaceError
+    if task.calculateSurfaceError
         tic 
         if ~runTasksInParallel
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
@@ -31,7 +31,7 @@ else
         end
         task.results.surfaceError(i_k) = surfaceError;
     end
-    if calculateVolumeError
+    if task.calculateVolumeError
         tic 
         varColCell = {varCol};
         U_cell = {U_fluid_o};

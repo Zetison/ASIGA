@@ -1031,13 +1031,14 @@ if ~useROM
     end
 end
 
-if storeFullVarCol
+if storeFullVarCol || useROM
     varColTemp = varCol;
 else
     varColTemp.alpha = varCol.alpha;
     varColTemp.beta = varCol.beta;
     varColTemp.k = k;
     varColTemp.f = k*varCol.c_f(1)/(2*pi);
+    varColTemp.c_f = varCol.c_f;
     if ~strcmp(method,'RT')
         varColTemp.dofs = varCol.dofs;
         varColTemp.dofsAlg = (varCol.dofs)^(1/3);
@@ -1060,8 +1061,9 @@ else
         if isfield(varCol,'timeSolveSystem')
             varColTemp.timeSolveSystem = varCol.timeSolveSystem;
         end
-    end
+    end 
     varColTemp.analyticSolutionExist = varCol.analyticSolutionExist;
+    varColTemp.boundaryMethod = varCol.boundaryMethod;
 end
 task.varCol = varColTemp;
 

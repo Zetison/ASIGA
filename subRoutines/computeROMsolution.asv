@@ -6,17 +6,13 @@
 % basisROM = 'Fourier';
 % basisROM = 'Bernstein';
 U_P = task.varCol.U_sweep;
-stringShift = 40;
 task.varCol = rmfield(task.varCol,'U_sweep');
 task.varCol = rmfield(task.varCol,'U');
 runTasksInParallelOld = runTasksInParallel;
-basisROMcell = studies(study_i).basisROMcell;
-k_ROM = studies(study_i).k_ROM;
-noVecsArr = studies(study_i).noVecsArr;
+basisROMcell = task.basisROMcell;
 noDofs = size(U_P{1},1);
-varCol = task.varCol;
-e3Dss_options = varCol.e3Dss_options;
 % noVec = size(U_P{1},2);
+noVecsArr = task.noVecsArr;
 for i_b = 1:numel(basisROMcell)
     basisROM = basisROMcell{i_b};
     k_P = task.varCol.k;
@@ -217,8 +213,7 @@ for i_b = 1:numel(basisROMcell)
 
         calculateSurfaceError = 1;
         if calculateSurfaceError
-%             k_ROM = double(unique(sort([k_P,k_ROM])));
-            k_ROM = double(k_ROM);
+            k_ROM = double(unique(sort([k_P,k_ROM])));
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
             t_startROM = tic;
             switch basisROM
@@ -236,7 +231,7 @@ for i_b = 1:numel(basisROMcell)
             end
             fprintf('using %12f seconds.', toc(t_startROM))
             surfaceErrorArr = zeros(size(k_ROM));
-            runTasksInParallel = 0; % to avoid printing elapsed time
+            runTasksInParallel = 1; % to avoid printing elapsed time
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
             t_startROM = tic;
             for i_k = 1:numel(k_ROM)
@@ -253,12 +248,12 @@ for i_b = 1:numel(basisROMcell)
             tasks(i_task,task_ROM,i_b).task = task;
             switch basisROM
                 case {'Taylor','Pade'}
-                    if task.calculateSurfaceError
+                    if calculateSurfaceError
                         [temp_error,temp_k_ROM] = insertNaN(k_ROM,task.results.surfaceError,k_P);
                         tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = temp_k_ROM;
                         tasks(i_task,task_ROM,i_b).task.results.surfaceError = temp_error;
                     end
-                    if task.calculateVolumeError
+                    if calculateVolumeError
                         [temp_error,temp_k_ROM] = insertNaN(k_ROM,task.results.energyError,k_P);
                         tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = temp_k_ROM;
                         tasks(i_task,task_ROM,i_b).task.results.energyError = temp_error;
@@ -270,10 +265,10 @@ for i_b = 1:numel(basisROMcell)
                         tasks(i_task,task_ROM,i_b).task.results.H1sError = temp_error;
                     end
                 otherwise
-                    if task.calculateSurfaceError
+                    if calculateSurfaceError
                         tasks(i_task,task_ROM,i_b).task.results.surfaceError = surfaceErrorArr;
                     end
-                    if task.calculateVolumeError
+                    if calculateVolumeError
                         tasks(i_task,task_ROM,i_b).task.results.energyError = energyError;
                         tasks(i_task,task_ROM,i_b).task.results.L2Error = L2Error;
                         tasks(i_task,task_ROM,i_b).task.results.H1Error = H1Error;
