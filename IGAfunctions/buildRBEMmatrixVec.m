@@ -145,8 +145,8 @@ p_max = max(p_xi,p_eta);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-for i = 1:n_cp
-% parfor i = 1:n_cp
+% for i = 1:n_cp
+parfor i = 1:n_cp
 %     totArea = 0;
 
     patch = patchIdx(i);
@@ -182,10 +182,6 @@ for i = 1:n_cp
     m_2 = J_temp(2,:);
     crossProd_x = cross(m_1,m_2);
     x = R_x*pts_x;
-    if true
-        e_xi = m_1/norm(m_1);
-        e_eta = m_2/norm(m_2);
-    end
     
     if (eta_x == 0 || eta_x == 1) && (strcmp(model,'SS') || strcmp(model,'SS_P') || strcmp(model,'S1') || strcmp(model,'S1_P') || strcmp(model,'S1_P2') || strcmp(model,'S3') ...
             || strcmp(model,'S5')  || strcmp(model,'MS') || strcmp(model,'MS_P') || strcmp(model,'EL'))
@@ -207,30 +203,33 @@ for i = 1:n_cp
         end
     end
     
-    x1 = x - 0.5*nx;
-    x2 = x - nx;
-    r1x = norm(x1-x);
-    r2x = norm(x2-x);
-    C2 = (1i*k*r2x-1)/r2x^2*dot(x2-x,nx) - (1i*k*r1x-1)/r1x^2*dot(x1-x,nx);
-    C1 = 1 - r2x^2*(1i*k*r1x-1)*dot(x1-x,nx)/(r1x^2*(1i*k*r2x-1)*dot(x2-x,nx));
-    
-    if abs(C2) < 1e-4 || abs(C1) < 1e-4
-        keyboard
+    switch psiType
+        case 1
+            x1 = zeros(1,3);
+        %     xd(2) = 1/2;
+            C1 = norm(x-x1);
+            C2 = dot(x-x1, nx)/C1;
+        case 2
+            x1 = x - 0.5*nx;
+            x2 = x - nx;
+            r1x = norm(x1-x);
+            r2x = norm(x2-x);
+            C2 = (1i*k*r2x-1)/r2x^2*dot(x2-x,nx) - (1i*k*r1x-1)/r1x^2*dot(x1-x,nx);
+            C1 = 1 - r2x^2*(1i*k*r1x-1)*dot(x1-x,nx)/(r1x^2*(1i*k*r2x-1)*dot(x2-x,nx));
+
+            if abs(C2) < 1e-4 || abs(C1) < 1e-4
+                error('Choose x1 and x2 more visely')
+            end
+            Phix1x = Phi_k(r1x);
+            Phix2x = Phi_k(r2x);
+        case 3
+            if abs(nx(1)) < 1/sqrt(2)
+                d1 = sqrt(3)/2*cross([1,0,0],nx)/sqrt(1-nx(1)^2) - nx/2;
+            else
+                d1 = sqrt(3)/2*cross([0,1,0],nx)/sqrt(1-nx(2)^2) - nx/2;
+            end
+            d2 = d1+nx;
     end
-    Phix1x = Phi_k(r1x);
-    Phix2x = Phi_k(r2x);
-    
-    if abs(nx(1)) < 1/sqrt(2)
-        d1 = sqrt(3)/2*cross([1;0;0],nx)/sqrt(1-nx(1)^2) - nx/2;
-    else
-        d1 = sqrt(3)/2*cross([0;1;0],nx)/sqrt(1-nx(2)^2) - nx/2;
-    end
-    d2 = d1+nx;
-    
-    xd = zeros(1,3);
-%     xd(2) = 1/2;
-    a = norm(x-xd);
-    b = dot(x-xd, nx)/a;
     
     Psi1_integral = complex(0);
     Psi2_integral = complex(0);
@@ -439,11 +438,6 @@ for i = 1:n_cp
                 r = norm2(xmy);
                 
                 
-                x1my = x1(ones(noGp,1),:)-y;
-                x2my = x2(ones(noGp,1),:)-y;
-
-                r1y = norm2(x1my);
-                r2y = norm2(x2my);
                 Phi_kTemp = Phi_k(r);
                 if ~SHBC
                     if useNeumanProj
@@ -455,13 +449,19 @@ for i = 1:n_cp
                 end
                 switch psiType
                     case 1
-                        ymxd = y-xd(ones(noGp,1),:);
-                        rd = norm2(ymxd);
-                        Psi2 = sin(k*(rd-a))./(b*k*rd); % = f
-                        Psi1 = a*cos(k*(rd-a))./rd + sin(k*(rd-a))./(k*rd);
-                        dPsi2dny = a/(b*k)*(k*cos(k*(rd-a))./rd - sin(k*(rd-a))./rd.^2).*sum(ymxd.*nx(ones(noGp,1),:),2)./rd;
-                        dPsi1dny = (-a*k*sin(k*(rd-a))./rd - a*cos(k*(rd-a))./rd.^2 + cos(k*(rd-a))./rd - sin(k*(rd-a))./(k*rd.^2)).*sum(ymxd.*nx(ones(noGp,1),:),2)./rd;
+                        ymx1 = y-x1(ones(noGp,1),:);
+                        R1 = norm2(ymx1);
+                        dR1dny = sum(ymx1.*ny,2)./R1;
+                        Psi2 = C1^2*sin(k*(R1-C1))./(C2*k*R1); % = f
+                        Psi1 = C1*cos(k*(R1-C1))./R1 + sin(k*(R1-C1))./(k*R1);
+                        dPsi2dny = C1^2/(C2*k)*(k*cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./R1.^2).*dR1dny;
+                        dPsi1dny = (-C1*k*sin(k*(R1-C1))./R1 - C1*cos(k*(R1-C1))./R1.^2 + cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./(k*R1.^2)).*dR1dny;
                     case 2
+                        x1my = x1(ones(noGp,1),:)-y;
+                        x2my = x2(ones(noGp,1),:)-y;
+
+                        r1y = norm2(x1my);
+                        r2y = norm2(x2my);
                         Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi2(x) = 0
                         Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi1(x) = 1
                         dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi2dny(x) = 1
@@ -527,11 +527,6 @@ for i = 1:n_cp
             end
             xmy = x(ones(noGp,1),:)-y;
             r = norm2(xmy);
-            x1my = x1(ones(noGp,1),:)-y;
-            x2my = x2(ones(noGp,1),:)-y;
-
-            r1y = norm2(x1my);
-            r2y = norm2(x2my);
             Phi_kTemp = Phi_k(r);
             if ~SHBC
                 if useNeumanProj
@@ -543,13 +538,19 @@ for i = 1:n_cp
             end
             switch psiType
                 case 1
-                    ymxd = y-xd(ones(noGp,1),:);
-                    rd = norm2(ymxd);
-                    Psi2 = sin(k*(rd-a))./(b*k*rd); % = f
-                    Psi1 = a*cos(k*(rd-a))./rd + sin(k*(rd-a))./(k*rd);
-                    dPsi2dny = a/(b*k)*(k*cos(k*(rd-a))./rd - sin(k*(rd-a))./rd.^2).*sum(ymxd.*nx(ones(noGp,1),:),2)./rd;
-                    dPsi1dny = (-a*k*sin(k*(rd-a))./rd - a*cos(k*(rd-a))./rd.^2 + cos(k*(rd-a))./rd - sin(k*(rd-a))./(k*rd.^2)).*sum(ymxd.*nx(ones(noGp,1),:),2)./rd;
+                    ymx1 = y-x1(ones(noGp,1),:);
+                    R1 = norm2(ymx1);
+                    dR1dny = sum(ymx1.*ny,2)./R1;
+                    Psi2 = C1^2*sin(k*(R1-C1))./(C2*k*R1); % = f
+                    Psi1 = C1*cos(k*(R1-C1))./R1 + sin(k*(R1-C1))./(k*R1);
+                    dPsi2dny = C1^2/(C2*k)*(k*cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./R1.^2).*dR1dny;
+                    dPsi1dny = (-C1*k*sin(k*(R1-C1))./R1 - C1*cos(k*(R1-C1))./R1.^2 + cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./(k*R1.^2)).*dR1dny;
                 case 2
+                    x1my = x1(ones(noGp,1),:)-y;
+                    x2my = x2(ones(noGp,1),:)-y;
+
+                    r1y = norm2(x1my);
+                    r2y = norm2(x2my);
                     Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi2(x) = 0
                     Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi1(x) = 1
                     dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi2dny(x) = 1
@@ -583,7 +584,7 @@ for i = 1:n_cp
     for j = 1:n_en
         switch psiType
             case 1
-                A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral - 2*pi*(1+1i/(k*a))*(1-exp(2*1i*k*a))/(4*pi));
+                A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral - 2*pi*(1+1i/(k*C1))*(1-exp(2*1i*k*C1))/(4*pi));
             case 2
                 A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral);
             case 3
@@ -597,7 +598,7 @@ for i = 1:n_cp
         FF(i,:) = FF(i,:) - p_inc_x;
     else
         if psiType == 1
-            FF(i,:) = FF(i,:) + FF_temp + dpdn_x*(Psi2_integral - dPsi2dny_integral + 2*pi*1i/(k*b)*(1-exp(2*1i*k*a))/(4*pi));
+            FF(i,:) = FF(i,:) + FF_temp + dpdn_x*(Psi2_integral - dPsi2dny_integral + 2*pi*1i/(k*C2)*(1-exp(2*1i*k*C1))/(4*pi));
 %             FF(i,:) = FF(i,:) + FF_temp + dp_inc_x*(Psi1_integral - dPsi1dny_integral);
         else
             FF(i,:) = FF(i,:) + FF_temp + dpdn_x*(Psi2_integral - dPsi2dny_integral);

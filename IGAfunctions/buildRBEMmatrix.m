@@ -21,23 +21,11 @@ noDofs = varCol.noDofs;
 model = varCol.model;
 extraGP = varCol.extraGP;
 extraGPBEM = varCol.extraGPBEM;
+psiType = str2double(varCol.formulation(end));   
 
 k = varCol.k;
-alpha = 1i/k;
+Eps = 10*eps;
 
-switch varCol.formulation(3:end)
-    case 'BM'
-        useCBIE = true;
-        useHBIE = true;
-    case 'CBIE'
-        useCBIE = true;
-        useHBIE = false;
-    case 'HBIE'
-        useCBIE = false;
-        useHBIE = true;
-    otherwise
-        error('Formulation not implemented')
-end
 if strcmp(varCol.coreMethod, 'XI')
     useEnrichedBfuns = true;
     d_vec = varCol.d_vec;
@@ -50,14 +38,10 @@ end
 Phi_0 = @(r)           1./(4*pi*r);
 Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
 
-dPhi_0dny = @(xmy,r,ny) Phi_0(r)./r.^2*               (xmy*ny);
-dPhi_kdny = @(xmy,r,ny) Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*ny);
-
-dPhi_0dnx = @(xmy,r,nx) -dPhi_0dny(xmy,r,nx);
-dPhi_kdnx = @(xmy,r,nx) -dPhi_kdny(xmy,r,nx);
-
-d2Phi_0dnxdny = @(xmy,r,nx,ny) Phi_0(r)/r^2*((nx'*ny)           - 3/r^2                *(xmy*nx)*(xmy*ny));
-d2Phi_kdnxdny = @(xmy,r,nx,ny) Phi_k(r)/r^2*((nx'*ny)*(1-1i*k*r)+(k^2+3/r^2*(1i*k*r-1))*(xmy*nx)*(xmy*ny));
+% dPhi_0dny = @(xmy,r,ny) Phi_0(r)./r.^2*               (xmy*ny);
+% dPhi_kdny = @(xmy,r,ny) Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*ny);
+dPhi_0dny = @(xmy,r,ny) Phi_0(r)./r.^2.*             sum(xmy.*ny,2);
+dPhi_kdny = @(xmy,r,ny) Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*ny,2);
 
 radialPulsation = strcmp(varCol.applyLoad, 'radialPulsation');
 if radialPulsation
@@ -72,26 +56,13 @@ end
 dpdn = varCol.dpdn;
 
 %% Create collocation points based on the Greville abscissae
-geometricSingularity = false;
-collocationC0 = false;
+colBEM_C0 = varCol.colBEM_C0;
 if p_xi == 1 && p_eta == 1
-    eps_greville_xi = 1/(4*p_xi);
-    eps_greville_eta = 1/(4*p_eta);
+    eps_greville_xi = 1/(2*colBEM_C0*p_xi);
+    eps_greville_eta = 1/(2*colBEM_C0*p_eta);
 else
-    switch model
-        case {'SS','SS_P','S1','S3','S5','MS','TAP'}
-            eps_greville_xi = 0;
-            eps_greville_eta = 0;
-            geometricSingularity = true;
-            collocationC0 = true;
-        case 'Torus'
-            eps_greville_xi = 0;
-            eps_greville_eta = 0;
-            collocationC0 = true;
-        otherwise
-            eps_greville_xi = 1/(2*p_xi);
-            eps_greville_eta = 1/(2*p_eta);
-    end
+    eps_greville_xi = 1/(colBEM_C0*p_xi);
+    eps_greville_eta = 1/(colBEM_C0*p_eta);
 end
 n_cp = noDofs - length(dofsToRemove);
 counter2 = 1;
@@ -157,7 +128,7 @@ for patch = 1:noPatches
 end
 useNeumanProj = varCol.useNeumanProj;
 if useNeumanProj
-    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+    [U,dU] = projectBC(varCol,SHBC,1,0);
 else
     U = NaN;
     dU = NaN;
@@ -197,8 +168,6 @@ end
 % % keyboard
 %     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-psiType = 4;
     
 eNeighbour = NaN; % to avoid transparency "bug"
 createElementTopology
@@ -244,6 +213,13 @@ parfor i = 1:n_cp
     xi_idx = findKnotSpan(noElementsXi, 0, xi_x, uniqueXi);
     eta_idx = findKnotSpan(noElementsEta, 0, eta_x, uniqueEta);
     e_x = sum(noElemsPatch(1:patch-1)) + xi_idx + noElementsXi*(eta_idx-1);
+    
+    idXi_x = index(e_x,1);
+    idEta_x = index(e_x,2);
+
+    Xi_e_x = elRangeXi(idXi_x,:);
+    Eta_e_x = elRangeEta(idEta_x,:);
+    
     sctr_x = element(e_x,:);
     pts_x = controlPts(sctr_x,:);
     wgts = weights(element2(e_x,:),:); % New
@@ -261,12 +237,11 @@ parfor i = 1:n_cp
     
     if (eta_x == 0 || eta_x == 1) && (strcmp(model,'SS') || strcmp(model,'SS_P') || strcmp(model,'S1') || strcmp(model,'S1_P') || strcmp(model,'S1_P2') || strcmp(model,'S3') ...
             || strcmp(model,'S5')  || strcmp(model,'MS') || strcmp(model,'MS_P') || strcmp(model,'EL'))
-        nx = x.'/norm(x);
+        nx = x/norm(x);
     else
-        nx = crossProd_x'/norm(crossProd_x);
+        nx = crossProd_x/norm(crossProd_x);
     end
-    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,index,elRangeXi,elRangeEta,eNeighbour,Eps,collocationC0);
-    
+    [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
 
     if 0
 %         iiPts = 1;
@@ -287,15 +262,15 @@ parfor i = 1:n_cp
 %             end
 %         end
     else
-        x1 = x - 0.5*nx.';
-        x2 = x - nx.';
+        x1 = x - 0.5*nx;
+        x2 = x - nx;
         r1x = norm(x1-x);
         r2x = norm(x2-x);
         C2 = (1i*k*r2x-1)/r2x^2*dot(x2-x,nx) - (1i*k*r1x-1)/r1x^2*dot(x1-x,nx);
         C1 = 1 - r2x^2*(1i*k*r1x-1)*dot(x1-x,nx)/(r1x^2*(1i*k*r2x-1)*dot(x2-x,nx));
     end
     if abs(C2) < 1e-4 || abs(C1) < 1e-4
-        keyboard
+        error('Choose x1 and x2 more visely')
     end
     Phix1x = Phi_k(r1x);
     Phix2x = Phi_k(r2x);
@@ -307,33 +282,6 @@ parfor i = 1:n_cp
     end
     d2 = d1+nx;
     
-    if psiType == 4
-        if abs(nx(1)) < 1/sqrt(2)
-            d3 = sqrt(3)/2*[1-nx(1)^2; -nx(1)*nx(2); -nx(1)*nx(3)]/sqrt(1-nx(1)^2) - nx/2;
-        else
-            d3 = sqrt(3)/2*[-nx(1)*nx(2); 1-nx(2)^2; -nx(2)*nx(3)]/sqrt(1-nx(2)^2) - nx/2;
-        end
-        d4 = d3+nx;
-        if abs(norm(d1)-1) > 10*eps || abs(norm(d2)-1) > 10*eps || abs(dot(d1,nx)+1/2) > 10*eps || abs(dot(d2,nx)-1/2) > 10*eps
-            keyboard
-        end
-        if abs(norm(d3)-1) > 10*eps || abs(norm(d4)-1) > 10*eps || abs(dot(d3,nx)+1/2) > 10*eps || abs(dot(d4,nx)-1/2) > 10*eps
-            keyboard
-        end
-        d1 = [1;0;0];
-        d2 = [0;1;0];
-        d3 = [0;0;1];
-        d4 = [1;1;1]/sqrt(3);
-        dn =   [dot(d1,nx),     dot(d2,nx),     dot(d3,nx),     dot(d4,nx)];
-        dxi =  [dot(d1,e_xi),   dot(d2,e_xi),   dot(d3,e_xi),   dot(d4,e_xi)];
-        deta = [dot(d1,e_eta),  dot(d2,e_eta),  dot(d3,e_eta),  dot(d4,e_eta)];
-        bb = ([1,1,1,1; dn; dxi; deta]\diag([1,1/(1i*k),1/(1i*k),1/(1i*k)])).';
-    else
-        Psi3 = 0;
-        Psi4 = 0;
-        dPsi3dny = 0;
-        dPsi4dny = 0;
-    end
     xd = zeros(1,3);
 %     xd(2) = 1/2;
     a = norm(x-xd);
@@ -452,9 +400,8 @@ parfor i = 1:n_cp
         sctr = element(e,:);
         pts = controlPts(sctr,:);
         wgts = weights(element2(e,:)); % New      
-        if useCBIE
-            CBIE = zeros(1, n_en);
-        end
+        
+        CBIE = zeros(1, n_en);
         
         [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
         if collocationPointIsInElement % use polar integration
@@ -523,7 +470,7 @@ parfor i = 1:n_cp
                     J = pts'*[dR_ydxi' dR_ydeta'];
                     crossProd = cross(J(:,1),J(:,2));
                     J_1 = norm(crossProd);
-                    ny = crossProd/J_1;
+                    ny = crossProd.'/J_1;
                     
                     J_3 = rho;
                     J_4 = rho_hat;
@@ -547,54 +494,37 @@ parfor i = 1:n_cp
 
                     r1y = norm(x1my);
                     r2y = norm(x2my);
-                    if useCBIE
-                        Phi_kTemp = Phi_k(r);
-                    end
+                    Phi_kTemp = Phi_k(r);
                     if radialPulsation
-                        if useCBIE
-                            FF_temp = FF_temp + Phi_kTemp*dpdn(y,ny)*fact;
-                        end
+                        FF_temp = FF_temp + Phi_kTemp*dpdn(y,ny)*fact;
                     end
-                    if useCBIE
-                        if psiType == 1
-                            Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi2(x) = 0
-                            Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi1(x) = 1
-                            dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi2dny(x) = 1
-                            dPsi1dny = dPhi_kdny(x1my,r1y,ny)/Phix1x/C1 + (1-1/C1)*dPhi_kdny(x2my,r2y,ny)/Phix2x; % dPsi1dny(x) = 0
-                        elseif psiType == 2
-                            exp1 = exp(1i*k*dot(d1,y-x));
-                            exp2 = exp(1i*k*dot(d2,y-x));
-                            Psi2 = 1i*(exp1-exp2)/k;
-                            Psi1 = (exp1+exp2)/2;
-                            dPsi2dny = dot(d2,ny)*exp2 - dot(d1,ny)*exp1;
-                            dPsi1dny = 1i*k*(dot(d1,ny)*exp1+dot(d2,ny)*exp2)/2;
-                        elseif psiType == 3
-                            rd = norm(y-xd);
-                            Psi2 = sin(k*(rd-a))/(b*k*rd); % = f
-                            Psi1 = a*cos(k*(rd-a))/rd + sin(k*(rd-a))/(k*rd);
-                            dPsi2dny = a/(b*k)*(k*cos(k*(rd-a))/rd - sin(k*(rd-a))/rd^2)*dot(y-xd,nx)/rd;
-                            dPsi1dny = (-a*k*sin(k*(rd-a))/rd - a*cos(k*(rd-a))/rd^2 + cos(k*(rd-a))/rd - sin(k*(rd-a))/(k*rd^2))*dot(y-xd,nx)/rd;
-                        else
-                            Psi1 = bb(1,1)*exp(1i*k*dot(-xmy,d1)) + bb(1,2)*exp(1i*k*dot(-xmy,d2)) + bb(1,3)*exp(1i*k*dot(-xmy,d3)) + bb(1,4)*exp(1i*k*dot(-xmy,d4));
-                            Psi2 = bb(2,1)*exp(1i*k*dot(-xmy,d1)) + bb(2,2)*exp(1i*k*dot(-xmy,d2)) + bb(2,3)*exp(1i*k*dot(-xmy,d3)) + bb(2,4)*exp(1i*k*dot(-xmy,d4));
-                            Psi3 = bb(3,1)*exp(1i*k*dot(-xmy,d1)) + bb(3,2)*exp(1i*k*dot(-xmy,d2)) + bb(3,3)*exp(1i*k*dot(-xmy,d3)) + bb(3,4)*exp(1i*k*dot(-xmy,d4));
-                            Psi4 = bb(4,1)*exp(1i*k*dot(-xmy,d1)) + bb(4,2)*exp(1i*k*dot(-xmy,d2)) + bb(4,3)*exp(1i*k*dot(-xmy,d3)) + bb(4,4)*exp(1i*k*dot(-xmy,d4));
-                            dPsi1dny = bb(1,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(1,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(1,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(1,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                            dPsi2dny = bb(2,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(2,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(2,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(2,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                            dPsi3dny = bb(3,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(3,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(3,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(3,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                            dPsi4dny = bb(4,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(4,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(4,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(4,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                        end
-                        dPhi_kTemp = dPhi_kdny(xmy,r,ny);
+                    if psiType == 2
+                        Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi2(x) = 0
+                        Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi1(x) = 1
+                        dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi2dny(x) = 1
+                        dPsi1dny = dPhi_kdny(x1my,r1y,ny)/Phix1x/C1 + (1-1/C1)*dPhi_kdny(x2my,r2y,ny)/Phix2x; % dPsi1dny(x) = 0
+                    elseif psiType == 3
+                        exp1 = exp(1i*k*dot(d1,y-x));
+                        exp2 = exp(1i*k*dot(d2,y-x));
+                        Psi2 = 1i*(exp1-exp2)/k;
+                        Psi1 = (exp1+exp2)/2;
+                        dPsi2dny = dot(d2,ny)*exp2 - dot(d1,ny)*exp1;
+                        dPsi1dny = 1i*k*(dot(d1,ny)*exp1+dot(d2,ny)*exp2)/2;
+                    elseif psiType == 1
+                        rd = norm(y-xd);
+                        Psi2 = sin(k*(rd-a))/(b*k*rd); % = f
+                        Psi1 = a*cos(k*(rd-a))/rd + sin(k*(rd-a))/(k*rd);
+                        dPsi2dny = a/(b*k)*(k*cos(k*(rd-a))/rd - sin(k*(rd-a))/rd^2)*dot(y-xd,ny)/rd;
+                        dPsi1dny = (-a*k*sin(k*(rd-a))/rd - a*cos(k*(rd-a))/rd^2 + cos(k*(rd-a))/rd - sin(k*(rd-a))/(k*rd^2))*dot(y-xd,ny)/rd;
+                    end
+                    dPhi_kTemp = dPhi_kdny(xmy,r,ny);
 
-                        Psi1_integral     = Psi1_integral    + Psi1*dPhi_kTemp*fact; 
-                        Psi2_integral     = Psi2_integral    + Psi2*dPhi_kTemp*fact; 
-                        Psi3_integral     = Psi3_integral    + (dPsi3dny*Phi_kTemp-Psi3*dPhi_kTemp)*fact; 
-                        Psi4_integral     = Psi4_integral    + (dPsi4dny*Phi_kTemp-Psi4*dPhi_kTemp)*fact; 
-                        dPsi1dny_integral = dPsi1dny_integral + dPsi1dny*Phi_kTemp*fact;
-                        dPsi2dny_integral = dPsi2dny_integral + dPsi2dny*Phi_kTemp*fact;
+                    Psi1_integral     = Psi1_integral    + Psi1*dPhi_kTemp*fact; 
+                    Psi2_integral     = Psi2_integral    + Psi2*dPhi_kTemp*fact; 
+                    dPsi1dny_integral = dPsi1dny_integral + dPsi1dny*Phi_kTemp*fact;
+                    dPsi2dny_integral = dPsi2dny_integral + dPsi2dny*Phi_kTemp*fact;
 
-                        CBIE = CBIE + dPhi_kTemp*R_y*fact;
-                    end 
+                    CBIE = CBIE + dPhi_kTemp*R_y*fact;
                 end  
             end
         else
@@ -634,7 +564,7 @@ parfor i = 1:n_cp
                         J = pts'*[dR_ydxi' dR_ydeta'];
                         crossProd = cross(J(:,1),J(:,2));
                         J_1 = norm(crossProd);
-                        ny = crossProd/J_1;
+                        ny = crossProd.'/J_1;
                         fact = J_1*J_2*wt;
 
                         y = R_y*pts;
@@ -654,62 +584,43 @@ parfor i = 1:n_cp
 
                         r1y = norm(x1my);
                         r2y = norm(x2my);
-                        if useCBIE
-                            Phi_kTemp = Phi_k(r);
-                        end
+                        Phi_kTemp = Phi_k(r);
                         if radialPulsation
-                            if useCBIE
-                                FF_temp = FF_temp + Phi_kTemp*dpdn(y,ny)*fact;
-                            end
+                            FF_temp = FF_temp + Phi_kTemp*dpdn(y,ny)*fact;
                         end
-                        if useCBIE
-                            if psiType == 1
-                                Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi1(x) = 0
-                                Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi2(x) = 1
-                                dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi1dny(x) = 1
-                                dPsi1dny = dPhi_kdny(x1my,r1y,ny)/Phix1x/C1 + (1-1/C1)*dPhi_kdny(x2my,r2y,ny)/Phix2x; % dPsi2dny(x) = 0
-                            elseif psiType == 2
-                                exp1 = exp(1i*k*dot(d1,y-x));
-                                exp2 = exp(1i*k*dot(d2,y-x));
-                                Psi2 = 1i*(exp1-exp2)/k;
-                                Psi1 = (exp1+exp2)/2;
-                                dPsi2dny = dot(d2,ny)*exp2 - dot(d1,ny)*exp1;
-                                dPsi1dny = 1i*k*(dot(d1,ny)*exp1+dot(d2,ny)*exp2)/2;
-                            elseif psiType == 3
-                                rd = norm(y-xd);
-                                Psi2 = sin(k*(rd-a))/(b*k*rd); % = f
-                                Psi1 = a*cos(k*(rd-a))/rd + sin(k*(rd-a))/(k*rd);
-                                dPsi2dny = a/(b*k)*(k*cos(k*(rd-a))/rd - sin(k*(rd-a))/rd^2)*dot(y-xd,ny)/rd;
-                                dPsi1dny = (-a*k*sin(k*(rd-a))/rd - a*cos(k*(rd-a))/rd^2 + cos(k*(rd-a))/rd - sin(k*(rd-a))/(k*rd^2))*dot(y-xd,ny)/rd;
-                            else
-                                Psi1 = bb(1,1)*exp(1i*k*dot(-xmy,d1)) + bb(1,2)*exp(1i*k*dot(-xmy,d2)) + bb(1,3)*exp(1i*k*dot(-xmy,d3)) + bb(1,4)*exp(1i*k*dot(-xmy,d4));
-                                Psi2 = bb(2,1)*exp(1i*k*dot(-xmy,d1)) + bb(2,2)*exp(1i*k*dot(-xmy,d2)) + bb(2,3)*exp(1i*k*dot(-xmy,d3)) + bb(2,4)*exp(1i*k*dot(-xmy,d4));
-                                Psi3 = bb(3,1)*exp(1i*k*dot(-xmy,d1)) + bb(3,2)*exp(1i*k*dot(-xmy,d2)) + bb(3,3)*exp(1i*k*dot(-xmy,d3)) + bb(3,4)*exp(1i*k*dot(-xmy,d4));
-                                Psi4 = bb(4,1)*exp(1i*k*dot(-xmy,d1)) + bb(4,2)*exp(1i*k*dot(-xmy,d2)) + bb(4,3)*exp(1i*k*dot(-xmy,d3)) + bb(4,4)*exp(1i*k*dot(-xmy,d4));
-                                dPsi1dny = bb(1,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(1,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(1,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(1,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                                dPsi2dny = bb(2,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(2,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(2,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(2,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                                dPsi3dny = bb(3,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(3,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(3,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(3,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                                dPsi4dny = bb(4,1)*1i*k*dot(ny,d1)*exp(1i*k*dot(-xmy,d1)) + bb(4,2)*1i*k*dot(ny,d2)*exp(1i*k*dot(-xmy,d2)) + bb(4,3)*1i*k*dot(ny,d3)*exp(1i*k*dot(-xmy,d3)) + bb(4,4)*1i*k*dot(ny,d4)*exp(1i*k*dot(-xmy,d4));
-                            end
-                            dPhi_kTemp = dPhi_kdny(xmy,r,ny);
-
-                            Psi1_integral    = Psi1_integral    + Psi1*dPhi_kTemp*fact; 
-                            Psi2_integral    = Psi2_integral    + Psi2*dPhi_kTemp*fact; 
-                            Psi3_integral    = Psi3_integral    + (dPsi3dny*Phi_kTemp-Psi3*dPhi_kTemp)*fact; 
-                            Psi4_integral    = Psi4_integral    + (dPsi4dny*Phi_kTemp-Psi4*dPhi_kTemp)*fact; 
-                            dPsi1dny_integral = dPsi1dny_integral + dPsi1dny*Phi_kTemp*fact;
-                            dPsi2dny_integral = dPsi2dny_integral + dPsi2dny*Phi_kTemp*fact;
-
-                            CBIE = CBIE + dPhi_kTemp*R_y*fact;
+                        if psiType == 2
+                            Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi1(x) = 0
+                            Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi2(x) = 1
+                            dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi1dny(x) = 1
+                            dPsi1dny = dPhi_kdny(x1my,r1y,ny)/Phix1x/C1 + (1-1/C1)*dPhi_kdny(x2my,r2y,ny)/Phix2x; % dPsi2dny(x) = 0
+                        elseif psiType == 3
+                            exp1 = exp(1i*k*dot(d1,y-x));
+                            exp2 = exp(1i*k*dot(d2,y-x));
+                            Psi2 = 1i*(exp1-exp2)/k;
+                            Psi1 = (exp1+exp2)/2;
+                            dPsi2dny = dot(d2,ny)*exp2 - dot(d1,ny)*exp1;
+                            dPsi1dny = 1i*k*(dot(d1,ny)*exp1+dot(d2,ny)*exp2)/2;
+                        elseif psiType == 1
+                            rd = norm(y-xd);
+                            Psi2 = sin(k*(rd-a))/(b*k*rd); % = f
+                            Psi1 = a*cos(k*(rd-a))/rd + sin(k*(rd-a))/(k*rd);
+                            dPsi2dny = a/(b*k)*(k*cos(k*(rd-a))/rd - sin(k*(rd-a))/rd^2)*dot(y-xd,ny)/rd;
+                            dPsi1dny = (-a*k*sin(k*(rd-a))/rd - a*cos(k*(rd-a))/rd^2 + cos(k*(rd-a))/rd - sin(k*(rd-a))/(k*rd^2))*dot(y-xd,ny)/rd;
                         end
+                        dPhi_kTemp = dPhi_kdny(xmy,r,ny);
+
+                        Psi1_integral    = Psi1_integral    + Psi1*dPhi_kTemp*fact; 
+                        Psi2_integral    = Psi2_integral    + Psi2*dPhi_kTemp*fact; 
+                        dPsi1dny_integral = dPsi1dny_integral + dPsi1dny*Phi_kTemp*fact;
+                        dPsi2dny_integral = dPsi2dny_integral + dPsi2dny*Phi_kTemp*fact;
+
+                        CBIE = CBIE + dPhi_kTemp*R_y*fact;
                     end
                 end
             end
         end
-        if useCBIE
-            for j = 1:n_en
-                A_row(sctr(j)) = A_row(sctr(j)) + CBIE(j);
-            end
+        for j = 1:n_en
+            A_row(sctr(j)) = A_row(sctr(j)) + CBIE(j);
         end
     end
 
@@ -717,23 +628,19 @@ parfor i = 1:n_cp
     if useEnrichedBfuns
         R_x = R_x*exp(1i*k*dot(d_vec, x));
     end
-    if useCBIE
-        for j = 1:n_en
-            if psiType == 1
-                A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral);
-            elseif psiType == 2
-                A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral - 1);
-            elseif psiType == 3
-                A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral - 2*pi*(1+1i/(k*a))*(1-exp(2*1i*k*a))/(4*pi));
+    for j = 1:n_en
+        if psiType == 2
+            A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral);
+        elseif psiType == 3
+            A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral - 1);
+        elseif psiType == 1
+            A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral - 2*pi*(1+1i/(k*a))*(1-exp(2*1i*k*a))/(4*pi));
 %                 A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi2dny_integral - Psi2_integral);
-            elseif psiType == 4
-                A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_x(j)*(dPsi1dny_integral - Psi1_integral - 1) + dR_xdxi(j)*Psi3_integral + dR_xdeta(j)*Psi3_integral;
-            end
         end
     end
     A(i,:) = A_row;
     if radialPulsation
-        if psiType == 3
+        if psiType == 1
             FF(i,:) = FF(i,:) + FF_temp + dpdn(x,nx)*(Psi2_integral - dPsi2dny_integral + 2*pi*1i/(k*b)*(1-exp(2*1i*k*a))/(4*pi));
 %             FF(i,:) = FF(i,:) + FF_temp + dpdn(x,nx)*(Psi1_integral - dPsi1dny_integral);
         else
@@ -741,9 +648,7 @@ parfor i = 1:n_cp
         end
     else
 %         FF(i,:) = FF(i,:) + FF_temp - dp_inc(x,nx).'*(Psi1_integral - dPsi1dy_integral);
-        if useCBIE
-            FF(i,:) = FF(i,:) - p_inc(x).';
-        end
+        FF(i,:) = FF(i,:) - p_inc(x).';
     end
 %     dPhi_0dny_integral+0.5
 %     d2Phi_0dnxdny_integral
