@@ -81,13 +81,13 @@ for study_i = 1:numel(studies)
         save([subFolderName '/_studies'], 'studies', '-v7.3')
     end
 end
-
-plotFileName = ['plotResults_' studyName];
-if printAndPlotResults && exist(['postProcessing/' plotFileName], 'file')
-    close all
-    eval(plotFileName)
-    if isfield(options,'subFolderName') && ~isempty(options.subFolderName)
-        save([options.subFolderName, '/_studies'],'studies')
-    end
-end
+% 
+% plotFileName = ['plotResults_' studyName];
+% if printAndPlotResults && exist(['postProcessing/' plotFileName], 'file')
+%     close all
+%     eval(plotFileName)
+%     if isfield(options,'subFolderName') && ~isempty(options.subFolderName)
+%         save([options.subFolderName, '/_studies'],'studies')
+%     end
+% end
 

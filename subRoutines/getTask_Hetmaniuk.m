@@ -10,9 +10,6 @@ formulation = {'BGC'};
 
 k = [9, 22.5, 36];
 % k = [9, 22.5, 36]/10;
-k_ROM = k(1):0.05:k(end);
-% k_ROM = k(1):0.005:k(end);
-% k_ROM = k(1):0.5:k(end);
 c_f = 1500;
 f = k*c_f/(2*pi);
 
@@ -42,7 +39,7 @@ collectIntoTasks
 
 method = {'BA'};
 formulation = {'VL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 formulation = {'SL2E'};
 collectIntoTasks
@@ -77,6 +74,9 @@ coreMethod = {'hp_FEM'};
 % collectIntoTasks
 
 
+k_ROM = k(1):0.05:k(end);
+% k_ROM = k(1):0.005:k(end);
+% k_ROM = k(1):0.5:k(end);
 k = k_ROM;
 % k = (9:1:36)/10;
 % k = 36;
