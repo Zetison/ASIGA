@@ -1,4 +1,4 @@
-function [A, FF, varCol] = buildBEMmatrixVec2(varCol)
+function [A, FF, varCol] = buildBEMmatrixVec4(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -160,9 +160,9 @@ else
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % for i = [354,317,319]
-% for i = [354,317,319,392]
-plotGP = 0;
-plotPointsAsSpheres = 1;
+for i = [317,319,392,354]
+plotGP = 1;
+plotPointsAsSpheres = 0;
 pointsRadius = 6e-3;
 lineColor = 'blue';
 lineStyle = '-';
@@ -200,9 +200,13 @@ createElementTopology
 
 n_en = (p_xi+1)*(p_eta+1);
 
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
 p_max = max(p_xi,p_eta);
 [W2D_2,Q2D_2] = gaussianQuadNURBS(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
+W2D = cell(64,1);
+Q2D = cell(64,1);
+for ii = 1:64-(p_xi+1+extraGP)
+    [W2D{ii},Q2D{ii}] = gaussianQuadNURBS(p_xi+1+ii+extraGP,p_eta+1+ii+extraGP);
+end
 W2D_2 = flipud(W2D_2); % to reduce round-off errors in summation?
 Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 A = complex(zeros(n_cp, noDofs));
@@ -220,7 +224,7 @@ FF = complex(zeros(n_cp, no_angles));
 %         plotGP = false;
 %     end
 totNoQP = 0;
-for i = 1:n_cp
+% for i = 1:n_cp
 % parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
@@ -246,8 +250,8 @@ for i = 1:n_cp
     Eta_e_x = elRangeEta(idEta_x,:);
     if plotGP
         if i == 354
-            xi_x = parent2ParametricSpace(Xi_e_x, Q2D(1,1));
-            eta_x = parent2ParametricSpace(Eta_e_x, Q2D(1,1));
+            xi_x = parent2ParametricSpace(Xi_e_x, Q2D{1}(1,1));
+            eta_x = parent2ParametricSpace(Eta_e_x, Q2D{1}(1,1));
         end
     end
     
@@ -657,24 +661,11 @@ for i = 1:n_cp
             l = norm(x-x_5);
             h = diagsMax(e);
             n_div = round(agpBEM*h/l + 1);
-            Xi_e_arr  = linspace(Xi_e(1),Xi_e(2),n_div+1);
-            Eta_e_arr = linspace(Eta_e(1),Eta_e(2),n_div+1);
-            J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1))/n_div^2;
-            xi = zeros(noGp,n_div^2);
-            eta = zeros(noGp,n_div^2);
-            counter = 1;
-            for i_eta = 1:n_div
-                Eta_e_sub = Eta_e_arr(i_eta:i_eta+1);
-                for i_xi = 1:n_div
-                    Xi_e_sub = Xi_e_arr(i_xi:i_xi+1);
-                    xi(:,counter) = parent2ParametricSpace(Xi_e_sub, Q2D(:,1));
-                    eta(:,counter) = parent2ParametricSpace(Eta_e_sub, Q2D(:,2));
-                    counter = counter + 1;
-                end
-            end
-            xi = reshape(xi,n_div^2*noGp,1);
-            eta = reshape(eta,n_div^2*noGp,1);
-            W2D_1 = repmat(W2D,n_div^2,1);
+            J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
+            xi = parent2ParametricSpace(Xi_e, Q2D{n_div}(:,1));
+            eta = parent2ParametricSpace(Eta_e, Q2D{n_div}(:,2));
+            
+            W2D_1 = W2D{n_div};
             noGp = size(xi,1);
 
             [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
@@ -700,18 +691,6 @@ for i = 1:n_cp
                     end
                 else
                     plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-                end
-                for i_xi = 2:n_div
-                    xi = Xi_e_arr(i_xi);
-                    eta = linspace2(Eta_e(1),Eta_e(2),100).';
-                    yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi(ones(100,1)),eta]);
-                    plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
-                end
-                for i_eta = 2:n_div
-                    eta = Eta_e_arr(i_eta);
-                    xi = linspace2(Xi_e(1),Xi_e(2),100).';
-                    yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi,eta(ones(100,1))]);
-                    plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
                 end
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -798,7 +777,7 @@ for i = 1:n_cp
     
     if plotGP
         figureFullScreen(gcf)
-        export_fig(['../../graphics/BEM/S1_' num2str(i) '_neqp2' num2str(extraGPBEM)], '-png', '-transparent', '-r300')
+        export_fig(['../../graphics/BEM/S1_4_' num2str(i) '_neqp2' num2str(extraGPBEM)], '-png', '-transparent', '-r300')
     end
 end
 

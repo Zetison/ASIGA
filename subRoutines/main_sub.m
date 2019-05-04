@@ -409,8 +409,14 @@ for i_k = 1:size(k,2)
 %                             [A, FF] = buildRBEMmatrix(varCol);  
                         otherwise
 %                             [A, FF] = buildBEMmatrixVec(varCol);  
-%                             [A, FF] = buildBEMmatrixVec2(varCol);  
-                            [A, FF] = buildBEMmatrixVec3(varCol);  
+                            switch task.quadMethod
+                                case 'Simpson'
+                                    [A, FF, varCol] = buildBEMmatrixVec2(varCol);  
+                                case 'New'
+                                    [A, FF, varCol] = buildBEMmatrixVec3(varCol);  
+                                case 'New2'
+                                    [A, FF, varCol] = buildBEMmatrixVec4(varCol);  
+                            end
     %                         [A, FF] = buildBEMmatrix(varCol);  
                     end
             end 
@@ -1060,6 +1066,9 @@ else
         end
         if isfield(varCol,'timeSolveSystem')
             varColTemp.timeSolveSystem = varCol.timeSolveSystem;
+        end
+        if isfield(varCol,'totNoQP')
+            varColTemp.totNoQP = varCol.totNoQP;
         end
     end 
     varColTemp.analyticSolutionExist = varCol.analyticSolutionExist;
