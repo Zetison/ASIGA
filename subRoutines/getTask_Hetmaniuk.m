@@ -9,6 +9,7 @@ formulation = {'BGC'};
 
 
 k = [9, 22.5, 36];
+k = 36;
 % k = [9, 22.5, 36]/10;
 c_f = 1500;
 f = k*c_f/(2*pi);
@@ -21,7 +22,7 @@ beta = -pi/2;
 r_a = 1.2;
 
 M = 1:5; % 5
-N = [7,9]; % 9
+N = [7,9,11,13,15]; % 9
 
 degree = 4;
 parm = 2;
@@ -33,6 +34,7 @@ plot2Dgeometry = 0;
 initMeshFactXi = 3;
 initMeshFactZeta = 4;
 useROM = false;
+computeCondNumber = 1;
 
 loopParameters = {'f','method','coreMethod','formulation','M','N','degree','parm'};
 collectIntoTasks

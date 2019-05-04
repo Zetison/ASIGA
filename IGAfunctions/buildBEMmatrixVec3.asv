@@ -169,7 +169,7 @@ lineStyle = '-';
 if plotGP
     close all
     for patch = 1:numel(patches)
-        plotNURBS(patches{patch}.nurbs,{'resolution',[10 10], 'elementBasedSamples',true,'samplingDistance',0.1});
+        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100], 'elementBasedSamples',true,'samplingDistance',0.1});
     end
     axis equal
     axis off
@@ -551,6 +551,7 @@ FF = complex(zeros(n_cp, no_angles));
             J_4 = zeros(no_gpSource^2*noSubElements,1);
             J_5 = zeros(no_gpSource^2*noSubElements,1);
             counter2 = 1;
+            noGp = size(Q2D_2,1);
             for area = 1:4
                 if isnan(n_div(area))
                     continue
@@ -559,8 +560,8 @@ FF = complex(zeros(n_cp, no_angles));
                 rho_t_arr  = linspace(0,1,n_div_r+1);
                 theta_arr = linspace(Eta_e(1),Eta_e(2),n_div_theta+1);
 %                 J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1))/n_div^2;
-                rho_t = zeros(no_gpSource^2,n_div_r*n_div_theta);
-                theta = zeros(no_gpSource^2,n_div_r*n_div_theta);
+                rho_t = zeros(noGp,n_div_r*n_div_theta);
+                theta = zeros(noGp,n_div_r*n_div_theta);
                 counter = 1;
                 for i_theta = 1:n_div
                     theta_sub = theta_arr(i_theta:i_theta+1);
@@ -572,8 +573,8 @@ FF = complex(zeros(n_cp, no_angles));
                     end
                 end
                 noSubElementsTri = n_div_r*n_div_theta;
-                rho_t = reshape(rho_t,noSubElementsTri*no_gpSource^2,1);
-                theta = reshape(theta,noSubElementsTri*no_gpSource^2,1);
+                rho_t = reshape(rho_t,noSubElementsTri*noGp,1);
+                theta = reshape(theta,noSubElementsTri*noGp,1);
 
 %                 rho_t = parent2ParametricSpace([0, 1],    Q2D_2(:,2));
 %                 theta = parent2ParametricSpace(thetaRange,Q2D_2(:,1));

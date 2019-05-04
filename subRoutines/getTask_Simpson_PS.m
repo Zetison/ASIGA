@@ -57,7 +57,7 @@ extraGPBEM = 0:32; % extra quadrature points around singularities for BEM formul
 % agpBEM = [2,4,8];
 agpBEM = [2,8];
 % agpBEM = 0;
-% collectIntoTasks
+collectIntoTasks
 
 formulation = {'GCBIE','GBM'};
 colBEM_C0 = Inf;
@@ -65,12 +65,11 @@ colBEM_C0 = Inf;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% BA simulation
 formulation = {'CRCBIE1','CRCBIE2'};
 extraGP = 0; % extra quadrature points
 extraGPBEM = 0:32; % extra quadrature points around singularities for BEM formulations
 % extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
 agpBEM = 0;
 colBEM_C0 = 2;
-collectIntoTasks
+% collectIntoTasks
 

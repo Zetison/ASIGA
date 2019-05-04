@@ -33,7 +33,7 @@ colBEM_C0 = Inf;
 % colBEM_C0 = Inf;
 extraGP = 0; % extra quadrature points
 extraGPBEM = 0; % extra quadrature points around singularities for BEM formulations
-extraGPBEM = 9; % extra quadrature points around singularities for BEM formulations
+% extraGPBEM = 9; % extra quadrature points around singularities for BEM formulations
 % agpBEM = 2;
 agpBEM = 2;
 collectIntoTasks

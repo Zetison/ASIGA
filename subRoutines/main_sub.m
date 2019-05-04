@@ -409,8 +409,8 @@ for i_k = 1:size(k,2)
 %                             [A, FF] = buildRBEMmatrix(varCol);  
                         otherwise
 %                             [A, FF] = buildBEMmatrixVec(varCol);  
-                            [A, FF] = buildBEMmatrixVec2(varCol);  
-%                             [A, FF] = buildBEMmatrixVec3(varCol);  
+%                             [A, FF] = buildBEMmatrixVec2(varCol);  
+                            [A, FF] = buildBEMmatrixVec3(varCol);  
     %                         [A, FF] = buildBEMmatrix(varCol);  
                     end
             end 
