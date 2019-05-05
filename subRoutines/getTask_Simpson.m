@@ -9,7 +9,7 @@ BC = 'SHBC';
 formulation = {'BGU'};
 coreMethod = 'IGA';
 computeCondNumber = 0;
-runTasksInParallel = 1;
+runTasksInParallel = 0;
 
 c_f = 1500; % Speed of sound in outer fluid
 % k = 100;             % Wave number for outer fluid domain
@@ -40,7 +40,7 @@ useNeumanProj = true;
 
 loopParameters = {'M','method','formulation'};
 parm = 1;
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
@@ -48,13 +48,14 @@ method = {'BEM'};
 % formulation = {'CCBIE', 'CHBIE', 'CBM'};
 formulation = {'CCBIE'};
 % formulation = 'CBM';
+colBEM_C0 = Inf;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 method = {'BA'};
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ABC simulation

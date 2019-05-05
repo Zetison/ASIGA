@@ -1,5 +1,3 @@
-close all
-
 addpath IGAfunctions
 addpath NURBS
 addpath SEM
@@ -69,7 +67,7 @@ for study_i = 1:numel(studies)
             studies(study_i).tasks(i_task,1).task = tasks(i_task,1).task;
             studies(study_i).subFolderName = subFolderName;
             fprintf('\nCompleted task %d/%d in study %d/%d\n\n', i_task, noTasks, study_i,length(studies)) 
-            save([subFolderName '/_studies'], 'studies', '-v7.3')
+            save([subFolderName '/_studies'], 'studies')
         end
         if task.useROM
             studies(study_i).loopParameters{end+1} = 'noVecs';

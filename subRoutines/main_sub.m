@@ -409,7 +409,7 @@ for i_k = 1:size(k,2)
 %                             [A, FF] = buildRBEMmatrix(varCol);  
                         otherwise
 %                             [A, FF] = buildBEMmatrixVec(varCol);  
-                            switch task.quadMethod
+                            switch task.quadMethodBEM
                                 case 'Simpson'
                                     [A, FF, varCol] = buildBEMmatrixVec2(varCol);  
                                 case 'New'

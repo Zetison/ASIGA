@@ -62,7 +62,7 @@ exteriorProblem = true;
 initMeshFactXi = 1;
 initMeshFactZeta = 1;
 colBEM_C0 = 2;
-
+quadMethodBEM = 'Simpson';
 M = 1;
 
 applyLoad = 'planeWave';

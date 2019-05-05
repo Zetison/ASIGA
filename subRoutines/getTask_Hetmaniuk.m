@@ -5,7 +5,7 @@ model = 'S1';  % Spherical shell
 coreMethod = {'IGA'};
 % coreMethod = {'IGA'};
 method = {'IE'};
-formulation = {'BGC'};
+formulation = {'BGU'};
 
 
 k = [9, 22.5, 36];

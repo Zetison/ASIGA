@@ -1,4 +1,4 @@
-function [A, FF] = buildBEMmatrixVec3(varCol)
+function [A, FF, varCol] = buildBEMmatrixVec2(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -160,16 +160,16 @@ else
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % for i = [354,317,319]
-for i = [317,319,392,354]
+% for i = [354,317,319,392]
 plotGP = 1;
-plotPointsAsSpheres = 0;
+plotPointsAsSpheres = 1;
 pointsRadius = 6e-3;
 lineColor = 'blue';
 lineStyle = '-';
 if plotGP
     close all
     for patch = 1:numel(patches)
-        plotNURBS(patches{patch}.nurbs,{'resolution',[10 10], 'elementBasedSamples',true,'samplingDistance',0.1});
+        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100], 'elementBasedSamples',true,'samplingDistance',0.1});
     end
     axis equal
     axis off
@@ -202,8 +202,7 @@ n_en = (p_xi+1)*(p_eta+1);
 
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
 p_max = max(p_xi,p_eta);
-no_gpSource = p_max+1+extraGPBEM;
-[W2D_2,Q2D_2] = gaussianQuadNURBS(no_gpSource,no_gpSource);
+[W2D_2,Q2D_2] = gaussianQuadNURBS(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
 W2D_2 = flipud(W2D_2); % to reduce round-off errors in summation?
 Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 A = complex(zeros(n_cp, noDofs));
@@ -220,7 +219,8 @@ FF = complex(zeros(n_cp, no_angles));
 %     else
 %         plotGP = false;
 %     end
-% for i = 1:n_cp
+totNoQP = 0;
+for i = 1:n_cp
 % parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
@@ -303,7 +303,10 @@ FF = complex(zeros(n_cp, no_angles));
         x = R_x*pts_x;
         nx = NaN;        
     end
-    
+%     if norm(x-[0,-1,0]) < 1e-2
+% %     if norm(x-[0.44774,-0.8532,0.26754]) < 1e-1
+%         keyboard
+%     end
     if useNeumanProj
         if SHBC
             if useCBIE
@@ -419,20 +422,20 @@ FF = complex(zeros(n_cp, no_angles));
 %         keyboard
 %     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    for e_x = 1:noElems  
-        patch = pIndex(e_x); % New
+    for e = 1:noElems  
+        patch = pIndex(e); % New
         Xi = knotVecs{patch}{1}; % New
         Eta = knotVecs{patch}{2}; % New
 
-        idXi = index(e_x,1);
-        idEta = index(e_x,2);
+        idXi = index(e,1);
+        idEta = index(e,2);
 
         Xi_e = elRangeXi(idXi,:);
         Eta_e = elRangeEta(idEta,:);
 
-        sctr = element(e_x,:);
+        sctr = element(e,:);
         pts = controlPts(sctr,:);
-        wgts = weights(element2(e_x,:)); % New      
+        wgts = weights(element2(e,:)); % New      
         if useCBIE
             CBIE = complex(zeros(1, n_en));
         end
@@ -502,251 +505,157 @@ FF = complex(zeros(n_cp, no_angles));
 %         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         if false
-        [collocationPointIsInElement,idx] = ismember(e_x,adjacentElements);
+        [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
         if collocationPointIsInElement % use polar integration
-            
-            eNeigh = eNeighbour(e_x,1:4,1);
-            x_5 = centerPts(eNeigh,:);
-            l = norm2(x(ones(4,1),:)-x_5);
-            h = diagsMax(eNeigh);
-            n_div = round(agpBEM*h./l + 1);
-            
-            
+            noGp = size(Q2D_2,1);
             xi_x_t = xi_x_tArr(idx);
             eta_x_t = eta_x_tArr(idx);
-            thetas = cell(4,1);
-            etas_east = linspace(-1,1,n_div(1)+1);
-            thetas{1} = atan2( etas_east-eta_x_t,  1-xi_x_t);
-            xis_north = linspace(1,-1,n_div(2)+1);
-            thetas{2} = atan2( 1-eta_x_t,  xis_north-xi_x_t);
-            etas_west = linspace(1,-1,n_div(3)+1);
-            thetas{3} = atan2( etas_west-eta_x_t,  1-xi_x_t);
-            xis_south = linspace(-1,1,n_div(4)+1);
-            thetas{4} = atan2( 1-eta_x_t,  xis_south-xi_x_t);
-            
-%             theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
-%             theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
-%             theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);
-%             theta_x4 = atan2(-1-eta_x_t,  1-xi_x_t);
+            theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
+            theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
+            theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);
+            theta_x4 = atan2(-1-eta_x_t,  1-xi_x_t);
 
             J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
-            areas = {'East', 'North', 'West','South'};
-            
-            
-            for area = 1:numel(areas)
-                switch areas{area}
-                    case 'East'
-                        if abs(xi_x_t - 1) < Eps
-                            n_div(area) = 0;
-                            continue
-                        end
-%                         thetaRange(area,:) = [theta_x4 theta_x1];
-                    case 'North'
-                        if abs(eta_x_t - 1) < Eps
-                            n_div(area) = 0;
-                            continue
-                        end
-%                         thetaRange(area,:) = [theta_x1 theta_x2];
-                    case 'West'
-                        if abs(xi_x_t - (-1)) < Eps
-                            n_div(area) = 0;
-                            continue
-                        end
-%                         thetaRange(area,:) = [theta_x2 theta_x3+2*pi];
+
+            for area = {'South', 'East', 'North', 'West'}
+                switch area{1}
                     case 'South'
                         if abs(eta_x_t - (-1)) < Eps
-                            n_div(area) = 0;
                             continue
                         end
-%                         thetaRange(area,:) = [theta_x3 theta_x4];
+                        thetaRange = [theta_x3 theta_x4];
+                    case 'East'
+                        if abs(xi_x_t - 1) < Eps
+                            continue
+                        end
+                        thetaRange = [theta_x4 theta_x1];
+                    case 'North'
+                        if abs(eta_x_t - 1) < Eps
+                            continue
+                        end
+                        thetaRange = [theta_x1 theta_x2];
+                    case 'West'
+                        if abs(xi_x_t - (-1)) < Eps
+                            continue
+                        end
+                        if theta_x3 < 0
+                            thetaRange = [theta_x2 theta_x3+2*pi];
+                        else
+                            thetaRange = [theta_x2 theta_x3];
+                        end
                 end
-            end
-            n_div_r = max(n_div);
-            noSubElements = sum(n_div_r*n_div);
-            
-            xi = zeros(no_gpSource^2*noSubElements,1);
-            eta = zeros(no_gpSource^2*noSubElements,1);
-            J_3 = zeros(no_gpSource^2*noSubElements,1);
-            J_4 = zeros(no_gpSource^2*noSubElements,1);
-            J_5 = zeros(no_gpSource^2*noSubElements,1);
-            counter2 = 1;
-            for area = 1:4
-                if n_div(area) == 0
-                    continue
-                end
-                n_div_theta = n_div(area);
-                rho_t_arr  = linspace(0,1,n_div_r+1);
-%                 theta_arr = linspace(thetaRange(area,1),thetaRange(area,2),n_div_theta+1);
-%                 J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1))/n_div^2;
-                rho_t = zeros(no_gpSource^2,n_div_r*n_div_theta);
-                theta = zeros(no_gpSource^2,n_div_r*n_div_theta);
-                counter = 1;
-                for i_theta = 1:n_div_theta
-                    theta_sub = thetas{area}(i_theta:i_theta+1);
-                    for i_rho_t = 1:n_div_r
-                        rho_t_sub = rho_t_arr(i_rho_t:i_rho_t+1);
-                        rho_t(:,counter) = parent2ParametricSpace(rho_t_sub, Q2D_2(:,1));
-                        theta(:,counter) = parent2ParametricSpace(theta_sub, Q2D_2(:,2));
-                        counter = counter + 1;
-                    end
-                end
-                noSubElementsTri = n_div_r*n_div_theta;
-                rho_t = reshape(rho_t,noSubElementsTri*no_gpSource^2,1);
-                theta = reshape(theta,noSubElementsTri*no_gpSource^2,1);
 
-%                 rho_t = parent2ParametricSpace([0, 1],    Q2D_2(:,2));
-%                 theta = parent2ParametricSpace(thetaRange,Q2D_2(:,1));
-                switch areas{area}
+                rho_t = parent2ParametricSpace([0, 1],    Q2D_2(:,2));
+                theta = parent2ParametricSpace(thetaRange,Q2D_2(:,1));
+                switch area{1}
+                    case 'South'
+                        rho_hat = (-1 - eta_x_t)./sin(theta);
                     case 'East'
                         rho_hat = ( 1 - xi_x_t)./cos(theta);
                     case 'North'
                         rho_hat = ( 1 - eta_x_t)./sin(theta);
                     case 'West'
                         rho_hat = (-1 - xi_x_t)./cos(theta);
-                    case 'South'
-                        rho_hat = (-1 - eta_x_t)./sin(theta);
                 end
                 rho = rho_hat.*rho_t;
 
                 xi_t  = xi_x_t + rho.*cos(theta);
                 eta_t = eta_x_t + rho.*sin(theta);
-                indices = counter2:counter2+numel(xi_t)-1;
-                xi(indices) = parent2ParametricSpace(Xi_e, xi_t);
-                eta(indices) = parent2ParametricSpace(Eta_e, eta_t);
-                J_3(indices) = rho;
-                J_4(indices) = rho_hat;
-                temp = repmat(thetas{area}(2:end)-thetas{area}(1:end-1),n_div_r*no_gpSource^2,1);
-                J_5(indices) = 0.25*reshape(temp,numel(xi_t),1)/n_div_r;
-                counter2 = counter2 + numel(xi_t);
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                xi = parent2ParametricSpace(Xi_e, xi_t);
+                eta = parent2ParametricSpace(Eta_e, eta_t);
+
+                [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
+
+                J1 = dR_ydxi*pts;
+                J2 = dR_ydeta*pts;
+                crossProd = cross(J1,J2,2);
+                J_1 = norm2(crossProd);
+                ny = crossProd./J_1(:,[1,1,1]);
+
+                J_3 = rho;
+                J_4 = rho_hat;
+                J_5 = 0.25*(thetaRange(2)-thetaRange(1));
+                fact_y = J_1*J_2.*J_3.*J_4*J_5.*W2D_2;
+
+                y = R_y*pts;
+                if useEnrichedBfuns
+                    temp = exp(1i*k*(y*d_vec));
+                    R_y = R_y.*temp(:,ones(1,noGp));
+                end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 if plotGP
-                    for i_theta = 1:n_div_theta
-                        theta_sub = thetas{area}(i_theta:i_theta+1);
-                        rho_t2 = linspace(Eps,1-Eps,100).';
-                        for ii = 1:2
-                            theta2 = theta_sub(ii)+Eps*(-1)^(ii+1);
-                            switch areas{area}
-                                case 'East'
-                                    rho_hat2 = ( 1 - xi_x_t)./cos(theta2);
-                                case 'North'
-                                    rho_hat2 = ( 1 - eta_x_t)./sin(theta2);
-                                case 'West'
-                                    rho_hat2 = (-1 - xi_x_t)./cos(theta2);
-                                case 'South'
-                                    rho_hat2 = (-1 - eta_x_t)./sin(theta2);
-                            end
-                            rho2 = rho_hat2.*rho_t2;
-
-                            xi_t2  = xi_x_t + rho2.*cos(theta2);
-                            eta_t2 = eta_x_t + rho2.*sin(theta2);
-                            xi2 = parent2ParametricSpace(Xi_e, xi_t2);
-                            eta2 = parent2ParametricSpace(Eta_e, eta_t2);
-                            if any(xi2 > 1) || any(xi2 < 0) || any(eta2 < 0) || any(eta2 > 1)
-                                keyboard
-                            end
-                            if ~(all(abs(xi2-Xi_e(1)) < Eps) || all(abs(xi2-Xi_e(2)) < Eps) || all(abs(eta2-Eta_e(1)) < Eps) || all(abs(eta2-Eta_e(2)) < Eps))
-                                yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi2,eta2]);
-                                plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
-                            end
+                    if plotPointsAsSpheres
+                        [Xs,Ys,Zs] = sphere(50);
+                        for ii = 1:size(y,1)
+                            surf(pointsRadius*Xs+y(ii,1),pointsRadius*Ys+y(ii,2),pointsRadius*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
                         end
+                    else
+                        plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
                     end
-                    for i_rho_t = 1:n_div_r-1
-                        rho_t_sub = rho_t_arr(i_rho_t:i_rho_t+1);
-                        rho_t2 = rho_t_sub(2);
-                        theta2 = linspace(thetas{area}(1)+Eps,thetas{area}(end)-Eps,100).';
-                        switch areas{area}
-                            case 'East'
-                                rho_hat2 = ( 1 - xi_x_t)./cos(theta2);
-                            case 'North'
-                                rho_hat2 = ( 1 - eta_x_t)./sin(theta2);
-                            case 'West'
-                                rho_hat2 = (-1 - xi_x_t)./cos(theta2);
-                            case 'South'
-                                rho_hat2 = (-1 - eta_x_t)./sin(theta2);
-                        end
-                        rho2 = rho_hat2.*rho_t2;
+                    rho_t2 = linspace2(0,1,100).';
+                    theta2 = thetaRange(1);
+                    switch area{1}
+                        case 'South'
+                            rho_hat2 = (-1 - eta_x_t)./sin(theta2);
+                        case 'East'
+                            rho_hat2 = ( 1 - xi_x_t)./cos(theta2);
+                        case 'North'
+                            rho_hat2 = ( 1 - eta_x_t)./sin(theta2);
+                        case 'West'
+                            rho_hat2 = (-1 - xi_x_t)./cos(theta2);
+                    end
+                    rho2 = rho_hat2.*rho_t2;
 
-                        xi_t2  = xi_x_t + rho2.*cos(theta2);
-                        eta_t2 = eta_x_t + rho2.*sin(theta2);
-                        xi2 = parent2ParametricSpace(Xi_e, xi_t2);
-                        eta2 = parent2ParametricSpace(Eta_e, eta_t2);
-                        if ~(all(abs(xi2-Xi_e(1)) < Eps) || all(abs(xi2-Xi_e(2)) < Eps) || all(abs(eta2-Eta_e(1)) < Eps) || all(abs(eta2-Eta_e(2)) < Eps))
-                            yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi2,eta2]);
-                            plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
-                        end
+                    xi_t2  = xi_x_t + rho2.*cos(theta2);
+                    eta_t2 = eta_x_t + rho2.*sin(theta2);
+                    xi = parent2ParametricSpace(Xi_e, xi_t2);
+                    eta = parent2ParametricSpace(Eta_e, eta_t2);
+                    if ~(all(abs(xi-Xi_e(1)) < Eps) || all(abs(xi-Xi_e(2)) < Eps) || all(abs(eta-Eta_e(1)) < Eps) || all(abs(eta-Eta_e(2)) < Eps))
+                        yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi,eta]);
+                        plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
                     end
                 end
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            end
-            noGp = size(xi,1);
-            W2D_2_1 = repmat(W2D_2,noSubElements,1);
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                xmy = x(ones(noGp,1),:)-y;
+                r = norm2(xmy);
+                
 
-            [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-
-            J1 = dR_ydxi*pts;
-            J2 = dR_ydeta*pts;
-            crossProd = cross(J1,J2,2);
-            J_1 = norm2(crossProd);
-            ny = crossProd./J_1(:,[1,1,1]);
-
-            fact_y = J_1.*J_2.*J_3.*J_4.*J_5.*W2D_2_1;
-
-            y = R_y*pts;
-            if useEnrichedBfuns
-                temp = exp(1i*k*(y*d_vec));
-                R_y = R_y.*temp(:,ones(1,noGp));
-            end
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if plotGP
-                if plotPointsAsSpheres
-                    [Xs,Ys,Zs] = sphere(50);
-                    for ii = 1:size(y,1)
-                        surf(pointsRadius*Xs+y(ii,1),pointsRadius*Ys+y(ii,2),pointsRadius*Zs+y(ii,3), 'FaceColor', 'red','EdgeColor','none','LineStyle','none')
-                    end
-                else
-                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
+                dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
+                if useHBIE
+                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
                 end
-            end
-%             keyboard
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            xmy = x(ones(noGp,1),:)-y;
-            r = norm2(xmy);
-
-
-            dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
-            if useHBIE
-                dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
-            end
-            if ~SHBC
-                if useNeumanProj
-                    dpdn_y = R_y*U(sctr,:);
-                else
-                    dpdn_y = dpdn(y,ny);
+                if ~SHBC
+                    if useNeumanProj
+                        dpdn_y = R_y*U(sctr,:);
+                    else
+                        dpdn_y = dpdn(y,ny);
+                    end
+                    if useCBIE
+                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
+                    end
+                    if useHBIE
+                        FF_temp = FF_temp + alpha*sum((dPhi_kdnx(xmy,r,nx.')+dPhi_0dny_).*dpdn_y.*fact_y);
+                        FF_temp = FF_temp - alpha*sum(dPhi_0dny_.*(dpdn_y-dpdn_x).*fact_y);
+                        FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);
+                    end
                 end
                 if useCBIE
-                    FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
+                    CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
                 end
                 if useHBIE
-                    FF_temp = FF_temp + alpha*sum((dPhi_kdnx(xmy,r,nx.')+dPhi_0dny_).*dpdn_y.*fact_y);
-                    FF_temp = FF_temp - alpha*sum(dPhi_0dny_.*(dpdn_y-dpdn_x).*fact_y);
-                    FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);
+                    HBIE = HBIE + ((d2Phi_kdnxdny(xmy,r,nx.',ny) - d2Phi_0dnxdny_).*fact_y).'*R_y;
+                    HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + xmy*v_dR_xdv);
+                    HBIE = HBIE + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1)*v_dR_xdv;
                 end
-            end
-            if useCBIE
-                CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
-            end
-            if useHBIE
-                HBIE = HBIE + ((d2Phi_kdnxdny(xmy,r,nx.',ny) - d2Phi_0dnxdny_).*fact_y).'*R_y;
-                HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + xmy*v_dR_xdv);
-                HBIE = HBIE + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1)*v_dR_xdv;
             end
         else
             noGp = size(Q2D,1);
-            x_5 = centerPts(e_x,:);
+            x_5 = centerPts(e,:);
 
             l = norm(x-x_5);
-            h = diagsMax(e_x);
+            h = diagsMax(e);
             n_div = round(agpBEM*h/l + 1);
             Xi_e_arr  = linspace(Xi_e(1),Xi_e(2),n_div+1);
             Eta_e_arr = linspace(Eta_e(1),Eta_e(2),n_div+1);
@@ -794,13 +703,13 @@ FF = complex(zeros(n_cp, no_angles));
                 end
                 for i_xi = 2:n_div
                     xi = Xi_e_arr(i_xi);
-                    eta = linspace(Eta_e(1)+Eps,Eta_e(2)-Eps,100).';
+                    eta = linspace2(Eta_e(1),Eta_e(2),100).';
                     yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi(ones(100,1)),eta]);
                     plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
                 end
                 for i_eta = 2:n_div
                     eta = Eta_e_arr(i_eta);
-                    xi = linspace(Xi_e(1)+Eps,Xi_e(2)-Eps,100).';
+                    xi = linspace2(Xi_e(1),Xi_e(2),100).';
                     yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi,eta(ones(100,1))]);
                     plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
                 end
@@ -838,6 +747,7 @@ FF = complex(zeros(n_cp, no_angles));
                                                                     + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
             end
         end
+        totNoQP = totNoQP + noGp;
         if useCBIE
             for j = 1:n_en
                 A_row(sctr(j)) = A_row(sctr(j)) + CBIE(j);
@@ -888,8 +798,9 @@ FF = complex(zeros(n_cp, no_angles));
     
     if plotGP
         figureFullScreen(gcf)
-        export_fig(['../../graphics/BEM/S1_2_' num2str(i) '_neqp2' num2str(extraGPBEM)], '-png', '-transparent', '-r300')
+        export_fig(['../../graphics/BEM/S1_' num2str(i) '_neqp2' num2str(extraGPBEM)], '-png', '-transparent', '-r300')
     end
 end
 
 
+varCol.totNoQP = totNoQP;

@@ -162,7 +162,7 @@ end
 % for i = [354,317,319]
 % for i = [354,317,319,392]
 plotGP = 0;
-plotPointsAsSpheres = 1;
+plotPointsAsSpheres = 0;
 pointsRadius = 6e-3;
 lineColor = 'blue';
 lineStyle = '-';
@@ -220,8 +220,8 @@ FF = complex(zeros(n_cp, no_angles));
 %         plotGP = false;
 %     end
 totNoQP = 0;
-for i = 1:n_cp
-% parfor i = 1:n_cp
+% for i = 1:n_cp
+parfor i = 1:n_cp
 %     totArea = 0;
     patch = patchIdx(i);
     Xi = knotVecs{patch}{1}; % New
@@ -593,7 +593,7 @@ for i = 1:n_cp
                     else
                         plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
                     end
-                    rho_t2 = linspace2(0,1,100).';
+                    rho_t2 = linspace2(Eps,1-Eps,100).';
                     theta2 = thetaRange(1);
                     switch area{1}
                         case 'South'
@@ -703,13 +703,13 @@ for i = 1:n_cp
                 end
                 for i_xi = 2:n_div
                     xi = Xi_e_arr(i_xi);
-                    eta = linspace2(Eta_e(1),Eta_e(2),100).';
+                    eta = linspace(Eta_e(1)+Eps,Eta_e(2)-Eps,100).';
                     yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi(ones(100,1)),eta]);
                     plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
                 end
                 for i_eta = 2:n_div
                     eta = Eta_e_arr(i_eta);
-                    xi = linspace2(Xi_e(1),Xi_e(2),100).';
+                    xi = linspace(Xi_e(1)+Eps,Xi_e(2)-Eps,100).';
                     yy = evaluateNURBS_2ndDeriv(patches{patch}.nurbs, [xi,eta(ones(100,1))]);
                     plot3(yy(:,1),yy(:,2),yy(:,3),lineStyle,'color',lineColor)
                 end
@@ -796,10 +796,10 @@ for i = 1:n_cp
         end
     end
     
-    if plotGP
-        figureFullScreen(gcf)
-        export_fig(['../../graphics/BEM/S1_' num2str(i) '_neqp2' num2str(extraGPBEM)], '-png', '-transparent', '-r300')
-    end
+%     if plotGP
+%         figureFullScreen(gcf)
+%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_neqp2' num2str(extraGPBEM)], '-png', '-transparent', '-r300')
+%     end
 end
 
 

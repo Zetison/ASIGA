@@ -66,9 +66,7 @@ task.beta = beta;
 if exist('parm','var')
     task.parm = parm;
 end
-if exist('quadMethod','var')
-    task.quadMethod = quadMethod;
-end
+task.quadMethodBEM = quadMethodBEM;
 
 task.computeCondNumber = computeCondNumber;
 if ~exist('loopParameters','var')
