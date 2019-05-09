@@ -71,7 +71,7 @@ quadMethodBEM = {'New'};
 collectIntoTasks
 
 formulation = {'GCBIE','GBM'};
-agpBEM = [2,4];
+agpBEM = [2,4,8,16];
 quadMethodBEM = {'Simpson'};
 colBEM_C0 = Inf;
 collectIntoTasks
