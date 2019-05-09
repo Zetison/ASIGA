@@ -57,7 +57,7 @@ extraGP = 0; % extra quadrature points
 extraGPBEM = 50; % extra quadrature points around singularities for BEM formulations
 % extraGPBEM = 0; % extra quadrature points around singularities for BEM formulations
 % agpBEM = [2,4,8,16];
-agpBEM = [2,4];
+agpBEM = 1:10;
 % agpBEM = 2;
 quadMethodBEM = {'Simpson'};
 
