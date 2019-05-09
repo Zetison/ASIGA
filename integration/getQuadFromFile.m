@@ -1,0 +1,10 @@
+function [Q, W] = getQuadFromFile(N)
+M = readmatrix(['integration/legendreData/GL_N' num2str(N) '.csv']);
+Q = zeros(N,1);
+W = zeros(N,1);
+indices = floor(N/2)+1:N;
+Q(indices) = M(:,1);
+W(indices) = M(:,2);
+indices = 1:floor(N/2);
+Q(indices) = -Q(N-indices+1);
+W(indices) = W(N-indices+1);

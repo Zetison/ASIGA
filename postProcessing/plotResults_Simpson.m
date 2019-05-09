@@ -1,3 +1,4 @@
+close all
 
 for study_i = 1:numel(studies)  
     study = studies(study_i);
@@ -26,7 +27,8 @@ for study_i = 1:numel(studies)
 %             printResultsToTextFiles(study,options)
 
     options.noXLoopPrms = 0;
-    options.legendEntries = {'method','M','formulation'};
+%     options.legendEntries = {'method','M','formulation'};
+    options.legendEntries = {'method','M','formulation','useNeumanProj'};
     options.lineStyle = '-';
     options.xname = 'alpha';
     options.yname = 'error_pAbs';

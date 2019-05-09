@@ -397,7 +397,7 @@ for i_k = 1:size(k,2)
                         otherwise
 %                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
 %                             [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
-                            [A, FF] = buildBEMmatrix_galerkinVec2(varCol);  
+                            [A, FF, varCol] = buildBEMmatrix_galerkinVec2(varCol);  
 %                             [A, FF] = buildBEMmatrix_galerkinVec3(varCol);  
                     end
                     A(dofsToRemove,:) = [];
@@ -408,15 +408,15 @@ for i_k = 1:size(k,2)
                             [A, FF] = buildRBEMmatrixVec(varCol);  
 %                             [A, FF] = buildRBEMmatrix(varCol);  
                         otherwise
-%                             [A, FF] = buildBEMmatrixVec(varCol);  
-                            switch task.quadMethodBEM
-                                case 'Simpson'
-                                    [A, FF, varCol] = buildBEMmatrixVec2(varCol);  
-                                case 'New'
-                                    [A, FF, varCol] = buildBEMmatrixVec3(varCol);  
-                                case 'New2'
-                                    [A, FF, varCol] = buildBEMmatrixVec4(varCol);  
-                            end
+                            [A, FF, varCol] = buildBEMmatrixVec(varCol);  
+%                             switch task.quadMethodBEM
+%                                 case 'Simpson'
+%                                     [A, FF, varCol] = buildBEMmatrixVec(varCol);  
+%                                 case 'New'
+%                                     [A, FF, varCol] = buildBEMmatrixVec3(varCol);  
+%                                 case 'New2'
+%                                     [A, FF, varCol] = buildBEMmatrixVec4(varCol);  
+%                             end
     %                         [A, FF] = buildBEMmatrix(varCol);  
                     end
             end 

@@ -99,7 +99,7 @@ switch options.noXLoopPrms
                 temp2 = loopParameters{j};
 
                 temp = study.tasks(i).task.(loopParameters{j});
-                if isnumeric(temp)
+                if ~ischar(temp)
                     temp = num2str(temp);
                 end
                 if j ~= 1

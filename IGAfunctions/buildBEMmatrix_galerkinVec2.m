@@ -1,4 +1,4 @@
-function [A, FF] = buildBEMmatrix_galerkinVec2(varCol)
+function [A, FF, varCol] = buildBEMmatrix_galerkinVec2(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -20,6 +20,10 @@ extraGPBEM = varCol.extraGPBEM;
 noDofs = varCol.noDofs;
 agpBEM = varCol.agpBEM;
 exteriorProblem = varCol.exteriorProblem;
+
+quadMethodBEMsimpson = strcmp(varCol.quadMethodBEM,'Simpson');
+
+Eps = 10*eps;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -110,11 +114,22 @@ end
 
 n_en = (p_xi+1)*(p_eta+1);
 % 
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
 p_max = max(p_xi,p_eta);
-[W2D_2,Q2D_2] = gaussianQuadNURBS(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
+[Q2D_2,W2D_2] = tensorQuad(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
 W2D_2 = flipud(W2D_2); % to reduce round-off errors in summation?
 Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
+if quadMethodBEMsimpson
+    [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
+else
+    [W2D,Q2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
+    noqpMax = 200;
+    W = cell(noqpMax,1);
+    Q = cell(noqpMax,1);
+    for ii = 1:noqpMax
+        [Q{ii},W{ii}] = getQuadFromFile(ii);
+%         [W2D{ii},Q2D{ii}] = gaussianQuadNURBS(p_xi+1+ii+extraGP,p_eta+1+ii+extraGP);
+    end
+end
 % [W2D,Q2D] = gaussianQuadNURBS(2*p_xi+1,2*p_eta+1);
 % p_max = max(p_xi,p_eta);
 % [W2D_2,Q2D_2] = gaussianQuadNURBS(6*p_max+1,6*p_max+1);
@@ -122,6 +137,7 @@ Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 idxRow = zeros(n_en, noElems);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
+totNoQP = 0;
 parfor e_x = 1:noElems
 % for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
@@ -141,7 +157,7 @@ parfor e_x = 1:noElems
     F_e = zeros(n_en, no_angles);
     A_e_temp = zeros(n_en, n_en, noElems);
     
-    J_2 = 0.25*(Xi_e_x(2)-Xi_e_x(1))*(Eta_e_x(2)-Eta_e_x(1));
+    J_2_x = 0.25*(Xi_e_x(2)-Xi_e_x(1))*(Eta_e_x(2)-Eta_e_x(1));
     
     for gp_x = 1:size(W2D,1)
         pt_x = Q2D(gp_x,:);
@@ -155,10 +171,10 @@ parfor e_x = 1:noElems
         m_1 = J(1,:);
         m_2 = J(2,:);
         crossProd = cross(m_1,m_2);
-        J_1 = norm(crossProd);
+        J_1_x = norm(crossProd);
 
         x = R_x*pts_x;
-        fact_x = J_1*J_2*wt_x;
+        fact_x = J_1_x*J_2_x*wt_x;
     
         if useHBIE
             h_xi = norm(m_1);
@@ -167,7 +183,7 @@ parfor e_x = 1:noElems
             e_eta = m_2/h_eta;
 
             v_1 = e_xi;
-            nx = crossProd/J_1;
+            nx = crossProd/J_1_x;
             v_3 = nx;
             v_2 = cross(v_3,v_1);
             cosT = dot(e_xi,e_eta);
@@ -352,30 +368,69 @@ parfor e_x = 1:noElems
                     end
                 end
             else
-                noGp = size(Q2D,1);
-                x_5 = centerPts(e_y,:);
-
-                l = norm(x-x_5);
                 h = diagsMax(e_y);
-                n_div = round(agpBEM*h/l + 1);
-                Xi_e_arr  = linspace(Xi_e_y(1),Xi_e_y(2),n_div+1);
-                Eta_e_arr = linspace(Eta_e_y(1),Eta_e_y(2),n_div+1);
-                J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1))/n_div^2;
-                xi_y = zeros(noGp,n_div^2);
-                eta_y = zeros(noGp,n_div^2);
-                counter = 1;
-                for i_eta = 1:n_div
-                    Eta_e_sub = Eta_e_arr(i_eta:i_eta+1);
-                    for i_xi = 1:n_div
-                        Xi_e_sub = Xi_e_arr(i_xi:i_xi+1);
-                        xi_y(:,counter) = parent2ParametricSpace(Xi_e_sub, Q2D(:,1));
-                        eta_y(:,counter) = parent2ParametricSpace(Eta_e_sub, Q2D(:,2));
-                        counter = counter + 1;
+                if quadMethodBEMsimpson
+                    x_5 = centerPts(e_y,:);
+                    l = norm(x-x_5);
+
+                    noGp = size(Q,1);
+                    n_div = round(agpBEM*h/l + 1);
+                    Xi_e_y_arr  = linspace(Xi_e_y(1),Xi_e_y(2),n_div+1);
+                    Eta_e_y_arr = linspace(Eta_e_y(1),Eta_e_y(2),n_div+1);
+                    J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1))/n_div^2;
+                    xi_y = zeros(noGp,n_div^2);
+                    eta_y = zeros(noGp,n_div^2);
+                    counter = 1;
+                    for i_eta = 1:n_div
+                        Eta_e_y_sub = Eta_e_y_arr(i_eta:i_eta+1);
+                        for i_xi = 1:n_div
+                            Xi_e_y_sub = Xi_e_y_arr(i_xi:i_xi+1);
+                            xi_y(:,counter) = parent2ParametricSpace(Xi_e_y_sub, Q(:,1));
+                            eta_y(:,counter) = parent2ParametricSpace(Eta_e_y_sub, Q(:,2));
+                            counter = counter + 1;
+                        end
                     end
+                    xi_y = reshape(xi_y,n_div^2*noGp,1);
+                    eta_y = reshape(eta_y,n_div^2*noGp,1);
+                    W2D_1 = repmat(W,n_div^2,1);
+                else
+                    xi1  = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,10);
+                    if Xi_e_y(1) < xi_x && xi_x < Xi_e_y(2)
+                        xi1 = [xi1, xi_x];
+                    end
+                    if Xi_e_y(1) < eta_x && eta_x < Xi_e_y(2)
+                        xi1 = [xi1, eta_x];
+                    end
+                    eta1  = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,10);
+                    if Eta_e_y(1) < eta_x && eta_x < Eta_e_y(2)
+                        eta1 = [eta1, eta_x];
+                    end
+                    if Eta_e_y(1) < xi_x && xi_x < Eta_e_y(2)
+                        eta1 = [eta1, xi_x];
+                    end
+                    [XI1,ETA1] = meshgrid(xi1,eta1);
+                    XI1 = XI1(:);
+                    ETA1 = ETA1(:);
+                    yy = evaluateNURBS_2ndDeriv(patches{patch_y}.nurbs, [XI1,ETA1]);
+                    hh = norm2(yy-x);
+                    [l, I] = min(hh);
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    if plotGP
+                        [Xs,Ys,Zs] = sphere(noSpherePts);
+                        surf(pointsRadius*Xs+yy(I,1),pointsRadius*Ys+yy(I,2),pointsRadius*Zs+yy(I,3), 'FaceColor', 'green','EdgeColor','none','LineStyle','none')
+                    end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
+                    n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
+                    Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
+                    Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
+                    Q_eta = Q_eta(:);
+                    J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
+                    xi_y = parent2ParametricSpace(Xi_e_y, Q_xi);
+                    eta_y = parent2ParametricSpace(Eta_e_y, Q_eta);
+                    W2D_1 = W{n_qp_xi}*W{n_qp_eta}.';
+                    W2D_1 = W2D_1(:);
                 end
-                xi_y = reshape(xi_y,n_div^2*noGp,1);
-                eta_y = reshape(eta_y,n_div^2*noGp,1);
-                W2D_1 = repmat(W2D,n_div^2,1);
                 noGp = size(xi_y,1);
 
                 [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi_y, eta_y, p_xi, p_eta, Xi_y, Eta_y, wgts_y);
@@ -431,6 +486,7 @@ parfor e_x = 1:noElems
             if useHBIE
                 A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + alpha*R_x.'*HBIE*fact_x;
             end
+            totNoQP = totNoQP + noGp;
         end
         if useCBIE
             A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn) + dPhi_0dny_integral)*fact_x;
@@ -465,3 +521,4 @@ parfor i = 1:no_angles
 end
 
 
+varCol.totNoQP = totNoQP;

@@ -36,9 +36,9 @@ else % reproduce plot in Simpson2014aib
     degree = 3;
 end
 N = 4;
-useNeumanProj = true;
+useNeumanProj = 0;
 
-loopParameters = {'M','method','formulation'};
+loopParameters = {'M','method','formulation','useNeumanProj'};
 parm = 1;
 % collectIntoTasks
 
@@ -49,13 +49,18 @@ method = {'BEM'};
 formulation = {'CCBIE'};
 % formulation = 'CBM';
 colBEM_C0 = Inf;
+useNeumanProj = [0,1];
+% colBEM_C0 = 2;
+% extraGP = 2; % extra quadrature points
+% extraGPBEM = 14; % extra quadrature points around singularities for BEM formulations
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 method = {'BA'};
+useNeumanProj = 0;
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ABC simulation

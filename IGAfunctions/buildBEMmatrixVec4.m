@@ -426,20 +426,20 @@ totNoQP = 0;
 %         keyboard
 %     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    for e = 1:noElems  
-        patch = pIndex(e); % New
+    for e_y = 1:noElems  
+        patch = pIndex(e_y); % New
         Xi = knotVecs{patch}{1}; % New
         Eta = knotVecs{patch}{2}; % New
 
-        idXi = index(e,1);
-        idEta = index(e,2);
+        idXi = index(e_y,1);
+        idEta = index(e_y,2);
 
         Xi_e = elRangeXi(idXi,:);
         Eta_e = elRangeEta(idEta,:);
 
-        sctr = element(e,:);
+        sctr = element(e_y,:);
         pts = controlPts(sctr,:);
-        wgts = weights(element2(e,:)); % New      
+        wgts = weights(element2(e_y,:)); % New      
         if useCBIE
             CBIE = complex(zeros(1, n_en));
         end
@@ -509,7 +509,7 @@ totNoQP = 0;
 %         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         if false
-        [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
+        [collocationPointIsInElement,idx] = ismember(e_y,adjacentElements);
         if collocationPointIsInElement % use polar integration
             noGp = size(Q2D_2,1);
             xi_x_t = xi_x_tArr(idx);
@@ -626,10 +626,6 @@ totNoQP = 0;
                 
 
                 dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
-                if useHBIE
-                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
-                end
                 if ~SHBC
                     if useNeumanProj
                         dpdn_y = R_y*U(sctr,:);
@@ -641,25 +637,34 @@ totNoQP = 0;
                     end
                     if useHBIE
                         FF_temp = FF_temp + alpha*sum((dPhi_kdnx(xmy,r,nx.')+dPhi_0dny_).*dpdn_y.*fact_y);
-                        FF_temp = FF_temp - alpha*sum(dPhi_0dny_.*(dpdn_y-dpdn_x).*fact_y);
-                        FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);
+%                         FF_temp = FF_temp - alpha*sum(dPhi_0dny_.*(dpdn_y-dpdn_x).*fact_y);
+%                         FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);
                     end
                 end
+                dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
+                dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
                 if useCBIE
-                    CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
+                    CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
+%                     CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
                 end
                 if useHBIE
-                    HBIE = HBIE + ((d2Phi_kdnxdny(xmy,r,nx.',ny) - d2Phi_0dnxdny_).*fact_y).'*R_y;
-                    HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + xmy*v_dR_xdv);
-                    HBIE = HBIE + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1)*v_dR_xdv;
+                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
+                    d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
+                    HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact_y).'*R_y;
+                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                    ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
+                                                                        + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
+%                     HBIE = HBIE + ((d2Phi_kdnxdny(xmy,r,nx.',ny) - d2Phi_0dnxdny_).*fact_y).'*R_y;
+%                     HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + xmy*v_dR_xdv);
+%                     HBIE = HBIE + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1)*v_dR_xdv;
                 end
             end
         else
             noGp = size(Q2D,1);
-            x_5 = centerPts(e,:);
+            x_5 = centerPts(e_y,:);
 
             l = norm(x-x_5);
-            h = diagsMax(e);
+            h = diagsMax(e_y);
             n_div = round(agpBEM*h/l + 1);
             J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
             xi = parent2ParametricSpace(Xi_e, Q2D{n_div}(:,1));

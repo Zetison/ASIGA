@@ -76,7 +76,7 @@ for study_i = 1:numel(studies)
             studies(study_i).loopParametersArr{end+1} = basisROMcell;
             studies(study_i).tasks = tasks(:);
         end
-        save([subFolderName '/_studies'], 'studies', '-v7.3')
+        save([subFolderName '/_studies'], 'studies')
     end
 end
 

@@ -21,7 +21,7 @@ saveName = model;
 for i = 1:length(loopParameters)
     temp2 = loopParameters{i};
     temp = task.(loopParameters{i});
-    if isnumeric(temp)
+    if ~ischar(temp)
         temp = num2str(temp);
     end
     if isstruct(temp)

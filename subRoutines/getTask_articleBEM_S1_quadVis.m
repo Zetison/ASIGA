@@ -22,20 +22,25 @@ plotFarField          = 0;
 calculateSurfaceError = 0;
 calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
-loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation'};
+loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation','quadMethodBEM'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE'};
-quadMethod = 'New2';
+quadMethodBEM = {'Simpson'};
 colBEM_C0 = Inf;
 % colBEM_C0 = Inf;
 extraGP = 0; % extra quadrature points
-extraGPBEM = 12; % extra quadrature points around singularities for BEM formulations
+extraGPBEM = 4; % extra quadrature points around singularities for BEM formulations
 % extraGPBEM = 9; % extra quadrature points around singularities for BEM formulations
 % agpBEM = 2;
-agpBEM = 8;
+agpBEM = 2;
+
+% collectIntoTasks
+
+quadMethodBEM = {'New'};
+agpBEM = 3;
 collectIntoTasks
 

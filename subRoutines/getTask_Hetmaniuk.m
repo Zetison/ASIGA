@@ -2,14 +2,14 @@ scatteringCase = 'Sweep';
 % BC = 'NNBC';
 model = 'S1';  % Spherical shell
 
-coreMethod = {'IGA'};
+coreMethod = {'IGA','hp_FEM'};
 % coreMethod = {'IGA'};
 method = {'IE'};
 formulation = {'BGU'};
 
 
 k = [9, 22.5, 36];
-k = 36;
+k = 1;
 % k = [9, 22.5, 36]/10;
 c_f = 1500;
 f = k*c_f/(2*pi);
@@ -22,22 +22,23 @@ beta = -pi/2;
 r_a = 1.2;
 
 M = 1:5; % 5
-N = 1:5; % 9
+N = 1; % 9
 
 degree = 4;
-parm = 2;
+degree = 2:5;
+parm = 1;
 calculateSurfaceError = 1;
 calculateVolumeError  = 0;
 calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
 plot2Dgeometry = 0;
-initMeshFactXi = 3;
-initMeshFactZeta = 4;
+% initMeshFactXi = 3;
+% initMeshFactZeta = 4;
 useROM = false;
 computeCondNumber = 1;
 
 loopParameters = {'f','method','coreMethod','formulation','M','N','degree','parm'};
-collectIntoTasks
+% collectIntoTasks
 
 method = {'BA'};
 N = 7; % 9
@@ -45,7 +46,7 @@ formulation = {'VL2E'};
 collectIntoTasks
 
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 k_ROM = k(1):0.05:k(end);
