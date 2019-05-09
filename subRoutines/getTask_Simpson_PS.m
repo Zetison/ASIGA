@@ -48,7 +48,8 @@ runTasksInParallel = 1;
 method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CBM','CRCBIE3'};
-formulation = {'CCBIE'};
+% formulation = {'CCBIE'};
+formulation = {'CCBIE','CBM'};
 
 colBEM_C0 = [1/2,0];
 % colBEM_C0 = 2;
