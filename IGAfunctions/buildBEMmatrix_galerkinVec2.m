@@ -118,7 +118,7 @@ p_max = max(p_xi,p_eta);
 [Q2D_2,W2D_2] = tensorQuad(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
 W2D_2 = flipud(W2D_2); % to reduce round-off errors in summation?
 Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
-[W2D,Q2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
+[Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 if quadMethodBEMsimpson
     [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 else
