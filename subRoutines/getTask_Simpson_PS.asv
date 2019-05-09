@@ -54,7 +54,7 @@ colBEM_C0 = [1/2,0];
 % colBEM_C0 = 2;
 % extraGP = [0,1,2,4,8,16]; % extra quadrature points
 extraGP = 0; % extra quadrature points
-extraGPBEM = 50; % extra quadrature points around singularities for BEM formulations
+extraGPBEM = 0:100; % extra quadrature points around singularities for BEM formulations
 % extraGPBEM = 0; % extra quadrature points around singularities for BEM formulations
 % agpBEM = [2,4,8,16];
 agpBEM = [2,4];
@@ -66,20 +66,20 @@ loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulat
 collectIntoTasks
 
 % agpBEM = [0.6,1.2,2.4];
-agpBEM = 1:6;
+agpBEM = [3,6];
 quadMethodBEM = {'New'};
 collectIntoTasks
 
 formulation = {'GCBIE','GBM'};
-agpBEM = 1:10;
+agpBEM = [2,4,8,16];
 quadMethodBEM = {'Simpson'};
-colBEM_C0 = 0;
+colBEM_C0 = Inf;
 collectIntoTasks
 
 formulation = {'GCBIE','GBM'};
-agpBEM = 1:6;
+agpBEM = [3,6];
 quadMethodBEM = {'New'};
-colBEM_C0 = 0;
+colBEM_C0 = Inf;
 collectIntoTasks
 
 

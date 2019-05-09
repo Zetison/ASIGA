@@ -153,6 +153,7 @@ switch options.noXLoopPrms
                 if isrow(y)
                     y = y.';
                 end
+                saveName(saveName == '.') = [];
                 printResultsToFile2([subFolderName '/' saveName], x.', y, {fileDataHeaderX}, {yname}, study.tasks(i).task);
             end
             if plotResults
@@ -275,6 +276,7 @@ switch options.noXLoopPrms
                 end
             end
             if printResults
+                saveName(saveName == '.') = [];
                 printResultsToFile2([subFolderName '/' saveName], x_temp(:), y_temp(:), {fileDataHeaderX}, {yname}, study.tasks(idxMap(i)).task, options.xLoopName);
             end
             if plotResults

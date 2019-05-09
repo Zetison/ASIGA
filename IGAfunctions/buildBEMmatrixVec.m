@@ -84,11 +84,11 @@ end
 %% Create collocation points
 colBEM_C0 = varCol.colBEM_C0;
 if p_xi == 1 && p_eta == 1
-    eps_greville_xi = 1/(2*colBEM_C0*p_xi);
-    eps_greville_eta = 1/(2*colBEM_C0*p_eta);
+    eps_greville_xi = colBEM_C0/(2*p_xi);
+    eps_greville_eta = colBEM_C0/(2*p_eta);
 else
-    eps_greville_xi = 1/(colBEM_C0*p_xi);
-    eps_greville_eta = 1/(colBEM_C0*p_eta);
+    eps_greville_xi = colBEM_C0/p_xi;
+    eps_greville_eta = colBEM_C0/p_eta;
 end
 n_cp = noDofs - length(dofsToRemove);
 counter2 = 1;
