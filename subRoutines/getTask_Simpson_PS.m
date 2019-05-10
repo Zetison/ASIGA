@@ -69,7 +69,7 @@ loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulat
 collectIntoTasks
 
 % agpBEM = [0.6,1.2,2.4];
-agpBEM = 1:6;
+% agpBEM = 1:6;
 quadMethodBEM = {'New'};
 collectIntoTasks
 
