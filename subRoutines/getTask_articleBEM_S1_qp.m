@@ -20,7 +20,7 @@ beta_s = 30*pi/180;
 
 parm = 1;
 degree = [2,5];
-runTasksInParallel = 0;
+runTasksInParallel = 1;
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 0;
 calculateSurfaceError = 1;
