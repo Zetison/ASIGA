@@ -53,7 +53,7 @@ formulation = {'CCBIE','CBM'};
 % formulation = {'CBM'};
 % formulation = {'CHBIE'};
 
-colBEM_C0 = [1/2,0];
+colBEM_C0 = [1/2,0]; 
 % colBEM_C0 = 2;
 % extraGP = [0,1,2,4,8,16]; % extra quadrature points
 extraGP = 0; % extra quadrature points
