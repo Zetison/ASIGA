@@ -1,8 +1,10 @@
 
+addpath ../../
 addpath('C:\Users\Zetison\Documents\Multiprecision Computing Toolbox\')
-
+addpath('/usr/local/AdvanpixMCT/4.6.0.13135')
+startMatlabPool
 mp.Digits(200);
-N = 200;
+N = 1000;
 [abscissa,weights] = computeGLpoints(N);
 d = mp.Digits;
 Eps = 10^(-d);

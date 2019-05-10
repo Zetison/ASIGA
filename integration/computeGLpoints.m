@@ -1,12 +1,14 @@
 function [Q,W] = computeGLpoints(n)
 
-% mp.Digits(100);
 
+d = mp.Digits;
 Q = cell(n,1);
 W = cell(n,1);
-for N = 1:n
-    N
+parfor N = 1:n
+    tic
+    mp.Digits(d);
     [Q{N}, W{N}] = lgwt(N);
+    toc
 end
 
 function [x, w] = lgwt(N)

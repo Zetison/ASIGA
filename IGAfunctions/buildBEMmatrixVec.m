@@ -210,7 +210,7 @@ W2D_2 = repmat(W2D_2,4,1); % 4 triangles around source point
 if quadMethodBEMsimpson
     [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 else
-    noqpMax = 200;
+    noqpMax = 1000;
     W = cell(noqpMax,1);
     Q = cell(noqpMax,1);
     for ii = 1:noqpMax
