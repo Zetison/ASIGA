@@ -44,7 +44,7 @@ extraGPBEM = 2; % extra quadrature points around singularities for BEM formulati
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-runTasksInParallel = 0;
+runTasksInParallel = 1;
 method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CBM','CRCBIE3'};
