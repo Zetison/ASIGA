@@ -304,8 +304,8 @@ parfor i = 1:n_cp
         cosT = dot(e_xi,e_eta);
         sinT = dot(v_2,e_eta);
         dXIdv = [1/h_xi, 0; -cosT/sinT/h_xi, 1/h_eta/sinT];
-        dR_xdv = dXIdv*[dR_xdxi; dR_xdeta];
-        v_dR_xdv = [v_1.', v_2.']*dR_xdv;
+%         dR_xdv = dXIdv*[dR_xdxi; dR_xdeta];
+%         v_dR_xdv = [v_1.', v_2.']*dR_xdv;
     else
         R_x = NURBS2DBasis(xi_x, eta_x, p_xi, p_eta, Xi_x, Eta_x, wgts_x);
         x = R_x*pts_x;
@@ -743,7 +743,7 @@ parfor i = 1:n_cp
                 FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
             end
             if useHBIE
-                FF_temp = FF_temp + alpha*sum((dPhi_kdnx(xmy,r,nx.')+dPhi_0dny_).*dpdn_y.*fact_y);
+                FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
             end
         end
         dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
@@ -786,6 +786,7 @@ parfor i = 1:n_cp
             gR_x = exp(1i*k*dot(d_vec, x))*gR_x + 1i*k*(d_vec*R_x).';
         end
         temp = gR_x*ugly_integral;
+%         temp = (dXIdv(1,:)*(v_1*ugly_integral) + dXIdv(2,:)*(v_2*ugly_integral))*[dR_xdxi; dR_xdeta];
         for j = 1:n_en
             A_row(sctr_x(j)) = A_row(sctr_x(j)) + alpha*(-R_x(j)*d2Phi_0dnxdny_integral + temp(j));
         end
