@@ -160,7 +160,7 @@ else
     dU = NaN;
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% for i = [354,317,319]
+% for i = 317
 % for i = [354,317,319,392]
 plotGP = 0;
 plotPointsAsSpheres = 1;
@@ -210,13 +210,10 @@ W2D_2 = repmat(W2D_2,4,1); % 4 triangles around source point
 if quadMethodBEMsimpson
     [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 else
-    noqpMax = 1000;
-    W = cell(noqpMax,1);
-    Q = cell(noqpMax,1);
-    for ii = 1:noqpMax
-        [Q{ii},W{ii}] = getQuadFromFile(ii);
-%         [W2D{ii},Q2D{ii}] = gaussianQuadNURBS(p_xi+1+ii+extraGP,p_eta+1+ii+extraGP);
-    end
+    load('integration/quadData_double')
+    Q = quadData.Q;
+    W = quadData.W;
+    noqpMax = numel(Q);
 end
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
@@ -324,7 +321,9 @@ parfor i = 1:n_cp
                 dp_inc_x = R_x*dU(sctr_x,:);
             end
         else
-            dpdn_x = R_x*U(sctr_x,:);
+            if useHBIE
+                dpdn_x = R_x*U(sctr_x,:);
+            end
         end
     else
         if SHBC
@@ -691,6 +690,14 @@ parfor i = 1:n_cp
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
                 n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
+                if n_qp_xi > noqpMax
+                    warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                    n_qp_xi = noqpMax;
+                end
+                if n_qp_eta > noqpMax
+                    warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                    n_qp_eta = noqpMax;
+                end
                 Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
                 Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
                 Q_eta = Q_eta(:);

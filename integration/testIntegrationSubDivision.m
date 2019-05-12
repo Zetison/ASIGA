@@ -2,22 +2,22 @@ close all
 % 
 % rule = 'Freud';
 rule = 'Legendre';
-N = 64;
+N = 200;
 n_qpSub = 5;
 I_gauss = zeros(N,1);
 N_arr = 1:N;
-epsilon = 1/4;
+epsilon = 1/20; % 1/5 is the original Runge function
 f = @(x) 1./(1+x.^2/epsilon.^2);
 x = linspace(-1,1,1000);
 plot(x,f(x))
 
 for n = N_arr
-    [W1D,Q1D] = gaussianQuadNURBS(n); 
+    [Q1D,W1D] = getQuadFromFile(n);
 
     I_gauss(n) = sum(f(Q1D).*W1D);
 end
-[W1D,Q1D] = gaussianQuadNURBS(n_qpSub); 
-n_div_arr = 1:20;
+[Q1D,W1D] = getQuadFromFile(n_qpSub);
+n_div_arr = 1:round(N_arr(end)/n_qpSub);
 I_gauss2 = zeros(numel(n_div_arr),1);
 N_arr2 = zeros(numel(n_div_arr),1);
 for n_div = n_div_arr

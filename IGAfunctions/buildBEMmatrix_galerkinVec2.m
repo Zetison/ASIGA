@@ -122,13 +122,10 @@ Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 if quadMethodBEMsimpson
     [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 else
-    noqpMax = 200;
-    W = cell(noqpMax,1);
-    Q = cell(noqpMax,1);
-    for ii = 1:noqpMax
-        [Q{ii},W{ii}] = getQuadFromFile(ii);
-%         [W2D{ii},Q2D{ii}] = gaussianQuadNURBS(p_xi+1+ii+extraGP,p_eta+1+ii+extraGP);
-    end
+    load('integration/quadData_double')
+    Q = quadData.Q;
+    W = quadData.W;
+    noqpMax = numel(Q);
 end
 % [W2D,Q2D] = gaussianQuadNURBS(2*p_xi+1,2*p_eta+1);
 % p_max = max(p_xi,p_eta);
@@ -422,6 +419,14 @@ parfor e_x = 1:noElems
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
                     n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
+                    if n_qp_xi > noqpMax
+                        warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                        n_qp_xi = noqpMax;
+                    end
+                    if n_qp_eta > noqpMax
+                        warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                        n_qp_eta = noqpMax;
+                    end
                     Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
                     Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
                     Q_eta = Q_eta(:);

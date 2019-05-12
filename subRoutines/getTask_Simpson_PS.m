@@ -44,7 +44,7 @@ extraGPBEM = 2; % extra quadrature points around singularities for BEM formulati
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-runTasksInParallel = 1;
+runTasksInParallel = 0;
 method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CBM','CRCBIE3'};
@@ -67,24 +67,26 @@ quadMethodBEM = {'Simpson'};
 
 loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation','quadMethodBEM'};
 
-collectIntoTasks
+% collectIntoTasks
 
 % agpBEM = [0.6,1.2,2.4];
 % agpBEM = 1:6;
+% formulation = {'CRCBIE1'};
 quadMethodBEM = {'New'};
+% quadMethodBEM = {'Simpson'};
 collectIntoTasks
 
 formulation = {'GCBIE','GBM'};
 agpBEM = 1:10;
 quadMethodBEM = {'Simpson'};
 colBEM_C0 = NaN;
-collectIntoTasks
+% collectIntoTasks
 
 formulation = {'GCBIE','GBM'};
 agpBEM = 1:6;
 quadMethodBEM = {'New'};
 colBEM_C0 = NaN;
-collectIntoTasks
+% collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

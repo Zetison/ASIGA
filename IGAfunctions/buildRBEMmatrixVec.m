@@ -25,8 +25,10 @@ agpBEM = varCol.agpBEM;
 
 k = varCol.k;
 psiType = str2double(varCol.formulation(end));    
-Eps = 10*eps;
 
+quadMethodBEMsimpson = strcmp(varCol.quadMethodBEM,'Simpson');
+
+Eps = 10*eps;
 
 if strcmp(varCol.coreMethod, 'XI')
     useEnrichedBfuns = true;
@@ -36,9 +38,8 @@ else
     d_vec = NaN;
 end
 
-Phi_0 = @(r)           1./(4*pi*r);
-Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
 
+Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
 dPhi_kdny = @(xmy,r,ny) Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*ny,2);
 
 SHBC = strcmp(varCol.BC, 'SHBC');
@@ -138,30 +139,37 @@ eNeighbour = NaN; % to avoid transparency "bug"
 createElementTopology
 
 n_en = (p_xi+1)*(p_eta+1);
-
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
 p_max = max(p_xi,p_eta);
-[W2D_2,Q2D_2] = gaussianQuadNURBS(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
+[Q2D_2,W2D_2] = tensorQuad(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
+W2D_2 = repmat(W2D_2,4,1); % 4 triangles around source point
+
+if quadMethodBEMsimpson
+    [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
+else
+    load('integration/quadData_double')
+    Q = quadData.Q;
+    W = quadData.W;
+    noqpMax = numel(Q);
+end
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-% for i = 1:n_cp
-parfor i = 1:n_cp
+totNoQP = 0;
+for i = 1:n_cp
+% parfor i = 1:n_cp
 %     totArea = 0;
-
     patch = patchIdx(i);
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
-    uniqueXi = unique(Xi);
-    uniqueEta = unique(Eta);
+    Xi_x = knotVecs{patch}{1}; % New
+    Eta_x = knotVecs{patch}{2}; % New
+    uniqueXi = unique(Xi_x);
+    uniqueEta = unique(Eta_x);
     noElementsXi = length(uniqueXi)-1;
     noElementsEta = length(uniqueEta)-1;
     
     A_row = complex(zeros(1, noDofs));
-    
     xi_x = cp_p(i,1);
     eta_x = cp_p(i,2);
-    
+
     xi_idx = findKnotSpan(noElementsXi, 0, xi_x, uniqueXi);
     eta_idx = findKnotSpan(noElementsEta, 0, eta_x, uniqueEta);
     e_x = sum(noElemsPatch(1:patch-1)) + xi_idx + noElementsXi*(eta_idx-1);
@@ -174,21 +182,40 @@ parfor i = 1:n_cp
     
     sctr_x = element(e_x,:);
     pts_x = controlPts(sctr_x,:);
-    wgts = weights(element2(e_x,:),:); % New
-
-    [R_x, dR_xdxi, dR_xdeta] = NURBS2DBasis(xi_x, eta_x, p_xi, p_eta, Xi, Eta, wgts);
-    J_temp = [dR_xdxi; dR_xdeta]*pts_x;
-    m_1 = J_temp(1,:);
-    m_2 = J_temp(2,:);
-    crossProd_x = cross(m_1,m_2);
-    x = R_x*pts_x;
-    
-    if (eta_x == 0 || eta_x == 1) && (strcmp(model,'SS') || strcmp(model,'SS_P') || strcmp(model,'S1') || strcmp(model,'S1_P') || strcmp(model,'S1_P2') || strcmp(model,'S3') ...
-            || strcmp(model,'S5')  || strcmp(model,'MS') || strcmp(model,'MS_P') || strcmp(model,'EL'))
-        nx = x/norm(x);
-    else
-        nx = crossProd_x/norm(crossProd_x);
+    wgts_x = weights(element2(e_x,:),:); % New
+       
+    singularMapping = true;
+    while singularMapping
+        [R_x, dR_xdxi, dR_xdeta] = NURBS2DBasis(xi_x, eta_x, p_xi, p_eta, Xi_x, Eta_x, wgts_x);
+        x = R_x*pts_x;
+        J_temp = [dR_xdxi; dR_xdeta]*pts_x;
+        m_1 = J_temp(1,:);
+        m_2 = J_temp(2,:);
+        crossProd_x = cross(m_1,m_2);
+        h_xi = norm(m_1);
+        if h_xi < Eps
+            eps_greville_xi = 1/(2*p_xi)*(Xi_e_x(2)-Xi_e_x(1));
+            if xi_x+eps_greville_xi > Xi_e_x(2)
+                xi_x = xi_x - eps_greville_xi*(Xi_e_x(2)-Xi_e_x(1));
+            else
+                xi_x = xi_x + eps_greville_xi*(Xi_e_x(2)-Xi_e_x(1));
+            end
+            continue
+        end
+        h_eta = norm(m_2);
+        if h_eta < Eps
+            eps_greville_eta = 1/(2*p_eta)*(Eta_e_x(2)-Eta_e_x(1));
+            if eta_x+eps_greville_eta > Eta_e_x(2)
+                eta_x = eta_x - eps_greville_eta*(Eta_e_x(2)-Eta_e_x(1));
+            else
+                eta_x = eta_x + eps_greville_eta*(Eta_e_x(2)-Eta_e_x(1));
+            end
+            continue
+        end
+        singularMapping = false;
     end
+    nx = crossProd_x/norm(crossProd_x);
+
     if useNeumanProj
         if SHBC
             p_inc_x = R_x*U(sctr_x,:);
@@ -336,23 +363,23 @@ parfor i = 1:n_cp
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     
-    for e = 1:noElems  
-        patch = pIndex(e); % New
-        Xi = knotVecs{patch}{1}; % New
-        Eta = knotVecs{patch}{2}; % New
+    for e_y = 1:noElems  
+        patch_y = pIndex(e_y); % New
+        Xi_y = knotVecs{patch_y}{1}; % New
+        Eta_y = knotVecs{patch_y}{2}; % New
 
-        idXi = index(e,1);
-        idEta = index(e,2);
+        idXi = index(e_y,1);
+        idEta = index(e_y,2);
 
-        Xi_e = elRangeXi(idXi,:);
-        Eta_e = elRangeEta(idEta,:);
+        Xi_e_y = elRangeXi(idXi,:);
+        Eta_e_y = elRangeEta(idEta,:);
 
-        sctr = element(e,:);
-        pts = controlPts(sctr,:);
-        wgts = weights(element2(e,:)); % New      
+        sctr_y = element(e_y,:);
+        pts_y = controlPts(sctr_y,:);
+        wgts_y = weights(element2(e_y,:)); % New  
         CBIE = complex(zeros(1, n_en));
         
-        [collocationPointIsInElement,idx] = ismember(e,adjacentElements);
+        [collocationPointIsInElement,idx] = ismember(e_y,adjacentElements);
         if collocationPointIsInElement % use polar integration
             noGp = size(Q2D_2,1);
             xi_x_t = xi_x_tArr(idx);
@@ -361,28 +388,28 @@ parfor i = 1:n_cp
             theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
             theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);
             theta_x4 = atan2(-1-eta_x_t,  1-xi_x_t);
-            
-            J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
-            
-            for area = {'South', 'East', 'North', 'West'}
-                switch area{1}
-                    case 'South'
-                        if abs(eta_x - Eta_e(1)) < 10*eps
-                            continue
-                        end
-                        thetaRange = [theta_x3 theta_x4];
-                    case 'East'
-                        if abs(xi_x - Xi_e(2)) < 10*eps
+
+            J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
+            xi_y = zeros(4*noGp,1);
+            eta_y = zeros(4*noGp,1);
+            J_3 = zeros(4*noGp,1);
+            J_4 = zeros(4*noGp,1);
+            J_5 = zeros(4*noGp,1);
+            counter = 0;
+            for area = 1:4 %{'East', 'North', 'West', 'South'}
+                switch area
+                    case 1 %'East'
+                        if abs(xi_x_t - 1) < Eps
                             continue
                         end
                         thetaRange = [theta_x4 theta_x1];
-                    case 'North'
-                        if abs(eta_x - Eta_e(2)) < 10*eps
+                    case 2 %'North'
+                        if abs(eta_x_t - 1) < Eps
                             continue
                         end
                         thetaRange = [theta_x1 theta_x2];
-                    case 'West'
-                        if abs(xi_x - Xi_e(1)) < 10*eps
+                    case 3 %'West'
+                        if abs(xi_x_t - (-1)) < Eps
                             continue
                         end
                         if theta_x3 < 0
@@ -390,191 +417,184 @@ parfor i = 1:n_cp
                         else
                             thetaRange = [theta_x2 theta_x3];
                         end
+                    case 4 %'South'
+                        if abs(eta_x_t - (-1)) < Eps
+                            continue
+                        end
+                        thetaRange = [theta_x3 theta_x4];
                 end
-                rho_t = parent2ParametricSpace([0, 1],   Q2D_2(:,1));
+
+                rho_t = parent2ParametricSpace([0, 1],    Q2D_2(:,1));
                 theta = parent2ParametricSpace(thetaRange,Q2D_2(:,2));
-                switch area{1}
-                    case 'South'
-                        rho_hat = (-1 - eta_x_t)./sin(theta);
-                    case 'East'
+                switch area
+                    case 1 %'East'
                         rho_hat = ( 1 - xi_x_t)./cos(theta);
-                    case 'North'
+                    case 2 %'North'
                         rho_hat = ( 1 - eta_x_t)./sin(theta);
-                    case 'West'
+                    case 3 %'West'
                         rho_hat = (-1 - xi_x_t)./cos(theta);
+                    case 4 %'South'
+                        rho_hat = (-1 - eta_x_t)./sin(theta);
                 end
                 rho = rho_hat.*rho_t;
 
                 xi_t  = xi_x_t + rho.*cos(theta);
                 eta_t = eta_x_t + rho.*sin(theta);
-
-                xi = parent2ParametricSpace(Xi_e, xi_t);
-                eta = parent2ParametricSpace(Eta_e, eta_t);
-
-                [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-
-                J1 = dR_ydxi*pts;
-                J2 = dR_ydeta*pts;
-                crossProd = cross(J1,J2,2);
-                J_1 = norm2(crossProd);
-                ny = crossProd./J_1(:,[1,1,1]);
-
-                J_3 = rho;
-                J_4 = rho_hat;
-                J_5 = 0.25*(thetaRange(2)-thetaRange(1));
-                fact = J_1*J_2.*J_3.*J_4*J_5.*W2D_2;
-
-                y = R_y*pts;
-                if useEnrichedBfuns
-                    temp = exp(1i*k*(y*d_vec));
-                    R_y = R_y.*temp(:,ones(1,noGp));
-                end
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                     hold on
-%                     plot3(X(1),X(2),X(3),'*')
-%                     hold off
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                xmy = x(ones(noGp,1),:)-y;
-                r = norm2(xmy);
-                
-                
-                Phi_kTemp = Phi_k(r);
-                if ~SHBC
-                    if useNeumanProj
-                        dpdn_y = R_y*U(sctr,:);
-                    else
-                        dpdn_y = dpdn(y,ny);
-                    end
-                    FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
-                end
-                switch psiType
-                    case 1
-                        ymx1 = y-x1(ones(noGp,1),:);
-                        R1 = norm2(ymx1);
-                        dR1dny = sum(ymx1.*ny,2)./R1;
-                        Psi2 = C1^2*sin(k*(R1-C1))./(C2*k*R1); % = f
-                        Psi1 = C1*cos(k*(R1-C1))./R1 + sin(k*(R1-C1))./(k*R1);
-                        dPsi2dny = C1^2/(C2*k)*(k*cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./R1.^2).*dR1dny;
-                        dPsi1dny = (-C1*k*sin(k*(R1-C1))./R1 - C1*cos(k*(R1-C1))./R1.^2 + cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./(k*R1.^2)).*dR1dny;
-                    case 2
-                        x1my = x1(ones(noGp,1),:)-y;
-                        x2my = x2(ones(noGp,1),:)-y;
-
-                        r1y = norm2(x1my);
-                        r2y = norm2(x2my);
-                        Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi2(x) = 0
-                        Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi1(x) = 1
-                        dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi2dny(x) = 1
-                        dPsi1dny = dPhi_kdny(x1my,r1y,ny)/Phix1x/C1 + (1-1/C1)*dPhi_kdny(x2my,r2y,ny)/Phix2x; % dPsi1dny(x) = 0
-                    case 3
-                        exp1 = exp(-1i*k*sum(d1(ones(noGp,1),:).*xmy,2));
-                        exp2 = exp(-1i*k*sum(d2(ones(noGp,1),:).*xmy,2));
-                        Psi2 = 1i*(exp1-exp2)/k;
-                        Psi1 = (exp1+exp2)/2;
-                        dPsi2dny = sum(d2(ones(noGp,1),:).*ny,2).*exp2 - sum(d1(ones(noGp,1),:).*ny,2).*exp1;
-                        dPsi1dny = 1i*k*(sum(d1(ones(noGp,1),:).*ny,2).*exp1+sum(d2(ones(noGp,1),:).*ny,2).*exp2)/2;
-                end
-                dPhi_kTemp = dPhi_kdny(xmy,r,ny);
-
-                Psi1_integral     = Psi1_integral    + sum(Psi1.*dPhi_kTemp.*fact); 
-                Psi2_integral     = Psi2_integral    + sum(Psi2.*dPhi_kTemp.*fact); 
-                dPsi1dny_integral = dPsi1dny_integral + sum(dPsi1dny.*Phi_kTemp.*fact);
-                dPsi2dny_integral = dPsi2dny_integral + sum(dPsi2dny.*Phi_kTemp.*fact);
-
-                CBIE = CBIE + (dPhi_kTemp.*fact).'*R_y;
+                indices = counter+1:counter+noGp;
+                xi_y(indices) = parent2ParametricSpace(Xi_e_y, xi_t);
+                eta_y(indices) = parent2ParametricSpace(Eta_e_y, eta_t);
+                J_3(indices) = rho;
+                J_4(indices) = rho_hat;
+                J_5(indices) = 0.25*(thetaRange(2)-thetaRange(1));
+                counter = counter + noGp;
             end
-        else
-            noGp = size(Q2D,1);
-            x_5 = centerPts(e,:);
+            
+            noGp = counter;
+            [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi_y(1:noGp), eta_y(1:noGp), p_xi, p_eta, Xi_y, Eta_y, wgts_y);
 
-            l = norm(x-x_5);
-            h = diagsMax(e);
-            n_div = round(agpBEM*h/l + 1);
-            Xi_e_arr  = linspace(Xi_e(1),Xi_e(2),n_div+1);
-            Eta_e_arr = linspace(Eta_e(1),Eta_e(2),n_div+1);
-            J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1))/n_div^2;
-            xi = zeros(noGp,n_div^2);
-            eta = zeros(noGp,n_div^2);
-            counter = 1;
-            for i_eta = 1:n_div
-                Eta_e_sub = Eta_e_arr(i_eta:i_eta+1);
-                for i_xi = 1:n_div
-                    Xi_e_sub = Xi_e_arr(i_xi:i_xi+1);
-                    xi(:,counter) = parent2ParametricSpace(Xi_e_sub, Q2D(:,1));
-                    eta(:,counter) = parent2ParametricSpace(Eta_e_sub, Q2D(:,2));
-                    counter = counter + 1;
-                end
-            end
-            xi = reshape(xi,n_div^2*noGp,1);
-            eta = reshape(eta,n_div^2*noGp,1);
-            W2D_1 = repmat(W2D,n_div^2,1);
-            noGp = size(xi,1);
-
-            [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-
-            J1 = dR_ydxi*pts;
-            J2 = dR_ydeta*pts;
+            J1 = dR_ydxi*pts_y;
+            J2 = dR_ydeta*pts_y;
             crossProd = cross(J1,J2,2);
             J_1 = norm2(crossProd);
             ny = crossProd./J_1(:,[1,1,1]);
 
-            fact = J_1*J_2.*W2D_1;
+            fact_y = J_1*J_2_y.*J_3(1:noGp).*J_4(1:noGp).*J_5(1:noGp).*W2D_2(1:noGp);
+        else
+            h = diagsMax(e_y);
+            if quadMethodBEMsimpson
+                x_5 = centerPts(e_y,:);
+                l = norm(x-x_5);
 
-            y = R_y*pts;
-            if useEnrichedBfuns
-                temp = exp(1i*k*(y*d_vec));
-                R_y = R_y.*temp(:,ones(1,noGp));
-            end
-            xmy = x(ones(noGp,1),:)-y;
-            r = norm2(xmy);
-            Phi_kTemp = Phi_k(r);
-            if ~SHBC
-                if useNeumanProj
-                    dpdn_y = R_y*U(sctr,:);
-                else
-                    dpdn_y = dpdn(y,ny);
+                noGp = size(Q,1);
+                n_div = round(agpBEM*h/l + 1);
+                Xi_e_y_arr  = linspace(Xi_e_y(1),Xi_e_y(2),n_div+1);
+                Eta_e_y_arr = linspace(Eta_e_y(1),Eta_e_y(2),n_div+1);
+                J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1))/n_div^2;
+                xi_y = zeros(noGp,n_div^2);
+                eta_y = zeros(noGp,n_div^2);
+                counter = 1;
+                for i_eta = 1:n_div
+                    Eta_e_y_sub = Eta_e_y_arr(i_eta:i_eta+1);
+                    for i_xi = 1:n_div
+                        Xi_e_y_sub = Xi_e_y_arr(i_xi:i_xi+1);
+                        xi_y(:,counter) = parent2ParametricSpace(Xi_e_y_sub, Q(:,1));
+                        eta_y(:,counter) = parent2ParametricSpace(Eta_e_y_sub, Q(:,2));
+                        counter = counter + 1;
+                    end
                 end
-                FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact);
+                xi_y = reshape(xi_y,n_div^2*noGp,1);
+                eta_y = reshape(eta_y,n_div^2*noGp,1);
+                W2D_1 = repmat(W,n_div^2,1);
+            
+            else
+                xi1  = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,10);
+                if Xi_e_y(1) < xi_x && xi_x < Xi_e_y(2)
+                    xi1 = [xi1, xi_x];
+                end
+                if Xi_e_y(1) < eta_x && eta_x < Xi_e_y(2)
+                    xi1 = [xi1, eta_x];
+                end
+                eta1  = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,10);
+                if Eta_e_y(1) < eta_x && eta_x < Eta_e_y(2)
+                    eta1 = [eta1, eta_x];
+                end
+                if Eta_e_y(1) < xi_x && xi_x < Eta_e_y(2)
+                    eta1 = [eta1, xi_x];
+                end
+                [XI1,ETA1] = meshgrid(xi1,eta1);
+                XI1 = XI1(:);
+                ETA1 = ETA1(:);
+                yy = evaluateNURBS_2ndDeriv(patches{patch_y}.nurbs, [XI1,ETA1]);
+                hh = norm2(yy-x);
+                [l, I] = min(hh);
+                n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
+                n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
+                if n_qp_xi > noqpMax
+                    warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                    n_qp_xi = noqpMax;
+                end
+                if n_qp_eta > noqpMax
+                    warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                    n_qp_eta = noqpMax;
+                end
+                Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
+                Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
+                Q_eta = Q_eta(:);
+                J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
+                xi_y = parent2ParametricSpace(Xi_e_y, Q_xi);
+                eta_y = parent2ParametricSpace(Eta_e_y, Q_eta);
+                W2D_1 = W{n_qp_xi}*W{n_qp_eta}.';
+                W2D_1 = W2D_1(:);
             end
-            switch psiType
-                case 1
-                    ymx1 = y-x1(ones(noGp,1),:);
-                    R1 = norm2(ymx1);
-                    dR1dny = sum(ymx1.*ny,2)./R1;
-                    Psi2 = C1^2*sin(k*(R1-C1))./(C2*k*R1); % = f
-                    Psi1 = C1*cos(k*(R1-C1))./R1 + sin(k*(R1-C1))./(k*R1);
-                    dPsi2dny = C1^2/(C2*k)*(k*cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./R1.^2).*dR1dny;
-                    dPsi1dny = (-C1*k*sin(k*(R1-C1))./R1 - C1*cos(k*(R1-C1))./R1.^2 + cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./(k*R1.^2)).*dR1dny;
-                case 2
-                    x1my = x1(ones(noGp,1),:)-y;
-                    x2my = x2(ones(noGp,1),:)-y;
+            noGp = size(xi_y,1);
 
-                    r1y = norm2(x1my);
-                    r2y = norm2(x2my);
-                    Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi2(x) = 0
-                    Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi1(x) = 1
-                    dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi2dny(x) = 1
-                    dPsi1dny = dPhi_kdny(x1my,r1y,ny)/Phix1x/C1 + (1-1/C1)*dPhi_kdny(x2my,r2y,ny)/Phix2x; % dPsi1dny(x) = 0
-                case 3
-                    exp1 = exp(-1i*k*sum(d1(ones(noGp,1),:).*xmy,2));
-                    exp2 = exp(-1i*k*sum(d2(ones(noGp,1),:).*xmy,2));
-                    Psi2 = 1i*(exp1-exp2)/k;
-                    Psi1 = (exp1+exp2)/2;
-                    dPsi2dny = sum(d2(ones(noGp,1),:).*ny,2).*exp2 - sum(d1(ones(noGp,1),:).*ny,2).*exp1;
-                    dPsi1dny = 1i*k*(sum(d1(ones(noGp,1),:).*ny,2).*exp1+sum(d2(ones(noGp,1),:).*ny,2).*exp2)/2;
-            end
-            dPhi_kTemp = dPhi_kdny(xmy,r,ny);
+            [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi_y, eta_y, p_xi, p_eta, Xi_y, Eta_y, wgts_y);
 
-            Psi1_integral     = Psi1_integral    + sum(Psi1.*dPhi_kTemp.*fact); 
-            Psi2_integral     = Psi2_integral    + sum(Psi2.*dPhi_kTemp.*fact); 
-            dPsi1dny_integral = dPsi1dny_integral + sum(dPsi1dny.*Phi_kTemp.*fact);
-            dPsi2dny_integral = dPsi2dny_integral + sum(dPsi2dny.*Phi_kTemp.*fact);
-
-            CBIE = CBIE + (dPhi_kTemp.*fact).'*R_y;
+            J1 = dR_ydxi*pts_y;
+            J2 = dR_ydeta*pts_y;
+            crossProd = cross(J1,J2,2);
+            J_1 = norm2(crossProd);
+            ny = crossProd./J_1(:,[1,1,1]);
+            fact_y = J_1*J_2_y.*W2D_1;
         end
+
+        y = R_y*pts_y;
+        if useEnrichedBfuns
+            temp = exp(1i*k*(y*d_vec));
+            R_y = R_y.*temp(:,ones(1,noGp));
+        end
+        xmy = x(ones(noGp,1),:)-y;
+        r = norm2(xmy);
+        Phi_kTemp = Phi_k(r);
+        if ~SHBC
+            if useNeumanProj
+                dpdn_y = R_y*U(sctr,:);
+            else
+                dpdn_y = dpdn(y,ny);
+            end
+            FF_temp = FF_temp + sum(Phi_kTemp.*dpdn_y.*fact_y);
+        end
+        switch psiType
+            case 1
+                ymx1 = y-x1(ones(noGp,1),:);
+                R1 = norm2(ymx1);
+                dR1dny = sum(ymx1.*ny,2)./R1;
+                Psi2 = C1^2*sin(k*(R1-C1))./(C2*k*R1); % = f
+                Psi1 = C1*cos(k*(R1-C1))./R1 + sin(k*(R1-C1))./(k*R1);
+                dPsi2dny = C1^2/(C2*k)*(k*cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./R1.^2).*dR1dny;
+                dPsi1dny = (-C1*k*sin(k*(R1-C1))./R1 - C1*cos(k*(R1-C1))./R1.^2 + cos(k*(R1-C1))./R1 - sin(k*(R1-C1))./(k*R1.^2)).*dR1dny;
+            case 2
+                x1my = x1(ones(noGp,1),:)-y;
+                x2my = x2(ones(noGp,1),:)-y;
+
+                r1y = norm2(x1my);
+                r2y = norm2(x2my);
+                Psi2 = (Phi_k(r1y)/Phix1x - Phi_k(r2y)/Phix2x)/C2; % Psi2(x) = 0
+                Psi1 = Phi_k(r1y)/Phix1x/C1 + (1-1/C1)*Phi_k(r2y)/Phix2x; % Psi1(x) = 1
+                dPsi2dny = (dPhi_kdny(x1my,r1y,ny)/Phix1x - dPhi_kdny(x2my,r2y,ny)/Phix2x)/C2; % dPsi2dny(x) = 1
+                dPsi1dny = dPhi_kdny(x1my,r1y,ny)/Phix1x/C1 + (1-1/C1)*dPhi_kdny(x2my,r2y,ny)/Phix2x; % dPsi1dny(x) = 0
+            case 3
+                exp1 = exp(-1i*k*sum(d1(ones(noGp,1),:).*xmy,2));
+                exp2 = exp(-1i*k*sum(d2(ones(noGp,1),:).*xmy,2));
+                Psi2 = 1i*(exp1-exp2)/k;
+                Psi1 = (exp1+exp2)/2;
+                dPsi2dny = sum(d2(ones(noGp,1),:).*ny,2).*exp2 - sum(d1(ones(noGp,1),:).*ny,2).*exp1;
+                dPsi1dny = 1i*k*(sum(d1(ones(noGp,1),:).*ny,2).*exp1+sum(d2(ones(noGp,1),:).*ny,2).*exp2)/2;
+        end
+        dPhi_kTemp = dPhi_kdny(xmy,r,ny);
+
+        Psi1_integral     = Psi1_integral    + sum(Psi1.*dPhi_kTemp.*fact_y); 
+        Psi2_integral     = Psi2_integral    + sum(Psi2.*dPhi_kTemp.*fact_y); 
+        dPsi1dny_integral = dPsi1dny_integral + sum(dPsi1dny.*Phi_kTemp.*fact_y);
+        dPsi2dny_integral = dPsi2dny_integral + sum(dPsi2dny.*Phi_kTemp.*fact_y);
+
+        CBIE = CBIE + (dPhi_kTemp.*fact_y).'*R_y;
+        
+        
         for j = 1:n_en
-            A_row(sctr(j)) = A_row(sctr(j)) + CBIE(j);
+            A_row(sctr_y(j)) = A_row(sctr_y(j)) + CBIE(j);
         end
+        totNoQP = totNoQP + noGp;
     end
 
 
@@ -613,3 +633,4 @@ parfor i = 1:n_cp
 end
 
 
+varCol.totNoQP = totNoQP;
