@@ -393,7 +393,8 @@ for i_k = 1:size(k,2)
                     switch formulation(2)
                         case 'R' % Regularized
 %                             [A, FF] = buildRBEMmatrix_galerkin(varCol);  
-                            [A, FF] = buildRBEMmatrix_galerkinVec(varCol);  
+%                             [A, FF, varCol] = buildRBEMmatrix_galerkinVec(varCol);  
+                            [A, FF, varCol] = buildRBEMmatrix_galerkinVec2(varCol);  
                         otherwise
 %                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
 %                             [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
@@ -405,7 +406,8 @@ for i_k = 1:size(k,2)
                 case 'C' % Collocation
                     switch formulation(2)
                         case 'R' % Regularized
-                            [A, FF] = buildRBEMmatrixVec(varCol);  
+%                             [A, FF] = buildRBEMmatrixVec(varCol);  
+                            [A, FF, varCol] = buildRBEMmatrixVec2(varCol);  
 %                             [A, FF] = buildRBEMmatrix(varCol);  
                         otherwise
                             [A, FF, varCol] = buildBEMmatrixVec(varCol);  

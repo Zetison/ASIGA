@@ -209,6 +209,7 @@ W2D_2 = repmat(W2D_2,4,1); % 4 triangles around source point
 % Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 if quadMethodBEMsimpson
     [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
+    noqpMax = NaN;
 else
     load('integration/quadData_double')
     Q = quadData.Q;
@@ -691,10 +692,13 @@ parfor i = 1:n_cp
                 n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
                 n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
                 if n_qp_xi > noqpMax
-                    warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                    warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points:\n' ...
+                             'n_qp_xi = ' num2str(n_qp_xi) ' > ' num2str(noqpMax) ' = noqpMax'])
                     n_qp_xi = noqpMax;
                 end
                 if n_qp_eta > noqpMax
+                    warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points:\n' ...
+                             'n_qp_eta = ' num2str(n_qp_eta) ' > ' num2str(noqpMax) ' = noqpMax'])
                     warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
                     n_qp_eta = noqpMax;
                 end

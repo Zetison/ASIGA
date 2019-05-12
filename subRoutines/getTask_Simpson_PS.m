@@ -49,7 +49,7 @@ method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CBM','CRCBIE3'};
 % formulation = {'CCBIE'};
-formulation = {'CCBIE','CBM'};
+% formulation = {'CCBIE','CBM'};
 % formulation = {'CBM'};
 % formulation = {'CHBIE'};
 
@@ -67,26 +67,28 @@ quadMethodBEM = {'Simpson'};
 
 loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation','quadMethodBEM'};
 
-% collectIntoTasks
+collectIntoTasks
 
 % agpBEM = [0.6,1.2,2.4];
 % agpBEM = 1:6;
-% formulation = {'CRCBIE1'};
+% formulation = {'GRCBIE3'};
 quadMethodBEM = {'New'};
 % quadMethodBEM = {'Simpson'};
 collectIntoTasks
 
+formulation = {'GCBIE','GBM','GRCBIE3'};
 formulation = {'GCBIE','GBM'};
 agpBEM = 1:10;
 quadMethodBEM = {'Simpson'};
 colBEM_C0 = NaN;
-% collectIntoTasks
+collectIntoTasks
 
+formulation = {'GCBIE','GBM','GRCBIE3'};
 formulation = {'GCBIE','GBM'};
 agpBEM = 1:6;
 quadMethodBEM = {'New'};
 colBEM_C0 = NaN;
-% collectIntoTasks
+collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
