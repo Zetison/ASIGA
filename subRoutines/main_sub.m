@@ -390,38 +390,12 @@ for i_k = 1:size(k,2)
             dofsToRemove = varCol.dofsToRemove;  
             switch formulation(1)
                 case 'G' % Galerkin
-                    switch formulation(2)
-                        case 'R' % Regularized
-%                             [A, FF] = buildRBEMmatrix_galerkin(varCol);  
-%                             [A, FF, varCol] = buildRBEMmatrix_galerkinVec(varCol);  
-                            [A, FF, varCol] = buildRBEMmatrix_galerkinVec2(varCol);  
-                        otherwise
-%                             [A, FF] = buildBEMmatrix_galerkin(varCol);  
-%                             [A, FF] = buildBEMmatrix_galerkinVec(varCol);  
-                            [A, FF, varCol] = buildBEMmatrix_galerkinVec2(varCol);  
-%                             [A, FF] = buildBEMmatrix_galerkinVec3(varCol);  
-                    end
+                    [A, FF, varCol] = buildBEMmatrix_galerkinVec(varCol);  
+%                     [A, FF, varCol] = buildBEMmatrix_galerkinVec2(varCol);  
                     A(dofsToRemove,:) = [];
                     FF(dofsToRemove,:) = [];
                 case 'C' % Collocation
-                    switch formulation(2)
-                        case 'R' % Regularized
-%                             [A, FF] = buildRBEMmatrixVec(varCol);  
-                            [A, FF, varCol] = buildRBEMmatrixVec2(varCol);  
-%                             [A, FF] = buildRBEMmatrix(varCol);  
-                        otherwise
-                            [A, FF, varCol] = buildBEMmatrixVec(varCol);  
-%                             [A, FF, varCol] = buildBEMmatrixVec2(varCol);  
-%                             switch task.quadMethodBEM
-%                                 case 'Simpson'
-%                                     [A, FF, varCol] = buildBEMmatrixVec(varCol);  
-%                                 case 'New'
-%                                     [A, FF, varCol] = buildBEMmatrixVec3(varCol);  
-%                                 case 'New2'
-%                                     [A, FF, varCol] = buildBEMmatrixVec4(varCol);  
-%                             end
-    %                         [A, FF] = buildBEMmatrix(varCol);  
-                    end
+                    [A, FF, varCol] = buildBEMmatrixVec(varCol);  
             end 
 
             A(:,dofsToRemove) = [];

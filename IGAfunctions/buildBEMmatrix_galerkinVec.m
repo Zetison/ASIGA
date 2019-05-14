@@ -1,4 +1,4 @@
-function [A, FF] = buildBEMmatrix_galerkinVec(varCol)
+function [A, FF, varCol] = buildBEMmatrix_galerkinVec(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -21,6 +21,10 @@ noDofs = varCol.noDofs;
 agpBEM = varCol.agpBEM;
 exteriorProblem = varCol.exteriorProblem;
 
+quadMethodBEMsimpson = strcmp(varCol.quadMethodBEM,'Simpson');
+
+Eps = 10*eps;
+
 k = varCol.k;
 alpha = 1i/k;
 
@@ -28,27 +32,29 @@ switch varCol.formulation(2:end)
     case 'BM'
         useCBIE = true;
         useHBIE = true;
+        psiType = NaN;
     case 'CBIE'
         useCBIE = true;
         useHBIE = false;
+        psiType = NaN;
     case 'HBIE'
         useCBIE = false;
         useHBIE = true;
+        psiType = NaN;
     otherwise
-        error('Formulation not implemented')
+        useCBIE = true;
+        useHBIE = false;
+        psiType = str2double(varCol.formulation(end));  
 end
+useRegul = ~isnan(psiType);
 
-Phi_0 = @(r)           1./(4*pi*r);
-Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
-
-dPhi_0dny = @(xmy,r,ny) Phi_0(r)./r.^2.*             sum(xmy.*ny,2);
-dPhi_kdny = @(xmy,r,ny) Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*ny,2);
-
-dPhi_0dnx = @(xmy,r,nx) -Phi_0(r)./r.^2.*             (xmy*nx);
-dPhi_kdnx = @(xmy,r,nx) -Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*nx);
-
-d2Phi_0dnxdny = @(xmy,r,nx,ny) Phi_0(r)./r.^2.*((ny*nx)           - 3./r.^2                .*(xmy*nx).*sum(xmy.*ny,2));
-d2Phi_kdnxdny = @(xmy,r,nx,ny) Phi_k(r)./r.^2.*((ny*nx).*(1-1i*k*r)+(k^2+3./r.^2.*(1i*k*r-1)).*(xmy*nx).*sum(xmy.*ny,2));
+if strcmp(varCol.coreMethod, 'XI')
+    useEnrichedBfuns = true;
+    d_vec = varCol.d_vec;
+else
+    useEnrichedBfuns = false;
+    d_vec = NaN;
+end
 
 SHBC = strcmp(varCol.BC, 'SHBC');
 if SHBC
@@ -79,47 +85,15 @@ end
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-plotGP = 0;
-if plotGP
-    close all
-    for patch = 1:numel(patches)
-        plotNURBS(patches{patch}.nurbs,{'resolution',[100 100]});
-    end
-    axis equal
-    axis off
-    set(gca, 'Color', 'none');
-    view(-100,20)
-    drawnow
-    hold on
-    if false
-        cp = zeros(size(cp_p,1),3);
-        for j = 1:size(cp_p,1)
-            patch = patchIdx(j);
-            cp(j,:) = evaluateNURBS(patches{patch}.nurbs, cp_p(j,:));
-            plot3(cp(j,1),cp(j,2),cp(j,3), '*', 'color','red')
-        end
-    end
-    ax = gca;               % get the current axis
-    ax.Clipping = 'off';    % turn clipping off
-    h = findobj('type','line');
-    noLines = numel(h);
-    % keyboard
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 n_en = (p_xi+1)*(p_eta+1);
-% 
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
-p_max = max(p_xi,p_eta);
-[W2D_2,Q2D_2] = gaussianQuadNURBS(p_max+1+extraGPBEM,p_max+1+extraGPBEM);
-% [W2D,Q2D] = gaussianQuadNURBS(2*p_xi+1,2*p_eta+1);
-% p_max = max(p_xi,p_eta);
-% [W2D_2,Q2D_2] = gaussianQuadNURBS(6*p_max+1,6*p_max+1);
+
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEMsimpson);
+[Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 
 idxRow = zeros(n_en, noElems);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
+totNoQP = 0;
 parfor e_x = 1:noElems
 % for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
@@ -139,7 +113,7 @@ parfor e_x = 1:noElems
     F_e = zeros(n_en, no_angles);
     A_e_temp = zeros(n_en, n_en, noElems);
     
-    J_2 = 0.25*(Xi_e_x(2)-Xi_e_x(1))*(Eta_e_x(2)-Eta_e_x(1));
+    J_2_x = 0.25*(Xi_e_x(2)-Xi_e_x(1))*(Eta_e_x(2)-Eta_e_x(1));
     
     for gp_x = 1:size(W2D,1)
         pt_x = Q2D(gp_x,:);
@@ -153,298 +127,50 @@ parfor e_x = 1:noElems
         m_1 = J(1,:);
         m_2 = J(2,:);
         crossProd = cross(m_1,m_2);
-        J_1 = norm(crossProd);
+        J_1_x = norm(crossProd);
+        nx = crossProd/J_1_x;
 
         x = R_x*pts_x;
-        fact_x = J_1*J_2*wt_x;
+        fact_x = J_1_x*J_2_x*wt_x;
     
-        if useHBIE
+        if useHBIE || useRegul
             h_xi = norm(m_1);
             h_eta = norm(m_2);
             e_xi = m_1/h_xi;
             e_eta = m_2/h_eta;
 
             v_1 = e_xi;
-            nx = crossProd/J_1;
-            v_3 = nx;
-            v_2 = cross(v_3,v_1);
+            v_2 = cross(nx,v_1);
             cosT = dot(e_xi,e_eta);
             sinT = dot(v_2,e_eta);
             dXIdv = [1/h_xi, 0; -cosT/sinT/h_xi, 1/h_eta/sinT];
+        else
+            dXIdv = NaN;
+            v_1 = NaN;
+            v_2 = NaN;
         end
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%         keyboard
-        if plotGP
-            foundMarker = true;
-            while foundMarker
-                foundMarker = false;
-                h = findobj('type','line');
-                for i_h = 1:numel(h)
-                    if strcmp(h(i_h).Marker,'*')
-                        delete(h(i_h));
-                        foundMarker = true;
-                        break
-                    end
-                end
-            end
-            plot3(x(1),x(2),x(3), '*', 'color','red')
-        end
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-        dPhi_0dny_integral = 0;
-        d2Phi_0dnxdny_integral = 0;
-        ugly_integral = zeros(3,1);
+        [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k);
         FF_temp = complex(zeros(1, no_angles));
         idxCol = zeros(n_en, noElems);
     
         for e_y = 1:noElems   
-            patch_y = pIndex(e_y); % New
-            Xi_y = knotVecs{patch_y}{1}; % New
-            Eta_y = knotVecs{patch_y}{2}; % New
-
-            idXi_y = index(e_y,1);
-            idEta_y = index(e_y,2);
-
-            Xi_e_y = elRangeXi(idXi_y,:);
-            Eta_e_y = elRangeEta(idEta_y,:);
-
-            sctr_y = element(e_y,:);
-            pts_y = controlPts(sctr_y,:);
-            wgts_y = weights(element2(e_y,:)); % New 
-
-            if useCBIE
-                CBIE = zeros(1, n_en);
-            end
-            if useHBIE
-                HBIE = zeros(1, n_en);
-            end
-            if e_x == e_y
-                noGp = size(Q2D_2,1);
-                xi_x_t = parametric2parentSpace(Xi_e_y, xi_x);
-                eta_x_t = parametric2parentSpace(Eta_e_y, eta_x);
-                theta_x1 = atan2( 1-eta_x_t,  1-xi_x_t);
-                theta_x2 = atan2( 1-eta_x_t, -1-xi_x_t);
-                theta_x3 = atan2(-1-eta_x_t, -1-xi_x_t);
-                theta_x4 = atan2(-1-eta_x_t,  1-xi_x_t);
-
-                J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
-
-                for area = {'South', 'East', 'North', 'West'}
-                    switch area{1}
-                        case 'South'
-                            thetaRange = [theta_x3 theta_x4];
-                        case 'East'
-                            thetaRange = [theta_x4 theta_x1];
-                        case 'North'
-                            thetaRange = [theta_x1 theta_x2];
-                        case 'West'
-                            if theta_x3 < 0
-                                thetaRange = [theta_x2 theta_x3+2*pi];
-                            else
-                                thetaRange = [theta_x2 theta_x3];
-                            end
-                    end
-
-                    rho_t = parent2ParametricSpace([0, 1],   Q2D_2(:,1));
-                    theta = parent2ParametricSpace(thetaRange,Q2D_2(:,2));
-                    switch area{1}
-                        case 'South'
-                            rho_hat = (-1 - eta_x_t)./sin(theta);
-                        case 'East'
-                            rho_hat = ( 1 - xi_x_t)./cos(theta);
-                        case 'North'
-                            rho_hat = ( 1 - eta_x_t)./sin(theta);
-                        case 'West'
-                            rho_hat = (-1 - xi_x_t)./cos(theta);
-                    end
-                    rho = rho_hat.*rho_t;
-
-                    xi_y_t  = xi_x_t + rho.*cos(theta);
-                    eta_y_t = eta_x_t + rho.*sin(theta);
-
-                    xi_y = parent2ParametricSpace(Xi_e_y, xi_y_t);
-                    eta_y = parent2ParametricSpace(Eta_e_y, eta_y_t);
-
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                    [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi_y, eta_y, p_xi, p_eta, Xi_y, Eta_y, wgts_y);
-
-                    J1 = dR_ydxi*pts_y;
-                    J2 = dR_ydeta*pts_y;
-                    crossProd_y = cross(J1,J2,2);
-                    J_1_y = norm2(crossProd_y);
-                    ny = crossProd_y./J_1_y(:,[1,1,1]);
-
-                    J_3_y = rho;
-                    J_4_y = rho_hat;
-                    J_5_y = 0.25*(thetaRange(2)-thetaRange(1));
-                    fact_y = J_1_y*J_2_y.*J_3_y.*J_4_y*J_5_y.*W2D_2;
-
-                    y = R_y*pts_y;
-
-                    xmy = x(ones(noGp,1),:)-y;
-                    r = norm2(xmy);
-
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    if plotGP
-                        plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-                    end
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-                    if ~SHBC
-                        if useNeumanProj
-                            dpdn_y = R_y*U(sctr_y,:);
-                        else
-                            dpdn_y = dpdn(y,ny);
-                        end
-                        if useCBIE
-                            FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
-                        end
-                        if useHBIE
-                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
-                        end
-                    end
-                    dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
-
-                    dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
-                    if useCBIE
-                        CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
-                    end
-                    if useHBIE
-                        d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
-                        d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
-                        HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact_y).'*R_y;
-                        dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                        ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
-                                                                            + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
-                    end
-                end
-            else
-                noGp = size(Q2D,1);
-                x_5 = centerPts(e_y,:);
-
-                l = norm(x-x_5);
-                h = diagsMax(e_y);
-                n_div = round(agpBEM*h/l + 1);
-                Xi_e_arr  = linspace(Xi_e_y(1),Xi_e_y(2),n_div+1);
-                Eta_e_arr = linspace(Eta_e_y(1),Eta_e_y(2),n_div+1);
-                J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1))/n_div^2;
-                xi_y = zeros(noGp,n_div^2);
-                eta_y = zeros(noGp,n_div^2);
-                counter = 1;
-                for i_eta = 1:n_div
-                    Eta_e_sub = Eta_e_arr(i_eta:i_eta+1);
-                    for i_xi = 1:n_div
-                        Xi_e_sub = Xi_e_arr(i_xi:i_xi+1);
-                        xi_y(:,counter) = parent2ParametricSpace(Xi_e_sub, Q2D(:,1));
-                        eta_y(:,counter) = parent2ParametricSpace(Eta_e_sub, Q2D(:,2));
-                        counter = counter + 1;
-                    end
-                end
-                xi_y = reshape(xi_y,n_div^2*noGp,1);
-                eta_y = reshape(eta_y,n_div^2*noGp,1);
-                W2D_1 = repmat(W2D,n_div^2,1);
-                noGp = size(xi_y,1);
-
-                [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi_y, eta_y, p_xi, p_eta, Xi_y, Eta_y, wgts_y);
-
-                J1 = dR_ydxi*pts_y;
-                J2 = dR_ydeta*pts_y;
-                crossProd_y = cross(J1,J2,2);
-                J_1_y = norm2(crossProd_y);
-                ny = crossProd_y./J_1_y(:,[1,1,1]);
-
-                fact_y = J_1_y*J_2_y.*W2D_1;
-
-                y = R_y*pts_y;
-                xmy = x(ones(noGp,1),:)-y;
-                r = norm2(xmy);
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if plotGP
-                    plot3(y(:,1),y(:,2),y(:,3),'*','color','blue')
-                end
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if ~SHBC
-                    if useNeumanProj
-                        dpdn_y = R_y*U(sctr_y,:);
-                    else
-                        dpdn_y = dpdn(y,ny);
-                    end
-                    if useCBIE
-                        FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
-                    end
-                    if useHBIE
-                        FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
-                    end
-                end
-                dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
-                dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
-                if useCBIE
-                    CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
-                end
-                if useHBIE
-                    d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
-                    d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
-                    HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact_y).'*R_y;
-                    dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                    ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
-                                                                        + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
-                end
-            end
+            [BIE, integrals, FF_temp, sctr_y, noGp] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
+                    useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
+                    x,nx,pt_x(1),pt_x(2),xi_x,eta_x,e_x,constants,psiType,useRegul,...
+                    p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
+                    patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEMsimpson);
             idxCol(:,e_y) = sctr_y;
-            if useCBIE
-                A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*CBIE*fact_x;
-            end
-            if useHBIE
-                A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + alpha*R_x.'*HBIE*fact_x;
-            end
+            A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*BIE*fact_x;
+            totNoQP = totNoQP + noGp;
         end
-        if useCBIE
-            A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) - R_x.'*R_x*(0.5*(1-sgn) + dPhi_0dny_integral)*fact_x;
-        end
-        if useHBIE
-            temp = (dXIdv(1,:)*(v_1*ugly_integral) + dXIdv(2,:)*(v_2*ugly_integral))*[dR_xdxi; dR_xdeta];
-            A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + alpha*R_x.'*(-R_x*d2Phi_0dnxdny_integral + temp)*fact_x;
-        end
-        if useNeumanProj
-            if SHBC
-                if useCBIE
-                    p_inc_x = R_x*U(sctr_x,:);
-                end
-                if useHBIE
-                    dp_inc_x = R_x*dU(sctr_x,:);
-                end
-            else
-                dpdn_x = R_x*U(sctr_x,:);
-            end
-        else
-            if SHBC
-                if useCBIE
-                    p_inc_x = p_inc(x);
-                end
-                if useHBIE
-                    dp_inc_x = dp_inc(x,nx);
-                end
-            else
-                if useHBIE
-                    dpdn_x = dpdn(x,nx);
-                end
-            end
-        end
-        if SHBC
-            if useCBIE
-                F_e = F_e - R_x.'*p_inc_x*fact_x;
-            end
-            if useHBIE
-                F_e = F_e - alpha*R_x.'*dp_inc_x*fact_x;
-            end
-        else
-            F_e = F_e + R_x.'*FF_temp*fact_x;
-            if useHBIE
-                F_e = F_e + alpha*R_x.'*dpdn_x*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral)*fact_x;
-            end
-        end
+        R_xScaled = getR_x_Coeff(R_x,useEnrichedBfuns,k,d_vec,x,useRegul,integrals,sgn,constants,...
+                        psiType,useCBIE,useHBIE,dXIdv,dR_xdxi,dR_xdeta,v_1,v_2,alpha);
+                
+        A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + R_x.'*R_xScaled*fact_x;
+
+        F_eTemp = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
+                    U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
+        F_e = F_e + R_x.'*F_eTemp*fact_x;
     end
     
     idxRow(:,e_x) = sctr_x.';
@@ -458,3 +184,4 @@ parfor i = 1:no_angles
 end
 
 
+varCol.totNoQP = totNoQP;

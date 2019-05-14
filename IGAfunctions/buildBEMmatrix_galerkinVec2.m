@@ -121,7 +121,6 @@ Q2D_2 = flipud(Q2D_2); % to reduce round-off errors in summation?
 [Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 if quadMethodBEMsimpson
     [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
-    noqpMax = NaN;
 else
     load('integration/quadData_double')
     Q = quadData.Q;
@@ -136,8 +135,8 @@ idxRow = zeros(n_en, noElems);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
 totNoQP = 0;
-parfor e_x = 1:noElems
-% for e_x = 1:noElems
+% parfor e_x = 1:noElems
+for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
     Xi_x = knotVecs{patch_x}{1}; % New
     Eta_x = knotVecs{patch_x}{2}; % New
@@ -334,15 +333,10 @@ parfor e_x = 1:noElems
 
                     xmy = x(ones(noGp,1),:)-y;
                     r = norm2(xmy);
-                    
-                    dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
-                    if useHBIE
-                        dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
-                        d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
-                    end
+
                     if ~SHBC
                         if useNeumanProj
-                            dpdn_y = R_y*U(sctr,:);
+                            dpdn_y = R_y*U(sctr_y,:);
                         else
                             dpdn_y = dpdn(y,ny);
                         end
@@ -350,19 +344,21 @@ parfor e_x = 1:noElems
                             FF_temp = FF_temp + sum(Phi_k(r).*dpdn_y.*fact_y);
                         end
                         if useHBIE
-                            FF_temp = FF_temp + alpha*sum((dPhi_kdnx(xmy,r,nx.')+dPhi_0dny_).*dpdn_y.*fact_y);
-                            FF_temp = FF_temp - alpha*sum(dPhi_0dny_.*(dpdn_y-dpdn_x).*fact_y);
-                            FF_temp = FF_temp - alpha*dpdn_x*sum((dPhi_0dnx_.*(ny*nx.')+dPhi_0dny_+d2Phi_0dnxdny_.*(xmy*nx.')).*fact_y);
+                            FF_temp = FF_temp + alpha*sum(dPhi_kdnx(xmy,r,nx.').*dpdn_y.*fact_y);
                         end
                     end
-
+                    dPhi_0dny_ = dPhi_0dny(xmy,r,ny);
+                    dPhi_0dny_integral = dPhi_0dny_integral + sum(dPhi_0dny_.*fact_y); 
                     if useCBIE
-                        CBIE = CBIE + fact_y.'*(repmat(dPhi_kdny(xmy,r,ny),1,n_en).*R_y - dPhi_0dny_*R_x);
+                        CBIE = CBIE + (dPhi_kdny(xmy,r,ny).*fact_y).'*R_y;
                     end
                     if useHBIE
-                        HBIE = HBIE + ((d2Phi_kdnxdny(xmy,r,nx.',ny) - d2Phi_0dnxdny_).*fact_y).'*R_y;
-                        HBIE = HBIE + (fact_y.*d2Phi_0dnxdny_).'*(R_y - R_x(ones(noGp,1),:) + xmy*v_dR_xdv);
-                        HBIE = HBIE + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx).*fact_y(:,[1,1,1]),1)*v_dR_xdv;
+                        d2Phi_0dnxdny_ = d2Phi_0dnxdny(xmy,r,nx.',ny);
+                        d2Phi_0dnxdny_integral = d2Phi_0dnxdny_integral + sum(d2Phi_0dnxdny_.*fact_y);
+                        HBIE = HBIE + (d2Phi_kdnxdny(xmy,r,nx.',ny).*fact_y).'*R_y;
+                        dPhi_0dnx_ = dPhi_0dnx(xmy,r,nx.');
+                        ugly_integral = ugly_integral + sum((dPhi_0dnx_(:,[1,1,1]).*ny + dPhi_0dny_*nx ...
+                                                                            + d2Phi_0dnxdny_(:,[1,1,1]).*xmy).*fact_y(:,[1,1,1]),1).';
                     end
                 end
             else
@@ -420,14 +416,14 @@ parfor e_x = 1:noElems
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
                     n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
-                    if n_qp_xi > noqpMax
-                        warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
-                        n_qp_xi = noqpMax;
-                    end
-                    if n_qp_eta > noqpMax
-                        warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
-                        n_qp_eta = noqpMax;
-                    end
+%                     if n_qp_xi > noqpMax
+%                         warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+%                         n_qp_xi = noqpMax;
+%                     end
+%                     if n_qp_eta > noqpMax
+%                         warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+%                         n_qp_eta = noqpMax;
+%                     end
                     Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
                     Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
                     Q_eta = Q_eta(:);
