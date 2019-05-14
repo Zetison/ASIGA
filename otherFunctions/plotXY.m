@@ -11,4 +11,5 @@ switch axisType
         h = loglog(x,y,lineStyle,'color',color,'DisplayName',legendEntry);
 end
 legend('off');
-legend('show');
+leg1 = legend('show');
+set(leg1,'Interpreter','latex');

@@ -20,6 +20,11 @@ switch applyLoad
         p_inc = @(v) zeros(size(v,1),1);
         gp_inc = @(v) zeros(size(v,1),1);
         dp_inc = @(v,n) -dpdn(v,n);
+        
+        e3Dss_options = struct('omega', omega, ...
+                         'P_inc', P_inc, ...
+                         'rho_f', rho_f, ...
+                         'c_f', c_f);
     case 'radialPulsation'
         switch model
             case 'MS_P'

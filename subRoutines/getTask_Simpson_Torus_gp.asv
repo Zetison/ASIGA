@@ -34,17 +34,15 @@ computeCondNumber = true;
 plot3Dgeometry = 0;
 quadMethodBEM = {'Simpson','New'};
 
-loopParameters = {'extraGP','extraGPBEM','agpBEM','M','degree','method','formulation','quadMethodBEM'};
+loopParameters = {'extraGP','extraGPBEM','agpBEM','useNeumanProj','M','degree','method','formulation','quadMethodBEM'};
 runTasksInParallel = 1;
 
 collectIntoTasks
 
 
 method = {'BA'};
-quadMethodBEM = NaN;
-formulation = {'SL2E'};
-extraGPBEM = NaN;
-extraGP = 0;
-agpBEM = [agpBEM(1),agpBEM(end)]; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
+formulation = {'CBM'};
+extraGP = [0,1,2,4];
+agpBEM = [1,2,4,8]; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 
-collectIntoTasks
+% collectIntoTasks

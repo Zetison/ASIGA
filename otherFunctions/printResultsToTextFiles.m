@@ -257,13 +257,31 @@ switch options.noXLoopPrms
                     if isnumeric(temp)
                         temp = num2str(temp);
                     end
-                    if j ~= 1
-                        legendName = [legendName ', ' ];
+                    mathematicalLegend = false;
+                    switch legendEntries{j}
+                        case 'extraGP'
+                            mathematicalLegend = true;
+                            legendEntriesMath = 'n_{\mathrm{eq}}^{(1)}';
+                        case 'extraGPBEM'
+                            mathematicalLegend = true;
+                            legendEntriesMath = 'n_{\mathrm{eq}}^{(2)}';
+                        case 'colBEM_C0'
+                            mathematicalLegend = true;
+                            legendEntriesMath = 'C_{\mathrm{col}}';
+                        case 'agpBEM'
+                            mathematicalLegend = true;
+                            legendEntriesMath = 's';
                     end
                     if isstruct(temp)
                         fieldNames = fieldnames(temp);
                         temp2 = fieldNames{1};
                         temp = temp.(temp2);
+                    end
+                    if strcmp(temp,'NaN')
+                        continue
+                    end
+                    if j ~= 1
+                        legendName = [legendName ', ' ];
                     end
                     switch legendEntries{j}
                         case {'formulation','IEbasis','method','coreMethod','BC'}
@@ -271,7 +289,11 @@ switch options.noXLoopPrms
                             saveName = [saveName '_' temp];
                         otherwise
                             saveName = [saveName '_' temp2 temp];
-                            legendName = [legendName legendEntries{j} '=' temp];
+                            if mathematicalLegend
+                                legendName = [legendName '$' legendEntriesMath '$=' temp];
+                            else
+                                legendName = [legendName legendEntries{j} '=' temp];
+                            end
                     end
                 end
             end
@@ -338,6 +360,8 @@ if plotResults
             xLabel = 'Time building the system';
         case 'N'
             xLabel = '$$N$$';
+        case 'agpBEM'
+            xLabel = '$$s$$';
         otherwise
             xLabel = xname;
             intrprtrX = 'none';
