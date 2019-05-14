@@ -32,7 +32,6 @@ else
     d_vec = NaN;
 end
 k = varCol.k;
-totNoQP = 0;
 
 switch varCol.formulation
     case 'SL2E'
@@ -248,7 +247,6 @@ switch varCol.formulation
 
             F_indices(:,e) = sctr';
             Fvalues(:,e,:) = R.'*(analytic_values(:,e).*repmat(abs(J_1)*J_2.*W3D,1,1,no_funcs));
-            totNoQP = totNoQP + numel(Qxi);
         end
 end
         

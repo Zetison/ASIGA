@@ -409,7 +409,7 @@ for i_k = 1:size(k,2)
             if ~runTasksInParallel
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Building BA matrix ... ')
             end
-            [A, FF] = bestApproximationVec(varCol);
+            [A, FF, varCol] = bestApproximationVec(varCol);
 
             dofsToRemove = varCol.dofsToRemove;  
             noDofs_tot = varCol.noDofs;

@@ -258,20 +258,20 @@ switch options.noXLoopPrms
                         temp = num2str(temp);
                     end
                     mathematicalLegend = false;
-                    switch legendEntries{j}
-                        case 'extraGP'
-                            mathematicalLegend = true;
-                            legendEntriesMath = 'n_{\mathrm{eq}}^{(1)}';
-                        case 'extraGPBEM'
-                            mathematicalLegend = true;
-                            legendEntriesMath = 'n_{\mathrm{eq}}^{(2)}';
-                        case 'colBEM_C0'
-                            mathematicalLegend = true;
-                            legendEntriesMath = 'C_{\mathrm{col}}';
-                        case 'agpBEM'
-                            mathematicalLegend = true;
-                            legendEntriesMath = 's';
-                    end
+%                     switch legendEntries{j}
+%                         case 'extraGP'
+%                             mathematicalLegend = true;
+%                             legendEntriesMath = 'n_{\mathrm{eq}}^{(1)}';
+%                         case 'extraGPBEM'
+%                             mathematicalLegend = true;
+%                             legendEntriesMath = 'n_{\mathrm{eq}}^{(2)}';
+%                         case 'colBEM_C0'
+%                             mathematicalLegend = true;
+%                             legendEntriesMath = 'C_{\mathrm{col}}';
+%                         case 'agpBEM'
+%                             mathematicalLegend = true;
+%                             legendEntriesMath = 's';
+%                     end
                     if isstruct(temp)
                         fieldNames = fieldnames(temp);
                         temp2 = fieldNames{1};
@@ -290,7 +290,7 @@ switch options.noXLoopPrms
                         otherwise
                             saveName = [saveName '_' temp2 temp];
                             if mathematicalLegend
-                                legendName = [legendName '$' legendEntriesMath '$=' temp];
+                                legendName = [legendName '$$' legendEntriesMath '$$=' temp];
                             else
                                 legendName = [legendName legendEntries{j} '=' temp];
                             end

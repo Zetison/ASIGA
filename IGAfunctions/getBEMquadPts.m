@@ -202,12 +202,12 @@ else
         n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
         n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
         if n_qp_xi > noqpMax
-            warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points:\n' ...
+            warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points: ' ...
                      'n_qp_xi = ' num2str(n_qp_xi) ' > ' num2str(noqpMax) ' = noqpMax'])
             n_qp_xi = noqpMax;
         end
         if n_qp_eta > noqpMax
-            warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points:\n' ...
+            warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points: ' ...
                      'n_qp_eta = ' num2str(n_qp_eta) ' > ' num2str(noqpMax) ' = noqpMax'])
             warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
             n_qp_eta = noqpMax;
