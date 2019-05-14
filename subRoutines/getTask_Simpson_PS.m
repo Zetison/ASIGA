@@ -61,17 +61,15 @@ loopParameters = {'formulation','extraGPBEM','extraGP','agpBEM','colBEM_C0','met
 
 collectIntoTasks
 
-agpBEM = 1:6;
 quadMethodBEM = {'New'};
 collectIntoTasks
 
 formulation = {'GCBIE','GHBIE','GBM','GRCBIE1','GRCBIE2','GRCBIE3'};
-agpBEM = 1:10;
 quadMethodBEM = {'Simpson'};
 colBEM_C0 = NaN;
 collectIntoTasks
 
-agpBEM = 1:6;
+
 quadMethodBEM = {'New'};
 colBEM_C0 = NaN;
 collectIntoTasks

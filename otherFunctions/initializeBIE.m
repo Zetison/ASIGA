@@ -1,7 +1,7 @@
 function [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k)
 switch psiType
     case 1
-        x1 = zeros(1,3);
+        x1 = x-nx;
         C1 = norm(x-x1);
         C2 = dot(x-x1, nx)/C1;
         constants = {x1 C1 C2};
