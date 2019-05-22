@@ -8,17 +8,17 @@ if useRegul
     switch psiType
         case 1
             C1 = constants{2};
-            temp2 = temp2 + 0.5*(sgn+1 - (1+1i/(k*C1))*(1-exp(2*1i*k*C1)));
+            temp2 = temp2 + 0.5*(1-sgn - (1+1i/(k*C1))*(1-exp(2*1i*k*C1)));
         case 2
-            temp2 = temp2 + 0.5*(sgn+1);
+            temp2 = temp2 + 0.5*(1-sgn);
         case 3
-            temp2 = temp2 + 0.5*(sgn-1);
+            temp2 = temp2 - 0.5*(1+sgn);
     end
     R_xScaled = R_x*temp2;
 else
     R_xScaled = complex(zeros(size(R_x)));
     if useCBIE
-        R_xScaled = R_x*(0.5*(sgn-1) - integrals{1});
+        R_xScaled = R_x*(-0.5*(1+sgn) - integrals{1});
     end
     if useHBIE
         dphidv = dXIdv*[dR_xdxi; dR_xdeta];

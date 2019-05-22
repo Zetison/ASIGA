@@ -61,12 +61,13 @@ useROM = false;
 exteriorProblem = true;
 initMeshFactXi = 1;
 initMeshFactZeta = 1;
-colBEM_C0 = 1/2;
-quadMethodBEM = 'Simpson';
+colBEM_C0 = 0;
+quadMethodBEM = 'New';
 M = 1;
 
 applyLoad = 'planeWave';
 % applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
+% applyLoad = 'SimpsonTorus'; % with analytic solution for arbitrary geometries
 
 coreMethod = 'IGA';
 

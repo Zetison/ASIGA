@@ -1,4 +1,4 @@
-function task = main_sub(task,loopParameters,runTasksInParallel)
+function task = main_sub(task,loopParameters,runTasksInParallel,subFolderName)
 
 stringShift = 40;
 extractTaskData
@@ -430,8 +430,8 @@ for i_k = 1:size(k,2)
             end
             dofsToRemove = varCol.dofsToRemove;  
             [A, FF, varCol] = buildMFSmatrix(varCol);  
-            rmsA = rms(rms(A))
-            condA = cond(A)
+%             rmsA = rms(rms(A))
+%             condA = cond(A)
             noDofs_tot = varCol.noDofs;
             varCol.timeBuildSystem = toc;
             if ~runTasksInParallel
@@ -544,7 +544,12 @@ for i_k = 1:size(k,2)
                         end
 %                         fprintf('using %12f seconds.', toc)
                     else
-                        UU = A\FF;
+                        if strcmp(method,'MFS') && strcmp(formulation,'SS')
+                            Pinv = diag(1./max(abs(A)));
+                            UU = diag(Pinv).*((A*Pinv)\FF);
+                        else
+                            UU = A\FF;
+                        end
                     end
             end
             if ~runTasksInParallel

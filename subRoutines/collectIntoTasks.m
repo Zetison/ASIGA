@@ -66,6 +66,9 @@ task.beta = beta;
 if exist('parm','var')
     task.parm = parm;
 end
+if exist('delta','var')
+    task.delta = delta;
+end
 task.quadMethodBEM = quadMethodBEM;
 
 task.computeCondNumber = computeCondNumber;

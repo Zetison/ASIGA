@@ -1,16 +1,3 @@
-addpath IGAfunctions
-addpath NURBS
-addpath SEM
-addpath(genpath('NURBSgeometries'))
-addpath otherFunctions
-addpath(genpath('e3Dss'))
-addpath(genpath('postProcessing'))
-addpath integration
-addpath subRoutines
-addpath ../export_fig
-addpath ../
-% addpath('/usr/local/AdvanpixMCT/4.6.0.13135')
-% return
 if exist('../availableStudies.m', 'file')
     clear all %#ok
     printAndPlotResults = true;
@@ -48,7 +35,7 @@ for study_i = 1:numel(studies)
     if runTasksInParallel
 %         for i_task = 1:length(tasks)
         parfor i_task = 1:length(tasks)
-            tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel);
+            tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel,subFolderName);
             fprintf('\nCompleted task %d/%d in study %d/%d\n\n', i_task, noTasks, study_i,length(studies)) 
         end
         studies(study_i).tasks = tasks;
@@ -56,7 +43,7 @@ for study_i = 1:numel(studies)
         save([subFolderName '/_studies'], 'studies', '-v7.3')
     else
         for i_task = 1:noTasks
-            tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel);
+            tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel,subFolderName);
             task = tasks(i_task).task;
             if task.plot3Dgeometry || task.plot2Dgeometry
                 return
@@ -82,7 +69,7 @@ end
 
 plotFileName = ['plotResults_' studyName];
 if printAndPlotResults && exist(['postProcessing/' plotFileName], 'file')
-%     close all
+    close all
     eval(plotFileName)
     if isfield(options,'subFolderName') && ~isempty(options.subFolderName)
         save([options.subFolderName, '/_studies'],'studies')

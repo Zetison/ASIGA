@@ -10,22 +10,17 @@ pIndex = varCol.pIndex;
 
 k = varCol.k;
 
-Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
-
-dPhi_kdnx = @(xmy,r,nx) -Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*nx);
-
-radialPulsation = strcmp(varCol.applyLoad, 'radialPulsation');
-if radialPulsation
-    no_angles = 1;
-    p_inc = NaN;
-    dpdn = varCol.dpdn;
-    dp_inc = NaN;
-else
+SHBC = strcmp(varCol.BC, 'SHBC');
+if SHBC
     no_angles = length(varCol.alpha_s);
     p_inc = varCol.p_inc;
     dp_inc = varCol.dp_inc;
-    dpdn = NaN;
+else
+    no_angles = 1;
+    p_inc = NaN;
+    dp_inc = NaN;
 end
+dpdn = varCol.dpdn;
 % n_cp = noDofs - length(dofsToRemove);
 
 if false
@@ -136,13 +131,16 @@ if false
         end
     end
 else
-%     nQuadPts = 24;
-    nQuadPts = 3;
-    n_vec = zeros(nQuadPts^2,3,noElems);
-    x_vec = zeros(nQuadPts^2,3,noElems);
+    extraGP = varCol.extraGP;
+    p_xi = patches{1}.nurbs.degree(1);
+    p_eta = patches{1}.nurbs.degree(2);  
+    [Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
+    nQuadPts = size(Q2D,1);
+    n_vec = zeros(nQuadPts,3,noElems);
+    x_vec = zeros(nQuadPts,3,noElems);
+    fact = zeros(nQuadPts,noElems);
 %     Q2D = [copyVector(linspace(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace(-1,1,nQuadPts).',nQuadPts,2)];
 %     Q2D = [copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,2)];
-    [~,Q2D] = gaussianQuadNURBS(nQuadPts,nQuadPts);  
     parfor e = 1:noElems  
         patch = pIndex(e); % New
         nurbs = patches{patch}.nurbs;
@@ -152,6 +150,8 @@ else
 
         Xi_e = elRangeXi(idXi,:);
         Eta_e = elRangeEta(idEta,:);
+        
+        J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
 
         xi = parent2ParametricSpace(Xi_e, Q2D(:,1));
         eta = parent2ParametricSpace(Eta_e, Q2D(:,2));
@@ -161,14 +161,24 @@ else
         J_1 = norm2(crossProd);
         n_vec(:,:,e) = crossProd./J_1(:,[1,1,1]);
         x_vec(:,:,e) = y;
+        
+        J_1 = norm2(crossProd);
+        n_vec(:,:,e) = crossProd./J_1(:,[1,1,1]);
+        x_vec(:,:,e) = y;
+        fact(:,e) = J_1*J_2.*W2D;
     end
-    n_sp = nQuadPts^2*noElems;
+    n_sp = nQuadPts*noElems;
     x_vec = reshape(permute(x_vec,[1,3,2]),n_sp,3);
     [x_vec, I] = uniquetol(x_vec,1e-10,'ByRows',true);
     n_vec = reshape(permute(n_vec,[1,3,2]),n_sp,3);
     n_sp = size(x_vec,1);
     n_vec = n_vec(I,:);
-    y_s = x_vec - n_vec*varCol.parm;
+%     y_s = x_vec - n_vec*varCol.delta;
+    if varCol.exteriorProblem
+        y_s = x_vec*(1-varCol.delta);
+    else
+        y_s = x_vec*(1+varCol.delta);
+    end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % patches = varCol.patches;
@@ -272,49 +282,91 @@ end
 
 
 if 1
+    formulation = varCol.formulation;
+    if n_sp > 1e4
+        error('This is a little bit too much?')
+    end
     switch formulation
         case 'SS'
-            N = ceil(sqrt(n_sp)-1);
-            A = zeros(N,n_sp);
-            F = zeros(n_sp,no_angles);
+%             n_sp = 1;
+%             x_vec = x_vec(1:n_sp,:);
+%             n_vec = n_vec(1:n_sp,:);
+            
+            Eps = 10*eps;
+            N = floor(sqrt(n_sp)-1);
+            A = zeros(n_sp,(N+1)^2);
+%             F = zeros(n_sp,no_angles);
             y = varCol.x_0;
             R = norm2(x_vec-y(ones(n_sp,1),:));
-            theta = arccos((x_vec(:,3)-y(3))./R);
+            theta = acos((x_vec(:,3)-y(3))./R);
             phi = atan2(x_vec(:,2)-y(2),x_vec(:,1)-y(1));
             r_hat = [sin(theta).*cos(phi), sin(theta).*sin(phi), cos(theta)];
             theta_hat = [cos(theta).*cos(phi), cos(theta).*sin(phi), -sin(theta)];
             phi_hat = [-sin(phi), cos(phi), zeros(n_sp,1)];
+            sinTheta = sin(theta);
+            zeta = k*R;
+            eta = cos(theta);
+            exp_phi = exp(1i*phi*(-N:N));
             
-            
+            counter = 1;
+            Prev = zeros(n_sp,1);
             for n = 0:N
-                h = hankel_s(n,k*R,1);
-                dh = 
+                h = hankel_s(n,zeta,1);
+                dh = k*(n*hankel_s(n,zeta,1)./zeta - hankel_s(n+1,zeta,1));
+                P = legendre(n,eta);
                 
-                x = x_vec(i,:);
-                n = n_vec(i,:).';
-                xmy = x(ones(n_sp,1),:) - y_s;
-                A(i,:) = dPhi_kdnx(xmy,norm2(xmy),n);
-                F(i,:) = -dp_inc(x,n);
+                for m = -n:n
+                    P1 = P(abs(m)+1,:).';
+                    if abs(m) <= n-1
+                        P2 = Prev(abs(m)+1,:).';
+                    else
+                        P2 = zeros(n_sp,1);
+                    end
+                    if n == 0
+                        dP = zeros(n_sp,1);
+                    else
+                        dP = (eta*n.*P1 - (abs(m)+n)*P2)./(eta.^2-1);
+                    end
+                    if m == 0
+                        temp = zeros(n_sp,1);
+                    else
+                        temp = 1i*m./(R.*sinTheta).*exp_phi2.*h.*P1;
+                    end
+                    exp_phi2 = exp_phi(:,m+N+1);
+                    A(:,counter) = sum(n_vec.*(k*repmat(exp_phi2.*dh.*P1,1,3).*r_hat ...
+                                               - repmat(sinTheta./R.*exp_phi2.*h.*dP,1,3).*theta_hat ...
+                                               - repmat(temp,1,3).*phi_hat),2);
+                    if any(A(:,counter) == 0)
+                        keyboard
+                    end
+                    counter = counter + 1;
+                end
+                Prev = P;
             end
-            varCol.y_s = y_s;
+            F = -dp_inc(x_vec,n_vec);
+            varCol.N = N;
         case 'PS'
             A = zeros(n_sp);
             F = zeros(n_sp,no_angles);
-            % for i = 1:n_sp
+%             for i = 1:n_sp
             parfor i = 1:n_sp  
                 x = x_vec(i,:);
-                n = n_vec(i,:).';
+                n = n_vec(i,:);
                 xmy = x(ones(n_sp,1),:) - y_s;
-                A(i,:) = dPhi_kdnx(xmy,norm2(xmy),n);
-                F(i,:) = -dp_inc(x,n);
+                A(i,:) = dPhi_kdnx(xmy,norm2(xmy),n.',k);
+                if SHBC
+                    F(i,:) = -dp_inc(x,n);
+                else
+                    F(i,:) = dpdn(x,n);
+                end
             end
             varCol.y_s = y_s;
     end
 else
     nQuadPts = 3;
-    x_vec = zeros(nQuadPts^2,3,noElems);
-    n_vec = zeros(nQuadPts^2,3,noElems);
-    fact = zeros(nQuadPts^2,noElems);
+    x_vec = zeros(nQuadPts,3,noElems);
+    n_vec = zeros(nQuadPts,3,noElems);
+    fact = zeros(nQuadPts,noElems);
     [W2D,Q2D] = gaussianQuadNURBS(nQuadPts,nQuadPts);  
     parfor e = 1:noElems  
         patch = pIndex(e); % New

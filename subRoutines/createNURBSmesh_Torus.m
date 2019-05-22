@@ -36,5 +36,6 @@ if varCol.boundaryMethod
 %     fluid = explodeNURBS(fluid,'eta');
 %     fluid = explodeNURBS(fluid,'xi');
     
-    varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
+%     varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
+    varCol.patchTop = getPatchTopology(fluid);
 end

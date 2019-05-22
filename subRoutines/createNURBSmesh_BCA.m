@@ -23,6 +23,7 @@ if varCol.boundaryMethod
     end
     
     fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots);
+    varCol.patchTop = getPatchTopology(fluid);
 end
 L_gamma = L+a+g2+g3;
 

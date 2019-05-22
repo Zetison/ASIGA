@@ -22,7 +22,7 @@ beta_s = 30*pi/180;
 parm = 1;
 degree = [2,5];
 % degree = 3;
-runTasksInParallel = 0;
+runTasksInParallel = 1;
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 0;
 calculateSurfaceError = 1;
@@ -34,11 +34,14 @@ extraGPBEM = [0,1,2,4,8,16,32,64]; % extra quadrature points
 agpBEM = 0:0.5:1.5;
 % agpBEM = 3;
 colBEM_C0 = 1/2;
-quadMethodBEM = {'New','Simpson'};
+quadMethodBEM = {'Simpson'};
 
 loopParameters = {'extraGPBEM','agpBEM','M','degree','formulation','method','quadMethodBEM'};
 collectIntoTasks
 
+agpBEM = (0:0.5:1.5)/5;
+quadMethodBEM = {'Adaptive'};
+collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 method = {'BA'};
 formulation = {'SL2E'};

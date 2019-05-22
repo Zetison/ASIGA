@@ -8,8 +8,8 @@ addpath ../models
 %% Test benchmark models
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
-% alpha_s = pi;
-% beta_s = 0;
+alpha_s = 0;
+beta_s = pi/2;
 
 beta_f = 0;
 beta_f_arr = beta_f;
@@ -50,7 +50,7 @@ switch scatteringCase
         f = omega/(2*pi);
         
 end
-model = 'S5';
+model = 'S1';
 
 switch model
     case 'S1'

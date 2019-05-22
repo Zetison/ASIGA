@@ -54,23 +54,29 @@ extraGPBEM = 50; % extra quadrature points around singularities for BEM formulat
 % agpBEM = [2,4,8,16];
 % agpBEM = 10;
 % useNeumanProj = [0,1];
-agpBEM = 1:10;
+agpBEM = 1:12;
 quadMethodBEM = {'Simpson'};
 
 loopParameters = {'formulation','extraGPBEM','extraGP','agpBEM','colBEM_C0','method','quadMethodBEM'};
 
 collectIntoTasks
 
-quadMethodBEM = {'New'};
+agpBEM = (1:12)/5;
+% agpBEM = 2;
+% colBEM_C0 = 1/2; 
+quadMethodBEM = {'Adaptive'};
+% quadMethodBEM = {'Simpson'};
 collectIntoTasks
 
+agpBEM = 1:12;
 formulation = {'GCBIE','GHBIE','GBM','GRCBIE1','GRCBIE2','GRCBIE3'};
 quadMethodBEM = {'Simpson'};
 colBEM_C0 = NaN;
 collectIntoTasks
 
 
-quadMethodBEM = {'New'};
+agpBEM = (1:12)/5;
+quadMethodBEM = {'Adaptive'};
 colBEM_C0 = NaN;
 collectIntoTasks
 

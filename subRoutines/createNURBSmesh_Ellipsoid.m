@@ -10,10 +10,10 @@ for j = 1:numel(names)
 end
 
 x_0 = [0, 0, 0];
+varCol.x_0 = x_0; % The origin of the model
 alignWithAxis = 'Zaxis';
 switch varCol.method
     case {'IE','IENSG','ABC'}
-        varCol.x_0 = x_0; % The origin of the model
         varCol.A_2 = [1 0 0;
                       0 1 0;
                       0 0 1];
@@ -51,38 +51,39 @@ if varCol.boundaryMethod
     noNewZetaKnots = initMeshFactZeta*2^(M-1);
     if varCol.parm(1) == 1
         solid = getEllipsoidalShellData(c_xy,c_xy,c_z,t,alignWithAxis);
-        varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
-        varCol.patchTop{1}(2,2) = NaN;
-        varCol.patchTop{1}(4,2) = NaN;
+%         varCol.patchTop{1} = [1, 0;
+%                               NaN, NaN;
+%                               1, 0;
+%                               NaN, NaN];
         nurbsDegree = solid.degree(1); % assume all degrees are equal
     else
         solid = getSphericalShellDataPatched(c_z, t); 
         solid = elevateDegreeInPatches(solid,[0 0 3]);
-        varCol.patchTop = cell(6,1);
-        varCol.patchTop{1} = [2 0;
-                              6 0;
-                              4 0;
-                              5 0];
-        varCol.patchTop{2} = [3 0;
-                              6 3;
-                              1 0;
-                              5 1];
-        varCol.patchTop{3} = [4 0;
-                              6 2;
-                              2 0;
-                              5 2];
-        varCol.patchTop{4} = [1 0;
-                              6 1;
-                              3 0;
-                              5 3];
-        varCol.patchTop{5} = [2 3;
-                              1 0;
-                              4 1;
-                              3 2];
-        varCol.patchTop{6} = [2 1;
-                              3 2;
-                              4 3;
-                              1 0];
+%         varCol.patchTop = cell(6,1);
+%         varCol.patchTop{1} = [2 0;
+%                               6 0;
+%                               4 0;
+%                               5 0];
+%         varCol.patchTop{2} = [3 0;
+%                               6 3;
+%                               1 0;
+%                               5 1];
+%         varCol.patchTop{3} = [4 0;
+%                               6 2;
+%                               2 0;
+%                               5 2];
+%         varCol.patchTop{4} = [1 0;
+%                               6 1;
+%                               3 0;
+%                               5 3];
+%         varCol.patchTop{5} = [2 3;
+%                               1 0;
+%                               4 1;
+%                               3 2];
+%         varCol.patchTop{6} = [2 1;
+%                               3 2;
+%                               4 3;
+%                               1 0];
         nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
     end
 %     solid = explodeNURBS(solid,'eta');
@@ -93,6 +94,7 @@ if varCol.boundaryMethod
     L_gamma = 2*c_z;
 
     fluid = extractOuterSurface(solid);
+    varCol.patchTop = getPatchTopology(fluid);
 else
     switch model
         case 'EL'

@@ -40,6 +40,9 @@ varCol.initMeshFactXi  	= task.initMeshFactXi;
 varCol.initMeshFactZeta	= task.initMeshFactZeta;
 varCol.useNeumanProj    = task.useNeumanProj;
 varCol.colBEM_C0        = task.colBEM_C0;
+if isfield(task,'delta')
+    varCol.delta = task.delta;
+end
 
 if isfield(task,'noVecsArr')
     noVecsArr = task.noVecsArr;

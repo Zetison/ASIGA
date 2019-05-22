@@ -41,11 +41,11 @@ else
         if psiType == 1
             C1 = constants{2};
             C2 = constants{3};
-            temp2 = temp2 + dpdn_x*1i/(k*C2)*(1-exp(2*1i*k*C1))/2;
+            temp2 = temp2 + dpdn_x*1i*C1/(k*C2)*(1-exp(2*1i*k*C1))/2;
         end
         F_eTemp = F_eTemp + temp2;
     end
     if useHBIE
-        F_eTemp = F_eTemp + alpha*dpdn_x*(integrals{1} - 0.5*(sgn-1) - nx*integrals{3});
+        F_eTemp = F_eTemp + alpha*dpdn_x*(integrals{1} + 0.5*(1+sgn) - nx*integrals{3});
     end
 end

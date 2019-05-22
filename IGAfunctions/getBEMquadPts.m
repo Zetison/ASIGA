@@ -1,9 +1,9 @@
-function [BIE, integrals, FF_temp, sctr_y, noGp] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
+function [BIE, integrals, FF_temp, sctr_y, noGp, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,xi_x,eta_x,adjacentElements,constants,psiType,useRegul,...
                 p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
-                patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEMsimpson,pD)
-if nargin < 44
+                patches,Eps,diagsMax,centerPts,subElementMap,maxLevel,agpBEM,quadMethodBEM,pD)
+if nargin < 46
     pD.plotGP = false;
 end
 alpha = 1i/k;
@@ -94,7 +94,7 @@ if collocationPointIsInElement % use polar integration
         counter = counter + noGp;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if pD.plotGP
-            rho_t2 = linspace2(Eps,1-Eps,100).';
+            rho_t2 = linspace(Eps,1-Eps,100).';
             theta2 = thetaRange(1);
             switch area
                 case 1 %'East'
@@ -113,8 +113,8 @@ if collocationPointIsInElement % use polar integration
             xi2 = parent2ParametricSpace(Xi_e_y, xi_t2);
             eta2 = parent2ParametricSpace(Eta_e_y, eta_t2);
             if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
-                yy = evaluateNURBS_2ndDeriv(pD.patches{pD.patch_y}.nurbs, [xi2,eta2]);
-                plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor)
+                yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2]);
+                pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
             end
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -131,95 +131,100 @@ if collocationPointIsInElement % use polar integration
 
     fact_y = J_1*J_2_y.*J_3(1:noGp).*J_4(1:noGp).*J_5(1:noGp).*W2D_2(1:noGp);
 else
-    h = diagsMax(e_y);
-    if quadMethodBEMsimpson
-        x_5 = centerPts(e_y,:);
-        l = norm(x-x_5);
+    switch quadMethodBEM
+        case 'Simpson'
+            x_5 = centerPts(e_y,:);
+            l = norm(x-x_5);
 
-        noGp = size(Q,1);
-        n_div = round(agpBEM*h/l + 1);
-        Xi_e_y_arr  = linspace(Xi_e_y(1),Xi_e_y(2),n_div+1);
-        Eta_e_y_arr = linspace(Eta_e_y(1),Eta_e_y(2),n_div+1);
-        J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1))/n_div^2;
-        xi_y = zeros(noGp,n_div^2);
-        eta_y = zeros(noGp,n_div^2);
-        counter = 1;
-        for i_eta = 1:n_div
-            Eta_e_y_sub = Eta_e_y_arr(i_eta:i_eta+1);
-            for i_xi = 1:n_div
-                Xi_e_y_sub = Xi_e_y_arr(i_xi:i_xi+1);
-                xi_y(:,counter) = parent2ParametricSpace(Xi_e_y_sub, Q(:,1));
-                eta_y(:,counter) = parent2ParametricSpace(Eta_e_y_sub, Q(:,2));
-                counter = counter + 1;
+            noGp = size(Q,1);
+            h = diagsMax(e_y);
+            n_div = round(agpBEM*h/l + 1);
+            Xi_e_y_arr  = linspace(Xi_e_y(1),Xi_e_y(2),n_div+1);
+            Eta_e_y_arr = linspace(Eta_e_y(1),Eta_e_y(2),n_div+1);
+            J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1))/n_div^2;
+            xi_y = zeros(noGp,n_div^2);
+            eta_y = zeros(noGp,n_div^2);
+            counter = 1;
+            for i_eta = 1:n_div
+                Eta_e_y_sub = Eta_e_y_arr(i_eta:i_eta+1);
+                for i_xi = 1:n_div
+                    Xi_e_y_sub = Xi_e_y_arr(i_xi:i_xi+1);
+                    xi_y(:,counter) = parent2ParametricSpace(Xi_e_y_sub, Q(:,1));
+                    eta_y(:,counter) = parent2ParametricSpace(Eta_e_y_sub, Q(:,2));
+                    counter = counter + 1;
+                end
             end
-        end
-        xi_y = reshape(xi_y,n_div^2*noGp,1);
-        eta_y = reshape(eta_y,n_div^2*noGp,1);
-        W2D_1 = repmat(W,n_div^2,1);
+            xi_y = reshape(xi_y,n_div^2*noGp,1);
+            eta_y = reshape(eta_y,n_div^2*noGp,1);
+            W2D_1 = repmat(W,n_div^2,1);
+            W2D_1 = W2D_1*J_2_y;
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if pD.plotGP
+                for i_xi = 2:n_div
+                    xi2 = Xi_e_y_arr(i_xi);
+                    eta2 = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,100).';
+                    yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2(ones(100,1)),eta2]);
+                    pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
+                end
+                for i_eta = 2:n_div
+                    eta2 = Eta_e_y_arr(i_eta);
+                    xi2 = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,100).';
+                    yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2(ones(100,1))]);
+                    pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
+                end
+            end
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        case 'New'
+            xi1  = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,10);
+            if Xi_e_y(1) < xi_x && xi_x < Xi_e_y(2)
+                xi1 = [xi1, xi_x];
+            end
+            if Xi_e_y(1) < eta_x && eta_x < Xi_e_y(2)
+                xi1 = [xi1, eta_x];
+            end
+            eta1  = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,10);
+            if Eta_e_y(1) < eta_x && eta_x < Eta_e_y(2)
+                eta1 = [eta1, eta_x];
+            end
+            if Eta_e_y(1) < xi_x && xi_x < Eta_e_y(2)
+                eta1 = [eta1, xi_x];
+            end
+            [XI1,ETA1] = meshgrid(xi1,eta1);
+            XI1 = XI1(:);
+            ETA1 = ETA1(:);
+            yy = evaluateNURBS_2ndDeriv(patches{patch_y}.nurbs, [XI1,ETA1]);
+            hh = norm2(yy-x);
+            [l, I] = min(hh);
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        if pD.plotGP
-            for i_xi = 2:n_div
-                xi2 = Xi_e_y_arr(i_xi);
-                eta2 = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,100).';
-                yy = evaluateNURBS_2ndDeriv(pD.patches{pD.patch_y}.nurbs, [xi2(ones(100,1)),eta2]);
-                plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor)
+            if pD.plotGP
+                pD = plotGP(pD,yy(I,:),'green');
             end
-            for i_eta = 2:n_div
-                eta2 = Eta_e_y_arr(i_eta);
-                xi2 = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,100).';
-                yy = evaluateNURBS_2ndDeriv(pD.patches{pD.patch_y}.nurbs, [xi2,eta2(ones(100,1))]);
-                plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor)
+
+            h = diagsMax(e_y);
+            n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
+            n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
+            if n_qp_xi > noqpMax
+                warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points: ' ...
+                         'n_qp_xi = ' num2str(n_qp_xi) ' > ' num2str(noqpMax) ' = noqpMax'])
+                n_qp_xi = noqpMax;
             end
-        end
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    else
-        xi1  = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,10);
-        if Xi_e_y(1) < xi_x && xi_x < Xi_e_y(2)
-            xi1 = [xi1, xi_x];
-        end
-        if Xi_e_y(1) < eta_x && eta_x < Xi_e_y(2)
-            xi1 = [xi1, eta_x];
-        end
-        eta1  = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,10);
-        if Eta_e_y(1) < eta_x && eta_x < Eta_e_y(2)
-            eta1 = [eta1, eta_x];
-        end
-        if Eta_e_y(1) < xi_x && xi_x < Eta_e_y(2)
-            eta1 = [eta1, xi_x];
-        end
-        [XI1,ETA1] = meshgrid(xi1,eta1);
-        XI1 = XI1(:);
-        ETA1 = ETA1(:);
-        yy = evaluateNURBS_2ndDeriv(patches{patch_y}.nurbs, [XI1,ETA1]);
-        hh = norm2(yy-x);
-        [l, I] = min(hh);
-        
-        if pD.plotGP
-            plotGP(pD,yy(I,:),'green')
-        end
-        
-        n_qp_xi = p_xi + 1 + round(agpBEM*h/l);
-        n_qp_eta = p_eta + 1 + round(agpBEM*h/l);
-        if n_qp_xi > noqpMax
-            warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points: ' ...
-                     'n_qp_xi = ' num2str(n_qp_xi) ' > ' num2str(noqpMax) ' = noqpMax'])
-            n_qp_xi = noqpMax;
-        end
-        if n_qp_eta > noqpMax
-            warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points: ' ...
-                     'n_qp_eta = ' num2str(n_qp_eta) ' > ' num2str(noqpMax) ' = noqpMax'])
-            warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
-            n_qp_eta = noqpMax;
-        end
-        Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
-        Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
-        Q_eta = Q_eta(:);
-        J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
-        xi_y = parent2ParametricSpace(Xi_e_y, Q_xi);
-        eta_y = parent2ParametricSpace(Eta_e_y, Q_eta);
-        W2D_1 = W{n_qp_xi}*W{n_qp_eta}.';
-        W2D_1 = W2D_1(:);
+            if n_qp_eta > noqpMax
+                warning(['Requested number of Gauss points exceeds upper limit of stored Gauss points: ' ...
+                         'n_qp_eta = ' num2str(n_qp_eta) ' > ' num2str(noqpMax) ' = noqpMax'])
+                warning('Requested number of Gauss points exceeds upper limit of stored Gauss points')
+                n_qp_eta = noqpMax;
+            end
+            Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
+            Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
+            Q_eta = Q_eta(:);
+            J_2_y = 0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
+            xi_y = parent2ParametricSpace(Xi_e_y, Q_xi);
+            eta_y = parent2ParametricSpace(Eta_e_y, Q_eta);
+            W2D_1 = W{n_qp_xi}*W{n_qp_eta}.';
+            W2D_1 = W2D_1(:);
+            W2D_1 = W2D_1*J_2_y;
+        case 'Adaptive'
+            [xi_y,eta_y,W2D_1,pD] = adaptiveQuad(x,agpBEM,Q,W,centerPts{e_y},subElementMap,maxLevel,pD,patch_y,p_xi,p_eta);
     end
     noGp = size(xi_y,1);
 
@@ -230,11 +235,11 @@ else
     crossProd = cross(J1,J2,2);
     J_1 = norm2(crossProd);
     ny = crossProd./J_1(:,[1,1,1]);
-    fact_y = J_1*J_2_y.*W2D_1;
+    fact_y = J_1.*W2D_1;
 end
 y = R_y*pts_y;
 if pD.plotGP
-    plotGP(pD,y,'red')
+    pD = plotGP(pD,y,'red');
 end
 
 if useEnrichedBfuns
@@ -321,4 +326,97 @@ else
     integrals{1} = integrals{1} + sum(dPhi_0dny_.*fact_y); 
 end
 
+function [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,centerPts,subElementMap,maxLevel,pD,patch_y,p_xi,p_eta)
+
+maxSubElements = numel(centerPts);
+refineElementsPrev = ones(maxSubElements,1);
+refineElements = ones(maxSubElements,1);
+finalElements = ones(maxSubElements,1);
+n_divArr = ones(maxSubElements,1);
+noElementsToRefinePrev = 1;
+counter2 = 0;
+resolved = false;
+level = 0;
+while ~resolved && ~(level > maxLevel)
+    resolved = true;
+    counter = 0;
+    for i = 1:noElementsToRefinePrev
+        e_sub = refineElementsPrev(i);
+        h = centerPts(e_sub).h;
+        x_5 = centerPts(e_sub).x_5;
+        l = norm(x-x_5);
+        n_div = agpBEM*h/l + 1;
+
+        if n_div < 2 || (level+1 > maxLevel)
+            counter2 = counter2 + 1;
+            finalElements(counter2) = e_sub;
+            n_divArr(counter2) = min(n_div,2);
+            if n_div >= 2
+                warning('maxLevel is not high enough')
+            end
+        else
+            refineElements(counter+1:counter+4) = subElementMap(e_sub,:);
+            counter = counter+4;
+            resolved = false;
+        end
+    end
+    refineElementsPrev = refineElements;
+    noElementsToRefinePrev = counter;
+    level = level + 1;
+end
+if maxLevel == 0
+    finalElements = 1;
+    n_divArr = 1;
+else
+    finalElements = finalElements(1:counter2);
+    n_divArr = n_divArr(1:counter2);
+end
+noSubElems = numel(finalElements);
+% noQuads = numel(W);
+xi = cell(noSubElems,1);
+eta = cell(noSubElems,1);
+w = cell(noSubElems,1);
+counter = 1;
+for i = 1:noSubElems
+    e_sub = finalElements(i);
+    n_div = n_divArr(i);
+
+    Xi_e_y = centerPts(e_sub).elRangeXi_sub;
+    Eta_e_y = centerPts(e_sub).elRangeEta_sub;
+    n_qp_xi = round((p_xi + 1)*n_div);
+    n_qp_eta = round((p_eta + 1)*n_div);
+    
+    Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
+    Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
+    Q_eta = Q_eta(:);
+    W2D_1 = W{n_qp_xi}*W{n_qp_eta}.';
+    W2D_1 = W2D_1(:);
+            
+    xi{i} = parent2ParametricSpace(Xi_e_y, Q_xi);
+    eta{i} = parent2ParametricSpace(Eta_e_y, Q_eta);
+    w{i} = W2D_1*0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
+    counter = counter+1;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if pD.plotGP
+        Xi_e = centerPts(1).elRangeXi_sub;
+        Eta_e = centerPts(1).elRangeEta_sub;
+        Eps = 100*eps;
+        xi2 = Xi_e_y(1);
+        if abs(Xi_e(1) - xi2) > Eps
+            eta2 = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,100).';
+            yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2(ones(100,1)),eta2]);
+            pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
+        end
+        eta2 = Eta_e_y(1);
+        if abs(Eta_e(1) - eta2) > Eps
+            xi2 = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,100).';
+            yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2(ones(100,1))]);
+            pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
+        end
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+end
+xi = cell2mat(xi);
+eta = cell2mat(eta);
+w = cell2mat(w);
 

@@ -38,6 +38,9 @@ if pointIsInEast && pointIsInNorth % top right corner (xi_x_t = 1, eta_x_t = 1)
         counter2 = 3; % index of element to the west
         e_temp = eNeighbour(e_next,counter2,1);
         while e_temp ~= e_prev
+            if counter > 100 || counter2 > 100
+                error('wtf?')
+            end
             counter2 = counter2 + 1;
             e_temp = eNeighbour(e_next,mod(counter2-1,4)+1,1);
         end
@@ -69,6 +72,9 @@ elseif pointIsInWest && pointIsInNorth % top left corner (xi_x_t = -1, eta_x_t =
         counter2 = 4; % index of element to the south
         e_temp = eNeighbour(e_next,counter2,1);
         while e_temp ~= e_prev
+            if counter > 100 || counter2 > 100
+                error('wtf?')
+            end
             counter2 = counter2 + 1;
             e_temp = eNeighbour(e_next,mod(counter2-1,4)+1,1);
         end
@@ -100,6 +106,9 @@ elseif pointIsInWest && pointIsInSouth % bottom left corner (xi_x_t = -1, eta_x_
         counter2 = 1; % index of element to the east
         e_temp = eNeighbour(e_next,counter2,1);
         while e_temp ~= e_prev
+            if counter > 100 || counter2 > 100
+                error('wtf?')
+            end
             counter2 = counter2 + 1;
             e_temp = eNeighbour(e_next,mod(counter2-1,4)+1,1);
         end
@@ -131,6 +140,9 @@ elseif pointIsInEast && pointIsInSouth % bottom right corner (xi_x_t = 1, eta_x_
         counter2 = 2; % index of element to the north
         e_temp = eNeighbour(e_next,counter2,1);
         while e_temp ~= e_prev
+            if counter > 100 || counter2 > 100
+                error('wtf?')
+            end
             counter2 = counter2 + 1;
             e_temp = eNeighbour(e_next,mod(counter2-1,4)+1,1);
         end

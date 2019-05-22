@@ -26,11 +26,6 @@ plotResults = options.plotResults;
 printResults = options.printResults;
 legendEntries = options.legendEntries;
 
-
-if ~exist(study.subFolderName, 'dir')
-    mkdir(study.subFolderName);
-end
-
 loopParametersArr = study.loopParametersArr;
 loopParameters = study.loopParameters;
 noParms = numel(loopParameters);
@@ -45,6 +40,9 @@ if isnan(options.subFolderName)
     subFolderName = study.subFolderName;
 else
     subFolderName = options.subFolderName;
+end
+if ischar(subFolderName) && ~exist(subFolderName, 'dir')
+    mkdir(subFolderName);
 end
 analyticSolutionExist = study.tasks(1).task.varCol.analyticSolutionExist;
 % analyticSolutionExist = true;
@@ -254,7 +252,7 @@ switch options.noXLoopPrms
                         continue
                     end
                     temp = study.tasks(idxMap(i)).task.(legendEntries{j});
-                    if isnumeric(temp)
+                    if isnumeric(temp) || islogical(temp)
                         temp = num2str(temp);
                     end
                     mathematicalLegend = false;

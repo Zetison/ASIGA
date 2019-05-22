@@ -1,13 +1,24 @@
-function [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k)
+function [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k,model)
 switch psiType
     case 1
-        x1 = x-nx;
+        switch model
+            case {'Cube','Cube_P'}
+                x1 = zeros(size(x));
+            otherwise
+                x1 = x-nx;
+        end
         C1 = norm(x-x1);
-        C2 = dot(x-x1, nx)/C1;
+        C2 = dot(x-x1, nx);
         constants = {x1 C1 C2};
     case 2
-        x1 = x - 0.5*nx;
-        x2 = x - nx;
+        switch model
+            case {'Cube','Cube_P'}
+                x1 = zeros(size(x));
+                x2 = 0.5*x;
+            otherwise
+                x1 = x - 0.5*nx;
+                x2 = x - nx;
+        end
         r1x = norm(x1-x);
         r2x = norm(x2-x);
         C2 = (1i*k*r2x-1)/r2x^2*dot(x2-x,nx) - (1i*k*r1x-1)/r1x^2*dot(x1-x,nx);

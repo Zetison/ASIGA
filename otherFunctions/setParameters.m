@@ -13,6 +13,8 @@ switch model
         setS3Parameters
     case 'Torus'
         setTorusParameters
+    case {'Cube','Cube_P'}
+        setCubeParameters
     case 'S5'
         setS5Parameters
     case 'IL'

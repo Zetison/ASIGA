@@ -22,16 +22,16 @@ if plot3Dgeometry
                     else 
                         resolution = [10,10];
                     end
-                    if 1
+                    if 0
                         colorFun = @(v) abs(varCol.analytic(v));
 %                         colorFun = @(v) real(varCol.analytic(v));
                         plotNURBS(fluid{i},{'resolution',[10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
                                                         'samplingDistance',0.1});
                     else
 %                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
-                        plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
 %                         plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-%                         plotNURBS(fluid{i},{'resolution',[40 40], 'elementBasedSamples',true,'samplingDistance',0.1});
+                        plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
                     end
             end
         else

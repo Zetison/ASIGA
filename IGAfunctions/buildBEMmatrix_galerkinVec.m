@@ -20,8 +20,9 @@ extraGPBEM = varCol.extraGPBEM;
 noDofs = varCol.noDofs;
 agpBEM = varCol.agpBEM;
 exteriorProblem = varCol.exteriorProblem;
+model = varCol.model;
 
-quadMethodBEMsimpson = strcmp(varCol.quadMethodBEM,'Simpson');
+quadMethodBEM = varCol.quadMethodBEM;
 
 Eps = 10*eps;
 
@@ -69,9 +70,9 @@ end
 dpdn = varCol.dpdn;
 
 if exteriorProblem
-    sgn = -1;
-else
     sgn = 1;
+else
+    sgn = -1;
 end
 
 useNeumanProj = varCol.useNeumanProj;
@@ -82,12 +83,20 @@ else
     dU = NaN;
 end
 
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
-centerPts = findCenterPoints(patches);
+if strcmp(quadMethodBEM,'Adaptive')
+    maxLevel = 7;
+    diagsMax = NaN;
+    [centerPts,subElementMap] = findCenterPointsAdap(patches,pIndex,noElems,index,elRangeXi,elRangeEta,maxLevel,Eps);
+else
+    [~, ~, diagsMax] = findMaxElementDiameter(patches);
+    maxLevel = NaN;
+    centerPts = findCenterPoints(patches);
+    subElementMap = NaN;
+end
 
 n_en = (p_xi+1)*(p_eta+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEMsimpson);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEM);
 [Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 
 idxRow = zeros(n_en, noElems);
@@ -149,7 +158,7 @@ parfor e_x = 1:noElems
             v_1 = NaN;
             v_2 = NaN;
         end
-        [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k);
+        [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k,model);
         FF_temp = complex(zeros(1, no_angles));
         idxCol = zeros(n_en, noElems);
     
@@ -158,7 +167,7 @@ parfor e_x = 1:noElems
                     useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                     x,nx,pt_x(1),pt_x(2),xi_x,eta_x,e_x,constants,psiType,useRegul,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
-                    patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEMsimpson);
+                    patches,Eps,diagsMax,centerPts,subElementMap,maxLevel,agpBEM,quadMethodBEM);
             idxCol(:,e_y) = sctr_y;
             A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*BIE*fact_x;
             totNoQP = totNoQP + noGp;

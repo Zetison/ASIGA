@@ -1,7 +1,7 @@
-function pD = plotBEMGeometry(patches,plotGP)
+function pD = plotBEMGeometry(patches,plotGP,npts,plotPointsAsSpheres)
 pD.plotGP = plotGP;
 if plotGP
-    pD.plotPointsAsSpheres = 1;
+    pD.plotPointsAsSpheres = plotPointsAsSpheres;
     pD.pointsRadius = 6e-3;
     pD.noSpherePts = 20;
     pD.lineColor = 'blue';
@@ -10,8 +10,9 @@ if plotGP
     if plotGP
         close all
         for patch = 1:numel(patches)
-            plotNURBS(patches{patch}.nurbs,{'resolution',[100 100], 'elementBasedSamples',true,'samplingDistance',0.1});
+            plotNURBS(patches{patch}.nurbs,{'resolution',[npts npts], 'elementBasedSamples',true,'samplingDistance',0.1});
         end
+        pD.h = gca;
         axis equal
         axis off
         set(gca, 'Color', 'none');

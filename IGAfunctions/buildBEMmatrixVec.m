@@ -22,8 +22,9 @@ extraGP = varCol.extraGP;
 extraGPBEM = varCol.extraGPBEM;
 agpBEM = varCol.agpBEM;
 exteriorProblem = varCol.exteriorProblem;
+model = varCol.model;
 
-quadMethodBEMsimpson = strcmp(varCol.quadMethodBEM,'Simpson');
+quadMethodBEM = varCol.quadMethodBEM;
 
 Eps = 10*eps;
 
@@ -71,9 +72,9 @@ end
 dpdn = varCol.dpdn;
 
 if exteriorProblem
-    sgn = -1;
-else
     sgn = 1;
+else
+    sgn = -1;
 end
 
 %% Create collocation points
@@ -91,8 +92,16 @@ counter = 1;
 cp_p = zeros(n_cp,2);
 patchIdx = zeros(n_cp,1);
 patches = varCol.patches;
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
-centerPts = findCenterPoints(patches);
+if strcmp(quadMethodBEM,'Adaptive')
+    maxLevel = 7;
+    [centerPts,subElementMap] = findCenterPointsAdap(patches,pIndex,noElems,index,elRangeXi,elRangeEta,maxLevel,Eps);
+    diagsMax = NaN;
+else
+    [~, ~, diagsMax] = findMaxElementDiameter(patches);
+    maxLevel = NaN;
+    centerPts = findCenterPoints(patches);
+    subElementMap = NaN;
+end
 for patch = 1:noPatches
     nurbs = patches{patch}.nurbs;
     n_xi = nurbs.number(1);
@@ -154,27 +163,33 @@ else
     U = NaN;
     dU = NaN;
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% for i = 317
-% for i = [354,317,319,392]
-pD = plotBEMGeometry(patches,0);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 eNeighbour = NaN; % to avoid transparency "bug"
 createElementTopology
 
 n_en = (p_xi+1)*(p_eta+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEMsimpson);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEM);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+plot_GP = 0;
+% pD = plotBEMGeometry(patches,plot_GP,100,1);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 totNoQP = 0;
+for i = 1:n_cp
 % for i = 1:n_cp
+% parfor i = 1:n_cp
+% for i = [354,317,319,392]
+% for i = 3207:n_cp % BCA
+% for i = 319
 % for i = 1:n_cp
-parfor i = 1:n_cp
 %     totArea = 0;
+    if ~plot_GP % to avoid Matlab bug
+        pD.plotGP = false;
+    end
     patch = patchIdx(i);
     Xi_x = knotVecs{patch}{1}; % New
     Eta_x = knotVecs{patch}{2}; % New
@@ -196,9 +211,12 @@ parfor i = 1:n_cp
 
     Xi_e_x = elRangeXi(idXi_x,:);
     Eta_e_x = elRangeEta(idEta_x,:);
-    if pD.plotGP
+    if plot_GP
+        if numel(pD.h) > 1
+            delete(pD.h(2:end))
+        end
         if i == 354
-            if quadMethodBEMsimpson
+            if strcmp(quadMethodBEM,'Simpson')
                 xi_x = parent2ParametricSpace(Xi_e_x, Q(1,1));
                 eta_x = parent2ParametricSpace(Eta_e_x, Q(1,1));
             else
@@ -262,23 +280,22 @@ parfor i = 1:n_cp
         v_1 = NaN;
         v_2 = NaN;
     end
-    
-    [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k);
+    [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k,model);
     
     FF_temp = complex(zeros(1, no_angles));
     
 
-    if pD.plotGP
-        plotGP(pD,x,'blue')
+    if plot_GP
+        pD = plotGP(pD,x,'blue');
     end
     
     [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
     for e_y = 1:noElems  
-        [BIE, integrals, FF_temp, sctr_y, noGp] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
+        [BIE, integrals, FF_temp, sctr_y, noGp, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,xi_x,eta_x,adjacentElements,constants,psiType,useRegul,...
                 p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
-                patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEMsimpson,pD);
+                patches,Eps,diagsMax,centerPts,subElementMap,maxLevel,agpBEM,quadMethodBEM,pD);
         for j = 1:n_en
             A_row(sctr_y(j)) = A_row(sctr_y(j)) + BIE(j);
         end
@@ -292,12 +309,13 @@ parfor i = 1:n_cp
     A(i,:) = A_row;
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
-    if pD.plotGP
+    if plot_GP
         figureFullScreen(gcf)
-        export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_extraGP' num2str(extraGP) '_agpBEM' num2str(agpBEM) '_Simpson' num2str(quadMethodBEMsimpson)], '-png', '-transparent', '-r300')
+%         totNoQP
+        export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
 %         keyboard
     end
 end
 
-
+% totNoQP
 varCol.totNoQP = totNoQP;

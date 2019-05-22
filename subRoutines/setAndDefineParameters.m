@@ -1,10 +1,13 @@
 
    
 switch model
-    case {'SS', 'PS', 'S1', 'S1_P', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL'}
+    case {'SS', 'PS', 'S1', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL'}
         analyticSolutionExist = true;
     otherwise
         analyticSolutionExist = false;
+end
+if strcmp(model(end-1:end),'_P')
+    analyticSolutionExist = true;
 end
 if strcmp(applyLoad,'radialPulsation') || strcmp(applyLoad,'SimpsonTorus')
     analyticSolutionExist = true;
