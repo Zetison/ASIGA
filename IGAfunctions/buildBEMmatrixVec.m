@@ -93,7 +93,7 @@ cp_p = zeros(n_cp,2);
 patchIdx = zeros(n_cp,1);
 patches = varCol.patches;
 if strcmp(quadMethodBEM,'Adaptive')
-    maxLevel = 7;
+    maxLevel = 4;
     [centerPts,subElementMap] = findCenterPointsAdap(patches,pIndex,noElems,index,elRangeXi,elRangeEta,maxLevel,Eps);
     diagsMax = NaN;
 else

@@ -47,11 +47,11 @@ alpha = 240*pi/180;
 beta = 30*pi/180;   
 
 degree = 4;
-M = 4;
+M = 2;
 parm = 2;
 calculateSurfaceError = 1;
 
-runTasksInParallel = 1;
+runTasksInParallel = 0;
 loopParameters = {'f','method','formulation'};
 
 collectIntoTasks
