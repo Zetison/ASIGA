@@ -35,8 +35,8 @@ eigenValues = [  pi  % Analytical eigenvalues of the interior Dirichlet sphere e
                7.851077679474405
                8.934838878352839
                ]';
-% k = sort([eigenValues linspace(0.005,10,3000)]);
-k = sort([eigenValues linspace(0.005,10,100)]);
+k = sort([eigenValues linspace(0.005,10,3000)]);
+% k = sort([eigenValues linspace(0.005,10,100)]);
 % k = 1;
 f = k*1500/(2*pi);
 
@@ -47,15 +47,12 @@ alpha = 240*pi/180;
 beta = 30*pi/180;   
 
 degree = 4;
-M = 1;
-% M = 1;
-parm = 1;
+M = 4;
+parm = 2;
 calculateSurfaceError = 1;
-colBEM_C0 = Inf;
-% colBEM_C0 = 2;
 
-runTasksInParallel = 0;
-loopParameters = {'f','parm','method','formulation'};
+runTasksInParallel = 1;
+loopParameters = {'f','method','formulation'};
 
 collectIntoTasks
 

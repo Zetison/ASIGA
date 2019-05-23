@@ -55,14 +55,14 @@ storeSolution = false;
 storeFullVarCol = false;
 clearGlobalMatrices = true;
 extraGP = 0; % extra quadrature points
-extraGPBEM = 4; % extra quadrature points around singularities for BEM formulations
-agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
+extraGPBEM = 16; % extra quadrature points around singularities for BEM formulations
+agpBEM = 1.4; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 useROM = false;
 exteriorProblem = true;
 initMeshFactXi = 1;
 initMeshFactZeta = 1;
 colBEM_C0 = 0;
-quadMethodBEM = 'New';
+quadMethodBEM = 'Adaptive';
 M = 1;
 
 applyLoad = 'planeWave';
