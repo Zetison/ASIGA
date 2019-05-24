@@ -1,4 +1,4 @@
-scatteringCase = 'Sweep';
+scatteringCase = 'MS';
 
 model = 'S1';  % Spherical shell
 

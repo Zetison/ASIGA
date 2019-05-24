@@ -179,9 +179,9 @@ plot_GP = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 totNoQP = 0;
-for i = 1:n_cp
 % for i = 1:n_cp
-% parfor i = 1:n_cp
+% for i = 1:n_cp
+parfor i = 1:n_cp
 % for i = [354,317,319,392]
 % for i = 3207:n_cp % BCA
 % for i = 319

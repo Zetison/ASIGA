@@ -624,7 +624,7 @@ for i_k = 1:size(k,2)
     end
     if strcmp(scatteringCase,'Sweep')
         U_sweep{i_k} = U_fluid_o(1:varCol.noDofs,:);
-        if ~strcmp(BC,'SHBC')
+        if strcmp(BC,'SSBC') || strcmp(BC,'NNBC')
             error('not implemented due to noDofs')
         end
     end

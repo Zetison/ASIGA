@@ -41,7 +41,7 @@ if isSphericalShell
     R_i = parms.R_i; 
 end
 switch BC
-    case 'SHBC'
+    case {'SHBC','NBC'}
         E = E(1:end-1);
         rho_s = rho_s(1:end-1);
         rho_f = rho_f(1:end-1);
