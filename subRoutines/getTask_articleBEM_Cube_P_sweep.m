@@ -13,8 +13,8 @@ eigenValues = [1,2,3,4,5,6,8,9,10];
 eigenValues = unique(sort([eigenValues, 3,6,9]));
 eigenValues = pi*sqrt(eigenValues);%  Analytical eigenvalues of the interior Dirichlet/Neumann cube problem.
 
-% k = sort([eigenValues linspace(0.01,10,3000)]);
-k = sort([eigenValues linspace(0.01,10,100)]);
+k = sort([eigenValues linspace(0.01,10,3000)]);
+% k = sort([eigenValues linspace(0.01,10,100)]);
 % k = 1;
 f = k*1500/(2*pi);
 
