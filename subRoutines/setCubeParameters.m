@@ -5,4 +5,4 @@ c_f = [1500,1500];  % Speed of sound in fluid domains
 E = 210e9; % Youngs modulus of elastic material
 nu = 0.3; % Poisson ratio of elastic material
 
-a = 1; % Major radius of torus
+a = 1; % Side length of cube

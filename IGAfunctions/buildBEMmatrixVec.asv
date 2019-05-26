@@ -92,7 +92,12 @@ counter = 1;
 cp_p = zeros(n_cp,2);
 patchIdx = zeros(n_cp,1);
 patches = varCol.patches;
-
+if strcmp(quadMethodBEM,'Adaptive')
+    maxLevel = 4;
+    [centerPts,subElementMap] = findCenterPointsAdap(patches,pIndex,noElems,index,elRangeXi,elRangeEta,maxLevel,Eps);
+    diagsMax = NaN;
+else
+end
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
 
@@ -169,12 +174,11 @@ FF = complex(zeros(n_cp, no_angles));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_GP = 0;
-% pD = plotBEMGeometry(patches,plot_GP,10,0);
+% pD = plotBEMGeometry(patches,plot_GP,100,1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 totNoQP = 0;
-totNoQPprev = 0;
-% for i = 2:n_cp
+% for i = 1:n_cp
 % for i = 1:n_cp
 parfor i = 1:n_cp
 % for i = [354,317,319,392]
@@ -290,7 +294,7 @@ parfor i = 1:n_cp
                 useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,xi_x,eta_x,adjacentElements,constants,psiType,useRegul,...
                 p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
-                patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM,pD);
+                patches,Eps,diagsMax,centerPts,subElementMap,maxLevel,agpBEM,quadMethodBEM,pD);
         for j = 1:n_en
             A_row(sctr_y(j)) = A_row(sctr_y(j)) + BIE(j);
         end
@@ -306,9 +310,8 @@ parfor i = 1:n_cp
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
     if plot_GP
         figureFullScreen(gcf)
-%         totNoQP-totNoQPprev
-%         totNoQPprev = totNoQP;
-%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
+%         totNoQP
+        export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
 %         keyboard
     end
 end

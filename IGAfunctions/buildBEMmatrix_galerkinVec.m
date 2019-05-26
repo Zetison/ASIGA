@@ -83,16 +83,8 @@ else
     dU = NaN;
 end
 
-if strcmp(quadMethodBEM,'Adaptive')
-    maxLevel = 7;
-    diagsMax = NaN;
-    [centerPts,subElementMap] = findCenterPointsAdap(patches,pIndex,noElems,index,elRangeXi,elRangeEta,maxLevel,Eps);
-else
-    [~, ~, diagsMax] = findMaxElementDiameter(patches);
-    maxLevel = NaN;
-    centerPts = findCenterPoints(patches);
-    subElementMap = NaN;
-end
+[~, ~, diagsMax] = findMaxElementDiameter(patches);
+centerPts = findCenterPoints(patches);
 
 n_en = (p_xi+1)*(p_eta+1);
 
@@ -167,7 +159,7 @@ parfor e_x = 1:noElems
                     useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                     x,nx,pt_x(1),pt_x(2),xi_x,eta_x,e_x,constants,psiType,useRegul,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
-                    patches,Eps,diagsMax,centerPts,subElementMap,maxLevel,agpBEM,quadMethodBEM);
+                    patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
             idxCol(:,e_y) = sctr_y;
             A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*BIE*fact_x;
             totNoQP = totNoQP + noGp;

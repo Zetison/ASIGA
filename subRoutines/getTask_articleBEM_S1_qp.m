@@ -19,8 +19,8 @@ M = [1,Mend];
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
 
-parm = 1;
-degree = [2,5];
+parm = 2;
+degree = [4,5];
 % degree = 3;
 runTasksInParallel = 1;
 plotResultsInParaview = 0;
@@ -33,7 +33,7 @@ extraGP = 0; % extra quadrature points
 extraGPBEM = [0,5,10]; % extra quadrature points
 agpBEM = 0:0.5:1.5;
 % agpBEM = 3;
-colBEM_C0 = 1/2;
+colBEM_C0 = 0;
 quadMethodBEM = {'Simpson'};
 
 loopParameters = {'extraGPBEM','agpBEM','M','degree','formulation','method','quadMethodBEM'};

@@ -18,6 +18,7 @@ if plotGP
         set(gca, 'Color', 'none');
     %     view(-100,20)
         view(10,20)
+%         view(0,-90)
         drawnow
         hold on
 %         if false

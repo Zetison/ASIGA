@@ -327,14 +327,16 @@ else
 end
 
 function [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,x_5,Xi_e,Eta_e,pD,nurbs,p_xi,p_eta)
-
-refineElementsPrev = 1;
+level = 3;
+maxSubElements = (4^(level+1)-1)/3;
+Xi_e = [Xi_e(1)+eps,Xi_e(2)-eps];
+Eta_e = [Eta_e(1)+eps,Eta_e(2)-eps];
+refineElementsPrev = ones(maxSubElements,1);
+refineElements = ones(maxSubElements,1);
 noElementsToRefinePrev = 1;
 counter2 = 0;
 resolved = false;
 level = 1;
-Xi_e = [Xi_e(1)+eps,Xi_e(2)-eps];
-Eta_e = [Eta_e(1)+eps,Eta_e(2)-eps];
 elRangeXi_subTemp = Xi_e;
 elRangeEta_subTemp = Eta_e;
 elRangeXi_sub = [];
@@ -350,7 +352,6 @@ while ~resolved
     subElemMap = [E2(:),E3(:),E1(:),E4(:)];
     resolved = true;
     counter = 0;
-    refineElements = zeros(4*noElementsToRefinePrev,1);
     for i = 1:noElementsToRefinePrev
         e_sub = refineElementsPrev(i);
         l = norm(x-x_5(i,:));
@@ -377,7 +378,7 @@ while ~resolved
         I2 = I(1:noNodes-1,1:noNodes-1);
         I3 = I(2:noNodes,1:noNodes-1);
         I4 = I(2:noNodes,2:noNodes);
-        elems = refineElements(1:counter);
+        elems = refineElements(1:noElementsToRefinePrev);
         xi_t = linspace(-1,1,noNodes).';
         eta_t = linspace(-1,1,noNodes).';
         elRangeXi_subTemp = parent2ParametricSpace(Xi_e, [xi_t(mod(I2(elems)-1,noNodes)+1), xi_t(mod(I3(elems)-1,noNodes)+1)]);
