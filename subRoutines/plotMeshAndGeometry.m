@@ -82,11 +82,13 @@ if plot3Dgeometry
     varCol.dimension = 1;
 %     view(-70,30)
 %     view(120,10)
-    view(18,10)
-    view(62,43)
-%     view(106,26)
+%     view(18,10) % BeTSSi
+%     view(62,43)
+    view(106,26) % sphere and cube
 %     view(0,0)
     camproj('perspective')
+%     camproj('orthographic')
+    
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
     camlight
@@ -99,6 +101,7 @@ if plot3Dgeometry
 % 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
 % 	export_fig('C:\Users\jonvegar\Desktop\trond\mesh3D', '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
+% 	export_fig(['../../graphics/Cube_mesh' num2str(M)], '-png', '-transparent', '-r300')
            
 
 %     export_fig('../../graphics/sphericalShell/Sphere1controlPolygon' , '-png', '-transparent')
