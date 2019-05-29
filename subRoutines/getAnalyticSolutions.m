@@ -57,8 +57,8 @@ switch applyLoad
             case 'Cube_P'
                 a = parms.a;
                 y = a/4*[1,0,0;
-                         0,1,0;
-                         0,0,1;
+                         0,pi-2,0;
+                         0,0,pi-2;
                          0,0,-1];
             otherwise
                 y = [0,0,0];

@@ -68,11 +68,11 @@ centerPts = findCenterPoints(patches);
 if exteriorProblem
     Xarr = linspace(-1,1,3)/4;
     Yarr = linspace(-1,1,3)/4;
-    Zarr = linspace(-1,1,3)/4;
+    Zarr = linspace(-1,1,4)/4;
     [X,Y,Z] = meshgrid(Xarr,Yarr,Zarr);
     cp = [X(:),Y(:), Z(:)];
-%     cp = [0.49,0,0;
-%           0,0,0];
+    cp = [0.49,0,0;
+          0,0,0];
 else
     error('Not implemented')
 end

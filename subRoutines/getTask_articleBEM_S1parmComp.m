@@ -6,7 +6,7 @@ k = 1;
 % f = 1e2;             % Frequency
 f = k*1500/(2*pi);
 N = 6;
-M = 1:7;
+M = 1:6;
 parm = [1,2];
 degree = 4;
 

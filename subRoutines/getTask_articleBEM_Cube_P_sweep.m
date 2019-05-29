@@ -9,7 +9,8 @@ formulation = {'CCBIE', 'CBM', 'CHBIE', 'CCBIEC', 'CHBIEC'};
 formulation = {'CCBIE', 'CCBIEC'};
 
 
-eigenValues = [1,2,3,4,5,6,8,9,10];
+eigenValues = [];
+% eigenValues = [1,2,3,4,5,6,8,9,10];
 eigenValues = unique(sort([eigenValues, 3,6,9]));
 eigenValues = pi*sqrt(eigenValues);%  Analytical eigenvalues of the interior Dirichlet/Neumann cube problem.
 if true 
@@ -36,7 +37,7 @@ beta = 30*pi/180;
 
 applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
 degree = 4;
-M = 3;
+M = 5;
 plot3Dgeometry = 0;
 calculateSurfaceError = 1;
 
