@@ -5,7 +5,7 @@ model = 'S1';  % Spherical shell
 coreMethod = 'IGA';
 % coreMethod = {'IGA'};
 method = {'BEM'};
-formulation = {'CCBIE', 'CBM', 'CHBIE'};
+formulation = {'CCBIE', 'CBM', 'CHBIE', 'CCBIEC'};
 % formulation = {'CCBIE'};
 
 
