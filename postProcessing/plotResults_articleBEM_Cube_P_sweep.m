@@ -11,14 +11,14 @@ for study_i = 1:numel(studies)
                      'subFolderName',   '../results/Cube_P_sweep', ...
                      'legendEntries',   {{'method','M','parm','formulation'}}, ...
                      'noXLoopPrms',     1); 
-    figure(2)
-    printResultsToTextFiles(study,options)
-
+%     figure(2)
+%     printResultsToTextFiles(study,options)
+% 
     options.yname = 'error_p';
     options.axisType = 'semilogy';
-
-    figure(4)
-    printResultsToTextFiles(study,options)
+% 
+%     figure(4)
+%     printResultsToTextFiles(study,options)
 
     options.yname = 'surfaceError';
 

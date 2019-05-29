@@ -31,7 +31,11 @@ Eps = 10*eps;
 k = varCol.k;
 alpha = 1i/k;
 
-switch varCol.formulation(2:end)
+formulation = varCol.formulation;
+if strcmp(formulation(end),'C')
+    formulation = formulation(1:end-1);
+end
+switch formulation(2:end)
     case 'BM'
         useCBIE = true;
         useHBIE = true;
@@ -47,7 +51,7 @@ switch varCol.formulation(2:end)
     otherwise
         useCBIE = true;
         useHBIE = false;
-        psiType = str2double(varCol.formulation(end));  
+        psiType = str2double(formulation(end));  
 end
 useRegul = ~isnan(psiType);
 

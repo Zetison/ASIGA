@@ -223,7 +223,7 @@ switch options.noXLoopPrms
             for j = otherInd
                 temp2 = loopParameters{j};
                 temp = study.tasks(idxMap(i)).task.(loopParameters{j});
-                if isnumeric(temp)
+                if isnumeric(temp) || islogical(temp)
                     temp = num2str(temp);
                 end
                 if j ~= otherInd(1)

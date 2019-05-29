@@ -397,7 +397,12 @@ for i_k = 1:size(k,2)
                 case 'C' % Collocation
                     [A, FF, varCol] = buildBEMmatrixVec(varCol);  
             end 
-
+            if strcmp(formulation(end),'C')
+                [A_CHIEF, FF_CHIEF, varCol] = buildCHIEFmatrixVec(varCol);
+                A = [A; A_CHIEF];
+                FF = [FF; FF_CHIEF];
+            end
+            
             A(:,dofsToRemove) = [];
             noDofs_tot = varCol.noDofs;
             varCol.timeBuildSystem = toc;
