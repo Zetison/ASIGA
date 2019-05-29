@@ -240,21 +240,21 @@ parfor i = 1:n_cp
             crossProd_x = cross(m_1,m_2);
             h_xi = norm(m_1);
             if h_xi < Eps
-                eps_greville_xi = 1/(2*p_xi)*(Xi_e_x(2)-Xi_e_x(1));
-                if xi_x+eps_greville_xi > Xi_e_x(2)
-                    xi_x = xi_x - eps_greville_xi*(Xi_e_x(2)-Xi_e_x(1));
-                else
-                    xi_x = xi_x + eps_greville_xi*(Xi_e_x(2)-Xi_e_x(1));
-                end
-                continue
-            end
-            h_eta = norm(m_2);
-            if h_eta < Eps
                 eps_greville_eta = 1/(2*p_eta)*(Eta_e_x(2)-Eta_e_x(1));
                 if eta_x+eps_greville_eta > Eta_e_x(2)
                     eta_x = eta_x - eps_greville_eta*(Eta_e_x(2)-Eta_e_x(1));
                 else
                     eta_x = eta_x + eps_greville_eta*(Eta_e_x(2)-Eta_e_x(1));
+                end
+                continue
+            end
+            h_eta = norm(m_2);
+            if h_eta < Eps
+                eps_greville_xi = 1/(2*p_xi)*(Xi_e_x(2)-Xi_e_x(1));
+                if xi_x+eps_greville_xi > Xi_e_x(2)
+                    xi_x = xi_x - eps_greville_xi*(Xi_e_x(2)-Xi_e_x(1));
+                else
+                    xi_x = xi_x + eps_greville_xi*(Xi_e_x(2)-Xi_e_x(1));
                 end
                 continue
             end

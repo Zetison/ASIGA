@@ -38,6 +38,7 @@ M = 1:6;
 % coreMethod = {'IGA', 'C0_IGA', 'hp_FEM','h_FEM'};
 % coreMethod = {'linear_FEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
+% formulation = {'CBM'};
 % formulation = {'CCBIE'};
 % formulation = {'CCBIE', 'CBM', 'CHBIE'};
 % formulation = {'CRCBIE'};
