@@ -42,9 +42,9 @@ collectIntoTasks
 %% BA simulation
 useNeumanProj = 0;
 % degree = 2;
-extraGPBEM = NaN;
-extraGP = 0;
-agpBEM = NaN; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
+extraGPBEM = N;
+extraGP = 4;
+agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 M = 1:7;
 method = {'BA'};
 formulation = {'SL2E'};
