@@ -35,7 +35,19 @@ eigenValues = [  pi  % Analytical eigenvalues of the interior Dirichlet sphere e
                7.851077679474405
                8.934838878352839
                ]';
-k = sort([eigenValues linspace(0.005,10,3000)]);
+if false 
+    k = eigenValues;
+else
+    noPts = 1000;
+%     noPts = 100;
+    delta = 10/noPts*3;
+    k = linspace(0.01,10,noPts);
+    for i = 1:numel(eigenValues)
+        k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
+    end
+end
+k = sort(unique(k));
+% k = sort([eigenValues linspace(0.005,10,3000)]);
 % k = sort([eigenValues linspace(0.005,10,100)]);
 % k = 1;
 f = k*1500/(2*pi);

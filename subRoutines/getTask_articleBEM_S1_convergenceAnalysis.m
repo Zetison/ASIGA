@@ -2,7 +2,7 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 
 model = 'S1';
 
-parm = 2;
+parm = 1;
 method = {'BEM'};
 BC = 'SHBC';
 % coreMethod = {'IGA'};
@@ -25,10 +25,16 @@ calculateSurfaceError = 1;
 plot2Dgeometry = 0;
 plot3Dgeometry = 0;
 loopParameters = {'M','method','degree','coreMethod','extraGPBEM','extraGP'};
-extraGPBEM = 0;
+extraGPBEM = 16;
 extraGP = 0;
+agpBEM = 1.4;
+% agpBEM = 2;
+colBEM_C0 = 0;
+% colBEM_C0 = 1/2;
+quadMethodBEM = 'Adaptive';
+% quadMethodBEM = 'Simpson';
 
-% collectIntoTasks
+collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'IGA'};
 degree = 3:4;
@@ -39,7 +45,7 @@ coreMethod = {'linear_FEM'};
 degree = 1;
 M = [M, M(end)+1];
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 formulation = 'SL2E';
@@ -48,7 +54,7 @@ coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
 degree = 2;
 M = M(1:end-1);
 
-% collectIntoTasks
+collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 coreMethod = {'IGA'};
 degree = 3:4;
@@ -59,4 +65,4 @@ coreMethod = {'linear_FEM'};
 degree = 1;
 M = [M, M(end)+1];
 
-% collectIntoTasks
+collectIntoTasks

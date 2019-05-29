@@ -17,7 +17,7 @@ if true
 else
     noPts = 1000;
 %     noPts = 100;
-    delta = 10/noPts;
+    delta = 10/noPts*3;
     k = linspace(0.01,10,noPts);
     for i = 1:numel(eigenValues)
         k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
