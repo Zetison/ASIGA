@@ -26,6 +26,7 @@ switch applyLoad
                          'rho_f', rho_f, ...
                          'c_f', c_f);
     case 'radialPulsation'
+        C_n = @(n) cos(n-1);
         switch model
             case 'MS_P'
                 R_o = parms.R_o;
@@ -56,20 +57,25 @@ switch applyLoad
                                 -1,-1,-1];
             case 'Cube_P'
                 a = parms.a;
-                y = a/4*[1,0,0;
-                         0,pi-2,0;
-                         0,0,pi-2;
-                         0,0,-1];
+%                 y = a/4*[1,0,0;
+%                          0,1,0;
+%                          0,0,1;
+%                          0,0,-1];
+                Xarr = linspace(-1,1,3)*a/4;
+                Yarr = linspace(-1,1,3)*a/4;
+                Zarr = linspace(-1,1,3)*a/4;
+                [X,Y,Z] = meshgrid(Xarr,Yarr,Zarr);
+                y = [X(:),Y(:), Z(:)];
             otherwise
                 y = [0,0,0];
         end
         xms = @(v) [v(:,1)-y(1),v(:,2)-y(2),v(:,3)-y(3)];
         R = @(v) norm2(xms(v));
-        analytic = @(v) analyticPulsation_(v,P_inc,y,k_1);
-        gAnalytic = @(v) gAnalyticPulsation_(v,P_inc,y,k_1);
-        dpdn = @(v,n) dAnalyticPulsation_(v,P_inc,y,k_1,n);
+        analytic = @(v) analyticPulsation_(v,C_n,y,k_1);
+        gAnalytic = @(v) gAnalyticPulsation_(v,C_n,y,k_1);
+        dpdn = @(v,n) dAnalyticPulsation_(v,C_n,y,k_1,n);
         
-        varCol.farField = @(v) fAnalyticPulsation_(v,P_inc,y,k_1);
+        varCol.farField = @(v) fAnalyticPulsation_(v,C_n,y,k_1);
         varCol.analytic = analytic;
         varCol.gAnalytic = gAnalytic;
         
