@@ -13,7 +13,7 @@ eigenValues = [];
 % eigenValues = [1,2,3,4,5,6,8,9,10];
 eigenValues = unique(sort([eigenValues, 3,6,9]));
 eigenValues = pi*sqrt(eigenValues);%  Analytical eigenvalues of the interior Dirichlet/Neumann cube problem.
-if false 
+if true 
     k = eigenValues;
 else
     noPts = 1000;
@@ -37,7 +37,7 @@ beta = 30*pi/180;
 
 applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
 degree = 4;
-M = 4;
+M = 5;
 plot3Dgeometry = 0;
 calculateSurfaceError = 1;
 
