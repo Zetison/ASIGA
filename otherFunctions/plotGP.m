@@ -1,4 +1,7 @@
 function pD = plotGP(pD,y,ptColor)
+if isempty(y)
+    return
+end
 if pD.plotPointsAsSpheres
     [Xs,Ys,Zs] = sphere(pD.noSpherePts);
     for ii = 1:size(y,1)
