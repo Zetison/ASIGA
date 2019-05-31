@@ -2,7 +2,7 @@ function patchTop = getPatchTopology(patches)
 
 noPatches = numel(patches);
 patchData = cell(noPatches,1);
-Eps = 1e-10;
+Eps = 1e7*eps;
 for i = 1:noPatches
     patchData{i}.edgeNodes = cell(4,1);
     patchData{i}.edgeNodes{1} = permute(patches{i}.coeffs(:,end,:),[1,3,2]);

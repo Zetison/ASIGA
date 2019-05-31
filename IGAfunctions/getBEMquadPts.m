@@ -241,7 +241,7 @@ else
             W2D_1_temp = [];
             n_qp = 0;
             corner_i = 0;
-            adaptiveQuad();
+            recursionLevel = adaptiveQuad(0);
             xi_y = xi_y(1:noGp);
             eta_y = eta_y(1:noGp);
             W2D_1 = W2D_1(1:noGp);
@@ -346,11 +346,14 @@ else
     integrals{1} = integrals{1} + sum(dPhi_0dny_.*fact_y); 
 end
 
-function adaptiveQuad()
+function recursionLevel = adaptiveQuad(recursionLevel)
 
+if recursionLevel > 50
+    error(['Problems arise around x = ' num2str(x)])
+end
 l = norm(x-x_5);
 n_div = agpBEM*h/l + 1;
-if n_div < 2
+if n_div < 2 || recursionLevel > 100
     n_qp_xi = round((p_xi + 1)*n_div);
     n_qp_eta = round((p_eta + 1)*n_div);
     n_qp = n_qp_xi*n_qp_eta;
@@ -399,13 +402,10 @@ else
             x_5 = y_temp(cntr,:);
             Xi_eSub = Xi_eSubArr(i:i+1);
             Eta_eSub = Eta_eSubArr(j:j+1);
-            adaptiveQuad();
+            recursionLevel = adaptiveQuad(recursionLevel + 1);
             cntr = cntr + 1;
         end
     end
-end
-if noGp > 1e8
-    error(['Problems arise around x = ' num2str(x)])
 end
 end
 end

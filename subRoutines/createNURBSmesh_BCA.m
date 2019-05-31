@@ -22,8 +22,8 @@ if varCol.boundaryMethod
         fluid = nurbs;
     end
     
-    fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots);
     varCol.patchTop = getPatchTopology(fluid);
+    fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots);
 end
 L_gamma = L+a+g2+g3;
 
