@@ -12,8 +12,8 @@ plot3Dgeometry = 0;
 plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 
 % f = [5e2, 1e3]; %[1e2 5e2 1e3];             % Frequency
-% f = [1e2 1e3];             % Frequency
-f = 1e3;             % Frequency
+f = [1e2 1e3];             % Frequency
+% f = 1e3;             % Frequency
 alpha = (0:0.05:360)*pi/180;
 
 plotResultsInParaview = 0;
