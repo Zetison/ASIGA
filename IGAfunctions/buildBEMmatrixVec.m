@@ -178,7 +178,7 @@ plot_GP = 0;
 
 totNoQP = 0;
 totNoQPprev = 0;
-% for i = 2:n_cp
+% for i = 3:n_cp
 % for i = 1:n_cp
 parfor i = 1:n_cp
 % for i = [354,317,319,392]

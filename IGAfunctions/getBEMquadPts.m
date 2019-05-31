@@ -224,7 +224,7 @@ else
             W2D_1 = W2D_1(:);
             W2D_1 = W2D_1*J_2_y;
         case 'Adaptive'
-            maxArraySize = 10000;
+            maxArraySize = 1e4;
             xi_y = zeros(maxArraySize,1);
             eta_y = zeros(maxArraySize,1);
             W2D_1 = zeros(maxArraySize,1);
@@ -404,9 +404,9 @@ else
         end
     end
 end
-% if numel(xi_y) > 1000
-%     keyboard
-% end
+if noGp > 1e8
+    error(['Problems arise around x = ' num2str(x)])
+end
 end
 end
 % 
