@@ -6,6 +6,7 @@ function [BIE, integrals, FF_temp, sctr_y, noGp, pD] = getBEMquadPts(e_y,Q2D_2,W
 if nargin < 44
     pD.plotGP = false;
 end
+
 alpha = 1i/k;
 patch_y = pIndex(e_y); % New
 Xi_y = knotVecs{patch_y}{1}; % New
@@ -20,7 +21,6 @@ Eta_e_y = elRangeEta(idEta,:);
 sctr_y = element(e_y,:);
 pts_y = controlPts(sctr_y,:);
 wgts_y = weights(element2(e_y,:)); % New    
-
 
 [collocationPointIsInElement,idx] = ismember(e_y,adjacentElements);
 
@@ -224,7 +224,27 @@ else
             W2D_1 = W2D_1(:);
             W2D_1 = W2D_1*J_2_y;
         case 'Adaptive'
-            [xi_y,eta_y,W2D_1,pD] = adaptiveQuad(x,agpBEM,Q,W,diagsMax(e_y),centerPts(e_y,:),Xi_e_y,Eta_e_y,Xi_e_y,Eta_e_y,pD,patches{patch_y}.nurbs,p_xi,p_eta);
+            maxArraySize = 10000;
+            xi_y = zeros(maxArraySize,1);
+            eta_y = zeros(maxArraySize,1);
+            W2D_1 = zeros(maxArraySize,1);
+            h = diagsMax(e_y);
+            x_5 = centerPts(e_y,:);
+            Xi_eSub = Xi_e_y;
+            Eta_eSub = Eta_e_y;
+            noGp = 0;
+            nurbs = patches{patch_y}.nurbs;
+            indexMap = reshape(5:13,3,3).';
+            XI = [];
+            ETA = [];
+            pts = [];
+            W2D_1_temp = [];
+            n_qp = 0;
+            corner_i = 0;
+            adaptiveQuad();
+            xi_y = xi_y(1:noGp);
+            eta_y = eta_y(1:noGp);
+            W2D_1 = W2D_1(1:noGp);
     end
     noGp = size(xi_y,1);
 
@@ -326,40 +346,35 @@ else
     integrals{1} = integrals{1} + sum(dPhi_0dny_.*fact_y); 
 end
 
-function [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,x_5,Xi_e,Eta_e,Xi_eSub,Eta_eSub,pD,nurbs,p_xi,p_eta,xi,eta,w)
+function adaptiveQuad()
 
-if nargin < 15
-    xi = [];
-    eta = [];
-    w = [];
-end
 l = norm(x-x_5);
 n_div = agpBEM*h/l + 1;
 if n_div < 2
     n_qp_xi = round((p_xi + 1)*n_div);
     n_qp_eta = round((p_eta + 1)*n_div);
-
+    n_qp = n_qp_xi*n_qp_eta;
     Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
     Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
     Q_eta = Q_eta(:);
-    W2D_1 = W{n_qp_xi}*W{n_qp_eta}.';
-    W2D_1 = W2D_1(:);
+    W2D_1_temp = W{n_qp_xi}*W{n_qp_eta}.';
+    W2D_1_temp = W2D_1_temp(:);
 
-    xi = [xi; parent2ParametricSpace(Xi_eSub, Q_xi)];
-    eta = [eta; parent2ParametricSpace(Eta_eSub, Q_eta)];
-    w = [w; W2D_1*0.25*(Xi_eSub(2)-Xi_eSub(1))*(Eta_eSub(2)-Eta_eSub(1))];
-
+    xi_y(noGp+1:noGp+n_qp) = parent2ParametricSpace(Xi_eSub, Q_xi);
+    eta_y(noGp+1:noGp+n_qp) = parent2ParametricSpace(Eta_eSub, Q_eta);
+    W2D_1(noGp+1:noGp+n_qp) = W2D_1_temp*0.25*(Xi_eSub(2)-Xi_eSub(1))*(Eta_eSub(2)-Eta_eSub(1));
+    noGp = noGp + n_qp;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if pD.plotGP
         Eps = 100*eps;
         xi2 = Xi_eSub(1);
-        if abs(Xi_e(1) - xi2) > Eps
+        if abs(Xi_e_y(1) - xi2) > Eps
             eta2 = linspace(Eta_eSub(1)+Eps,Eta_eSub(2)-Eps,100).';
             yy = evaluateNURBS_2ndDeriv(nurbs, [xi2(ones(100,1)),eta2]);
             pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
         end
         eta2 = Eta_eSub(1);
-        if abs(Eta_e(1) - eta2) > Eps
+        if abs(Eta_e_y(1) - eta2) > Eps
             xi2 = linspace(Xi_eSub(1)+Eps,Xi_eSub(2)-Eps,100).';
             yy = evaluateNURBS_2ndDeriv(nurbs, [xi2,eta2(ones(100,1))]);
             pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
@@ -375,19 +390,25 @@ else
            mean(Xi_eSubArr(1:2)), mean(Eta_eSubArr(2:3));
            mean(Xi_eSubArr(2:3)), mean(Eta_eSubArr(2:3));
            XI(:),ETA(:)];
-    y = evaluateNURBS_2ndDeriv(nurbs, pts);
-    II = reshape(5:13,3,3).';
-    counter = 1;
+    y_temp = evaluateNURBS_2ndDeriv(nurbs, pts);
+    cntr = 1;
     for j = 1:2
         for i = 1:2
-            I = II(i:i+1,j:j+1);
-            h = max([norm(y(I(1),:)-y(I(4),:)), norm(y(I(2),:)-y(I(3),:))]);
-            [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,y(counter,:),Xi_e,Eta_e,Xi_eSubArr(i:i+1),Eta_eSubArr(j:j+1),pD,nurbs,p_xi,p_eta,xi,eta,w);
-            counter = counter + 1;
+            corner_i = indexMap(i:i+1,j:j+1);
+            h = max([norm(y_temp(corner_i(1),:)-y_temp(corner_i(4),:)), norm(y_temp(corner_i(2),:)-y_temp(corner_i(3),:))]);
+            x_5 = y_temp(cntr,:);
+            Xi_eSub = Xi_eSubArr(i:i+1);
+            Eta_eSub = Eta_eSubArr(j:j+1);
+            adaptiveQuad();
+            cntr = cntr + 1;
         end
     end
 end
-
+% if numel(xi_y) > 1000
+%     keyboard
+% end
+end
+end
 % 
 % 
 % function [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,x_5,Xi_e,Eta_e,pD,nurbs,p_xi,p_eta)

@@ -633,12 +633,6 @@ elseif strcmp(nurbs.type, '3Dsurface')
         Y = cell(noElems,1);
         Z = cell(noElems,1);
         C = cell(noElems,1);
-        for e = 1:noElems
-            X{e} = zeros(400,400);
-            Y{e} = zeros(400,400);
-            Z{e} = zeros(400,400);
-            C{e} = zeros(400,400);
-        end
         hold on
 %         parfor e = 1:noElems
         for e = 1:noElems
@@ -674,9 +668,11 @@ elseif strcmp(nurbs.type, '3Dsurface')
             Z{e} = reshape(v(:,3),noXiValues,noEtaValues); 
             if plotSolution
                 C{e} = reshape(colorFun(v),noXiValues,noEtaValues);
+    %             C{e} = zeros(noXiValues,noEtaValues);
+                maxC(e) = max(max(C{e}));
+            else
+                maxC(e) = NaN;
             end
-%             C{e} = zeros(noXiValues,noEtaValues);
-            maxC(e) = max(max(C{e}));
         end
         for e = 1:noElems
             if plotSolution

@@ -19,6 +19,7 @@ applyLoad = 'radialPulsation';
 method = {'BEM'};
 formulation = {'CCBIE'};
 M = 1:2;
+extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
 storeSolution = 0;
 storeFullVarCol = 0;
 degree = [2,6];

@@ -8,7 +8,7 @@ for study_i = 1:numel(studies)
                      'axisType',        'plot', ... 
                      'lineStyle',       '-', ... 
                      'xLoopName',       'f', ...
-                     'subFolderName',   '../results/S1_sweep_BEM', ...
+                     'subFolderName',   '../results/articleBEM_S1_sweep', ...
                      'legendEntries',   {{'method','M','parm','formulation'}}, ...
                      'noXLoopPrms',     any(strcmp(study.loopParameters,'f'))); 
     figure(2)
@@ -55,10 +55,10 @@ eigenValues = [  pi  % Analytical eigenvalues of the interior Dirichlet sphere e
                ]';
 for i = 1:numel(eigenValues)
     yLim = ylim;
-    if i < 10
-        color = 'red';
-    else
+    if i <= 10
         color = 'blue';
+    else
+        color = 'red';
     end
     plot([1,1]*eigenValues(i), yLim,'--','color',color)
 end

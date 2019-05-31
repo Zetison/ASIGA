@@ -42,6 +42,7 @@ else
 %     noPts = 100;
     delta = 10/noPts*3;
     k = linspace(0.01,10,noPts);
+    k = [k, linspace(0.01,delta/2,round(noPts/10))];
     for i = 1:numel(eigenValues)
         k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
     end
