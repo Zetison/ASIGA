@@ -224,7 +224,7 @@ else
             W2D_1 = W2D_1(:);
             W2D_1 = W2D_1*J_2_y;
         case 'Adaptive'
-            [xi_y,eta_y,W2D_1,pD] = adaptiveQuad(x,agpBEM,Q,W,diagsMax(e_y),centerPts(e_y,:),Xi_e_y,Eta_e_y,Xi_e_y,Eta_e_y,pD,patches{patch_y}.nurbs,p_xi,p_eta);
+            [xi_y,eta_y,W2D_1,pD] = adaptiveQuad(x,agpBEM,Q,W,diagsMax(e_y),centerPts(e_y,:),Xi_e_y,Eta_e_y,pD,patches{patch_y}.nurbs,p_xi,p_eta);
     end
     noGp = size(xi_y,1);
 
@@ -326,13 +326,9 @@ else
     integrals{1} = integrals{1} + sum(dPhi_0dny_.*fact_y); 
 end
 
-function [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,x_5,Xi_e,Eta_e,Xi_eSub,Eta_eSub,pD,nurbs,p_xi,p_eta,xi,eta,w)
+function [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,x_5,Xi_e,Eta_e,Xi_eSub,Eta_eSub,pD,nurbs,p_xi,p_eta)
 
-if nargin < 15
-    xi = [];
-    eta = [];
-    w = [];
-end
+
 l = norm(x-x_5);
 n_div = agpBEM*h/l + 1;
 if n_div < 2
@@ -370,23 +366,113 @@ else
     Xi_eSubArr = [Xi_eSub(1), mean(Xi_eSub), Xi_eSub(2)];
     Eta_eSubArr = [Eta_eSub(1), mean(Eta_eSub), Eta_eSub(2)];
     [XI,ETA] = meshgrid(Xi_eSubArr,Eta_eSubArr);
-    pts = [mean(Xi_eSubArr(1:2)), mean(Eta_eSubArr(1:2));
+    pts = [XI(:),ETA(:);
+           mean(Xi_eSubArr(1:2)), mean(Eta_eSubArr(1:2));
            mean(Xi_eSubArr(2:3)), mean(Eta_eSubArr(1:2));
            mean(Xi_eSubArr(1:2)), mean(Eta_eSubArr(2:3));
-           mean(Xi_eSubArr(2:3)), mean(Eta_eSubArr(2:3));
-           XI(:),ETA(:)];
+           mean(Xi_eSubArr(2:3)), mean(Eta_eSubArr(2:3))];
     y = evaluateNURBS_2ndDeriv(nurbs, pts);
-    II = reshape(5:13,3,3).';
-    counter = 1;
-    for j = 1:2
-        for i = 1:2
-            I = II(i:i+1,j:j+1);
-            h = max([norm(y(I(1),:)-y(I(4),:)), norm(y(I(2),:)-y(I(3),:))]);
-            [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,y(counter,:),Xi_e,Eta_e,Xi_eSubArr(i:i+1),Eta_eSubArr(j:j+1),pD,nurbs,p_xi,p_eta,xi,eta,w);
+    for i = 1:2
+        for j = 1:2
+            h = max([norm(y(1,:)-y(4,:)), norm(y(2,:)-y(3,:))]);
+            x_5 = y;
+            [xi,eta,w,pD] = adaptiveQuad(x,agpBEM,Q,W,h,y(counter,:),Xi_e,Eta_e,Xi_eSubArr(i:i+1),Eta_eSubArr(i:i+1),pD,nurbs,p_xi,p_eta);
             counter = counter + 1;
         end
     end
 end
+
+while ~resolved
+    noSubElems = 2^level;
+    E = reshape(1:noSubElems^2,noSubElems,noSubElems);
+    E1 = E(1:2:noSubElems-1,2:2:noSubElems);
+    E2 = E(1:2:noSubElems-1,1:2:noSubElems-1);
+    E3 = E(2:2:noSubElems,1:2:noSubElems-1);
+    E4 = E(2:2:noSubElems,2:2:noSubElems);
+    subElemMap = [E2(:),E3(:),E1(:),E4(:)];
+    resolved = true;
+    counter = 0;
+    refineElements = zeros(4*noElementsToRefinePrev,1);
+    for i = 1:noElementsToRefinePrev
+        e_sub = refineElementsPrev(i);
+        l = norm(x-x_5(i,:));
+        n_div = agpBEM*h(i)/l + 1;
+
+    end
+    noElementsToRefinePrev = counter;
+    refineElementsPrev = refineElements;
+    
+    if ~resolved % compute data for next level
+        if level > 15
+            error(['x = ' num2str(x)])
+        end
+        noNodes = 2^level+1;
+        I = reshape(1:noNodes^2,noNodes,noNodes);
+        I1 = I(1:noNodes-1,2:noNodes);
+        I2 = I(1:noNodes-1,1:noNodes-1);
+        I3 = I(2:noNodes,1:noNodes-1);
+        I4 = I(2:noNodes,2:noNodes);
+        elems = refineElements(1:counter);
+        xi_t = linspace(-1,1,noNodes).';
+        eta_t = linspace(-1,1,noNodes).';
+        elRangeXi_subTemp = parent2ParametricSpace(Xi_e, [xi_t(mod(I2(elems)-1,noNodes)+1), xi_t(mod(I3(elems)-1,noNodes)+1)]);
+        elRangeEta_subTemp = parent2ParametricSpace(Eta_e, [eta_t(floor((I2(elems)-1)/noNodes)+1), eta_t(floor((I1(elems)-1)/noNodes)+1)]);
+        indices = unique([I1(elems); I2(elems); I3(elems); I4(elems)]);
+        xi = [parent2ParametricSpace(Xi_e, xi_t(mod(indices-1,noNodes)+1)); mean(elRangeXi_subTemp,2)];
+        eta = [parent2ParametricSpace(Eta_e, eta_t(floor((indices-1)/noNodes)+1)); mean(elRangeEta_subTemp,2)];
+        y = evaluateNURBS_2ndDeriv(nurbs, [xi,eta]);
+        yy = zeros(noNodes^2,3);
+        yy(indices,:) = y(1:end-counter,:);
+        h = max([norm2(yy(I1(elems),:)-yy(I3(elems),:)), norm2(yy(I2(elems),:)-yy(I4(elems),:))],[],2);
+        x_5 = y(end-counter+1:end,:);
+    end
+    level = level + 1;
+end
+noSubElemsTot = counter2;
+n_divArr = n_divArr(1:noSubElemsTot);
+xi = cell(noSubElemsTot,1);
+eta = cell(noSubElemsTot,1);
+w = cell(noSubElemsTot,1);
+counter = 1;
+for i = 1:noSubElemsTot
+    n_div = n_divArr(i);
+
+    Xi_e_y = elRangeXi_sub(i,:);
+    Eta_e_y = elRangeEta_sub(i,:);
+    n_qp_xi = round((p_xi + 1)*n_div);
+    n_qp_eta = round((p_eta + 1)*n_div);
+    
+    Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
+    Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
+    Q_eta = Q_eta(:);
+    W2D_1 = W{n_qp_xi}*W{n_qp_eta}.';
+    W2D_1 = W2D_1(:);
+            
+    xi{i} = parent2ParametricSpace(Xi_e_y, Q_xi);
+    eta{i} = parent2ParametricSpace(Eta_e_y, Q_eta);
+    w{i} = W2D_1*0.25*(Xi_e_y(2)-Xi_e_y(1))*(Eta_e_y(2)-Eta_e_y(1));
+    counter = counter+1;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if pD.plotGP
+        Eps = 100*eps;
+        xi2 = Xi_e_y(1);
+        if abs(Xi_e(1) - xi2) > Eps
+            eta2 = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,100).';
+            yy = evaluateNURBS_2ndDeriv(nurbs, [xi2(ones(100,1)),eta2]);
+            pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
+        end
+        eta2 = Eta_e_y(1);
+        if abs(Eta_e(1) - eta2) > Eps
+            xi2 = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,100).';
+            yy = evaluateNURBS_2ndDeriv(nurbs, [xi2,eta2(ones(100,1))]);
+            pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
+        end
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+end
+xi = cell2mat(xi);
+eta = cell2mat(eta);
+w = cell2mat(w);
 
 % 
 % 

@@ -22,6 +22,7 @@ M = 1:2;
 storeSolution = 0;
 storeFullVarCol = 0;
 degree = [2,6];
+degree = 6;
 loopParameters = {'method','formulation','M','degree'};
 collectIntoTasks
 
