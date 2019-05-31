@@ -349,7 +349,7 @@ end
 function adaptiveQuad(recursionLevel)
 
 if recursionLevel > 100
-    error(['Problems arise around x = ' num2str(x)])
+    warning(['Problems arise around x = ' num2str(x)])
 end
 l = norm(x-x_5);
 n_div = agpBEM*h/l + 1;

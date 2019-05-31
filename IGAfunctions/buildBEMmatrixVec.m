@@ -26,7 +26,7 @@ model = varCol.model;
 
 quadMethodBEM = varCol.quadMethodBEM;
 
-Eps = 10*eps;
+Eps = 100*eps;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -174,17 +174,15 @@ plot_GP = 0;
 % pD = plotBEMGeometry(patches,plot_GP,10,0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if plot_GP
-    A = complex(zeros(5, noDofs));
-    FF = complex(zeros(5, no_angles));
-else
-    A = complex(zeros(n_cp, noDofs));
-    FF = complex(zeros(n_cp, no_angles));
-end
+A = complex(zeros(1000, noDofs));
+FF = complex(zeros(1000, no_angles));
+% A = complex(zeros(n_cp, noDofs));
+% FF = complex(zeros(n_cp, no_angles));
 totNoQP = 0;
 totNoQPprev = 0;
 % for i = 3:n_cp
 % for i = 1:n_cp
+% for i = 650:n_cp
 parfor i = 1:n_cp
 % for i = [354,317,319,392]
 % for i = 3207:n_cp % BCA rear sail
@@ -291,9 +289,11 @@ parfor i = 1:n_cp
     if plot_GP
         pD = plotGP(pD,x,'blue');
     end
-    
     [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
     for e_y = 1:noElems  
+%         if e_y == 32
+%             keyboard
+%         end
         [BIE, integrals, FF_temp, sctr_y, noGp, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,xi_x,eta_x,adjacentElements,constants,psiType,useRegul,...
