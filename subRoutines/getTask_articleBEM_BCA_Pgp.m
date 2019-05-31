@@ -4,10 +4,7 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 
 model = 'BCA_P'; % BeTSSi submarine
 coreMethod = 'IGA';
-
-% alpha_s = 270*pi/180;
-alpha_s = 240*pi/180;
-beta_s = 0*pi/180;        
+   
 plot3Dgeometry = 0;
 plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 
@@ -33,12 +30,12 @@ loopParameters = {'method','degree','extraGP','extraGPBEM','agpBEM'};
 degree = 4;
 
 extraGP = 0; % extra quadrature points
-extraGPBEM = 0; % extra quadrature points
-agpBEM = [0.25,0.5,1,1.5,2,2.5,3];
+extraGPBEM = 32; % extra quadrature points
+agpBEM = [0.2,0.4,0.6,0.8,1,1.2,1.4];
 collectIntoTasks
 
-% extraGP = [0,4];
-% extraGPBEM = 0;
-% method = {'BA'};
-% formulation = 'SL2E';
-% collectIntoTasks
+agpBEM = agpBEM([1,end]);
+extraGPBEM = NaN;
+method = {'BA'};
+formulation = 'SL2E';
+collectIntoTasks

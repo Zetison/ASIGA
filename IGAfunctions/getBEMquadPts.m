@@ -348,12 +348,9 @@ end
 
 function adaptiveQuad(recursionLevel)
 
-if recursionLevel > 100
-    warning(['Problems arise around x = ' num2str(x)])
-end
 l = norm(x-x_5);
 n_div = agpBEM*h/l + 1;
-if n_div < 2 || recursionLevel > 200
+if n_div < 2 % || recursionLevel > 200
     n_qp_xi = round((p_xi + 1)*n_div);
     n_qp_eta = round((p_eta + 1)*n_div);
     n_qp = n_qp_xi*n_qp_eta;
