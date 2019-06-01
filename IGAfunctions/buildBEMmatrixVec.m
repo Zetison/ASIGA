@@ -26,7 +26,7 @@ model = varCol.model;
 
 quadMethodBEM = varCol.quadMethodBEM;
 
-Eps = 100*eps;
+Eps = 1e4*eps;
 
 k = varCol.k;
 alpha = 1i/k;

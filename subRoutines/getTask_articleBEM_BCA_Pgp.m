@@ -36,7 +36,8 @@ agpBEM = [0.2,0.3,0.4,0.5,0.6,0.7,0.8];
 collectIntoTasks
 
 agpBEM = agpBEM([1,end]);
-extraGPBEM = NaN;
+extraGPBEM = extraGPBEM([1,end]);
 method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks
+
