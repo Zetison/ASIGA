@@ -20,7 +20,7 @@ calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 % beta = 0;
 
-loopParameters = {'M','parm','method','formulation','parm'};
+loopParameters = {'M','parm','method','formulation'};
 
 % applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
 collectIntoTasks
