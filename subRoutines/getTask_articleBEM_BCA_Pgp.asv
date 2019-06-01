@@ -22,21 +22,20 @@ BC = 'NBC';
 
 applyLoad = 'radialPulsation';
 method = {'BEM'};
-formulation = {'CCBIE','CRCBIE1','CRCBIE3'};
+formulation = 'CCBIE';
 M = 1;
 storeSolution = false;
 storeFullVarCol = false;
-loopParameters = {'method','degree','extraGPBEM','formulation','agpBEM'};
-degree = [2,6];
+loopParameters = {'method','degree','extraGP','extraGPBEM','agpBEM'};
+degree = 4;
 
-runTasksInParallel = false; % extra quadrature points
 extraGP = 0; % extra quadrature points
-extraGPBEM = [4,8,16,32]; % extra quadrature points
-agpBEM = [0.2,0.3,0.4,0.5,0.6,0.7,0.8];
+extraGPBEM = 32; % extra quadrature points
+agpBEM = [0.2,0.3,0.4,0.5,0.6,0.8];
 collectIntoTasks
 
 agpBEM = agpBEM([1,end]);
 extraGPBEM = NaN;
 method = {'BA'};
-formulation = {'SL2E'};
+formulation = 'SL2E';
 collectIntoTasks

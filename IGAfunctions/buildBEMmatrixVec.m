@@ -174,10 +174,10 @@ plot_GP = 0;
 % pD = plotBEMGeometry(patches,plot_GP,10,0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A = complex(zeros(1000, noDofs));
-FF = complex(zeros(1000, no_angles));
-% A = complex(zeros(n_cp, noDofs));
-% FF = complex(zeros(n_cp, no_angles));
+% A = complex(zeros(1000, noDofs));
+% FF = complex(zeros(1000, no_angles));
+A = complex(zeros(n_cp, noDofs));
+FF = complex(zeros(n_cp, no_angles));
 totNoQP = 0;
 totNoQPprev = 0;
 % for i = 3:n_cp
@@ -186,8 +186,9 @@ totNoQPprev = 0;
 parfor i = 1:n_cp
 % for i = [354,317,319,392]
 % for i = 3207:n_cp % BCA rear sail
-% for i = 3456:n_cp %  BCA side sail
-% for i = 319
+% for i = 3456:n_cp %  BCA side sail p = 2
+% for i = 14472:n_cp
+%     i
 % for i = 1:n_cp
 %     totArea = 0;
     if ~plot_GP % to avoid Matlab bug
@@ -283,6 +284,11 @@ parfor i = 1:n_cp
         v_1 = NaN;
         v_2 = NaN;
     end
+%     if x(1) < -15.9 && x(1) > -17 && x(2) < 1.2 && x(2) > 1.19 && abs(x(3) - 4) < 1e6*eps
+%         keyboard
+%     else
+%         continue
+%     end
     [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k,model);
     
     FF_temp = complex(zeros(1, no_angles));
@@ -304,6 +310,13 @@ parfor i = 1:n_cp
         end
         totNoQP = totNoQP + noGp;
     end
+    if plot_GP
+        figureFullScreen(gcf)
+%         totNoQP-totNoQPprev
+%         totNoQPprev = totNoQP;
+%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
+        keyboard
+    end
     R_xScaled = getR_x_Coeff(R_x,useEnrichedBfuns,k,d_vec,x,useRegul,integrals,sgn,constants,...
                     psiType,useCBIE,useHBIE,dXIdv,dR_xdxi,dR_xdeta,v_1,v_2,alpha);
     for j = 1:n_en
@@ -312,13 +325,6 @@ parfor i = 1:n_cp
     A(i,:) = A_row;
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
-    if plot_GP
-        figureFullScreen(gcf)
-%         totNoQP-totNoQPprev
-%         totNoQPprev = totNoQP;
-%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
-        keyboard
-    end
 end
 
 % totNoQP

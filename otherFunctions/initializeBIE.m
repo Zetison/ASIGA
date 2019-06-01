@@ -4,8 +4,10 @@ switch psiType
         switch model
             case {'Cube','Cube_P'}
                 x1 = zeros(size(x));
-            otherwise
+            case {'S1','Torus'}
                 x1 = x-nx;
+            otherwise
+                x1 = zeros(size(x));
         end
         C1 = norm(x-x1);
         C2 = dot(x-x1, nx);
@@ -15,9 +17,11 @@ switch psiType
             case {'Cube','Cube_P'}
                 x1 = zeros(size(x));
                 x2 = 0.5*x;
-            otherwise
+            case {'S1','Torus'}
                 x1 = x - 0.5*nx;
                 x2 = x - nx;
+            otherwise
+                x1 = zeros(size(x));
         end
         r1x = norm(x1-x);
         r2x = norm(x2-x);

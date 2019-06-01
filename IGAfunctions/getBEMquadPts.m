@@ -259,7 +259,9 @@ else
 end
 y = R_y*pts_y;
 if pD.plotGP
-    pD = plotGP(pD,y(y(:,1) < -54,:),'red');
+%     indices = y(:,1) < -54;
+    indices = and(and(and(and(y(:,1) > -25,y(:,1) < -11.8), y(:,3) > 2), y(:,3) < 6),y(:,2) > 0);
+    pD = plotGP(pD,y(indices,:),'red');
 end
 
 if useEnrichedBfuns

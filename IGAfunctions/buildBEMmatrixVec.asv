@@ -26,7 +26,7 @@ model = varCol.model;
 
 quadMethodBEM = varCol.quadMethodBEM;
 
-Eps = 10*eps;
+Eps = 100*eps;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -170,28 +170,25 @@ n_en = (p_xi+1)*(p_eta+1);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-plot_GP = 0;
-% pD = plotBEMGeometry(patches,plot_GP,10,0);
+plot_GP =0;
+pD = plotBEMGeometry(patches,plot_GP,10,0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-A = complex(zeros(5, noDofs));
-FF = complex(zeros(5, no_angles));
-if plot_GP
-    A = complex(zeros(5, noDofs));
-    FF = complex(zeros(5, no_angles));
-else
-    A = complex(zeros(n_cp, noDofs));
-    FF = complex(zeros(n_cp, no_angles));
-end
+A = complex(zeros(1000, noDofs));
+FF = complex(zeros(1000, no_angles));
+% A = complex(zeros(n_cp, noDofs));
+% FF = complex(zeros(n_cp, no_angles));
 totNoQP = 0;
 totNoQPprev = 0;
 % for i = 3:n_cp
-for i = 1:n_cp
+% for i = 1:n_cp
+% for i = 650:n_cp
 % parfor i = 1:n_cp
 % for i = [354,317,319,392]
 % for i = 3207:n_cp % BCA rear sail
-% for i = 3456:n_cp %  BCA side sail
-% for i = 319
+% for i = 3456:n_cp %  BCA side sail p = 2
+for i = 12741:n_cp
+%     i
 % for i = 1:n_cp
 %     totArea = 0;
     if ~plot_GP % to avoid Matlab bug
@@ -287,15 +284,22 @@ for i = 1:n_cp
         v_1 = NaN;
         v_2 = NaN;
     end
+    if x(1) < -15.9 && x(1) > -16.1 && x(2) < 1.2 && x(2) > 1.19 && abs(x(3) - 4) < 1e6*eps
+        keyboard
+    else
+        continue
+    end
     [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k,model);
     
     FF_temp = complex(zeros(1, no_angles));
     if plot_GP
         pD = plotGP(pD,x,'blue');
     end
-    
     [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
     for e_y = 1:noElems  
+%         if e_y == 32
+%             keyboard
+%         end
         [BIE, integrals, FF_temp, sctr_y, noGp, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,xi_x,eta_x,adjacentElements,constants,psiType,useRegul,...
@@ -306,6 +310,13 @@ for i = 1:n_cp
         end
         totNoQP = totNoQP + noGp;
     end
+    if plot_GP
+        figureFullScreen(gcf)
+%         totNoQP-totNoQPprev
+%         totNoQPprev = totNoQP;
+%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
+        keyboard
+    end
     R_xScaled = getR_x_Coeff(R_x,useEnrichedBfuns,k,d_vec,x,useRegul,integrals,sgn,constants,...
                     psiType,useCBIE,useHBIE,dXIdv,dR_xdxi,dR_xdeta,v_1,v_2,alpha);
     for j = 1:n_en
@@ -314,13 +325,6 @@ for i = 1:n_cp
     A(i,:) = A_row;
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
-    if plot_GP
-        figureFullScreen(gcf)
-%         totNoQP-totNoQPprev
-%         totNoQPprev = totNoQP;
-%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
-        keyboard
-    end
 end
 
 % totNoQP
