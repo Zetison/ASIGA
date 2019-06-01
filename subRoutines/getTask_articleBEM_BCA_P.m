@@ -8,7 +8,7 @@ plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 
 BC = 'NBC';
 
-f = 1e2; %[1e2 5e2 1e3];             % Frequency
+f = [1e2 1e3];             % Frequency
 plotResultsInParaview = 0;
 plotMesh              = 0;	% Create additional Paraview files to visualize IGA mesh
 calculateSurfaceError = true;
@@ -18,18 +18,18 @@ computeCondNumber = true;
 applyLoad = 'radialPulsation';
 method = {'BEM'};
 formulation = {'CCBIE'};
-M = 1;
-extraGPBEM = 50; % extra quadrature points around singularities for BEM formulations
+M = [1,2];
+extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
 storeSolution = 0;
 storeFullVarCol = 0;
-% degree = [2,6];
-degree = 6;
-loopParameters = {'method','formulation','M','degree'};
+degree = [2,6];
+% degree = 6;
+loopParameters = {'method','degree','formulation','M','f'};
 collectIntoTasks
 
 method = {'BA'};
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 
 

@@ -325,7 +325,10 @@ switch options.noXLoopPrms
             y_ref = y_ref(1:sizes(idx));
             x = permute(x,[noParms,1:noParms-1]);
             x = x(1:sizes(idx));
-            printResultsToFile2([subFolderName '/analytic'], x, y_ref, {fileDataHeaderX}, {yname}, study.tasks(i).task);
+            if isrow(y_ref)
+                y_ref = y_ref.';
+            end
+            printResultsToFile2([subFolderName '/analytic'], x.', y_ref, {fileDataHeaderX}, {yname}, study.tasks(i).task);
         end
 end
 

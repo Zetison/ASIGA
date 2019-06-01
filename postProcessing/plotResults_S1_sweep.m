@@ -10,7 +10,7 @@ for study_i = 1:numel(studies)
                      'xLoopName',       'f', ...
                      'subFolderName',   '../results/_studies/S1_sweep/', ...
                      'legendEntries',   {{'method','M','parm'}}, ...
-                     'noXLoopPrms',     0); 
+                     'noXLoopPrms',     1); 
 
     figure(2)
     printResultsToTextFiles(study,options)
@@ -27,8 +27,8 @@ for study_i = 1:numel(studies)
     figure(5)
     printResultsToTextFiles(study,options)
 
-%             options.yname = 'surfaceError';
-%             
-%             figure(6)
-%             printResultsToTextFiles(study,options)
+    options.yname = 'surfaceError';
+
+    figure(6)
+    printResultsToTextFiles(study,options)
 end
