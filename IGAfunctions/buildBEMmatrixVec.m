@@ -183,13 +183,13 @@ totNoQPprev = 0;
 % for i = 3:n_cp
 % for i = 1:n_cp
 % for i = 650:n_cp
-parfor i = 1:n_cp
+% parfor i = 1:n_cp
 % for i = [354,317,319,392]
 % for i = 3207:n_cp % BCA rear sail
 % for i = 3456:n_cp %  BCA side sail p = 2
 % for i = 14472:n_cp
 %     i
-% for i = 1:n_cp
+for i = 2929
 %     totArea = 0;
     if ~plot_GP % to avoid Matlab bug
         pD.plotGP = false;
@@ -323,7 +323,7 @@ parfor i = 1:n_cp
         A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_xScaled(j);
     end     
     if any(isinf(A_row)) || any(isnan(A_row))
-        error(['Problems at i = ' num2str(i)])
+        warning(['Problems at i = ' num2str(i)])
     end
     A(i,:) = A_row;
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
