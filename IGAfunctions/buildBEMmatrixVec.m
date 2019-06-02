@@ -323,6 +323,7 @@ for i = 2929
         A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_xScaled(j);
     end     
     if any(isinf(A_row)) || any(isnan(A_row))
+        keyboard
         warning(['Problems at i = ' num2str(i)])
     end
     A(i,:) = A_row;
