@@ -321,7 +321,10 @@ parfor i = 1:n_cp
                     psiType,useCBIE,useHBIE,dXIdv,dR_xdxi,dR_xdeta,v_1,v_2,alpha);
     for j = 1:n_en
         A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_xScaled(j);
-    end        
+    end     
+    if any(isinf(A_row)) || any(isnan(A_row))
+        error(['Problems at i = ' num2str(i)])
+    end
     A(i,:) = A_row;
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
