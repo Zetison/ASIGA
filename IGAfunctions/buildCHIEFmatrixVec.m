@@ -69,7 +69,7 @@ if exteriorProblem
     Xarr = linspace(-0.5,1,3)/4;
     Yarr = linspace(-0.5,1,3)/4;
     Zarr = linspace(-0.5,1,3)/4;
-    [X,Y,Z] = meshgrid(Xarr,Yarr,Zarr);
+    [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
     cp = [X(:),Y(:), Z(:)];
 %     cp = [0.49,0,0;
 %           0,0,0];

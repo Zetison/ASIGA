@@ -404,6 +404,9 @@ for i_k = 1:size(k,2)
             end
             
             A(:,dofsToRemove) = [];
+            if any(isinf(A(:))) || any(isnan(A(:)))
+                warning('An element of A is NaN or Inf')
+            end
             noDofs_tot = varCol.noDofs;
             varCol.timeBuildSystem = toc;
             if ~runTasksInParallel

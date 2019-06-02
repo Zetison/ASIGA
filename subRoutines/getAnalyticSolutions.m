@@ -64,7 +64,7 @@ switch applyLoad
                 Xarr = linspace(-1,1,3)*a/4;
                 Yarr = linspace(-1,1,3)*a/4;
                 Zarr = linspace(-1,1,3)*a/4;
-                [X,Y,Z] = meshgrid(Xarr,Yarr,Zarr);
+                [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
                 y = [X(:),Y(:), Z(:)];
             otherwise
                 y = [0,0,0];
