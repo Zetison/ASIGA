@@ -1,3 +1,5 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Main file of ASIGA
 if exist('../availableStudies.m', 'file')
     clear all %#ok
     printAndPlotResults = true;
@@ -5,6 +7,7 @@ if exist('../availableStudies.m', 'file')
 else
     printAndPlotResults = false;
 end
+printAndPlotResults = false;
 studies = getTasks(studyName);
 startMatlabPool
 % Create folders

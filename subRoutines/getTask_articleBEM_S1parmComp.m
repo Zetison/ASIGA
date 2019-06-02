@@ -7,7 +7,9 @@ k = 1;
 f = k*1500/(2*pi);
 N = 6;
 M = 1:6;
+% M = 1;
 parm = [1,2];
+% parm = 2;
 degree = 4;
 
 alpha_s = 240*pi/180;
@@ -23,7 +25,7 @@ calculateFarFieldPattern = 0;
 loopParameters = {'M','parm','method','formulation'};
 
 % applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
@@ -33,11 +35,12 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% extraGPBEM = 32; % extra quadrature points around singularities for BEM formulations
+% agpBEM = 2; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 method = {'BEM'};
-M = 1:6;
+formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
 % coreMethod = {'IGA', 'C0_IGA', 'hp_FEM','h_FEM'};
 % coreMethod = {'linear_FEM'};
-formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
 % formulation = {'CBM'};
 % formulation = {'CCBIE'};
 % formulation = {'CCBIE', 'CBM', 'CHBIE'};
@@ -46,6 +49,6 @@ formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
 % formulation = {'CCBIE'};
 % formulation = {'GCBIE'};
 % formulation = {'CCBIE', 'GCBIE', 'GBM'};
-
+useNeumannProj = false;
 
 collectIntoTasks
