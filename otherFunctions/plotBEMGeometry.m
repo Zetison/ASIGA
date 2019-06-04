@@ -10,16 +10,16 @@ if plotGP
     if plotGP
         close all
 %         for patch = 1:17
-        for patch = [189,191,220:228]
-%         for patch = 1:numel(patches)
+%         for patch = [189,191,220:228]
+        for patch = 1:numel(patches)
             plotNURBS(patches{patch}.nurbs,{'resolution',[npts npts], 'elementBasedSamples',true,'samplingDistance',0.1});
         end
         pD.h = gca;
         axis equal
         axis off
         set(gca, 'Color', 'none');
-        view(-100,20) % BeTSSi side part
-%         view(10,20) % getTask_articleBEM_S1_quadVis
+%         view(-100,20) % BeTSSi side part
+        view(10,20) % getTask_articleBEM_S1_quadVis
 %         view(0,-90)
 %         view(-90,0) % BeTSSi rear part
         drawnow

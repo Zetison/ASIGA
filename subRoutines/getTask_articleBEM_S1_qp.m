@@ -6,7 +6,7 @@ coreMethod = 'IGA';
 method = {'BEM'};
 formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CBM','CRCBIE1','CRCBIE2','CRCBIE3','GCBIE','GBM','GRCBIE1','GRCBIE2','GRCBIE3'};
-formulation = {'GBM'};
+formulation = {'GCBIE','GBM'};
 
 c_f = 1500;
 k = 1;
@@ -15,7 +15,7 @@ f = omega/(2*pi);
 
 Mend = 5;
 M = [1,Mend];
-% M = 3;
+M = 5;
 
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;

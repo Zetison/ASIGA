@@ -15,9 +15,9 @@ for study_i = 1:numel(studies)
 
     figure(2)
     printResultsToTextFiles(study,options)
-% 
-%     options.xname = 'nepw';
-%     options.yScale = 1;
+
+%     options.xLoopName = 'extraGPBEM';
+%     options.legendEntries = {'extraGP','agpBEM','colBEM_C0','formulation','quadMethodBEM'};
 %     figure(3)
 %     printResultsToTextFiles(study,options)
 

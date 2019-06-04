@@ -3,7 +3,7 @@ function [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, pD
                 x,nx,xi_x_tArr,eta_x_tArr,adjacentElements,constants,psiType,useRegul,...
                 p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                 patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM,pD)
-if nargin < 42
+if nargin < 44
     pD.plotGP = false;
 end
 
@@ -140,7 +140,7 @@ if collocationPointIsInElement % use polar integration
             p_max = max(p_xi,p_eta);
 %             no_gpSource = p_max+1+50;
             no_gpSource = 2*(p_max+1);
-            n_div = ceil(sqrt(numel(W2D_2)/4)*thetas_m/(pi/2)/no_gpSource);
+            n_div = max([ones(1,4);round(sqrt(numel(W2D_2)/4)*thetas_m/(pi/2)/no_gpSource)],[],1);
 %             switch quadMethodBEM
 %                 case 'Adaptive'
 %                     no_gpSource = p_max+1;
@@ -156,7 +156,7 @@ if collocationPointIsInElement % use polar integration
 %                     n_div = max([ones(1,4);round(sqrt(numel(W2D_2)/4)*thetas_m/(pi/2)/no_gpSource)],[],1);
 %             end
 %             n_div   = round(sqrt(numel(W2D_2)/4)/(p_max+1)/2)*ones(1,4);
-            n_div_r = ceil(sqrt(numel(W2D_2)/4)/no_gpSource);
+            n_div_r = max(1,round(sqrt(numel(W2D_2)/4)/no_gpSource));
 
         %     n_qp_theta = round((p_max + 1)*n_div);
         %     n_qp_r = round((p_max + 1)*n_div_r);

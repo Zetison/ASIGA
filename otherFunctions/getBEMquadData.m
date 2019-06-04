@@ -7,10 +7,10 @@ switch quadMethodBEM
         load('integration/quadData_double','quadData')
         Q = quadData.Q;
         W = quadData.W;
-    case 'Adaptive'
-        load('integration/quadData_double','quadData')
-        Q = quadData.Q(1:(p_xi+1)*2);
-        W = quadData.W(1:(p_eta+1)*2);
     case 'Simpson'
         [Q,W] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
+    otherwise
+        load('integration/quadData_double','quadData')
+        Q = quadData.Q(1:(p_max+1)*2);
+        W = quadData.W(1:(p_max+1)*2);
 end

@@ -17,11 +17,12 @@ switch psiType
             case {'Cube','Cube_P'}
                 x1 = zeros(size(x));
                 x2 = 0.5*x;
-            case {'S1','Torus'}
+            case {'S1','S1_P','Torus'}
                 x1 = x - 0.5*nx;
                 x2 = x - nx;
             otherwise
                 x1 = zeros(size(x));
+                x2 = ones(size(x))/2;
         end
         r1x = norm(x1-x);
         r2x = norm(x2-x);

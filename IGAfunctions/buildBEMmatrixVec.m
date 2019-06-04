@@ -171,25 +171,27 @@ n_en = (p_xi+1)*(p_eta+1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_GP = 0;
-% pD = plotBEMGeometry(patches,plot_GP,10,0);
+% pD = plotBEMGeometry(patches,plot_GP,100,1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % A = complex(zeros(1000, noDofs));
 % FF = complex(zeros(1000, no_angles));
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
+totNoQPnonPolar = 0;
 totNoQP = 0;
 totNoQPprev = 0;
 % for i = 3:n_cp
 % for i = 1:n_cp
 % for i = 650:n_cp
-% parfor i = 1:n_cp
-% for i = [354,317,319,392]
+parfor i = 1:n_cp
+% for i = [317,319,392,354]
+% for i = 317
 % for i = 3207:n_cp % BCA rear sail
 % for i = 3456:n_cp %  BCA side sail p = 2
 % for i = 14472:n_cp
 %     i
-for i = 2929
+% for i = 2929
 %     totArea = 0;
     if ~plot_GP % to avoid Matlab bug
         pD.plotGP = false;
@@ -297,16 +299,19 @@ for i = 2929
     end
     [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
     for e_y = 1:noElems  
-%         if e_y == 32
+%         if e_y == 1666
 %             keyboard
 %         end
-        [BIE, integrals, FF_temp, sctr_y, noGp, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
+        [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
-                x,nx,xi_x_tArr,eta_x_tArr,xi_x,eta_x,adjacentElements,constants,psiType,useRegul,...
+                x,nx,xi_x_tArr,eta_x_tArr,adjacentElements,constants,psiType,useRegul,...
                 p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                 patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM,pD);
         for j = 1:n_en
             A_row(sctr_y(j)) = A_row(sctr_y(j)) + BIE(j);
+        end
+        if ~collocationPointIsInElement
+            totNoQPnonPolar = totNoQPnonPolar + noGp;
         end
         totNoQP = totNoQP + noGp;
     end
@@ -314,22 +319,21 @@ for i = 2929
         figureFullScreen(gcf)
 %         totNoQP-totNoQPprev
 %         totNoQPprev = totNoQP;
-%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
-        keyboard
+        export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
+%         keyboard
     end
     R_xScaled = getR_x_Coeff(R_x,useEnrichedBfuns,k,d_vec,x,useRegul,integrals,sgn,constants,...
                     psiType,useCBIE,useHBIE,dXIdv,dR_xdxi,dR_xdeta,v_1,v_2,alpha);
     for j = 1:n_en
         A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_xScaled(j);
     end     
-    keyboard
-    if any(isinf(A_row)) || any(isnan(A_row))
-        warning(['Problems at i = ' num2str(i)])
-    end
+%     if any(isinf(A_row)) || any(isnan(A_row))
+%         warning(['Problems at i = ' num2str(i)])
+%     end
     A(i,:) = A_row;
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
 end
 
 % totNoQP
-varCol.totNoQP = totNoQP;
+varCol.totNoQP = totNoQPnonPolar;
