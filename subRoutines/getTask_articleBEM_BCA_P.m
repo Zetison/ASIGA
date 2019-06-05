@@ -25,6 +25,7 @@ extraGPBEM = 200; % extra quadrature points around singularities for BEM formula
 storeSolution = 0;
 storeFullVarCol = 0;
 degree = [2,6];
+agpBEM = 3;
 % degree = 2;
 loopParameters = {'method','degree','formulation','M','f'};
 collectIntoTasks
