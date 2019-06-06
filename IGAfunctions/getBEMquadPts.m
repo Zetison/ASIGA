@@ -133,10 +133,13 @@ if collocationPointIsInElement % use polar integration
             diag_se2 = (1-xi_x_t)^2 + (eta_x_t+1)^2;
             diag_nw2 = (xi_x_t+1)^2 + (1-eta_x_t)^2;
             diag_sw2 = (xi_x_t+1)^2 + (eta_x_t+1)^2;
-            thetas_m(1) = acos((diag_ne2+diag_se2-2^2)/(2*sqrt(diag_ne2*diag_se2)));
-            thetas_m(2) = acos((diag_ne2+diag_nw2-2^2)/(2*sqrt(diag_ne2*diag_nw2)));
-            thetas_m(3) = acos((diag_sw2+diag_nw2-2^2)/(2*sqrt(diag_sw2*diag_nw2)));
-            thetas_m(4) = acos((diag_sw2+diag_se2-2^2)/(2*sqrt(diag_sw2*diag_se2)));
+            thetas_m(1) = (diag_ne2+diag_se2-2^2)/(2*sqrt(diag_ne2*diag_se2));
+            thetas_m(2) = (diag_ne2+diag_nw2-2^2)/(2*sqrt(diag_ne2*diag_nw2));
+            thetas_m(3) = (diag_sw2+diag_nw2-2^2)/(2*sqrt(diag_sw2*diag_nw2));
+            thetas_m(4) = (diag_sw2+diag_se2-2^2)/(2*sqrt(diag_sw2*diag_se2));
+            thetas_m(thetas_m < -1) = -1;
+            thetas_m(thetas_m > 1) = 1;
+            thetas_m = acos(thetas_m);
             p_max = max(p_xi,p_eta);
 %             no_gpSource = p_max+1+50;
             no_gpSource = 2*(p_max+1);
