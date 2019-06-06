@@ -27,7 +27,7 @@ M = 1;
 storeSolution = false;
 storeFullVarCol = false;
 loopParameters = {'method','degree','extraGPBEM','formulation','agpBEM'};
-degree = [2,6];
+degree = [2,5];
 
 runTasksInParallel = false; % extra quadrature points
 extraGP = 0; % extra quadrature points

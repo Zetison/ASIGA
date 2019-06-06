@@ -35,7 +35,7 @@ extraGP = 0;
 collectIntoTasks
 
 M = 1:2;
-degree = [2,4,6];
+degree = [2,5];
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
