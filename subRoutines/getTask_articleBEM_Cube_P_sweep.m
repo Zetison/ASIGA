@@ -6,7 +6,7 @@ coreMethod = 'IGA';
 % coreMethod = {'IGA'};
 method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'CCBIEC'};
-% formulation = {'CCBIE', 'CCBIEC'};
+% formulation = {'CCBIEC'};
 
 
 eigenValues = [];
@@ -31,9 +31,6 @@ k = sort(unique(k));
 % k = pi*sqrt(3);
 % k = pi*sqrt(6);
 f = k*1500/(2*pi);
-
-alpha_s = 240*pi/180;
-beta_s = 30*pi/180;  
 
 alpha = 240*pi/180;
 beta = 30*pi/180;   

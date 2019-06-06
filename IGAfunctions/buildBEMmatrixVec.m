@@ -286,11 +286,6 @@ parfor i = 1:n_cp
         v_1 = NaN;
         v_2 = NaN;
     end
-%     if x(1) < -15.9 && x(1) > -17 && x(2) < 1.2 && x(2) > 1.19 && abs(x(3) - 4) < 1e6*eps
-%         keyboard
-%     else
-%         continue
-%     end
     [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k,model);
     
     FF_temp = complex(zeros(1, no_angles));
@@ -299,9 +294,6 @@ parfor i = 1:n_cp
     end
     [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
     for e_y = 1:noElems  
-%         if e_y == 1666
-%             keyboard
-%         end
         [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,adjacentElements,constants,psiType,useRegul,...
@@ -319,7 +311,7 @@ parfor i = 1:n_cp
         figureFullScreen(gcf)
 %         totNoQP-totNoQPprev
 %         totNoQPprev = totNoQP;
-        export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
+%         export_fig(['../../graphics/BEM/S1_' num2str(i) '_extraGPBEM' num2str(extraGPBEM) '_agpBEM' num2str(agpBEM) '_' quadMethodBEM], '-png', '-transparent', '-r300')
 %         keyboard
     end
     R_xScaled = getR_x_Coeff(R_x,useEnrichedBfuns,k,d_vec,x,useRegul,integrals,sgn,constants,...
@@ -327,9 +319,6 @@ parfor i = 1:n_cp
     for j = 1:n_en
         A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_xScaled(j);
     end     
-%     if any(isinf(A_row)) || any(isnan(A_row))
-%         warning(['Problems at i = ' num2str(i)])
-%     end
     A(i,:) = A_row;
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
