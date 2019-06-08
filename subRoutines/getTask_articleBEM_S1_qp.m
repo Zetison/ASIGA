@@ -31,7 +31,7 @@ plot2Dgeometry = 0;
 plot3Dgeometry = 0;
 
 extraGP = 0; % extra quadrature points
-extraGPBEM = [0,4,8,16,32,64]; % extra quadrature points
+extraGPBEM = [0,4,8,16,32]; % extra quadrature points
 agpBEM = 0:0.5:1.5;
 % agpBEM = 3;
 colBEM_C0 = 0;
@@ -40,9 +40,16 @@ quadMethodBEM = {'Simpson'};
 loopParameters = {'extraGPBEM','agpBEM','M','degree','formulation','method','quadMethodBEM'};
 % collectIntoTasks
 
-agpBEM = 0.2:0.4:1.4;
+agpBEM = 0.2:0.1:0.7;
+extraGPBEM = 32; % extra quadrature points
 quadMethodBEM = {'Adaptive'};
 collectIntoTasks
+
+
+extraGPBEM = [0,1,2,4,8,16,32]; % extra quadrature points
+agpBEM = 0.7;
+collectIntoTasks
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 method = {'BA'};
 extraGPBEM = NaN;
