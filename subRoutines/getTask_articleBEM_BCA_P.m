@@ -21,12 +21,13 @@ method = {'BEM'};
 formulation = {'CCBIE'};
 M = [1,2];
 M = 1;
-extraGPBEM = 100; % extra quadrature points around singularities for BEM formulations
+extraGPBEM = 512; % extra quadrature points around singularities for BEM formulations
 storeSolution = 0;
 storeFullVarCol = 0;
 degree = [2,5];
-% agpBEM = 1.4;
-agpBEM = 3;
+degree = 5;
+agpBEM = 2;
+% agpBEM = 0.7;
 % degree = 2;
 loopParameters = {'method','degree','formulation','M','f'};
 collectIntoTasks
