@@ -12,7 +12,7 @@ plot3Dgeometry = 0;
 plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 
 % f = [5e2, 1e3]; %[1e2 5e2 1e3];             % Frequency
-f = 1e3; %[1e2 5e2 1e3];             % Frequency
+f = [1e2 1e3];             % Frequency
 alpha = (0:0.05:180)*pi/180;
 
 plotResultsInParaview = 0;
@@ -25,13 +25,11 @@ method = {'BEM'};
 % coreMethod = 'XI';
 formulation = {'CCBIE'};
 % formulation = {'CRCBIE'};
-M = 3;
-degree = 4:5;
+M = 1:3;
+degree = [2,5];
 storeSolution = 0;
 storeFullVarCol = 0;
 loopParameters = {'method','formulation','M','degree','f','formulation','scatteringCase'};
-extraGPBEM = 0;
-extraGP = 0;
 collectIntoTasks
 
 

@@ -24,7 +24,6 @@ wgts_y = weights(element2(e_y,:)); % New
 
 [collocationPointIsInElement,idx] = ismember(e_y,adjacentElements);
 
-noqpMax = numel(Q);
 if collocationPointIsInElement % use polar integration
     switch quadMethodBEM
         case 'Simpson'
@@ -441,7 +440,7 @@ end
 y = R_y*pts_y;
 if pD.plotGP
 %     indices = y(:,1) < -54;
-    indices = and(and(and(and(y(:,1) > -25,y(:,1) < -11.8), y(:,3) > 2), y(:,3) < 6),y(:,2) > 0);
+%     indices = and(and(and(and(y(:,1) > -25,y(:,1) < -11.8), y(:,3) > 2), y(:,3) < 6),y(:,2) > 0);
 %     pD = plotGP(pD,y(indices,:),'red');
     pD = plotGP(pD,y,'red');
 end
