@@ -1,6 +1,6 @@
 
 close all
-for study_i = 1:numel(studies)
+for study_i = [1,3]
     study = studies(study_i);
     options = struct('xname',           'agpBEM',  ...
                      'yname',           'surfaceError', ...
@@ -15,20 +15,20 @@ for study_i = 1:numel(studies)
 
     figure(2)
     printResultsToTextFiles(study,options)
-% 
-%     options.xname = 'nepw';
-%     options.yScale = 1;
-%     figure(3)
-%     printResultsToTextFiles(study,options)
+end
+for study_i = [2,3]
+    study = studies(study_i);
+    options = struct('xname',           'extraGPBEM',  ...
+                     'yname',           'surfaceError', ...
+                     'plotResults', 	1, ... 
+                     'printResults',	1, ... 
+                     'axisType',        'semilogy', ... 
+                     'lineStyle',       '*-', ... 
+                     'xLoopName',       'extraGPBEM', ...
+                     'subFolderName',   '../results/articleBEM_S1_qp', ...
+                     'legendEntries',   {{'agpBEM','extraGP','colBEM_C0','formulation','quadMethodBEM','degree','M'}}, ...
+                     'noXLoopPrms',     1); 
 
-%     options.xname = 'h_max';
-%     options.yScale = 1/100;
-% %     options.xScale = 0.2874/3.7417;
-%     figure(4)
-%     printResultsToTextFiles(study,options)
-% 
-%             options.xname = 'dofs';
-%             options.yname = 'cond_number';
-%             figure(4)
-%             printResultsToTextFiles(study,options)
+    figure(3)
+    printResultsToTextFiles(study,options)
 end
