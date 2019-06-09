@@ -6,7 +6,7 @@ coreMethod = 'IGA';
 method = {'BEM'};
 formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CBM','CRCBIE1','CRCBIE2','CRCBIE3','GCBIE','GBM','GRCBIE1','GRCBIE2','GRCBIE3'};
-formulation = {'GCBIE','GBM'};
+formulation = {'CCBIE','CBM','GCBIE','GBM'};
 
 c_f = 1500;
 k = 1;
