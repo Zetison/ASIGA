@@ -48,7 +48,6 @@ method = {'BEM'};
 % formulation = {'CCBIE', 'CHBIE', 'CBM'};
 formulation = {'CCBIE'};
 % formulation = 'CBM';
-colBEM_C0 = Inf;
 useNeumanProj = [0,1];
 % colBEM_C0 = 2;
 % extraGP = 2; % extra quadrature points

@@ -14,7 +14,7 @@ omega = k*c_f;
 f = omega/(2*pi); 
 
 Mend = 5;
-M = [1,Mend];
+M = [4,Mend];
 % M = 5;
 
 alpha_s = 240*pi/180;
@@ -30,28 +30,22 @@ calculateSurfaceError = 1;
 plot2Dgeometry = 0;
 plot3Dgeometry = 0;
 
-extraGP = 0; % extra quadrature points
-extraGPBEM = [0,4,8,16,32]; % extra quadrature points
-agpBEM = 0:0.5:1.5;
-% agpBEM = 3;
-colBEM_C0 = 0;
-
 loopParameters = {'extraGPBEM','agpBEM','M','degree','formulation','method','quadMethodBEM'};
 
 agpBEM = 0.2:0.1:0.7;
-extraGPBEM = 32; % extra quadrature points
+extraGPBEM = 100; % extra quadrature points
 quadMethodBEM = {'Adaptive'};
 collectIntoTasks
 
 
-extraGPBEM = [0,1,2,3,4,10,20,30,40,50,60]; % extra quadrature points
+extraGPBEM = [0,1,2,3,4,10:10:100]; % extra quadrature points
 agpBEM = 0.7;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 method = {'BA'};
 extraGPBEM = [extraGPBEM(1),extraGPBEM(end)];
-agpBEM = [agpBEM(1),agpBEM(end)];
+agpBEM = [0.2,0.7];
 formulation = {'SL2E'};
 coreMethod = 'IGA';
 collectIntoTasks

@@ -27,6 +27,7 @@ while exist(subFolderName, 'dir')
     subFolderName = [folderName '/' studyName num2str(i)];
 end
 mkdir(subFolderName);
+t_start_study = tic;
 
 for study_i = 1:numel(studies)    
     loopParameters = studies(study_i).loopParameters;
@@ -69,6 +70,7 @@ for study_i = 1:numel(studies)
         save([subFolderName '/_studies'], 'studies')
     end
 end
+fprintf('\n\nTotal time spent on study "%s": %12f seconds\n', studyName, toc(t_start_study))  
 
 plotFileName = ['plotResults_' studyName];
 if printAndPlotResults && exist(['postProcessing/' plotFileName], 'file')
