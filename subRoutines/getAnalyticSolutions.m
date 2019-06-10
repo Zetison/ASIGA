@@ -56,7 +56,8 @@ switch applyLoad
                                 1,-1,-1;
                                 -1,-1,-1];
             case 'Cube_P'
-                a = parms.a;
+%                 C_n = @(n) 1;
+%                 a = parms.a;
 %                 y = a/4*[1,0,0;
 %                          0,1,0;
 %                          0,0,1;

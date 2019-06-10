@@ -40,7 +40,7 @@ for study_i = 1:numel(studies)
 %         for i_task = 1:length(tasks)
         parfor i_task = 1:length(tasks)
             tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel,subFolderName);
-            fprintf('\nCompleted task %d/%d in study %d/%d\n\n', i_task, noTasks, study_i,length(studies)) 
+            fprintf('\nStudy %s: Completed task %d/%d in study %d/%d\n\n', studyName, i_task, noTasks, study_i,length(studies)) 
         end
         studies(study_i).tasks = tasks;
         studies(study_i).subFolderName = subFolderName;
@@ -57,7 +57,7 @@ for study_i = 1:numel(studies)
             end
             studies(study_i).tasks(i_task,1).task = tasks(i_task,1).task;
             studies(study_i).subFolderName = subFolderName;
-            fprintf('\nCompleted task %d/%d in study %d/%d\n\n', i_task, noTasks, study_i,length(studies)) 
+            fprintf('\nStudy %s: Completed task %d/%d in study %d/%d\n\n', studyName, i_task, noTasks, study_i,length(studies)) 
             save([subFolderName '/_studies'], 'studies')
         end
         if task.useROM
