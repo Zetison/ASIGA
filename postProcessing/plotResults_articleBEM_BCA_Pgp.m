@@ -1,5 +1,6 @@
 
-for study_i = 1:numel(studies)
+close all
+for study_i = [1,3]
     study = studies(study_i);
     options = struct('xname',           'agpBEM',  ...
                      'yname',           'surfaceError', ...
@@ -8,36 +9,28 @@ for study_i = 1:numel(studies)
                      'axisType',        'semilogy', ... 
                      'lineStyle',       '*-', ... 
                      'xLoopName',       'agpBEM', ...
-                     'subFolderName',   '../results/BCA_P_qp', ...
-                     'legendEntries',   {{'method','extraGPBEM','degree'}}, ...
+                     'subFolderName',   '../results/articleBEM_S1_qp', ...
+                     'legendEntries',   {{'extraGPBEM','colBEM_C0','formulation','degree','M'}}, ...
                      'noXLoopPrms',     1); 
-% 
+
     figure(2)
     printResultsToTextFiles(study,options)
-
-%     options.yname = 'cond_number';
-%     figure(3)
-%     printResultsToTextFiles(study,options)
-% 
-%     figure(5)
-%     options.legendEntries = {{'method','f','degreeElev','M'}};
-%     options.noXLoopPrms = 0;
-%     options.lineStyle = '-';
-%     options.axisType = 'plot';
-%     options.xname = 'alpha';
-%     options.yname = 'TS';
-%     options.xScale = 180/pi;
-% %             printResultsToTextFiles(study,options)
-% 
-%     options.yname = 'error_p';
-%     options.axisType = 'semilogy';
-% 
-%     figure(6)
-%     printResultsToTextFiles(study,options)
-
-%             options.yname = 'error_pAbs';
-%             options.axisType = 'semilogy';
-%             
-%             figure(7)
-%             printResultsToTextFiles(study,options)
 end
+for study_i = [2,3]
+    study = studies(study_i);
+    options = struct('xname',           'extraGPBEM',  ...
+                     'yname',           'surfaceError', ...
+                     'plotResults', 	1, ... 
+                     'printResults',	1, ... 
+                     'axisType',        'semilogy', ... 
+                     'lineStyle',       '*-', ... 
+                     'xLoopName',       'extraGPBEM', ...
+                     'subFolderName',   '../results/BCA_P_qp', ...
+                     'legendEntries',   {{'agpBEM','colBEM_C0','formulation','degree','M'}}, ...
+                     'noXLoopPrms',     1); 
+
+    figure(3)
+    printResultsToTextFiles(study,options)
+end
+
+

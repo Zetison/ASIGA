@@ -12,10 +12,10 @@ for study_i = 1:numel(studies)
                      'legendEntries',   {{'method','formulation','degree','parm'}}, ...
                      'noXLoopPrms',     1); 
 
-%     figure(2)
-%     printResultsToTextFiles(study,options)
-
-    options.xname = 'nepw';
-    figure(4)
+    figure(2)
     printResultsToTextFiles(study,options)
+
+%     options.xname = 'nepw';
+%     figure(4)
+%     printResultsToTextFiles(study,options)
 end
