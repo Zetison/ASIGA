@@ -1,4 +1,4 @@
-scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'BCA'; % BeTSSi submarine
 coreMethod = 'IGA';
@@ -15,7 +15,6 @@ BC = 'SHBC';
 
 method = {'BEM'};
 formulation = 'CCBIE';
-loopParameters = {'method','formulation','M','degree','f','formulation','scatteringCase'};
 
 
 f = 1e3;             % Frequency

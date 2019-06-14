@@ -24,7 +24,7 @@ M = 1:2;
 degree = [2,5];
 storeSolution = 0;
 storeFullVarCol = 0;
-loopParameters = {'method','formulation','M','degree','f','formulation','scatteringCase'};
+loopParameters = {'method','formulation','M','degree','f','scatteringCase'};
 
 collectIntoTasks
 
