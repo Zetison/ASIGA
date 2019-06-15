@@ -29,17 +29,16 @@ degree = [2,5];
 agpBEM = 1.4;
 % degree = 2;
 loopParameters = {'method','degree','formulation','M','f'};
-% collectIntoTasks
+collectIntoTasks
 
-formulation = {'CBM','GCBIE'};
-degree = 5;
-M = 2;
-f = 1e3; 
+formulation = {'GCBIE'};
+degree = [2,5];
+
 collectIntoTasks
 
 method = {'BA'};
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 
 
