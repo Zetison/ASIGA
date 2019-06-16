@@ -20,8 +20,8 @@ BC = 'NBC';
 
 applyLoad = 'radialPulsation';
 method = {'BEM'};
-formulation = {'CCBIE','CRCBIE1','CRCBIE3'};
-% formulation = {'CCBIE'};
+formulation = {'CCBIE','CRCBIE1','CRCBIE3','CBM'};
+formulation = {'CBM'};
 M = 1;
 storeSolution = false;
 storeFullVarCol = false;
@@ -31,13 +31,13 @@ degree = [2,5];
 
 runTasksInParallel = false; % extra quadrature points
 extraGP = 0; % extra quadrature points
-extraGPBEM = 500; % extra quadrature points
+extraGPBEM = 100; % extra quadrature points
 agpBEM = 0:0.1:0.6;
 agpBEMold = agpBEM;
 collectIntoTasks
 
 
-extraGPBEM = [0,50,100,200,300,400,500];
+extraGPBEM = [0,5,10,20,30,40,50];
 agpBEM = 0.6;
 collectIntoTasks
 
