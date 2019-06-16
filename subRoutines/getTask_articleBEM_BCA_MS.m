@@ -30,6 +30,11 @@ degree = [2,5];
 storeSolution = 0;
 storeFullVarCol = 0;
 loopParameters = {'method','formulation','M','degree','f','formulation','scatteringCase'};
+% collectIntoTasks
+
+
+f = 1e3;             % Frequency
+formulation = {'CBM'};
 collectIntoTasks
 
 

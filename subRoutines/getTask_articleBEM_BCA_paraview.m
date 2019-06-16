@@ -14,7 +14,7 @@ alpha = (0:0.05:360)*pi/180;
 BC = 'SHBC';
 
 method = {'BEM'};
-formulation = 'CCBIE';
+formulation = 'CBM';
 
 
 f = 1e3;             % Frequency
