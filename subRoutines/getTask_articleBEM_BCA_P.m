@@ -31,7 +31,7 @@ agpBEM = 1.4;
 loopParameters = {'method','degree','formulation','M','f'};
 % collectIntoTasks
 
-formulation = {'CBM','GCBIE'};
+formulation = {'CBM'};
 degree = 5;
 M = 2;
 f = 1e3; 
