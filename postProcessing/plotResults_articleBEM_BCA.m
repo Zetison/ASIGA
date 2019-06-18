@@ -1,5 +1,5 @@
 close all
-for study_i = 1:numel(studies)  
+for study_i = 1:2 %numel(studies)  
     study = studies(study_i);
     options = struct('xname',           'alpha',  ...
                      'yname',           'TS', ...
@@ -47,7 +47,7 @@ else
     alphaCOMSOL = alpha(1:end-1);
     % for res = [4,8]
     p_ref = studies(2).tasks(2).task.results.abs_p;
-    T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(80) '_noPMLayers_' num2str(10) '_A' num2str(240) '_F' num2str(100) '.txt'],'FileType','text', 'HeaderLines',8);
+    T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(80) '_noPMLayers_' num2str(10) '_f_' num2str(100) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
 
     y = T.Var2;
@@ -60,7 +60,7 @@ else
 %     for res = [1,2,4,8]
 %         f = 1000;
         alpha_s = 240;
-        T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(res) '_noPMLayers_' num2str(10) '_A' num2str(alpha_s) '_F' num2str(f) '.txt'],'FileType','text', 'HeaderLines',8);
+        T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(res) '_noPMLayers_' num2str(10) '_f_' num2str(f) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
         x = T.Var1;
         y = T.Var2;
@@ -106,9 +106,8 @@ else
         legend('off');
         legend('show');
         hold on
-    %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
         Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
-%         Error = 100*abs(10.^(y/20)-p_ref3)./max(p_ref3);
+        Error = 100*abs(10.^(y/20)-p_ref3)./max(p_ref3);
         l2errorWTD71(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
         l2errorWTD712(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
     %     l2errorWTD713(counter) = 100*sqrt(sum((10.^(y/20)-p_ref3).^2)./sum(p_ref(1:end-1).^2));
@@ -138,7 +137,7 @@ else
         hold on
     %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
     %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
-        Error = 100*abs(10.^(y/20)-p_ref)./max(p_ref);
+        Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
         l2errorCOMSOL_BEM(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
         l2errorCOMSOL_BEM2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
     %     l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));

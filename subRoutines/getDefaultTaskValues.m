@@ -49,6 +49,7 @@ plotMesh              = false;	% Create additional Paraview files to visualize I
 plotFarField          = true;	% If false, plots the near-field instead
 useNeumanProj         = false;
 runTasksInParallel    = false;
+plotResidualError     = false;
 calculateFarFieldPattern = true;
 computeCondNumber = false;
 storeSolution = false;
@@ -63,6 +64,7 @@ initMeshFactXi = 1;
 initMeshFactZeta = 1;
 colBEM_C0 = 0;
 quadMethodBEM = 'Adaptive';
+colMethod = 'Grev';
 M = 1;
 
 applyLoad = 'planeWave';

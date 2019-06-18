@@ -45,6 +45,8 @@ task.initMeshFactZeta = initMeshFactZeta;
 task.method = method;
 task.useNeumanProj = useNeumanProj;
 task.colBEM_C0 = colBEM_C0;
+task.plotResidualError = plotResidualError;
+task.colMethod = colMethod;
 if exist('r_a','var')
     task.r_a = r_a;
 end

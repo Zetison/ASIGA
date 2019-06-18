@@ -23,6 +23,7 @@ extraGPBEM = varCol.extraGPBEM;
 agpBEM = varCol.agpBEM;
 exteriorProblem = varCol.exteriorProblem;
 model = varCol.model;
+colMethod = varCol.colMethod;
 
 quadMethodBEM = varCol.quadMethodBEM;
 
@@ -107,51 +108,65 @@ for patch = 1:noPatches
     Xi_y = nurbs.knots{1};
     Eta_y = nurbs.knots{2};
     
-    if 1
-        for j = 1:n_eta
-            eta_bar = sum(Eta_y(j+1:j+p_eta))/p_eta;
-            if Eta_y(j+1) == Eta_y(j+p_eta)
-                if Eta_y(j+1) == Eta_y(j+p_eta+1)
-                    eta_bar = eta_bar - eps_greville_eta*(Eta_y(j+p_eta+1)-Eta_y(j));
-                else
-                    eta_bar = eta_bar + eps_greville_eta*(Eta_y(j+p_eta+1)-Eta_y(j+1));
-                end
-            end
-            for i = 1:n_xi
-                if ~any(dofsToRemove == counter)
-                    xi_bar = sum(Xi_y(i+1:i+p_xi))/p_xi;
-                    if Xi_y(i+1) == Xi_y(i+p_xi)
-                        if Xi_y(i+1) == Xi_y(i+p_xi+1)
-                            xi_bar = xi_bar - eps_greville_xi*(Xi_y(i+p_xi+1)-Xi_y(i));
-                        else
-                            xi_bar = xi_bar + eps_greville_xi*(Xi_y(i+p_xi+1)-Xi_y(i+1));
-                        end
+    switch colMethod
+        case 'Grev'
+            for j = 1:n_eta
+                eta_bar = sum(Eta_y(j+1:j+p_eta))/p_eta;
+                if Eta_y(j+1) == Eta_y(j+p_eta)
+                    if Eta_y(j+1) == Eta_y(j+p_eta+1)
+                        eta_bar = eta_bar - eps_greville_eta*(Eta_y(j+p_eta+1)-Eta_y(j));
+                    else
+                        eta_bar = eta_bar + eps_greville_eta*(Eta_y(j+p_eta+1)-Eta_y(j+1));
                     end
+                end
+                for i = 1:n_xi
+                    if ~any(dofsToRemove == counter)
+                        xi_bar = sum(Xi_y(i+1:i+p_xi))/p_xi;
+                        if Xi_y(i+1) == Xi_y(i+p_xi)
+                            if Xi_y(i+1) == Xi_y(i+p_xi+1)
+                                xi_bar = xi_bar - eps_greville_xi*(Xi_y(i+p_xi+1)-Xi_y(i));
+                            else
+                                xi_bar = xi_bar + eps_greville_xi*(Xi_y(i+p_xi+1)-Xi_y(i+1));
+                            end
+                        end
 
-                    cp_p(counter2,:) = [xi_bar, eta_bar];
-                    patchIdx(counter2) = patch;
-                    counter2 = counter2 + 1;
+                        cp_p(counter2,:) = [xi_bar, eta_bar];
+                        patchIdx(counter2) = patch;
+                        counter2 = counter2 + 1;
+                    end
+                    counter = counter + 1;
                 end
-                counter = counter + 1;
             end
-        end
-    else
-        cg_xi = splinesGL(Xi_y,p_xi);
-        cg_eta = splinesGL(Eta_y,p_eta);
-%         cg_xi = CauchyGalerkin(p_xi, n_xi, Xi);
-%         cg_eta = CauchyGalerkin(p_eta, n_eta, Eta);
-        for j = 1:n_eta
-            eta_bar = cg_eta(j);
-            for i = 1:n_xi
-                if ~any(dofsToRemove == counter)
-                    xi_bar = cg_xi(i);
-                    cp_p(counter2,:) = [xi_bar, eta_bar];
-                    patchIdx(counter2) = patch;
-                    counter2 = counter2 + 1;
+        case 'CG'
+            cg_xi = CauchyGalerkin(p_xi, n_xi, Xi_y);
+            cg_eta = CauchyGalerkin(p_eta, n_eta, Eta_y);
+            for j = 1:n_eta
+                eta_bar = cg_eta(j);
+                for i = 1:n_xi
+                    if ~any(dofsToRemove == counter)
+                        xi_bar = cg_xi(i);
+                        cp_p(counter2,:) = [xi_bar, eta_bar];
+                        patchIdx(counter2) = patch;
+                        counter2 = counter2 + 1;
+                    end
+                    counter = counter + 1;
                 end
-                counter = counter + 1;
             end
-        end
+        case 'GL'
+            cg_xi = splinesGL(Xi_y,p_xi);
+            cg_eta = splinesGL(Eta_y,p_eta);
+            for j = 1:n_eta
+                eta_bar = cg_eta(j);
+                for i = 1:n_xi
+                    if ~any(dofsToRemove == counter)
+                        xi_bar = cg_xi(i);
+                        cp_p(counter2,:) = [xi_bar, eta_bar];
+                        patchIdx(counter2) = patch;
+                        counter2 = counter2 + 1;
+                    end
+                    counter = counter + 1;
+                end
+            end
     end
 end
 useNeumanProj = varCol.useNeumanProj;

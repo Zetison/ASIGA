@@ -777,9 +777,11 @@ if ~useROM
             plotError = analyticSolutionExist && ~plotTimeOscillation; 
 
             tic
-            plotResultsInMatlab = 0;
-            if plotResultsInMatlab && analyticSolutionExist && strcmp(formulation,'GCBIE')
+            if plotResidualError && analyticSolutionExist && strcmp(formulation,'GCBIE')
+                close all
+                fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting zeros of residual ... ')
                 plotGalerkinResidual(varCol,U);
+                fprintf('using %12f seconds.', toc)
                 axis equal
                 axis off
     %             set(gca, 'Color', 'none');

@@ -24,8 +24,8 @@ Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
 
 
 p_inc = varCol.p_inc;
-
-npts = 200;
+Eps = 1e4*eps;
+npts = 20;
 
 patches = varCol.patches;
 noPatches = varCol.noPatches;
@@ -86,11 +86,16 @@ for e_x = 1:noElems
     wgts = weights(element2(e_x,:)); % New      
     U_sctr = U(sctr,:); % New      
 
-    xi_x = copyVector(linspace(Xi_e_x(1)+10*eps,Xi_e_x(2)-10*eps,npts),npts,1);
-    eta_x = copyVector(linspace(Eta_e_x(1)+10*eps,Eta_e_x(2)-10*eps,npts),npts,2);
+    xi_x = copyVector(linspace(Xi_e_x(1)+Eps,Xi_e_x(2)-Eps,npts),npts,1);
+    eta_x = copyVector(linspace(Eta_e_x(1)+Eps,Eta_e_x(2)-Eps,npts),npts,2);
     [x,u_x] = numericalSolEvalVectorized(xi_x,eta_x,p_xi,p_eta,Xi,Eta,wgts,pts,U_sctr);
-    u_x = u_x + p_inc(x);
-    f = p_inc(x) - u_x;
+    if 1
+%         u_x = u_x + p_inc(x);
+        residual = p_inc(x) - u_x;
+    else
+        u_x = u_x - p_inc(x);
+        residual = -u_x;
+    end
    
     
 %     for e_y = 1:noElems  
@@ -172,12 +177,12 @@ for e_x = 1:noElems
                     J_4 = rho_hat;
                     J_5 = 0.25*(thetaRange(:,2)-thetaRange(:,1));
                     fact = J_1*J_2.*J_3.*J_4.*J_5*wt;
-                    u_y = u_y + p_inc(y);
+%                     u_y = u_y - p_inc(y);
                     xmy = x-y;
                     r = norm2(xmy);
                     dPhi_0dny = Phi_0(r)./r.^2.*              sum(xmy.*ny,2);
                     dPhi_kdny = Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*ny,2);
-                    f = f + (dPhi_kdny.*u_y - dPhi_0dny.*u_x).*fact;
+                    residual = residual + (dPhi_kdny.*u_y - dPhi_0dny.*u_x).*fact;
                 end
             end
         else
@@ -197,19 +202,19 @@ for e_x = 1:noElems
 
                 fact = J_1*J_2*wt;
 
-                u_y = u_y + p_inc(y);
+%                 u_y = u_y - p_inc(y);
                 xmy = x-repmat(y,npts^2,1);
                 r = norm2(xmy);
                 dPhi_0dny = Phi_0(r)./r.^2.*              (xmy*ny);
                 dPhi_kdny = Phi_k(r)./r.^2.*(1 - 1i*k*r).*(xmy*ny);
-                f = f + (dPhi_kdny*u_y - dPhi_0dny.*u_x)*fact;
+                residual = residual + (dPhi_kdny*u_y - dPhi_0dny.*u_x)*fact;
             end
         end
     end
     X = reshape(x(:,1),npts,npts);
     Y = reshape(x(:,2),npts,npts);
     Z = reshape(x(:,3),npts,npts);
-    C = reshape(f,npts,npts);
+    C = reshape(residual,npts,npts);
 %     C = reshape(u_x-(analytic(x)+p_inc(x)),npts,npts);
 %     C = reshape(u_x,npts,npts);
 %     C = reshape(analytic(x),npts,npts);
