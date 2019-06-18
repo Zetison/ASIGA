@@ -17,7 +17,7 @@ f = omega/(2*pi);
 % omega = 2*pi*f;
 % k = omega/c_f;
 
-M = 2;
+M = 2:3;
 
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
@@ -34,9 +34,9 @@ plot3Dgeometry = 0;
 % extraGPBEM = 1;
 plotResidualError = true;
 loopParameters = {'M','formulation','method','degree','coreMethod'};
-% collectIntoTasks
+collectIntoTasks
 
-Mend = 5;
+Mend = 6;
 degree = 4:5;
 M = 1:Mend;
 plotResidualError = false;
@@ -48,5 +48,6 @@ collectIntoTasks
 
 method = {'BA'};
 formulation = {'SL2E'};
+colMethod = NaN;
 collectIntoTasks
 

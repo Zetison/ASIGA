@@ -526,9 +526,10 @@ if useRegul
     integrals{3} = integrals{3} + sum(dPsi1dny.*Phi_kTemp.*fact_y);
     integrals{4} = integrals{4} + sum(dPsi2dny.*Phi_kTemp.*fact_y);
 else
-    integrals{1} = integrals{1} + sum(dPhi_0dny_.*fact_y); 
-    if isnan(integrals{1})
-        keyboard
+    if iscell(integrals)
+        integrals{1} = integrals{1} + sum(dPhi_0dny_.*fact_y); 
+    else
+        integrals = integrals + sum(dPhi_0dny_.*fact_y); 
     end
 end
 
