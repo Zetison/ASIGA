@@ -123,17 +123,18 @@ end
 
 pD.plotGP = true;
 pD.plotPointsAsSpheres = true;
-pD.pointsRadius = 6e-3;
-pD.noSpherePts = 20;
+pD.pointsRadius = 12e-3;
+pD.noSpherePts = 40;
 pD.lineColor = 'blue';
 pD.lineStyle = '-';
 pD.patches = patches;
-figure(42)
 hold on
 pD.h = gca;
 pD = plotGP(pD,x_grev,'red');
 pD = plotGP(pD,x_gl,'blue');
-pD = plotGP(pD,x_cg,'green');
+if mod(p_xi,2)
+    pD = plotGP(pD,x_cg,'green');
+end
 drawnow
 
 
@@ -210,7 +211,7 @@ for e_x = 1:noElems
     colorbar 
     axis off
 %     caxis([-10,0])
-    caxis([-10,-2.5])
+    caxis([-7,-3])
     axis equal
     
     set(gca, 'Color', 'none');

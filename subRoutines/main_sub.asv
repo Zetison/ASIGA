@@ -778,17 +778,18 @@ if ~useROM
 
             tic
             if plotResidualError && analyticSolutionExist && strcmp(formulation,'GCBIE')
-                close all
+%                 close all
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting zeros of residual ... ')
                 plotGalerkinResidual(varCol,U);
                 fprintf('using %12f seconds.', toc)
                 axis equal
                 axis off
     %             set(gca, 'Color', 'none');
-                title('Error in Galerkin solution')
+%                 title('Error in Galerkin solution')
 %                 colorbar
-                caxis([-7,0])
+%                 caxis([-7,0])
                 camlight
+                colorbar off
                 savefig([subFolderName '/' saveName])
     %             n_xi = fluid.number(1);
     %             n_eta = fluid.number(2);

@@ -17,7 +17,7 @@ f = omega/(2*pi);
 % omega = 2*pi*f;
 % k = omega/c_f;
 
-M = 2:3;
+M = 2;
 
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;

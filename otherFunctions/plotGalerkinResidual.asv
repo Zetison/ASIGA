@@ -85,8 +85,6 @@ end
 
 p_inc = varCol.p_inc;
 Eps = 1e4*eps;
-npts = 256;
-npts = 16;
 
 patches = varCol.patches;
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
@@ -125,17 +123,18 @@ end
 
 pD.plotGP = true;
 pD.plotPointsAsSpheres = true;
-pD.pointsRadius = 6e-3;
-pD.noSpherePts = 20;
+pD.pointsRadius = 12e-3;
+pD.noSpherePts = 40;
 pD.lineColor = 'blue';
 pD.lineStyle = '-';
 pD.patches = patches;
-figure(42)
 hold on
 pD.h = gca;
 pD = plotGP(pD,x_grev,'red');
 pD = plotGP(pD,x_gl,'blue');
-pD = plotGP(pD,x_cg,'green');
+if mod(p_xi,2)
+    pD = plotGP(pD,x_cg,'green');
+end
 drawnow
 
 
@@ -162,12 +161,14 @@ for e_x = 1:noElems
     pts = controlPts(sctr,:);
     wgts = weights(element2(e_x,:)); % New      
     U_sctr = U(sctr,:); % New      
+    npts = 256/noElemsXi;
+%     npts = 32/noElemsXi;
 
-    xi_x_arr = copyVector(linspace(Xi_e_x(1)+Eps,Xi_e_x(2)-Eps,npts),npts/noElemsXi,1);
-    eta_x_arr = copyVector(linspace(Eta_e_x(1)+Eps,Eta_e_x(2)-Eps,npts),npts/noElemsXi,2);
+    xi_x_arr = copyVector(linspace(Xi_e_x(1)+Eps,Xi_e_x(2)-Eps,npts),npts,1);
+    eta_x_arr = copyVector(linspace(Eta_e_x(1)+Eps,Eta_e_x(2)-Eps,npts),npts,2);
     [x,u_x] = numericalSolEvalVectorized(xi_x_arr,eta_x_arr,p_xi,p_eta,Xi,Eta,wgts,pts,U_sctr);
-    xi_x_arr = copyVector(linspace(Xi_e_x(1),Xi_e_x(2),npts),npts/noElemsXi,1);
-    eta_x_arr = copyVector(linspace(Eta_e_x(1),Eta_e_x(2),npts),npts/noElemsXi,2);
+    xi_x_arr = copyVector(linspace(Xi_e_x(1),Xi_e_x(2),npts),npts,1);
+    eta_x_arr = copyVector(linspace(Eta_e_x(1),Eta_e_x(2),npts),npts,2);
     if 1
 %         u_x = u_x + p_inc(x);
         residual = p_inc(x) - u_x;
@@ -179,21 +180,22 @@ for e_x = 1:noElems
         xi_x = xi_x_arr(i);
         eta_x = eta_x_arr(i);
 
-        [constants, integrals] = initializeBIE(psiType,useRegul,x,NaN,k,model);
+%         [constants, integrals] = initializeBIE(psiType,useRegul,x,NaN,k,model);
         [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
-        residual
+        residual_temp = complex(0);
+        integrals_temp = complex(0);
 %         for e_y = 1:noElems  
         parfor e_y = 1:noElems  
-            [BIE, integrals, ~, sctr_y] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,NaN,...
+            [BIE, integrals_temp2, ~, sctr_y] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,complex(0),NaN,...
                     useEnrichedBfuns,k,d_vec,0,SHBC,useCBIE,useHBIE,dpdn,NaN,...
-                    x,NaN(1,3),xi_x_tArr,eta_x_tArr,adjacentElements,constants,psiType,useRegul,...
+                    x(i,:),NaN(1,3),xi_x_tArr,eta_x_tArr,adjacentElements,NaN,psiType,useRegul,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                     patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
-                   
+            integrals_temp = integrals_temp + integrals_temp2;
             U_sctr = U(sctr_y,:); % New      
-            residual(i) = residual(i) + BIE*U_sctr;
+            residual_temp = residual_temp + BIE*U_sctr;
         end
-        residual(i) = residual(i) - integrals{1}*u_x(i);
+        residual(i) = residual(i) + residual_temp - integrals_temp*u_x(i);
     end
     X = reshape(x(:,1),npts,npts);
     Y = reshape(x(:,2),npts,npts);
@@ -203,12 +205,13 @@ for e_x = 1:noElems
 %     C = reshape(u_x,npts,npts);
 %     C = reshape(analytic(x),npts,npts);
 %     surf(X,Y,Z, abs(C), 'EdgeColor','none','LineStyle','none')
-    max_res = max(max(abs(C)))
+    max_res = max(max(abs(C)));
     hold on
     surf(X,Y,Z, log10(abs(C)), 'EdgeColor','none','LineStyle','none')
     colorbar 
     axis off
-    caxis([-10,0])
+%     caxis([-10,0])
+    caxis([-7,-3])
     axis equal
     
     set(gca, 'Color', 'none');
