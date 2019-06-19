@@ -176,7 +176,7 @@ for e_x = 1:noElems
         u_x = u_x - p_inc(x);
         residual = -u_x;
     end
-    for i = 1:numel(eta_x_arr)
+    parfor i = 1:numel(eta_x_arr)
         xi_x = xi_x_arr(i);
         eta_x = eta_x_arr(i);
 
@@ -185,7 +185,7 @@ for e_x = 1:noElems
         residual_temp = complex(0);
         integrals_temp = complex(0);
 %         for e_y = 1:noElems  
-        parfor e_y = 1:noElems  
+        for e_y = 1:noElems  
             [BIE, integrals_temp2, ~, sctr_y] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,complex(0),NaN,...
                     useEnrichedBfuns,k,d_vec,0,SHBC,useCBIE,useHBIE,dpdn,NaN,...
                     x(i,:),NaN(1,3),xi_x_tArr,eta_x_tArr,adjacentElements,NaN,psiType,useRegul,...
