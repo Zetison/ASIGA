@@ -130,11 +130,11 @@ pD.lineStyle = '-';
 pD.patches = patches;
 hold on
 pD.h = gca;
-pD = plotGP(pD,x_grev,'red');
-pD = plotGP(pD,x_gl,'blue');
-if mod(p_xi,2)
-    pD = plotGP(pD,x_cg,'green');
-end
+% pD = plotGP(pD,x_grev,'red');
+% pD = plotGP(pD,x_gl,'blue');
+% if mod(p_xi,2)
+%     pD = plotGP(pD,x_cg,'green');
+% end
 drawnow
 
 
@@ -161,7 +161,8 @@ for e_x = 1:noElems
     pts = controlPts(sctr,:);
     wgts = weights(element2(e_x,:)); % New      
     U_sctr = U(sctr,:); % New      
-    npts = 256/noElemsXi;
+    npts = 512/noElemsXi;
+%     npts = 256/noElemsXi;
 %     npts = 32/noElemsXi;
 
     xi_x_arr = copyVector(linspace(Xi_e_x(1)+Eps,Xi_e_x(2)-Eps,npts),npts,1);

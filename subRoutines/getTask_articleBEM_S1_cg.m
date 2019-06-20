@@ -17,7 +17,7 @@ f = omega/(2*pi);
 % omega = 2*pi*f;
 % k = omega/c_f;
 
-M = 2;
+M = 5;
 
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
@@ -39,15 +39,17 @@ collectIntoTasks
 Mend = 6;
 degree = 4:5;
 M = 1:Mend;
+M = Mend;
 plotResidualError = false;
 formulation = {'CCBIE','CHBIE','CBM'};
 loopParameters = {'M','formulation','method','degree','coreMethod','colMethod'};
 colMethod = {'CG','Grev','GL'};
-collectIntoTasks
+colMethod = {'GL'};
+% collectIntoTasks
 
 
 method = {'BA'};
 formulation = {'SL2E'};
 colMethod = NaN;
-collectIntoTasks
+% collectIntoTasks
 

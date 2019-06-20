@@ -1,5 +1,5 @@
 close all
-for study_i = 1:2 %numel(studies)  
+for study_i = 1:numel(studies)  
     study = studies(study_i);
     options = struct('xname',           'alpha',  ...
                      'yname',           'TS', ...
@@ -43,10 +43,10 @@ if 0
         hold on
     end
 else
-    alpha = studies(2).tasks(2).task.alpha;
+    alpha = studies(1).tasks(6).task.alpha;
     alphaCOMSOL = alpha(1:end-1);
     % for res = [4,8]
-    p_ref = studies(2).tasks(2).task.results.abs_p;
+    p_ref = studies(1).tasks(6).task.results.abs_p;
     T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(80) '_noPMLayers_' num2str(10) '_f_' num2str(100) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
 
@@ -70,11 +70,11 @@ else
         legend('show');
         hold on
     %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
-        Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
+        Error = 100*abs(10.^(y/20)-p_ref2)./max(p_ref2);
         l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
-        l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
+        l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref2.^2));
         counter = counter + 1;
-        printResultsToFile2(['../results/BCA/COMSOL_Error_res' num2str(res)], 180/pi*alphaCOMSOL.', Error)
+        printResultsToFile2(['../results/articleBEM_BCA/COMSOL_Error_res' num2str(res)], 180/pi*alphaCOMSOL.', Error)
         figure(42)
         semilogy(180/pi*alphaCOMSOL,Error,'DisplayName',['COMSOL res' num2str(res)])
         hold on
@@ -87,6 +87,7 @@ else
     y(idx) = [];
     l2errorWTD71 = zeros(1,4);
     l2errorWTD712 = zeros(1,4);
+    l2errorWTD713 = zeros(1,4);
     p_ref3 = 10.^(y/20);
     counter = 1;
     for res = 1:6
@@ -107,13 +108,14 @@ else
         legend('show');
         hold on
         Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
-        Error = 100*abs(10.^(y/20)-p_ref3)./max(p_ref3);
+%         Error = 100*abs(10.^(y/20)-p_ref3)./max(p_ref3);
         l2errorWTD71(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
-        l2errorWTD712(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
-    %     l2errorWTD713(counter) = 100*sqrt(sum((10.^(y/20)-p_ref3).^2)./sum(p_ref(1:end-1).^2));
+%         l2errorWTD712(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref2(1:end-1).^2));
+        l2errorWTD713(counter) = 100*sqrt(sum((10.^(y/20)-p_ref3).^2)./sum(p_ref3(1:end-1).^2));
         counter = counter + 1;
-    %     printResultsToFile2(['../results/BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
-        figure(44)
+    %     printResultsToFile2(['../results/articleBEM_BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
+%         figure(44)
+        figure(42)
         semilogy(180/pi*alphaCOMSOL,Error,'DisplayName',['WTD71 res' num2str(res)])
         hold on
     end
@@ -139,20 +141,21 @@ else
     %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
         Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
         l2errorCOMSOL_BEM(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
-        l2errorCOMSOL_BEM2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
+        l2errorCOMSOL_BEM2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref2(1:end-1).^2));
     %     l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
     %     l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
         counter = counter + 1;
-    %     printResultsToFile2(['../results/BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
+%         printResultsToFile2(['../results/articleBEM_BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
         figure(42)
         semilogy(180/pi*alphaCOMSOL,Error,'DisplayName',['COMSOL res' num2str(res) ', BEM'])
         hold on
     end
-    l2errorWTD71 %  1.6563    0.3034    0.2532    0.2420
-    l2errorWTD712 %  1.3668    0.1561    0.0541
-    l2errorCOMSOL_BEM %  1.6563    0.3034    0.2532    0.2420
-    l2errorCOMSOL_BEM2 %  1.6563    0.3034    0.2532    0.2420
-    l2errorCOMSOL %  1.6563    0.3034    0.2532    0.2420
+%     l2errorWTD71 %  1.6563    0.3034    0.2532    0.2420
+%     l2errorWTD712 %  1.3668    0.1561    0.0541
+    l2errorWTD713
+%     l2errorCOMSOL_BEM %  1.6563    0.3034    0.2532    0.2420
+%     l2errorCOMSOL_BEM2 %  1.6563    0.3034    0.2532    0.2420
+%     l2errorCOMSOL %  1.6563    0.3034    0.2532    0.2420
     l2errorCOMSOL2 %  1.3668    0.1561    0.0541
     savefig([options.subFolderName '/_comparison'])
     figure(42)
@@ -166,13 +169,13 @@ else
         l2errorIGA(task_i) = 100*sqrt(sum((p-p_ref).^2)./sum(p_ref.^2));
         l2errorIGA2(task_i) = 100*sqrt(sum((p(1:end-1)-p_ref2).^2)./sum(p_ref2.^2));
         filename = ['M' num2str(M) 'degree' num2str(degree) 'f100'];
-        printResultsToFile2(['../results/BCA/BCA_BEM_IGA_CCBIE_' filename], 180/pi*alpha.', Error)
+        printResultsToFile2(['../results/articleBEM_BCA/BCA_BEM_IGA_CBM_' filename], 180/pi*alpha.', Error)
         semilogy(180/pi*alpha,Error,'DisplayName',filename)
         counter = counter + 1;
         hold on
     end
     l2errorIGA % 0.1226    0.0412    0.0600    0.0206    0.0347    0.0089
-    l2errorIGA2 % 0.1226    0.0412    0.0600    0.0206    0.0347    0.0089
+%     l2errorIGA2 % 0.1226    0.0412    0.0600    0.0206    0.0347    0.0089
     yLabel = '$$\frac{||p|-|p_h||}{|p|} [\%]$$';
     ylabel(yLabel,'interpreter','latex')
     xlabel('$$\alpha$$','interpreter','latex')
@@ -180,19 +183,21 @@ else
     xlim([0,360])
     savefig([options.subFolderName '/_error'])
     % 
-    % fprintf('\n\n')
-    % for i = 1:6
-    %     fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & %g & %d\\\\\n', ...
-    %         studies(2).tasks(i).task.M, ...
-    %         studies(2).tasks(i).task.degree, ...
-    %         studies(2).tasks(i).task.degree-1, ...
-    %         studies(2).tasks(i).task.varCol.noElems, ...
-    %         studies(2).tasks(i).task.varCol.dofs, ...
-    %         studies(2).tasks(i).task.varCol.h_max, ...
-    %         studies(2).tasks(i).task.varCol.nepw, ...
-    %         l2errorIGA(i), ...
-    %         round(studies(2).tasks(i).task.varCol.tot_time)); 
-    % end
-    % i = 1;
-    % fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & 0 & %d\\\\\n', studies(1).tasks(i).task.M, studies(1).tasks(i).task.degree, studies(1).tasks(i).task.degree-1, studies(1).tasks(i).task.varCol.noElems, studies(1).tasks(i).task.varCol.dofs, studies(1).tasks(i).task.varCol.h_max, studies(1).tasks(i).task.varCol.nepw, round(studies(1).tasks(i).task.varCol.tot_time)); 
+%     fprintf('\n\n')
+%     for i = 1:6
+%         fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & %g & %d\\\\\n', ...
+%             studies(1).tasks(i).task.M, ...
+%             studies(1).tasks(i).task.degree, ...
+%             studies(1).tasks(i).task.degree-1, ...
+%             studies(1).tasks(i).task.varCol.noElems, ...
+%             studies(1).tasks(i).task.varCol.dofs, ...
+%             studies(1).tasks(i).task.varCol.h_max, ...
+%             studies(1).tasks(i).task.varCol.nepw, ...
+%             l2errorIGA(i), ...
+%             round(studies(1).tasks(i).task.varCol.tot_time)); 
+%     end
+%     fprintf('\n\n')
+%     i = 1;
+%     fprintf('\t\t${\\cal M}_{%d,%d,%d}^{\\textsc{igabem}}$ & %d & %d & %g & %g & 0 & %d\\\\\n', studies(1).tasks(i).task.M, studies(1).tasks(i).task.degree, studies(1).tasks(i).task.degree-1, studies(1).tasks(i).task.varCol.noElems, studies(1).tasks(i).task.varCol.dofs, studies(1).tasks(i).task.varCol.h_max, studies(1).tasks(i).task.varCol.nepw, round(studies(1).tasks(i).task.varCol.tot_time)); 
+
 end

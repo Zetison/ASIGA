@@ -1,5 +1,5 @@
 close all
-for study_i = 1:numel(studies)  
+for study_i = 2:numel(studies)  
     study = studies(study_i);
     options = struct('xname',           'dofs',  ...
                      'yname',           'surfaceError', ...
