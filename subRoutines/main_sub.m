@@ -395,7 +395,7 @@ for i_k = 1:size(k,2)
                     A(dofsToRemove,:) = [];
                     FF(dofsToRemove,:) = [];
                 case 'C' % Collocation
-%                     [A, FF, varCol] = buildBEMmatrixVec(varCol);  
+                    [A, FF, varCol] = buildBEMmatrixVec(varCol);  
             end 
             if ~runTasksInParallel
                 fprintf('using %12f seconds.', toc)
