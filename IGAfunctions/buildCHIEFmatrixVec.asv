@@ -73,8 +73,7 @@ if exteriorProblem
             Zarr = linspace(-0.5,1,3)/4;
             [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
             cp = [X(:),Y(:), Z(:)];
-        case {'BCA','BCA_P'}
-            alpha = NaN;
+        case 'BCA'
             setBCParameters
             h = g2*tan(alpha/2); % = g2/tan((pi-alpha)/2)
             x2 = g3*tan(alpha);
@@ -92,27 +91,27 @@ if exteriorProblem
                   -s/4              s/4;
                   s                 s+0.5*h_d;
                   -s                -s-0.5*h_d;
-                  -0.1*b_lm         0.1*b_lm;
+                  -b_lm             b_lm;
                   -0.3*h_m          -0.8*h_m;
-                  -0.1*b_lm         0.1*b_lm;
+                  -b_lm             b_lm;
                   0.3*h_m           0.8*h_m;
                   -h_tail*0.5       h_tail*0.5];
             zi = [-b/4              c/4;
                   c              	c+0.5*h_s;
-                  c-b_ld/2-0.4*b_ld/2 c-b_ld/2+0.4*b_ld/2;
-                  c-b_ld/2-0.4*b_ld/2 c-b_ld/2+0.4*b_ld/2;
+                  c-b_ld/2-0.8*b_ld/2 c-b_ld/2+0.8*b_ld/2;
+                  -s                -s-0.5*h_d;
                   0.3*h_m           0.8*h_m;
-                  -0.1*b_lm         0.1*b_lm;
+                  -b_lm             b_lm;
                   -0.3*h_m          -0.8*h_m;
-                  -0.1*b_lm         0.1*b_lm;
+                  -b_lm             b_lm;
                   -h_tail*0.5       h_tail*0.5];
                   
             cp = [];
             npts = 3;
-            for i = 1:size(xi,1)
-                Xarr = linspace(xi(i,1),xi(i,2),npts);
-                Yarr = linspace(yi(i,1),yi(i,2),npts);
-                Zarr = linspace(zi(i,1),zi(i,2),npts);
+            for i = 1:numel(xi)
+                Xarr = linspace(xi(i),xi(i),npts);
+                Yarr = linspace(yi(i),yi(i),npts);
+                Zarr = linspace(zi(i),zi(i),npts);
                 [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
                 cp = [cp; X(:),Y(:), Z(:)];
             end
@@ -137,17 +136,7 @@ n_en = (p_xi+1)*(p_eta+1);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-plot_GP = 0;
-pD = plotBEMGeometry(patches,plot_GP,10,0,0.8);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% for i = 1:n_cp
-%     x = cp(i,:);
-%     if plot_GP
-%         pD = plotGP(pD,x,'red');
-%     end
-% end
 totNoQP = 0;
 % for i = 1:n_cp
 parfor i = 1:n_cp

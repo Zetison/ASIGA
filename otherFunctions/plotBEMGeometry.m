@@ -1,4 +1,7 @@
-function pD = plotBEMGeometry(patches,plotGP,npts,plotPointsAsSpheres)
+function pD = plotBEMGeometry(patches,plotGP,npts,plotPointsAsSpheres,alphaValue)
+if nargin < 5
+    alphaValue = 1;
+end
 pD.plotGP = plotGP;
 if plotGP
     pD.plotPointsAsSpheres = plotPointsAsSpheres;
@@ -12,7 +15,7 @@ if plotGP
 %         for patch = 1:17
 %         for patch = [189,191,220:228]
         for patch = 1:numel(patches)
-            plotNURBS(patches{patch}.nurbs,{'resolution',[npts npts], 'elementBasedSamples',true,'samplingDistance',0.1});
+            plotNURBS(patches{patch}.nurbs,{'resolution',[npts npts], 'elementBasedSamples',true,'samplingDistance',0.1,'alphaValue',alphaValue});
         end
         pD.h = gca;
         axis equal

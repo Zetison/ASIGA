@@ -395,12 +395,19 @@ for i_k = 1:size(k,2)
                     A(dofsToRemove,:) = [];
                     FF(dofsToRemove,:) = [];
                 case 'C' % Collocation
-                    [A, FF, varCol] = buildBEMmatrixVec(varCol);  
+%                     [A, FF, varCol] = buildBEMmatrixVec(varCol);  
             end 
+            if ~runTasksInParallel
+                fprintf('using %12f seconds.', toc)
+            end
             if strcmp(formulation(end),'C')
+                fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
                 [A_CHIEF, FF_CHIEF, varCol] = buildCHIEFmatrixVec(varCol);
                 A = [A; A_CHIEF];
                 FF = [FF; FF_CHIEF];
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', toc)
+                end
             end
             
             A(:,dofsToRemove) = [];
@@ -409,9 +416,6 @@ for i_k = 1:size(k,2)
             end
             noDofs_tot = varCol.noDofs;
             varCol.timeBuildSystem = toc;
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', varCol.timeBuildSystem)
-            end
         case 'BA'
             tic
             if ~runTasksInParallel
