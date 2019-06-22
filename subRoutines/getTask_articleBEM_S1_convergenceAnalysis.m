@@ -18,6 +18,7 @@ M = 1:7;
 
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
+solveForPtot = true;
 
 degree = 2;
 calculateFarFieldPattern = 0;

@@ -5,7 +5,7 @@ k = 1;
 f = k*1500/(2*pi);
 N = 6;
 M = 1:6;
-M = 1:4;
+% M = 1:2;
 parm = [1,2];
 % parm = 2;
 degree = 4;
@@ -17,16 +17,14 @@ alpha = (0:0.5:360)*pi/180;
 beta = 30*pi/180;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 1;
-solveForPtot = [0,1];
+solveForPtot = 1;
 % runTasksInParallel = true;
 
-loopParameters = {'solveForPtot','M','parm','method','formulation'};
+loopParameters = {'M','parm','method','formulation'};
 
-% collectIntoTasks
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
+% formulation = {'CCBIE'};
 useNeumannProj = false;
 
 collectIntoTasks

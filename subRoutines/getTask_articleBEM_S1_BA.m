@@ -1,6 +1,6 @@
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 model = 'S1';
-k = 10;
+k = 1;
 % f = 1e2;             % Frequency
 f = k*1500/(2*pi);
 N = 6;

@@ -34,12 +34,20 @@ else
     d_vec = NaN;
 end
 
-if strcmp(varCol.applyLoad, 'radialPulsation')
-    acousticScattering = false;
-    dpdn = varCol.dpdn;
+formulation = varCol.formulation;
+solveForPtot = varCol.solveForPtot;
+SHBC = strcmp(varCol.BC, 'SHBC');
+if SHBC
+    if solveForPtot
+        homNeumanCond = true;
+        dpdn = @(x,n) 0;
+    else
+        homNeumanCond = false;
+        dpdn = @(x,n) -varCol.dp_inc(x,n);
+    end
 else
-    acousticScattering = true;
-    dpdn = 0;
+    homNeumanCond = false;
+    dpdn = varCol.dpdn;
 end
 
 if useExtraQuadPts
@@ -102,15 +110,14 @@ parfor e = 1:noElems %[8 7 3 4 5 6 2 1]%
             x_d_y = dot3(P_far, Y.')./norm2(P_far);
             p_h = p_h - 1/(4*pi)*1i*k* (p_h_gp.').*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
         else
-            p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n)* J_1 * J_2 * wt;  
+            p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
         end
-            
-        if ~acousticScattering
+        if ~homNeumanCond
             dp_h_gp = dpdn(Y, n);
             if computeFarField
                 p_h = p_h - 1/(4*pi)*dp_h_gp.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
             else
-                p_h = p_h - dp_h_gp.*Phi_k(r)* J_1 * J_2 * wt;  
+                p_h = p_h - dp_h_gp.*Phi_k(r,k)* J_1 * J_2 * wt;  
             end
         end
     end

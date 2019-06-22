@@ -7,6 +7,7 @@ coreMethod = 'IGA';
 method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'CCBIEC'};
 % formulation = {'CCBIE'};
+solveForPtot = true;
 
 
 % Eigenfrequencies from Zheng2015itb
@@ -69,11 +70,12 @@ loopParameters = {'f','method','formulation'};
 
 collectIntoTasks
 
-method = {'IE'};
-formulation = {'BGU'};
-N = 5;
-collectIntoTasks
-
 method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks
+
+method = {'IE'};
+formulation = {'BGU'};
+N = 5;
+solveForPtot = false;
+% collectIntoTasks
