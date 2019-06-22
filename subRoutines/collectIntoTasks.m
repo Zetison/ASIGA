@@ -47,6 +47,7 @@ task.useNeumanProj = useNeumanProj;
 task.colBEM_C0 = colBEM_C0;
 task.plotResidualError = plotResidualError;
 task.colMethod = colMethod;
+task.solveForPtot = solveForPtot;
 if exist('r_a','var')
     task.r_a = r_a;
 end

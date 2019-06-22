@@ -67,14 +67,23 @@ end
 SHBC = strcmp(varCol.BC, 'SHBC');
 if SHBC
     no_angles = length(varCol.alpha_s);
-    p_inc = varCol.p_inc;
-    dp_inc = varCol.dp_inc;
 else
     no_angles = 1;
+end
+solveForPtot = varCol.solveForPtot;
+if solveForPtot
+    p_inc = varCol.p_inc;
+    dp_inc = varCol.dp_inc;
+    dpdn = @(x,n) 0;
+else
     p_inc = NaN;
     dp_inc = NaN;
+    if SHBC
+        dpdn = @(x,n) -varCol.dp_inc(x,n);
+    else
+        dpdn = varCol.dpdn;
+    end
 end
-dpdn = varCol.dpdn;
 
 if exteriorProblem
     sgn = 1;
@@ -310,7 +319,7 @@ parfor i = 1:n_cp
     [adjacentElements, xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps);
     for e_y = 1:noElems  
         [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, pD] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
-                useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
+                useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,adjacentElements,constants,psiType,useRegul,...
                 p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                 patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM,pD);
@@ -335,7 +344,7 @@ parfor i = 1:n_cp
         A_row(sctr_x(j)) = A_row(sctr_x(j)) + R_xScaled(j);
     end     
     A(i,:) = A_row;
-    FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
+    FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
 end
 

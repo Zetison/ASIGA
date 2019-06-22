@@ -24,8 +24,6 @@ else
     d_vec = NaN;
 end
 
-analytic = varCol.analytic;
-
 % if noElems < 600
 %     noQuadPts = 16;
 % else
@@ -96,9 +94,10 @@ else
     p_h = reshape(p_h, size(p_h,1)*size(p_h,2),1);
 end
 
-if (strcmp(varCol.method, 'BEM') || strcmp(varCol.formulation(end-2:end),'tot')) && strcmp(varCol.applyLoad, 'planeWave')
-    p_inc = varCol.p_inc;
-    p_h = p_h - p_inc(points);
+if varCol.solveForPtot
+    analytic = @(x) varCol.analytic(x) + varCol.p_inc(x);
+else
+    analytic = varCol.analytic;
 end
 p = analytic(points);
 if isinf(LpOrder)

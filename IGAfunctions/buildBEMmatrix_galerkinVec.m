@@ -63,14 +63,23 @@ end
 SHBC = strcmp(varCol.BC, 'SHBC');
 if SHBC
     no_angles = length(varCol.alpha_s);
-    p_inc = varCol.p_inc;
-    dp_inc = varCol.dp_inc;
 else
     no_angles = 1;
+end
+solveForPtot = varCol.solveForPtot;
+if solveForPtot
+    p_inc = varCol.p_inc;
+    dp_inc = varCol.dp_inc;
+    dpdn = @(x,n) 0;
+else
     p_inc = NaN;
     dp_inc = NaN;
+    if SHBC
+        dpdn = @(x,n) -varCol.dp_inc(x,n);
+    else
+        dpdn = varCol.dpdn;
+    end
 end
-dpdn = varCol.dpdn;
 
 if exteriorProblem
     sgn = 1;
@@ -159,7 +168,7 @@ parfor e_x = 1:noElems
     
         for e_y = 1:noElems   
             [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
-                    useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
+                    useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                     x,nx,pt_x(1),pt_x(2),e_x,constants,psiType,useRegul,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                     patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
@@ -174,7 +183,7 @@ parfor e_x = 1:noElems
                 
         A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + R_x.'*R_xScaled*fact_x;
 
-        F_eTemp = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
+        F_eTemp = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                     U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
         F_e = F_e + R_x.'*F_eTemp*fact_x;
     end

@@ -1,19 +1,22 @@
 function p_h = calculateScatteredPressureBA(varCol, U, P_far, useExtraQuadPts, computeFarField)
 formulation = varCol.formulation;
-UisTot = strcmp(formulation(end-2:end),'tot');
-BC = varCol.BC;
-SHBC = strcmp(BC, 'SHBC');
-if SHBC && ~UisTot
+solveForPtot = varCol.solveForPtot;
+SHBC = strcmp(varCol.BC, 'SHBC');
+if SHBC
+    if solveForPtot
+        homNeumanCond = true;
+        dpdn = @(x,n) 0;
+    else
+        homNeumanCond = false;
+        dpdn = @(x,n) -varCol.dp_inc(x,n);
+    end
+else
     homNeumanCond = false;
     dpdn = varCol.dpdn;
-else
-    homNeumanCond = true;
-    dpdn = 0;
 end
-dp_inc = varCol.dp_inc;
 
 switch formulation
-    case {'SL2E','SL2Etot'}
+    case 'SL2E'
         p_xi = varCol.degree(1); % assume p_xi is equal in all patches
         p_eta = varCol.degree(2); % assume p_eta is equal in all patches
 
@@ -93,39 +96,24 @@ switch formulation
                 end
 
                 p_h_gp = R*U(sctr,:);
-                if SHBC
-                    dp_h_gp = -dp_inc(Y,n);
+                if computeFarField
+                    x_d_n = dot3(P_far, n.')./norm2(P_far);
+                    x_d_y = dot3(P_far, Y.')./norm2(P_far);
+                    p_h = p_h - 1/(4*pi)*1i*k* (p_h_gp.').*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
                 else
-                    dp_h_gp = dpdn(Y,n);   
+                    p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
                 end
-                if UisTot
+                if ~homNeumanCond
+                    dp_h_gp = dpdn(Y, n);
                     if computeFarField
-                        x_d_n = dot3(P_far, n.')./norm2(P_far);
-                        x_d_y = dot3(P_far, Y.')./norm2(P_far);
-                        p_h = p_h - 1/(4*pi)*1i*k* (p_h_gp.').*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
+                        p_h = p_h - 1/(4*pi)*dp_h_gp.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
                     else
-                        p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
-                    end
-                    if ~homNeumanCond
-                        dp_h_gp = dpdn(Y, n);
-                        if computeFarField
-                            p_h = p_h - 1/(4*pi)*dp_h_gp.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
-                        else
-                            p_h = p_h - dp_h_gp.*Phi_k(r,k)* J_1 * J_2 * wt;  
-                        end
-                    end
-                else
-                    if computeFarField
-                        x_d_n = dot3(P_far, n.')./norm2(P_far);
-                        x_d_y = dot3(P_far, Y.')./norm2(P_far);
-                        p_h = p_h - 1/(4*pi)*(1i*k* (p_h_gp.').*x_d_n + dp_h_gp).*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
-                    else
-                        p_h = p_h + ((p_h_gp.').*dPhi_kdny(xmy,r,n,k) - dp_h_gp.*Phi_k(r,k))* J_1 * J_2 * wt; 
+                        p_h = p_h - dp_h_gp.*Phi_k(r,k)* J_1 * J_2 * wt;  
                     end
                 end
             end
         end
-    case {'VL2E','VL2Etot'}
+    case 'VL2E'
         p_xi = varCol.degree(1); % assume p_xi is equal in all patches
         p_eta = varCol.degree(2); % assume p_eta is equal in all patches
         p_zeta = varCol.degree(3); % assume p_zeta is equal in all patches
@@ -208,20 +196,24 @@ switch formulation
 
                 p_h_gp = R_fun*U_sctr;
 
-                if SHBC
-                    dp_h_gp = -dp_inc(Y,n); 
-                else
-                    dp_h_gp = dot3((J'\[dRdxi; dRdeta; dRdzeta]*U(sctr,:)).',n);
-                end
                 if computeFarField
                     x_d_n = dot3(P_far, n.')./norm2(P_far);
                     x_d_y = dot3(P_far, Y.')./norm2(P_far);
-                    p_h = p_h - 1/(4*pi)*(1i*k* (p_h_gp.').*x_d_n + dp_h_gp).*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
+                    p_h = p_h - 1/(4*pi)*1i*k* (p_h_gp.').*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
                 else
-                    xmy = -elementAddition(Y, -P_far);
-
-                    r = norm2(xmy);  
-                    p_h = p_h + ((p_h_gp.').*dPhi_kdny(xmy,r,n,k) - dp_h_gp.*Phi_k(r,k))* J_1 * J_2 * wt; 
+                    p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
+                end
+                if ~homNeumanCond
+                    if SHBC
+                        dp_h_gp = dpdn(Y, n);
+                    else
+                        dp_h_gp = dot3((J'\[dRdxi; dRdeta; dRdzeta]*U(sctr,:)).',n);
+                    end
+                    if computeFarField
+                        p_h = p_h - 1/(4*pi)*dp_h_gp.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
+                    else
+                        p_h = p_h - dp_h_gp.*Phi_k(r,k)* J_1 * J_2 * wt;  
+                    end
                 end
             end
         end

@@ -17,9 +17,10 @@ alpha = (0:0.5:360)*pi/180;
 beta = 30*pi/180;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 1;
+solveForPtot = [0,1];
 
-loopParameters = {'M','parm','method','formulation'};
+loopParameters = {'solveForPtot','M','parm','method','formulation'};
 
 method = {'BA'};
-formulation = {'SL2Etot','SL2E'};
+formulation = {'SL2E'};
 collectIntoTasks

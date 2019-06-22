@@ -5,7 +5,7 @@ k = 1;
 f = k*1500/(2*pi);
 N = 6;
 M = 1:6;
-M = 1:4;
+M = 1:3;
 parm = [1,2];
 % parm = 2;
 degree = 4;
@@ -16,23 +16,21 @@ beta_s = 30*pi/180;
 alpha = (0:0.5:360)*pi/180;
 beta = 30*pi/180;
 calculateSurfaceError = 1;
-calculateFarFieldPattern = 1;
-solveForPtot = [0,1];
-% runTasksInParallel = true;
+calculateFarFieldPattern = 0;
 
-loopParameters = {'solveForPtot','M','parm','method','formulation'};
+loopParameters = {'M','parm','method','formulation'};
 
 % collectIntoTasks
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% BA simulation
+method = {'BA'};
+formulation = {'SL2E'};
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
 useNeumannProj = false;
 
-collectIntoTasks
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% BA simulation
-method = {'BA'};
-formulation = {'SL2E'};
 collectIntoTasks

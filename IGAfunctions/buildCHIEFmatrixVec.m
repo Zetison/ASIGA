@@ -43,14 +43,23 @@ end
 SHBC = strcmp(varCol.BC, 'SHBC');
 if SHBC
     no_angles = length(varCol.alpha_s);
-    p_inc = varCol.p_inc;
-    dp_inc = varCol.dp_inc;
 else
     no_angles = 1;
+end
+solveForPtot = varCol.solveForPtot;
+if solveForPtot
+    p_inc = varCol.p_inc;
+    dp_inc = varCol.dp_inc;
+    dpdn = @(x,n) 0;
+else
     p_inc = NaN;
     dp_inc = NaN;
+    if SHBC
+        dpdn = @(x,n) -varCol.dp_inc(x,n);
+    else
+        dpdn = varCol.dpdn;
+    end
 end
-dpdn = varCol.dpdn;
 
 if exteriorProblem
     sgn = 1;
@@ -159,7 +168,7 @@ parfor i = 1:n_cp
     
     for e_y = 1:noElems  
         [BIE, integrals, FF_temp, sctr_y, noGp] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
-                useEnrichedBfuns,k,d_vec,useNeumanProj,SHBC,useCBIE,useHBIE,dpdn,U,...
+                useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                 x,NaN,NaN,NaN,NaN,constants,psiType,useRegul,...
                 p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                 patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
@@ -169,7 +178,7 @@ parfor i = 1:n_cp
         totNoQP = totNoQP + noGp;
     end       
     A(i,:) = A_row;
-    FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,NaN,NaN,x,NaN,...
+    FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,NaN,NaN,x,NaN,...
                 U,dU,p_inc,dp_inc,dpdn,NaN,NaN,NaN,NaN,sgn);
 end
 

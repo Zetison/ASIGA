@@ -1,8 +1,8 @@
-function F_eTemp = getF_eTemp(F_eTemp,useNeumanProj,SHBC,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
+function F_eTemp = getF_eTemp(F_eTemp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn)
 
 if useNeumanProj
-    if SHBC
+    if solveForPtot
         if useCBIE
             p_inc_x = R_x*U(sctr_x,:);
         end
@@ -15,7 +15,7 @@ if useNeumanProj
         end
     end
 else
-    if SHBC
+    if solveForPtot
         if useCBIE
             p_inc_x = p_inc(x);
         end
@@ -28,7 +28,7 @@ else
         end
     end
 end
-if SHBC
+if solveForPtot
     if useCBIE
         F_eTemp = F_eTemp - p_inc_x;
     end

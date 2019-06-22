@@ -23,13 +23,11 @@ knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
 noDofs = varCol.noDofs;
 extraGP = varCol.extraGP;
-formulation = varCol.formulation;
 
-switch formulation(end-2:end)
-    case 'tot'
-        analytic = @(x) varCol.analytic(x) + varCol.p_inc(x);
-    otherwise
-        analytic = varCol.analytic;
+if varCol.solveForPtot
+    analytic = @(x) varCol.analytic(x) + varCol.p_inc(x);
+else
+    analytic = varCol.analytic;
 end
 
 if strcmp(varCol.coreMethod, 'XI')
@@ -43,7 +41,7 @@ k = varCol.k;
 totNoQP = 0;
 
 switch varCol.formulation
-    case {'SL2E','SL2Etot'}
+    case 'SL2E'
         %% Preallocation and initiallizations
         n_en = (p_xi+1)*(p_eta+1);
         [W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP); 
@@ -152,7 +150,7 @@ switch varCol.formulation
             Fvalues(:,e,:) = R.'*(analytic_values(:,e).*repmat(abs(J_1)*J_2.*W2D,1,1,no_funcs));
             totNoQP = totNoQP + numel(Qxi);
         end
-    case {'VL2E','VL2Etot'}
+    case 'VL2E'
         elRangeZeta = varCol.elRange{3};
         p_zeta = varCol.degree(3); % assume p_eta is equal in all patches
         

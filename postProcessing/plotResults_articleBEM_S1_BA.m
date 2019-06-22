@@ -9,13 +9,13 @@ for study_i = 1:numel(studies)
                      'lineStyle',       '*-', ... 
                      'xLoopName',       'M', ...
                      'subFolderName',   '../results/articleBEM_S1parmComp', ...
-                     'legendEntries',   {{'method','formulation','degree','parm'}}, ...
+                     'legendEntries',   {{'solveForPtot','method','degree','parm'}}, ...
                      'noXLoopPrms',     1); 
 
     figure(2)
     printResultsToTextFiles(study,options)
 
-    options.legendEntries = {'formulation','M','method','degree','parm'};
+    options.legendEntries = {'solveForPtot','M','method','degree','parm'};
     options.xname = 'alpha';
     options.yname = 'error_p';
     options.axisType = 'semilogy';
@@ -26,7 +26,11 @@ for study_i = 1:numel(studies)
     printResultsToTextFiles(study,options)
 
     options.yname = 'error_pAbs';
-
     figure(4)
+    printResultsToTextFiles(study,options)
+
+    options.yname = 'TS';
+    options.axisType = 'plot';
+    figure(5)
     printResultsToTextFiles(study,options)
 end

@@ -55,6 +55,7 @@ computeCondNumber = false;
 storeSolution = false;
 storeFullVarCol = false;
 clearGlobalMatrices = true;
+solveForPtot = false;
 extraGP = 0; % extra quadrature points
 extraGPBEM = 50; % extra quadrature points around singularities for BEM formulations
 agpBEM = 1.4; % parameter for adaptiv Gauss point integration around singularities for BEM formulations

@@ -41,6 +41,7 @@ varCol.initMeshFactZeta	= task.initMeshFactZeta;
 varCol.useNeumanProj    = task.useNeumanProj;
 varCol.colBEM_C0        = task.colBEM_C0;
 varCol.colMethod        = task.colMethod;
+varCol.solveForPtot     = task.solveForPtot;
 plotResidualError       = task.plotResidualError;
 if isfield(task,'delta')
     varCol.delta = task.delta;
