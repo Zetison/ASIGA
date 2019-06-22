@@ -94,9 +94,9 @@ switch method
         boundaryMethod = true;
     case 'BA'
         switch formulation
-            case 'SL2E'
+            case {'SL2E','SL2Etot'}
                 boundaryMethod = true;
-            case 'VL2E'
+            case {'VL2E','VL2Etot'}
                 boundaryMethod = false;
             otherwise
                 error('Not implemented')

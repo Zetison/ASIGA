@@ -19,6 +19,7 @@ else
     R_xScaled = complex(zeros(size(R_x)));
     if useCBIE
         R_xScaled = R_x*(-0.5*(1+sgn) - integrals{1});
+%         R_xScaled = sgn*R_x*integrals{1};
     end
     if useHBIE
         dphidv = dXIdv*[dR_xdxi; dR_xdeta];

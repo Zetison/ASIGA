@@ -23,6 +23,14 @@ knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
 noDofs = varCol.noDofs;
 extraGP = varCol.extraGP;
+formulation = varCol.formulation;
+
+switch formulation(end-2:end)
+    case 'tot'
+        analytic = @(x) varCol.analytic(x) + varCol.p_inc(x);
+    otherwise
+        analytic = varCol.analytic;
+end
 
 if strcmp(varCol.coreMethod, 'XI')
     useEnrichedBfuns = true;
@@ -35,7 +43,7 @@ k = varCol.k;
 totNoQP = 0;
 
 switch varCol.formulation
-    case 'SL2E'
+    case {'SL2E','SL2Etot'}
         %% Preallocation and initiallizations
         n_en = (p_xi+1)*(p_eta+1);
         [W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP); 
@@ -77,10 +85,10 @@ switch varCol.formulation
         end
         v_values = reshape(v_values, size(W2D,1)*noElems, 3);
         n_values = reshape(n_values, size(W2D,1)*noElems, 3);
-        if nargin(varCol.analytic) == 2
-            analytic_values = varCol.analytic(v_values,n_values);
+        if nargin(analytic) == 2
+            analytic_values = analytic(v_values,n_values);
         else
-            analytic_values = varCol.analytic(v_values);
+            analytic_values = analytic(v_values);
         end
             
         no_funcs = size(analytic_values,2);
@@ -144,7 +152,7 @@ switch varCol.formulation
             Fvalues(:,e,:) = R.'*(analytic_values(:,e).*repmat(abs(J_1)*J_2.*W2D,1,1,no_funcs));
             totNoQP = totNoQP + numel(Qxi);
         end
-    case 'VL2E'
+    case {'VL2E','VL2Etot'}
         elRangeZeta = varCol.elRange{3};
         p_zeta = varCol.degree(3); % assume p_eta is equal in all patches
         
@@ -185,7 +193,7 @@ switch varCol.formulation
             v_values(:,e,:) = R*pts;
         end
         v_values = reshape(v_values, size(W3D,1)*noElems, 3);
-        analytic_values = varCol.analytic(v_values);
+        analytic_values = analytic(v_values);
         no_funcs = size(analytic_values,2);
         analytic_values = reshape(analytic_values, size(W3D,1),noElems,no_funcs);
 

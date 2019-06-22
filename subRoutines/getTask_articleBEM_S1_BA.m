@@ -1,36 +1,25 @@
-
-
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+model = 'S1';
+k = 10;
+% f = 1e2;             % Frequency
+f = k*1500/(2*pi);
+N = 6;
+M = 1:5;
+% M = 1;
+parm = [1,2];
+% parm = 2;
+degree = 4;
 
-model = 'S1_P';
-
-coreMethod = 'IGA';
-
-% alpha_s = 270*pi/180;
 alpha_s = 240*pi/180;
-beta_s = 0*pi/180;        
-plot3Dgeometry = 0;
-plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
+beta_s = 30*pi/180;
 
-% f = [5e2, 1e3]; %[1e2 5e2 1e3];             % Frequency
-f = 1e2; %[1e2 5e2 1e3];             % Frequency
-alpha = (0:0.05:360)*pi/180;
+alpha = (0:0.5:360)*pi/180;
+beta = 30*pi/180;
+calculateSurfaceError = 1;
+calculateFarFieldPattern = 1;
 
-plotResultsInParaview = 0;
-plotMesh              = 0;	% Create additional Paraview files to visualize IGA mesh
-plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dynamic result
-calculateSurfaceError = true;
-calculateFarFieldPattern = false;
+loopParameters = {'M','parm','method','formulation'};
 
-applyLoad = 'radialPulsation';
-BC = 'NBC';
 method = {'BA'};
-formulation = 'SL2E';
-parm = 1;
-M = 1:9;
-storeSolution = 0;
-storeFullVarCol = 0;
-loopParameters = {'method','M','degree','f'};
-degree = 2:4;
+formulation = {'SL2Etot','SL2E'};
 collectIntoTasks
-

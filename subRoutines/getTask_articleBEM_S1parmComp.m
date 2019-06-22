@@ -27,7 +27,7 @@ loopParameters = {'M','parm','method','formulation'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 method = {'BA'};
-formulation = {'SL2E'};
+formulation = {'SL2Etot','SL2E'};
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,4 +35,4 @@ method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
 useNeumannProj = false;
 
-collectIntoTasks
+% collectIntoTasks

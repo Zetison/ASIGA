@@ -47,5 +47,6 @@ else
     end
     if useHBIE
         F_eTemp = F_eTemp + alpha*dpdn_x*(integrals{1} + 0.5*(1+sgn) - nx*integrals{3});
+%         F_eTemp = F_eTemp + alpha*dpdn_x*(-sgn*integrals{1} - nx*integrals{3});
     end
 end

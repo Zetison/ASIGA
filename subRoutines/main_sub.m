@@ -401,6 +401,7 @@ for i_k = 1:size(k,2)
                 fprintf('using %12f seconds.', toc)
             end
             if strcmp(formulation(end),'C')
+                tic
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
                 [A_CHIEF, FF_CHIEF, varCol] = buildCHIEFmatrixVec(varCol);
                 A = [A; A_CHIEF];
@@ -576,7 +577,7 @@ for i_k = 1:size(k,2)
             % normUU = norm(UU)
             % condest(A)
             % keyboard
-            if computeCondNumber
+            if computeCondNumber && (size(A,1) == size(A,2))
                 rng('default') % for reproducibility in condest
                 condNumber = condest(A);
     %             condNumber = cond(full(A))
