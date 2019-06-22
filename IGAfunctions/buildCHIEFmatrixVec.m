@@ -77,9 +77,9 @@ centerPts = findCenterPoints(patches);
 if exteriorProblem
     switch model
         case 'S1'
-            Xarr = linspace(-0.5,1,3)/4;
-            Yarr = linspace(-0.5,1,3)/4;
-            Zarr = linspace(-0.5,1,3)/4;
+            Xarr = linspace(-1,1,3)/4;
+            Yarr = linspace(-1,1,3)/4;
+            Zarr = linspace(-1,1,3)/4;
             [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
             cp = [X(:),Y(:), Z(:)];
         case {'BCA','BCA_P'}
