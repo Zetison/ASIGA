@@ -23,7 +23,7 @@ BC = 'SHBC';
 
 method = {'BEM'};
 % coreMethod = 'XI';
-formulation = {'CCBIEC'};
+formulation = {'CCBIE'};
 % formulation = {'CRCBIE'};
 M = 1:3;
 degree = [2,5];
@@ -35,7 +35,7 @@ loopParameters = {'method','formulation','M','degree','f','formulation','scatter
 
 
 f = 1e3;             % Frequency
-formulation = {'CCBIEC'};
+formulation = {'CBM'};
 collectIntoTasks
 
 
