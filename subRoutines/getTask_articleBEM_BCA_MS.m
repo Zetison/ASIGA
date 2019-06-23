@@ -23,18 +23,19 @@ BC = 'SHBC';
 
 method = {'BEM'};
 % coreMethod = 'XI';
-formulation = {'CBM'};
+formulation = {'CCBIEC'};
 % formulation = {'CRCBIE'};
 M = 1:3;
 degree = [2,5];
 storeSolution = 0;
 storeFullVarCol = 0;
+agpBEM = 0.6;
 loopParameters = {'method','formulation','M','degree','f','formulation','scatteringCase'};
 % collectIntoTasks
 
 
 f = 1e3;             % Frequency
-formulation = {'CBM'};
+formulation = {'CCBIEC'};
 collectIntoTasks
 
 

@@ -416,7 +416,7 @@ for i_k = 1:size(k,2)
                 warning('An element of A is NaN or Inf')
             end
             noDofs_tot = varCol.noDofs;
-            varCol.timeBuildSystem = toc;
+            varCol.timeBuildSystem = toc(t_start);
         case 'BA'
             tic
             if ~runTasksInParallel

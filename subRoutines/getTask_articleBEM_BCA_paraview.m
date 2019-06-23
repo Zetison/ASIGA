@@ -14,7 +14,7 @@ alpha = (0:0.05:360)*pi/180;
 BC = 'SHBC';
 
 method = {'BEM'};
-formulation = 'CBM';
+formulation = 'CCBIEC';
 
 
 f = 1e3;             % Frequency
@@ -28,6 +28,7 @@ plotTimeOscillation   = 1;	% Create 30 paraview files in order to visualize a dy
 computeCondNumber = 0;
 storeSolution = 0;
 storeFullVarCol = 0;
+agpBEM = 0.6;
 loopParameters = {'method','degree'};
 collectIntoTasks
 

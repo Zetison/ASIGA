@@ -26,7 +26,7 @@ storeSolution = 0;
 storeFullVarCol = 0;
 degree = [2,5];
 % degree = 5;
-agpBEM = 1.4;
+agpBEM = 0.6;
 % degree = 2;
 loopParameters = {'method','degree','formulation','M','f'};
 % collectIntoTasks
