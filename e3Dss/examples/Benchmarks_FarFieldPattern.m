@@ -6,7 +6,7 @@ addpath ../utils
 addpath ../models
 
 
-pathToResults = '../../plotData/e3Dss/';
+pathToResults = '../../../plotData/e3Dss/';
 % pathToResults = '../results';
 
 % startMatlabPool
@@ -23,7 +23,7 @@ d_vec = -[cos(beta_s)*cos(alpha_s);
 models = {'S1','S3','S5','S35','S15','S13','S135'};
 % models = {'S1'};
 
-for scatteringCase = {'BI','Sweep'}
+for scatteringCase = {'BI'} %,'Sweep'}
     switch scatteringCase{1}
         case 'BI'
             delta_alpha = 0.1;
@@ -45,7 +45,7 @@ for scatteringCase = {'BI','Sweep'}
                 for ESBC = [1, 0]
                     if ~(ESBC + SHBC + SSBC > 1)
                         if strcmp(scatteringCase{1},'BI')
-                            if strcmp(model,'S5') && exist([pathToResults 'S5_SHBC_F30_specialValues'], 'file')
+                            if strcmp(model,'S5') && exist([pathToResults 'S5_SHBC_F30_specialValues.mat'], 'file')
                                 load([pathToResults 'S5_SHBC_F30_specialValues'])
                                 alpha_f_arr = unique(sort([specialValues', alpha_f_arr]));
                             else
@@ -148,7 +148,7 @@ for scatteringCase = {'BI','Sweep'}
                             for i = 1:length(f)
 
                                 figure(i)
-                                saveName = [model '_' scatteringCase{1} '_A'  aspect '_E' elevation '_F' num2str(f(i)/1000)];
+                                saveName = [model '_' BC '_' scatteringCase{1} '_A'  aspect '_E' elevation '_F' num2str(f(i)/1000)];
                                 filename = [pathToResults '/' saveName];
                                 varCol.f = f(i);
                                 varCol.saveName = saveName;
@@ -170,12 +170,15 @@ for scatteringCase = {'BI','Sweep'}
             end
         end
         if strcmp(scatteringCase{1}, 'Sweep')
+            saveName = [model '_' scatteringCase{1} '_A'  aspect '_E' elevation '_F' frequency];
+            filename = [pathToResults '/' saveName];
             savefig([filename '.fig'])
         elseif strcmp(scatteringCase{1}, 'BI')
             for i = 1:length(f)
                 figure(i)
-%                 legend({'SHBC'}, 'interpreter', 'none')
+                saveName = [model '_' scatteringCase{1} '_A'  aspect '_E' elevation '_F' num2str(f(i)/1000)];
                 title([saveName(1:end-2) num2str(f(i)/1000)], 'interpreter', 'none')
+                filename = [pathToResults '/' saveName];
                 savefig([filename(1:end-2) num2str(f(i)/1000) '.fig'])
             end
         end

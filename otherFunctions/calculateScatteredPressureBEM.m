@@ -19,9 +19,6 @@ pIndex = varCol.pIndex;
 % dofsToRemove = varCol.dofsToRemove;
 % noDofs = varCol.noDofs;
 
-Phi_k = varCol.Phi_k;
-dPhi_kdny = varCol.dPhi_kdny;
-
 k = varCol.k;
 
 

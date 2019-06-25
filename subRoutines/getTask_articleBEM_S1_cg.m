@@ -35,21 +35,3 @@ plot3Dgeometry = 0;
 plotResidualError = true;
 loopParameters = {'M','formulation','method','degree','coreMethod'};
 collectIntoTasks
-
-Mend = 6;
-degree = 4:5;
-M = 1:Mend;
-M = Mend;
-plotResidualError = false;
-formulation = {'CCBIE','CHBIE','CBM'};
-loopParameters = {'M','formulation','method','degree','coreMethod','colMethod'};
-colMethod = {'CG','Grev','GL'};
-colMethod = {'GL'};
-% collectIntoTasks
-
-
-method = {'BA'};
-formulation = {'SL2E'};
-colMethod = NaN;
-% collectIntoTasks
-

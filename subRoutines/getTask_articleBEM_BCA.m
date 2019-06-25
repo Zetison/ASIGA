@@ -21,12 +21,12 @@ BC = 'SHBC';
 
 method = {'BEM'};
 formulation = {'CCBIE'};
-formulation = {'CBM'};
+% formulation = {'CBM'};
 M = 1:3;
 degree = [2,5];
 storeSolution = 0;
 storeFullVarCol = 0;
-% agpBEM = 0.6;
+agpBEM = 0.6;
 loopParameters = {'method','formulation','M','degree','f','scatteringCase'};
 
 collectIntoTasks
