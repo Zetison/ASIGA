@@ -5,7 +5,7 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 model = 'IL';
 
 method = 'IE';
-parm = 2;
+parm = 1;
 % method = 'BA';
 % method = {'IENSG'};
 % method = {'BEM'};
@@ -13,9 +13,9 @@ parm = 2;
 for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
 
 %     coreMethod = {'C0_IGA','hp_FEM'};
-    coreMethod = {'IGA'};
+%     coreMethod = {'IGA'};
     coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
-%     formulation = 'BGU';
+    formulation = 'BGU';
 %     formulation = 'VL2E';
 %     formulation = 'SL2E';
     c_f = 1524;
@@ -48,16 +48,13 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     collectIntoTasks
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     coreMethod = {'IGA'};
-    if strcmp(BC{1}, 'SHBC')
-        M = 1:6;
-    end
     degree = 3:4;
     collectIntoTasks
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     coreMethod = {'linear_FEM'};
     degree = 1;
-    M = [mesh, mesh(end)+1];
+    M = [M, M(end)+1];
 
     collectIntoTasks
 end

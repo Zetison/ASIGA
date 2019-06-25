@@ -130,17 +130,17 @@ pD.lineStyle = '-';
 pD.patches = patches;
 hold on
 pD.h = gca;
-% pD = plotGP(pD,x_grev,'red');
-% pD = plotGP(pD,x_gl,'blue');
-% if mod(p_xi,2)
-%     pD = plotGP(pD,x_cg,'green');
-% end
+pD = plotGP(pD,x_grev,'red');
+pD = plotGP(pD,x_gl,'blue');
+if mod(p_xi,2)
+    pD = plotGP(pD,x_cg,'green');
+end
 drawnow
+keyboard
 
 
 eNeighbour = NaN; % to avoid transparency "bug"
 createElementTopology
-
 % legend show
 % set(0,'DefaultLegendAutoUpdate','off')
 [Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEM);

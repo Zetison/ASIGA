@@ -24,14 +24,13 @@ beta_s = 30*pi/180;
 
 parm = 2;
 degree = 4:5;
+degree = 5;
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 0;
 calculateSurfaceError = 1;
 plot2Dgeometry = 0;
 plot3Dgeometry = 0;
 
-% extraGP = 1;
-% extraGPBEM = 1;
 plotResidualError = true;
 loopParameters = {'M','formulation','method','degree','coreMethod'};
 collectIntoTasks

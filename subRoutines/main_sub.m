@@ -391,7 +391,6 @@ for i_k = 1:size(k,2)
             switch formulation(1)
                 case 'G' % Galerkin
                     [A, FF, varCol] = buildBEMmatrix_galerkinVec(varCol);  
-%                     [A, FF, varCol] = buildBEMmatrix_galerkinVec2(varCol);  
                     A(dofsToRemove,:) = [];
                     FF(dofsToRemove,:) = [];
                 case 'C' % Collocation
@@ -411,7 +410,7 @@ for i_k = 1:size(k,2)
                 end
             end
             
-            A(:,dofsToRemove) = [];
+%             A(:,dofsToRemove) = [];
             if any(isinf(A(:))) || any(isnan(A(:)))
                 warning('An element of A is NaN or Inf')
             end
