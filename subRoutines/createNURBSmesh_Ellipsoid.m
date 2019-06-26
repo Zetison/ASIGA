@@ -150,8 +150,8 @@ else
         fluid = getSphericalShellDataPatched(c_z, t_fluid); 
         fluid = elevateDegreeInPatches(fluid,[0 0 3]);
     end
-    fluid = explodeNURBS(fluid,'eta');
-    fluid = explodeNURBS(fluid,'xi');
+%     fluid = explodeNURBS(fluid,'eta');
+%     fluid = explodeNURBS(fluid,'xi');
     nurbsDegree = fluid{1}.degree(1); % assume all degrees are equal
     degree = max(degree,nurbsDegree);
     fluid = elevateDegreeInPatches(fluid,[1 1 1]*(degree-nurbsDegree));

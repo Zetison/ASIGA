@@ -30,7 +30,7 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     elseif strcmp(BC{1}, 'NNBC')
         M = 1:5; %3:6
     end
-%     N = 4;
+%     M = 7;
     alpha_s = pi;
     beta_s = 0;
 
@@ -54,7 +54,6 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     coreMethod = {'linear_FEM'};
     degree = 1;
-    M = [M, M(end)+1];
 
     collectIntoTasks
 end
