@@ -4,18 +4,18 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 
 model = 'IL';
 
-method = 'IE';
 parm = 1;
 % method = 'BA';
 % method = {'IENSG'};
 % method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
 for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
+    method = {'IE'};
 
 %     coreMethod = {'C0_IGA','hp_FEM'};
 %     coreMethod = {'IGA'};
     coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
-    formulation = 'BGU';
+    formulation = {'BGU'};
 %     formulation = 'VL2E';
 %     formulation = 'SL2E';
     c_f = 1524;
@@ -41,20 +41,37 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     calculateSurfaceError = 1;
     plot2Dgeometry = 0;
     plot3Dgeometry = 0;
-    loopParameters = {'M','degree','coreMethod','BC'};
+    loopParameters = {'M','degree','method','coreMethod','formulation','BC'};
 
-    N = 6;
+    N = 5;
     
     collectIntoTasks
+    
+    method = {'BA'};
+    formulation = 'VL2E';
+    collectIntoTasks
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    method = {'IE'};
     coreMethod = {'IGA'};
+    formulation = {'BGU'};
     degree = 3:4;
 %     degree = 4;
     collectIntoTasks
     
+    method = {'BA'};
+    formulation = {'VL2E'};
+    collectIntoTasks    
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    method = {'IE'};
+    formulation = {'BGU'};
     coreMethod = {'linear_FEM'};
     degree = 1;
 
     collectIntoTasks
+    
+    method = {'BA'};
+    formulation = {'VL2E'};
+    collectIntoTasks    
 end
