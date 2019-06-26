@@ -30,11 +30,11 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     elseif strcmp(BC{1}, 'NNBC')
         M = 1:5; %3:6
     end
-%     M = 7;
+    M = 7;
     alpha_s = pi;
     beta_s = 0;
 
-    degree = 2;
+    degree = 4;
     plotResultsInParaview = 0;
     calculateFarFieldPattern = 0;
     calculateVolumeError = 1;
@@ -43,13 +43,12 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     plot3Dgeometry = 0;
     loopParameters = {'M','degree','coreMethod','BC'};
 
-    N = 6;
+    N = 4;
     
     collectIntoTasks
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     coreMethod = {'IGA'};
     degree = 3:4;
-%     degree = 4;
     collectIntoTasks
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
