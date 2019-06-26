@@ -410,7 +410,7 @@ for i_k = 1:size(k,2)
                 end
             end
             
-%             A(:,dofsToRemove) = [];
+            A(:,dofsToRemove) = [];
             if any(isinf(A(:))) || any(isnan(A(:)))
                 warning('An element of A is NaN or Inf')
             end
