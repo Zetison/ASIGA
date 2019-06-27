@@ -99,7 +99,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                 degree = 2;
                 M = 6; % 6
         end
-        M = 1;
+%         M = 1;
         collectIntoTasks
     end
 end
