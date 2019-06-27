@@ -43,7 +43,7 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     plot3Dgeometry = 0;
     loopParameters = {'M','degree','method','coreMethod','formulation','BC'};
 
-    N = 5;
+    N = 6;
     
     collectIntoTasks
     

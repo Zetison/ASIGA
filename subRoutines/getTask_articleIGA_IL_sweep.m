@@ -10,6 +10,8 @@ alpha_s = pi;
 beta_s = 0;
 alpha = alpha_s;
 beta = beta_s;
+parm = 1;
+N = 4; % not sure if this was the original choice in the article
 
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 1;
@@ -87,18 +89,17 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                     M = 4; % 4
                     degree = 3; %1
                 else
-                    M = 5;
+                    M = 5; % 5
                     degree = 2:3;
                 end
             case 'hp_FEM'
                 degree = 2;
-                M = 5;
+                M = 5; % 5
             case 'linear_FEM'
                 degree = 2;
-                M = 6;
+                M = 6; % 6
         end
         % M = 5;
-        % N = 4;
 
         collectIntoTasks
     end

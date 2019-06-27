@@ -59,14 +59,14 @@ for j = 1:3
         degree = task.degree;
         t_sys = task.varCol.timeBuildSystem;
         t_sol = task.varCol.tot_time - t_sys;
-        noElems = task.varCol.noElems;
+        noElems = task.varCol.totNoElems;
         dofs = task.varCol.dofs;
         switch task.coreMethod
             case 'IGA'
-                fprintf('Mesh ${\\cal M}_{%d,%d,%d}^{\\textsc{iga}}$\t\t\t & %5d\t & %d \t & %5.2f & %6.2f & %5.2f \\cr\n', ...
+                fprintf('Mesh ${\\cal M}_{%d,%d,%d}^{\\textsc{iga}}$\t\t\t & %6d\t & %6d \t & %5.2f & %6.2f & %5.2f \\cr\n', ...
                          M, degree, degree-1, noElems, dofs, t_sys, t_sol, task.results.energyError);
             otherwise
-                fprintf('Mesh ${\\cal M}_{%d,%d,\\mathrm{i}}^{\\textsc{fem}}$\t & %5d\t & %d \t & %5.2f & %6.2f & %5.2f \\cr\n', ...
+                fprintf('Mesh ${\\cal M}_{%d,%d,\\mathrm{i}}^{\\textsc{fem}}$\t & %6d\t & %6d \t & %5.2f & %6.2f & %5.2f \\cr\n', ...
                          M, degree, noElems, dofs, t_sys, t_sol, task.results.energyError);
         end
     end
