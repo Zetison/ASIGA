@@ -62,6 +62,7 @@ if useSolidDomain
     varCol_solid.solveForPtot = false;
     varCol_solid.coreMethod = coreMethod;
     varCol_solid.k = NaN;
+    varCol_solid.formulation = formulation;
 end
 if useInnerFluidDomain     
     varCol_fluid_i.dimension = 1;   
@@ -72,4 +73,5 @@ if useInnerFluidDomain
     varCol_fluid_i.extraGP = extraGP;
     varCol_fluid_i.solveForPtot = false;
     varCol_fluid_i.coreMethod = coreMethod;
+    varCol_fluid_i.formulation = formulation;
 end

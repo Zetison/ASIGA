@@ -1,7 +1,4 @@
-
-
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-
 model = 'IL';
 
 parm = 1;
@@ -9,7 +6,7 @@ parm = 1;
 % method = {'IENSG'};
 % method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
-for BC = {'NNBC'} %{'SHBC', 'SSBC','NNBC'}
+for BC = {'SHBC', 'SSBC','NNBC'}
     method = {'IE'};
 
 %     coreMethod = {'C0_IGA','hp_FEM'};
@@ -23,11 +20,11 @@ for BC = {'NNBC'} %{'SHBC', 'SSBC','NNBC'}
     omega = k*c_f;
     f = omega/(2*pi); 
     if strcmp(BC{1}, 'SHBC')
-        M = 1:3; %1:7
+        M = 1:7; %1:7
     elseif strcmp(BC{1}, 'SSBC')
-        M = 1:2; %1:6
+        M = 1:6; %1:6
     elseif strcmp(BC{1}, 'NNBC')
-        M = 1:2; %1:5
+        M = 1:5; %1:5
     end
 %     M = 7;
     alpha_s = pi;
@@ -44,7 +41,7 @@ for BC = {'NNBC'} %{'SHBC', 'SSBC','NNBC'}
 
     N = 6;
     
-%     collectIntoTasks
+    collectIntoTasks
     
     method = {'BA'};
     formulation = {'VL2E'};

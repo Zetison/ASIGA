@@ -419,9 +419,14 @@ for i_k = 1:size(k,2)
         case 'BA'
             tic
             if ~runTasksInParallel
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Building BA matrix ... ')
+                fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
             end
             [A_fluid_o, FF_fluid_o, varCol] = bestApproximationVec(varCol);
+            noDofs_tot = varCol.noDofs;
+            varCol.timeBuildSystem = toc;
+            if ~runTasksInParallel
+                fprintf('using %12f seconds.', varCol.timeBuildSystem)
+            end
 
             if useSolidDomain 
                 tic
@@ -430,7 +435,9 @@ for i_k = 1:size(k,2)
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
                 end
                 [A_solid, FF_solid, varCol_solid] = bestApproximationVec(varCol_solid);
-                
+                A_solid = kron(A_solid,eye(3));
+                FF_solid = FF_solid.';
+                FF_solid = FF_solid(:);
                 noDofs_tot = noDofs_tot + varCol_solid.noDofs;
                 dofsToRemove = [varCol_solid.dofsToRemove (varCol.dofsToRemove+varCol_solid.noDofs)];
                 varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
@@ -482,18 +489,35 @@ for i_k = 1:size(k,2)
             end
             
             
-            dofsToRemove = varCol.dofsToRemove;  
-            noDofs_tot = varCol.noDofs;
 
+            %% Modify system of equations
+            % Remove the rows and columns of the global matrix corresponding to
+            % removed degrees of freedom
+            if useSolidDomain 
+                P1 = speye(size(A));
+%                 if useInnerFluidDomain
+%                     P1(1:varCol_fluid_i.noDofs, 1:varCol_fluid_i.noDofs) = ...
+%                         sqrt(omega^2*rho_f(2))*speye(varCol_fluid_i.noDofs);
+%                 end
+% 
+%                 P1(shift+1:shift+varCol_solid.noDofs, shift+1:shift+varCol_solid.noDofs) = ...
+%                     1/sqrt(max([omega^2*rho_s, C(1,1)]))*speye(varCol_solid.noDofs);
+%                 P1(shift+1+varCol_solid.noDofs:end, shift+1+varCol_solid.noDofs:end) = ...
+%                     sqrt(omega^2*rho_f(1))*speye(varCol.noDofs);
+% 
+%                 A = P1*A*P1;
+%                 FF = P1*FF;
+
+                P1(dofsToRemove,:) = [];  
+                P1(:,dofsToRemove) = [];
+            end
+            
             A(dofsToRemove,:) = [];  
             A(:,dofsToRemove) = [];
 
             FF(dofsToRemove,:) = [];
 
             varCol.timeBuildSystem = toc;
-            if ~runTasksInParallel
-                fprintf('using %12f seconds.', varCol.timeBuildSystem)
-            end
         case 'MFS'
             tic
             if ~runTasksInParallel

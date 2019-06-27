@@ -21,7 +21,7 @@ weights = varCol.weights;
 controlPts = varCol.controlPts;
 knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
-noDofs = varCol.noDofs;
+noDofs = varCol.noCtrlPts;
 extraGP = varCol.extraGP;
 
 if varCol.solveForPtot
@@ -90,7 +90,7 @@ switch varCol.formulation
         end
             
         no_funcs = size(analytic_values,2);
-        analytic_values = reshape(analytic_values, size(W2D,1), noElems, no_funcs);
+        analytic_values = permute(reshape(analytic_values, size(W2D,1), noElems, no_funcs),[1,3,2]);
 
 
         %% Build global matrices
@@ -147,7 +147,7 @@ switch varCol.formulation
             Mvalues(:,e) = reshape(m_e, sizeMe, 1);
 
             F_indices(:,e) = sctr';
-            Fvalues(:,e,:) = R.'*(analytic_values(:,e).*repmat(abs(J_1)*J_2.*W2D,1,1,no_funcs));
+            Fvalues(:,e,:) = R.'*(analytic_values(:,:,e).*repmat(abs(J_1)*J_2.*W2D,1,no_funcs));
             totNoQP = totNoQP + numel(Qxi);
         end
     case 'VL2E'
@@ -193,7 +193,7 @@ switch varCol.formulation
         v_values = reshape(v_values, size(W3D,1)*noElems, 3);
         analytic_values = analytic(v_values);
         no_funcs = size(analytic_values,2);
-        analytic_values = reshape(analytic_values, size(W3D,1),noElems,no_funcs);
+        analytic_values = permute(reshape(analytic_values, size(W3D,1), noElems, no_funcs),[1,3,2]);
 
 
         %% Build global matrices
@@ -205,6 +205,7 @@ switch varCol.formulation
         Fvalues   = zeros(n_en,noElems,no_funcs); 
         F_indices = zeros(n_en,noElems); 
 
+%         for e = 1:noElems
         parfor e = 1:noElems
             patch = pIndex(e); % New
             Xi = knotVecs{patch}{1}; % New
@@ -253,7 +254,7 @@ switch varCol.formulation
             Mvalues(:,e) = reshape(m_e, sizeMe, 1);
 
             F_indices(:,e) = sctr';
-            Fvalues(:,e,:) = R.'*(analytic_values(:,e).*repmat(abs(J_1)*J_2.*W3D,1,1,no_funcs));
+            Fvalues(:,e,:) = R.'*(analytic_values(:,:,e).*repmat(abs(J_1)*J_2.*W3D,1,no_funcs));
             totNoQP = totNoQP + numel(Qxi);
         end
 end
