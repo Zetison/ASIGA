@@ -1,6 +1,6 @@
 
 
-scatteringCase = 'Sweep'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'IL';
 formulation = 'BGU';
@@ -26,7 +26,7 @@ coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
 % coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
-    for BC = {'SHBC','SSBC','NNBC'} %
+    for BC = {'NNBC'} %,'SSBC','NNBC'} %
         npts = 1500;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;
@@ -99,8 +99,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                 degree = 2;
                 M = 6; % 6
         end
-        % M = 5;
-
+        M = 1;
         collectIntoTasks
     end
 end

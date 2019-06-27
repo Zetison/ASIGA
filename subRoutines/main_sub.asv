@@ -429,6 +429,7 @@ for i_k = 1:size(k,2)
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
                 end
+                A_solid = A_K-rho_s*omega^2*A_M;
                 [A_solid, FF_solid, varCol_solid] = bestApproximationVec(varCol_solid);
                 
                 noDofs_tot = noDofs_tot + varCol_solid.noDofs;
@@ -458,27 +459,20 @@ for i_k = 1:size(k,2)
 
             % Collect all matrices
             A = sparse(noDofs_tot,noDofs_tot);
-            FF = zeros(noDofs_tot,1);
             if ~useSolidDomain
                 varCol.noDofs_tot = noDofs_tot;
                 A = A_fluid_o;   
-                FF = FF_fluid_o;
             elseif useSolidDomain && ~useInnerFluidDomain
                 varCol_solid.noDofs_tot = noDofs_tot;
                 A(1:varCol_solid.noDofs,1:varCol_solid.noDofs) = A_solid;  
                 A((varCol_solid.noDofs+1):noDofs_tot,(varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o; 
                 shift = 0;
-                FF(1:varCol_solid.noDofs) = FF_solid;
-                FF((varCol_solid.noDofs+1):noDofs_tot) = FF_fluid_o;
             else 
                 varCol_solid.noDofs_tot = noDofs_tot;
                 A(1:varCol_fluid_i.noDofs,1:varCol_fluid_i.noDofs) = A_fluid_i; 
                 A((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs),(varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs)) = A_solid;
                 A((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot,(varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o;
                 shift = varCol_fluid_i.noDofs;
-                FF(1:varCol_fluid_i.noDofs) = FF_fluid_i;
-                FF((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs)) = FF_solid;
-                FF((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot) = FF_fluid_o;
             end
             
             

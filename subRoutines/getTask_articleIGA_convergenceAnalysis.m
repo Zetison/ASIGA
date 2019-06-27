@@ -9,7 +9,7 @@ parm = 1;
 % method = {'IENSG'};
 % method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
-for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
+for BC = {'NNBC'} %{'SHBC', 'SSBC','NNBC'}
     method = {'IE'};
 
 %     coreMethod = {'C0_IGA','hp_FEM'};
@@ -23,12 +23,11 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     omega = k*c_f;
     f = omega/(2*pi); 
     if strcmp(BC{1}, 'SHBC')
-        M = 1:7; %3:6
-%         M = 1:2; %3:6
+        M = 1:3; %1:7
     elseif strcmp(BC{1}, 'SSBC')
-        M = 1:6; %3:6
+        M = 1:2; %1:6
     elseif strcmp(BC{1}, 'NNBC')
-        M = 1:5; %3:6
+        M = 1:2; %1:5
     end
 %     M = 7;
     alpha_s = pi;
@@ -45,7 +44,7 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
 
     N = 6;
     
-    collectIntoTasks
+%     collectIntoTasks
     
     method = {'BA'};
     formulation = {'VL2E'};

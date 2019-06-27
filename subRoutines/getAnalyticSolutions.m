@@ -175,6 +175,12 @@ switch applyLoad
             varCol.farField = @(v) farField_(v,e3Dss_options);
             varCol.analytic = @(v) analytic_(v,e3Dss_options);
             varCol.gAnalytic = @(v) gAnalytic_(v,e3Dss_options);
+            if useSolidDomain
+                varCol_solid.analytic = @(v) analytic_solid_(v,e3Dss_options);
+            end
+            if useInnerFluidDomain
+                varCol_fluid_i.analytic = @(v) analytic_fluid_i_(v,e3Dss_options);
+            end
         else
             e3Dss_options = [];
         end

@@ -59,6 +59,9 @@ if useSolidDomain
     varCol_solid.rho_s = rho_s;
     
     varCol_solid.extraGP = extraGP;
+    varCol_solid.solveForPtot = false;
+    varCol_solid.coreMethod = coreMethod;
+    varCol_solid.k = NaN;
 end
 if useInnerFluidDomain     
     varCol_fluid_i.dimension = 1;   
@@ -67,4 +70,6 @@ if useInnerFluidDomain
     varCol_fluid_i.k = k(2,:);
     varCol_fluid_i.rho_f = rho_f(2);
     varCol_fluid_i.extraGP = extraGP;
+    varCol_fluid_i.solveForPtot = false;
+    varCol_fluid_i.coreMethod = coreMethod;
 end
