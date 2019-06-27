@@ -6,13 +6,25 @@ model = 'IL';
 formulation = 'BGU';
 method = 'IE';
 
+alpha_s = pi;
+beta_s = 0;
+alpha = alpha_s;
+beta = beta_s;
+
+plotResultsInParaview = 0;
+calculateFarFieldPattern = 1;
+calculateVolumeError = 1;
+calculateSurfaceError = 0;
+runTasksInParallel = 1;
+loopParameters = {'M','degree','coreMethod','BC','f'};
+
 % for coreMethod = {'IGA','hp_FEM','linear_FEM'}
 %     for BC = {'SHBC','SSBC','NNBC'}
 coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
-coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+% coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
-    for BC = {'SHBC'} %{'SHBC','SSBC','NNBC'} %
+    for BC = {'SHBC','SSBC','NNBC'} %
         npts = 1500;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;
@@ -87,17 +99,6 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
         end
         % M = 5;
         % N = 4;
-
-        alpha_s = pi;
-        beta_s = 0;
-        alpha = alpha_s;
-        beta = beta_s;
-
-        plotResultsInParaview = 0;
-        calculateFarFieldPattern = 1;
-        calculateVolumeError = 1;
-        calculateSurfaceError = 0;
-        loopParameters = {'M','degree','coreMethod','BC','f'};
 
         collectIntoTasks
     end

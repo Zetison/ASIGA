@@ -1051,6 +1051,7 @@ else
         varColTemp.nepw = varCol.nepw;
         varColTemp.tot_time = varCol.tot_time;
         varColTemp.noElems = varCol.noElems;
+        varColTemp.totNoElems = varCol.totNoElems;
         if storeSolution
             varColTemp.U = varCol.U;
         end

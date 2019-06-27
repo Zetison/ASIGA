@@ -44,7 +44,8 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
 end
 return
 for j = 1:3
-    tasks = studies(9+j).tasks;
+    tasks = studies(j).tasks;
+    tasks(end+1) = studies(9+j).tasks;
     tasks(end+1) = studies(6+j).tasks;
     tasks(end+1) = studies(3+j).tasks(1);
     tasks(end+1) = studies(j).tasks(1);
