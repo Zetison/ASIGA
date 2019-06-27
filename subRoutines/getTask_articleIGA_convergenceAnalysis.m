@@ -26,7 +26,7 @@ for BC = {'SHBC', 'SSBC','NNBC'}
     elseif strcmp(BC{1}, 'NNBC')
         M = 1:5; %1:5
     end
-%     M = 7;
+%     M = 1:3;
     alpha_s = pi;
     beta_s = 0;
 

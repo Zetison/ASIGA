@@ -423,6 +423,7 @@ for i_k = 1:size(k,2)
             end
             [A_fluid_o, FF_fluid_o, varCol] = bestApproximationVec(varCol);
             noDofs_tot = varCol.noDofs;
+            dofsToRemove = varCol.dofsToRemove;
             varCol.timeBuildSystem = toc;
             if ~runTasksInParallel
                 fprintf('using %12f seconds.', varCol.timeBuildSystem)
