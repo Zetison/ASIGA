@@ -48,7 +48,7 @@ for BC = {'SHBC'} %{'SHBC', 'SSBC','NNBC'}
     collectIntoTasks
     
     method = {'BA'};
-    formulation = 'VL2E';
+    formulation = {'VL2E'};
     collectIntoTasks
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
