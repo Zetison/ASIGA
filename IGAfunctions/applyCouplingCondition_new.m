@@ -94,7 +94,7 @@ parfor e = 1:solidNoElemsXiEta
         xi  = parent2ParametricSpace(Xi_e, pt(1));
         eta = parent2ParametricSpace(Eta_e,pt(2));
 
-        [R_fun, dRxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, weights(solidNodes));
+        [R_fun, dRxi, dRdeta] = NURBS2DBasis_old(xi, eta, p_xi, p_eta, Xi, Eta, weights(solidNodes));
 
         J = pts'*[dRxi' dRdeta'];
         crossProd = cross(J(:,1), J(:,2));  % pointing outwards if sphere

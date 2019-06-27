@@ -57,11 +57,14 @@ if useSolidDomain
     end
     varCol_solid.omega = omega;
     varCol_solid.rho_s = rho_s;
+    
+    varCol_solid.extraGP = extraGP;
 end
 if useInnerFluidDomain     
     varCol_fluid_i.dimension = 1;   
     varCol_fluid_i = convertNURBS(fluid_i, varCol_fluid_i);
     varCol_fluid_i.omega = omega;
-    varCol_fluid_i.k = k(:,2);
+    varCol_fluid_i.k = k(2,:);
     varCol_fluid_i.rho_f = rho_f(2);
+    varCol_fluid_i.extraGP = extraGP;
 end

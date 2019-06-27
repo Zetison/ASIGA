@@ -85,7 +85,8 @@ if true
             if strcmp(BC, 'SHBC')
                 dp_h_gp = -dp_inc(Y,n); 
             else
-                dp_h_gp = dot3((J'\[dRdxi; dRdeta; dRdzeta]*U(sctr,:)).',n);
+%                 dp_h_gp = dot3((J'\[dRdxi; dRdeta; dRdzeta]*U_sctr).',n);
+                dp_h_gp = (J'\[dRdxi; dRdeta; dRdzeta]*U_sctr).'*n.';
             end
             if computeFarField
                 x_d_n = dot3(P_far, n.')./norm2(P_far);

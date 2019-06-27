@@ -200,7 +200,7 @@ for i_k = 1:size(k,2)
                 options = {'operator','linearElasticity',...
                            'fieldDimension', 3,...
                            'buildMassMatrix', 1};
-                [A_K, A_M] = buildGlobalMatrices(varCol_solid, options);
+                [A_K, A_M] = buildGlobalMatricesVec(varCol_solid, options);
 
                 A_solid = A_K-rho_s*omega^2*A_M;
                 if clearGlobalMatrices
@@ -221,10 +221,10 @@ for i_k = 1:size(k,2)
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building inner fluid matrix ... ')
                 end
-                options = {'operator','laplace',...
+                options = {'operator','Laplace',...
                            'fieldDimension', 1,...
                            'buildMassMatrix', 1};
-                [A_K, A_M] = buildGlobalMatrices(varCol_fluid_i, options);
+                [A_K, A_M] = buildGlobalMatricesVec(varCol_fluid_i, options);
 
                 k_2 = k(2,i_k);
                 A_fluid_i = 1/(rho_f(2)*omega^2)*(A_K - k_2^2*A_M);

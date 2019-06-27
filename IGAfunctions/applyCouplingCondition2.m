@@ -1,24 +1,25 @@
 function A = applyCouplingCondition2(varCol,varCol_i,shift)
 
 
-Xi = varCol.nurbs.knots{1};
-Eta = varCol.nurbs.knots{2};
+Xi = varCol.knotVecs{1}{1};
+Eta = varCol.knotVecs{1}{2};
 
-p_xi = varCol.nurbs.degree(1);
-p_eta = varCol.nurbs.degree(2);
+p_xi = varCol.patches{1}.nurbs.degree(1);
+p_eta = varCol.patches{1}.nurbs.degree(2);
 
-n_xi = varCol.nurbs.number(1);
-n_eta = varCol.nurbs.number(2);
-n_zeta = varCol.nurbs.number(3);
+n_xi = varCol.patches{1}.nurbs.number(1);
+n_eta = varCol.patches{1}.nurbs.number(2);
+n_zeta = varCol.patches{1}.nurbs.number(3);
 
-elRangeXi = varCol.elRangeXi;
-elRangeEta = varCol.elRangeEta;
+elRangeXi = varCol.patches{1}.elRange{1};
+elRangeEta = varCol.patches{1}.elRange{2};
 
-weights = varCol.weights;
-controlPts = varCol.controlPts;
+weights = varCol.patches{1}.weights;
+controlPts = varCol.patches{1}.controlPts;
 
 gluedNodes = varCol.gluedNodes;
-
+noDofs = varCol.noDofs;
+noCtrlPts = varCol.noCtrlPts;
 noDofs_tot = varCol.noDofs_tot;
 
 d = varCol.dimension;
@@ -38,9 +39,9 @@ end
 
 [solidXiEtaMesh, solidIndexXiEta, solidNoElemsXiEta] = generateIGA2DMesh(Xi, Eta, p_xi, p_eta, n_xi, n_eta);
 
-n_xi = varCol_i.nurbs.number(1);
-n_eta = varCol_i.nurbs.number(2);
-n_zeta = varCol_i.nurbs.number(3);
+n_xi = varCol_i.patches{1}.nurbs.number(1);
+n_eta = varCol_i.patches{1}.nurbs.number(2);
+n_zeta = varCol_i.patches{1}.nurbs.number(3);
 
 fluidNodes = zeros(1,n_xi*n_eta);
 counter = 1;
@@ -100,7 +101,7 @@ parfor e = 1:solidNoElemsXiEta
         xi  = parent2ParametricSpace(Xi_e, pt(1));
         eta = parent2ParametricSpace(Eta_e,pt(2));
 
-        [R_fun, dRxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, weights(solidNodes));
+        [R_fun, dRxi, dRdeta] = NURBS2DBasis_old(xi, eta, p_xi, p_eta, Xi, Eta, weights(solidNodes));
 
         J = pts'*[dRxi' dRdeta'];
         crossProd = cross(J(:,1), J(:,2));  % pointing outwards if sphere

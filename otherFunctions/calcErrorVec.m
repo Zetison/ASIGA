@@ -34,12 +34,13 @@ for i = 1:noDomains
 %     else
 %         noQuadPts = 10;
 %     end
-%     noQuadPts = 6;
-%     [W3D,Q3D] = gaussianQuadNURBS(noQuadPts,noQuadPts,noQuadPts); 
-%     [W3D,Q3D] = gaussianQuadNURBS(p_xi+5,p_eta+5,p_zeta+5); 
-    extraGP = varCol.extraGP;
-    [W3D,Q3D] = gaussianQuadNURBS(p_xi+3+extraGP,p_eta+3+extraGP,p_zeta+3+extraGP); 
-
+    if true
+        noQuadPts = 6;
+        [W3D,Q3D] = gaussianQuadNURBS(noQuadPts,noQuadPts,noQuadPts); 
+    else
+        extraGP = varCol.extraGP;
+        [W3D,Q3D] = gaussianQuadNURBS(p_xi+3+extraGP,p_eta+3+extraGP,p_zeta+3+extraGP); 
+    end
     if mod(i,2) == 0
         noComponents = 3;
         noComponentsDeriv = 9;

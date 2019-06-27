@@ -73,16 +73,16 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
             case 'IGA'
                 if i_coreM == 1
                     M = 4; % 4
-                    degreeElev = 1; %1
+                    degree = 3; %1
                 else
                     M = 5;
-                    degreeElev = 0:1;
+                    degree = 2:3;
                 end
             case 'hp_FEM'
-                degreeElev = 0;
+                degree = 2;
                 M = 5;
             case 'linear_FEM'
-                degreeElev = 0;
+                degree = 2;
                 M = 6;
         end
         % M = 5;
@@ -97,7 +97,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
         calculateFarFieldPattern = 1;
         calculateVolumeError = 1;
         calculateSurfaceError = 0;
-        loopParameters = {'M','degreeElev','coreMethod','BC','f'};
+        loopParameters = {'M','degree','coreMethod','BC','f'};
 
         collectIntoTasks
     end

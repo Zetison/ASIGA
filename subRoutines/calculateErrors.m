@@ -1,4 +1,3 @@
-
 if varCol.boundaryMethod
     if task.calculateSurfaceError
         tic 
