@@ -147,7 +147,7 @@ if plot2Dgeometry && ~boundaryMethod
     drawnow
 %     export_fig('../../graphics/sphericalShell/NNBC_FEMlinear6', '-pdf', '-transparent')
 % 	export_fig(['../../graphics/MS_P/mesh' num2str(M) '_sphere'], '-pdf', '-transparent')
-% 	export_fig(['../../graphics/MS_P/mesh' num2str(M)], '-pdf', '-transparent')
+	export_fig(['../../graphics/MS_P/mesh' num2str(M)], '-pdf', '-transparent')
 % 	export_fig(['../../graphics/BC/mesh' num2str(M) '_xi'], '-pdf', '-transparent')
 % 	export_fig(['../../graphics/BC/mesh' num2str(M) '_eta'], '-pdf', '-transparent')
 %     export_fig('../../graphics/sphericalShell/NNBC_IGAmesh4', '-pdf', '-transparent')

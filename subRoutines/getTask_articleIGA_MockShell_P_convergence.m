@@ -10,7 +10,7 @@ formulation = {'BGU','PGU','PGC','BGC'};
 IEbasis = {'Chebyshev','Bernstein','Lagrange'};
 % IEbasis = {'Bernstein'};
 M = 1:6;
-% M = 1:2;
+M = 4;
 N = [1,2,3,6,9];
 % N = 1;
 degree = 2;
@@ -30,8 +30,8 @@ c_f = 1500;
 
 f = k*c_f/(2*pi);             % Frequency
 
-plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
-plot3Dgeometry = 0;  % Plot cross section of mesh and geometry
+plot2Dgeometry = 1;  % Plot cross section of mesh and geometry
+plot3Dgeometry = 1;  % Plot cross section of mesh and geometry
 loopParameters = {'M', 'N', 'formulation','IEbasis'};
 % loopParameters = {'M'};
 collectIntoTasks

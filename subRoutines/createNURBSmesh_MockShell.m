@@ -1,4 +1,4 @@
-function [varCol, fluid, solid, fluid_i] = createNURBSmesh_MockShell(varCol,parms, M, degreeElev)
+function [varCol, fluid, solid, fluid_i] = createNURBSmesh_MockShell(varCol,parms, M, degree)
 
 solid = NaN;
 fluid_i = NaN;
@@ -40,7 +40,7 @@ if varCol.boundaryMethod
 
     solid = getModel3Data(R_o, R_o, t, L, 4);
     solid = elevateNURBSdegree(solid,[0 0 1]);
-    solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
+    solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
 
     nn = 2^(M-1)-1;
 
@@ -94,11 +94,11 @@ else
                                       insertUniform2(fluid.knots{2}, nn) ...
                                       insertUniform2(fluid.knots{3}, noNewZetaKnots)});
 
-    fluid = elevateNURBSdegree(fluid,[1 1 1]*degreeElev);
+    fluid = elevateNURBSdegree(fluid,[1 1 1]*(degree-2));
 
     solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, nn) ...
                                       insertUniform2(solid.knots{2}, nn) []});
-    solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
+    solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
 end
 L_gamma = L + 2*R_o;
 
