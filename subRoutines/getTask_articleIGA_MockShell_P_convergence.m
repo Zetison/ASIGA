@@ -5,15 +5,16 @@ model = 'MS_P'; % Mock shell model after Ihlenburg
 % formulation = {'BGU','PGC','BGC'};
 method = 'IE';
 formulation = {'BGU','PGU','PGC','BGC'};
-formulation = {'BGU'};
+% formulation = {'BGU'};
 
 IEbasis = {'Chebyshev','Bernstein','Lagrange'};
-IEbasis = {'Bernstein'};
-% M = 1:6;
-M = 1:3;
-% N = [1,2,3,6,9];
-N = 1;
-degreeElevArr = 0;
+% IEbasis = {'Bernstein'};
+M = 1:6;
+% M = 1:2;
+N = [1,2,3,6,9];
+% N = 1;
+degree = 2;
+runTasksInParallel = true;
 plotResultsInParaview = 0;
 calculateSurfaceError = 1;	% Only for spherical shell and if scatteringCase == 'Bi'
 LpOrder = 2; % For error calculation in calcSurfError()

@@ -5,7 +5,7 @@ addpath ..
 addpath ../utils
 addpath ../models
 
-pathToResults = '../../../plotData/e3Dss/';
+pathToResults = '../../../results/e3Dss/';
 % pathToResults = '../results';
 
 P_inc = 1; % Amplitude of incident wave

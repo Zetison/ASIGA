@@ -61,6 +61,10 @@ if exist('k_ROM','var')
     task.k_ROM = k_ROM;
 end
 
+if exist('IEbasis','var')
+    task.IEbasis = IEbasis;
+end
+
 task.coreMethod = coreMethod;
 task.degree = degree;
 task.BC = BC;

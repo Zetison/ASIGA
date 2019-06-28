@@ -32,7 +32,7 @@ options = struct('d_vec', d_vec, ...
 
 delta_alpha = 0.001;
 alpha_f_arr = (0:delta_alpha:360)*pi/180;
-pathToResults = '../../../plotData/e3Dss/';
+pathToResults = '../../../results/e3Dss/';
 
 TS_ = @(alpha) computeTS(alpha,beta_f,options);
 TS = TS_(alpha_f_arr);

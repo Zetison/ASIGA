@@ -35,16 +35,16 @@ if plot3Dgeometry
                     end
             end
         else
-            varColPlot.plotAt = [0, 0;
-                                 0, 0;
-                                 1, 1];
             if strcmp(coreMethod,'SEM')
+                varColPlot.plotAt = [0, 0;
+                                     0, 0;
+                                     1, 1];
 %                     colorFun = @(x) log10(abs(norm2(x)));
                 plotLagrange(fluid{i},[1000 1000 1000], 1, 1.5*[44 77 32]/255, 0.8, NaN, varColPlot);
             else
                 plotAt = [0, 0;
                          0, 0;
-                         0, 1];
+                         1, 0];
                 if boundaryMethod
                     plotNURBS(fluid{i},{'resolution',[10 10 10]});
                 else
@@ -54,7 +54,7 @@ if plot3Dgeometry
                         caxis([-17,1])
                         plotControlPts(fluid{i})
                     else
-                        plotNURBS(fluid{i},{'resolution',[10 10 10],'alphaValue',1,'plotAt',plotAt});
+                        plotNURBS(fluid{i},{'resolution',[10 10 10],'alphaValue',0.8,'plotAt',plotAt});
                     end
                 end
             end
@@ -145,14 +145,14 @@ if plot2Dgeometry && ~boundaryMethod
     set(gcf,'color','w');
 %     title(['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(i_mesh)])
     drawnow
-%     export_fig('../graphics/sphericalShell/NNBC_FEMlinear6', '-pdf', '-transparent')
-% 	export_fig(['../graphics/MS_P/mesh' num2str(M) '_sphere'], '-pdf', '-transparent')
-% 	export_fig(['../graphics/MS_P/mesh' num2str(M)], '-pdf', '-transparent')
-% 	export_fig(['../graphics/BC/mesh' num2str(M) '_xi'], '-pdf', '-transparent')
-% 	export_fig(['../graphics/BC/mesh' num2str(M) '_eta'], '-pdf', '-transparent')
-%     export_fig('../graphics/sphericalShell/NNBC_IGAmesh4', '-pdf', '-transparent')
-%     export_fig('../graphics/M3/M3_above', '-png', '-transparent')
-%     export_fig('../graphics/M3/M3_M3_1', '-png', '-transparent')
+%     export_fig('../../graphics/sphericalShell/NNBC_FEMlinear6', '-pdf', '-transparent')
+% 	export_fig(['../../graphics/MS_P/mesh' num2str(M) '_sphere'], '-pdf', '-transparent')
+% 	export_fig(['../../graphics/MS_P/mesh' num2str(M)], '-pdf', '-transparent')
+% 	export_fig(['../../graphics/BC/mesh' num2str(M) '_xi'], '-pdf', '-transparent')
+% 	export_fig(['../../graphics/BC/mesh' num2str(M) '_eta'], '-pdf', '-transparent')
+%     export_fig('../../graphics/sphericalShell/NNBC_IGAmesh4', '-pdf', '-transparent')
+%     export_fig('../../graphics/M3/M3_above', '-png', '-transparent')
+%     export_fig('../../graphics/M3/M3_M3_1', '-png', '-transparent')
 end
 % keyboard
 

@@ -55,15 +55,19 @@ if varCol.boundaryMethod
     varCol.patchTop{1}(2,2) = NaN;
     varCol.patchTop{1}(4,2) = NaN;
 else
-    s = 0.25 + 0.05*(L-R_o)/R_o;
-    c_z = (L+2*R_o)/2 + s*R_o;
-    c_xy = R_o + s*R_o;
+%     s = 0.25 + 0.05*(L-R_o)/R_o;
+%     c_z = (L+2*R_o)/2 + s*R_o;
+%     c_xy = R_o + s*R_o;
+    c_z = 1.2*(L+2*R_o)/2; % 30
+    c_xy = 1.3*R_o; % 2.5, 3.75
 
     Upsilon = sqrt(c_z^2-c_xy^2);
     varCol.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
 
-    eta1Arr = [0.35, 0.3, 0.26, 0.25, 0.23, 0.22, 0.22, 0.21, 0.20, 0.19];
-    eta1 = eta1Arr(mult);
+%     eta1Arr = [0.35, 0.3, 0.26, 0.25, 0.23, 0.22, 0.22, 0.21, 0.20, 0.19];
+%     eta1 = eta1Arr(mult);
+%     eta2 = 1-eta1;
+    eta1 = 0.37;
     eta2 = 1-eta1;
 
     chimin = c_z;
