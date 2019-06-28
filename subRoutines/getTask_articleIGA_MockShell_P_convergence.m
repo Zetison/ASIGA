@@ -14,7 +14,7 @@ M = 1:6;
 N = [1,2,3,6,9];
 % N = 1;
 degree = 2;
-runTasksInParallel = true;
+runTasksInParallel = 0;
 plotResultsInParaview = 0;
 calculateSurfaceError = 1;	% Only for spherical shell and if scatteringCase == 'Bi'
 LpOrder = 2; % For error calculation in calcSurfError()
