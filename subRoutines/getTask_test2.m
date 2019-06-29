@@ -22,5 +22,6 @@ beta_s = 0*pi/180;
 % beta_s = 30*pi/180;          
 % plot3Dgeometry = true;
 calculateSurfaceError = 1;	% Only for spherical shell and if scatteringCase == 'Bi'
+solveForPtot = true;
 
 collectIntoTasks

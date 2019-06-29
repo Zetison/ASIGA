@@ -32,5 +32,6 @@ plot2Dgeometry = 0;
 plot3Dgeometry = 0;
 
 plotResidualError = true;
+solveForPtot = true;
 loopParameters = {'M','formulation','method','degree','coreMethod'};
 collectIntoTasks

@@ -21,6 +21,7 @@ computeCondNumber = 0;
 runTasksInParallel = 0;
 useNeumanProj = [1,0];
 
+solveForPtot = true;
 loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','agpBEM','useNeumanProj','colBEM_C0'};
 colBEM_C0 = [0,1/2];
 colBEM_C0 = 0;

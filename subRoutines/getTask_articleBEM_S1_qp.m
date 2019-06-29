@@ -30,7 +30,6 @@ calculateSurfaceError = 1;
 plot2Dgeometry = 0;
 plot3Dgeometry = 0;
 solveForPtot = true;
-
 loopParameters = {'extraGPBEM','agpBEM','M','degree','formulation','method','quadMethodBEM'};
 
 agpBEM = 0.2:0.1:0.7;

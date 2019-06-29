@@ -10,11 +10,11 @@ formulation = {'BGU','PGU','PGC','BGC'};
 IEbasis = {'Chebyshev','Bernstein','Lagrange'};
 % IEbasis = {'Bernstein'};
 M = 1:6;
-% M = 4;
+M = 1:2;
 N = [1,2,3,6,9];
 % N = 1;
 degree = 2;
-runTasksInParallel = 0;
+runTasksInParallel = 1;
 plotResultsInParaview = 0;
 calculateSurfaceError = 1;	% Only for spherical shell and if scatteringCase == 'Bi'
 LpOrder = 2; % For error calculation in calcSurfError()

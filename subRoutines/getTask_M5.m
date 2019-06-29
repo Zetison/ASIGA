@@ -19,6 +19,7 @@ beta_s = 0*pi/180;
 degreeElevArr = 2;
 plotResultsInParaview = 1;	% Only if scatteringCase == 'Bi'
 
+solveForPtot = true;
 % plot3Dgeometry = true;
 collectIntoTasks
 % 

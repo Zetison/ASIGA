@@ -34,6 +34,7 @@ computeCondNumber = true;
 plot3Dgeometry = 0;
 quadMethodBEM = {'Simpson','New'};
 
+solveForPtot = true;
 loopParameters = {'extraGP','extraGPBEM','agpBEM','M','degree','method','formulation','quadMethodBEM'};
 runTasksInParallel = 1;
 

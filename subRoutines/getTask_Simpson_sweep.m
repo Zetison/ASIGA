@@ -35,14 +35,4 @@ plot3Dgeometry = 0;
 calculateFarFieldPattern = 0;
 
 % collectIntoTasks
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MFS simulation
-f = linspace(1e1,5e3,10);
-method = {'MFS'};
-M = 5;
-degreeElev = 0;
-computeCondNumber = false;
-loopParameters = {'M','method'};
-collectIntoTasks
+solveForPtot = true;

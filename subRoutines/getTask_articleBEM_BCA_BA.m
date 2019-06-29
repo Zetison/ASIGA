@@ -31,6 +31,7 @@ M = 1:7;
 % M = 1:5;
 storeSolution = 0;
 storeFullVarCol = 0;
+solveForPtot = true;
 loopParameters = {'method','M','degree','f'};
 degree = 2:4;
 collectIntoTasks

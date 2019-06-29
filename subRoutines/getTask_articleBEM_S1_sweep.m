@@ -66,6 +66,7 @@ parm = 2;
 calculateSurfaceError = 1;
 
 runTasksInParallel = 1;
+solveForPtot = true;
 loopParameters = {'f','method','formulation'};
 
 collectIntoTasks

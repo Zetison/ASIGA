@@ -20,6 +20,7 @@ calculateFarFieldPattern = 1;
 solveForPtot = 1;
 % runTasksInParallel = true;
 
+solveForPtot = true;
 loopParameters = {'M','parm','method','formulation'};
 
 method = {'BEM'};

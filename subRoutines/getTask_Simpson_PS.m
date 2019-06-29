@@ -29,6 +29,7 @@ plotFarField          = 0;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
+solveForPtot = true;
 loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation'};
 
 % collectIntoTasks

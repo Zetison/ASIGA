@@ -42,17 +42,6 @@ loopParameters = {'M','method','formulation','useNeumanProj'};
 parm = 1;
 % collectIntoTasks
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% BEM simulation
-method = {'BEM'};
-% formulation = {'CCBIE', 'CHBIE', 'CBM'};
-formulation = {'CCBIE'};
-% formulation = 'CBM';
-useNeumanProj = [0,1];
-% colBEM_C0 = 2;
-% extraGP = 2; % extra quadrature points
-% extraGPBEM = 14; % extra quadrature points around singularities for BEM formulations
-collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
@@ -80,3 +69,16 @@ computeCondNumber = false;
 loopParameters = {'M','method'};
 % collectIntoTasks
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% BEM simulation
+method = {'BEM'};
+% formulation = {'CCBIE', 'CHBIE', 'CBM'};
+formulation = {'CCBIE'};
+% formulation = 'CBM';
+useNeumanProj = [0,1];
+% colBEM_C0 = 2;
+% extraGP = 2; % extra quadrature points
+% extraGPBEM = 14; % extra quadrature points around singularities for BEM formulations
+solveForPtot = true;
+collectIntoTasks

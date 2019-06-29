@@ -77,9 +77,9 @@ if solveForPtot
     dpdn = @(x,n) 0;
 else
     p_inc = NaN;
-    dp_inc = NaN;
+    dp_inc = varCol.dp_inc;
     if SHBC
-        dpdn = @(x,n) -varCol.dp_inc(x,n);
+        dpdn = @(x,n) -dp_inc(x,n);
     else
         dpdn = varCol.dpdn;
     end
@@ -205,7 +205,7 @@ FF = complex(zeros(n_cp, no_angles));
 totNoQPnonPolar = 0;
 totNoQP = 0;
 totNoQPprev = 0;
-% for i = 3:n_cp
+% for i = [1,32,532,65,62,654,643,743,236,547]
 % for i = 1:n_cp
 % for i = 650:n_cp
 parfor i = 1:n_cp
@@ -331,6 +331,7 @@ parfor i = 1:n_cp
         end
         totNoQP = totNoQP + noGp;
     end
+%     rms(A_row)
     if plot_GP
         figureFullScreen(gcf)
 %         totNoQP-totNoQPprev

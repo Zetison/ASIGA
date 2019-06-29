@@ -26,6 +26,7 @@ plot3Dgeometry = 0;
 degree = 2:7;
 calculateSurfaceError = 1;
 computeCondNumber = false;
+solveForPtot = true;
 loopParameters = {'M','coreMethod','degree','method'};
 % collectIntoTasks
 

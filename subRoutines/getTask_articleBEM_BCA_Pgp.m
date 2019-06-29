@@ -25,6 +25,7 @@ formulation = {'CBM'};
 M = 1;
 storeSolution = false;
 storeFullVarCol = false;
+solveForPtot = true;
 loopParameters = {'method','degree','extraGPBEM','formulation','agpBEM'};
 degree = [2,5];
 % degree = 5;

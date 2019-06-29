@@ -52,21 +52,7 @@ extraGP = [1,2,4,8,16,32];
 loopParameters = {'delta','extraGP','method'};
 
 collectIntoTasks
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% BEM simulation
-% 
-% method = {'BEM'};
-% formulation = 'CCBIE';
-% M = 1:4; %3:6
-% % formulation = 'CBM';
-% % coreMethod = {'linear_FEM'};
-% % formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
-% 
-% calculateSurfaceError = 1;
-% % calculateVolumeError = 0;
-% 
-% collectIntoTasks
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % %% BA simulation
 % method = {'BA'};
 % coreMethod = 'IGA';

@@ -25,6 +25,7 @@ calculateFarFieldPattern = 0;
 calculateSurfaceError = 1;
 plot2Dgeometry = 0;
 plot3Dgeometry = 0;
+solveForPtot = true;
 loopParameters = {'M','method','degree','coreMethod','extraGPBEM','extraGP'};
 % agpBEM = 2;
 colBEM_C0 = 0;

@@ -28,6 +28,7 @@ degree = [2,5];
 % degree = 5;
 agpBEM = 0.6;
 % degree = 2;
+solveForPtot = true;
 loopParameters = {'method','degree','formulation','M','f'};
 % collectIntoTasks
 

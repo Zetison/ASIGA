@@ -19,6 +19,8 @@ calculateSurfaceError = 1;
 calculateFarFieldPattern = 1;
 solveForPtot = [0,1];
 
+% solveForPtot = true;
+solveForPtot = true;
 loopParameters = {'solveForPtot','M','parm','method','formulation'};
 
 method = {'BA'};

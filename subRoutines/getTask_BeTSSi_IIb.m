@@ -18,6 +18,7 @@ beta_s = 0*pi/180;
 
 degreeElevArr = 2;
 
+solveForPtot = true;
 % collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

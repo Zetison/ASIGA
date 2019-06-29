@@ -30,6 +30,7 @@ degree = [2,5];
 storeSolution = 0;
 storeFullVarCol = 0;
 agpBEM = 0.6;
+solveForPtot = true;
 loopParameters = {'method','formulation','M','degree','f','formulation','scatteringCase'};
 % collectIntoTasks
 

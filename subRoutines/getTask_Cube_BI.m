@@ -43,6 +43,7 @@ agpBEM = 5; % parameter for adaptiv Gauss point integration around singularities
 computeCondNumber = 0;
 runTasksInParallel = false;
 
+solveForPtot = true;
 loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','agpBEM'};
 % colBEM_C0 = 0;
 colBEM_C0 = 1/2;

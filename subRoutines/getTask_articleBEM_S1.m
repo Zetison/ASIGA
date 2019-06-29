@@ -23,6 +23,7 @@ extraGP = 0;
 
 % beta = 0;
 
+solveForPtot = true;
 loopParameters = {'M','degree','method','formulation','parm'};
 
 % applyLoad = 'radialPulsation'; % with analytic solution for arbitrary geometries
