@@ -26,7 +26,7 @@ method = {'BEM'};
 formulation = {'CCBIE'};
 % formulation = {'CRCBIE'};
 M = 1:3;
-degree = [2,5];
+degree = [2,6];
 storeSolution = 0;
 storeFullVarCol = 0;
 agpBEM = 0.6;
@@ -36,6 +36,8 @@ loopParameters = {'method','formulation','M','degree','f','formulation','scatter
 
 
 f = 1e3;             % Frequency
+M = 3;
+degree = 6;
 formulation = {'CBM'};
 collectIntoTasks
 
