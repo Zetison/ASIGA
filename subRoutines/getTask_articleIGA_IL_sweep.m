@@ -20,6 +20,7 @@ calculateFarFieldPattern = 1;
 calculateVolumeError = 1;
 calculateSurfaceError = 0;
 runTasksInParallel = 1;
+extraGP = -2;
 loopParameters = {'M','degree','coreMethod','BC','f'};
 
 % for coreMethod = {'IGA','hp_FEM','linear_FEM'}
@@ -29,7 +30,7 @@ coreMethods = {'linear_FEM','hp_FEM','IGA','IGA'}; % [5, 4, 2, 1, 3]
 % coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
-    for BC = {'NNBC','SSBC','NNBC'} %
+    for BC = {'NNBC','SSBC','SHBC'} %
         npts = 1500;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;

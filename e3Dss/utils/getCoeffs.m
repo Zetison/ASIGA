@@ -147,8 +147,8 @@ end
 CC = zeros(length(omega),6*M,class(R_o));
 
 % Loop over frequencies
-% for i = 1:length(omega)
-parfor i = 1:length(omega)
+for i = 1:length(omega)
+% parfor i = 1:length(omega)
 %     H = sparse([], [], [], systemSize,systemSize, M*((I-2)^2+2*(I-2)+8)); % global matrix
     H = zeros(systemSize,class(R_o)); % global matrix
     D = zeros(systemSize,1,class(R_o)); % righ hand side

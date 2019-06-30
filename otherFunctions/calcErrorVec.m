@@ -34,7 +34,7 @@ for i = 1:noDomains
 %     else
 %         noQuadPts = 10;
 %     end
-    if true
+    if false
         noQuadPts = 6;
         [W3D,Q3D] = gaussianQuadNURBS(noQuadPts,noQuadPts,noQuadPts); 
     else

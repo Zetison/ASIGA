@@ -289,7 +289,7 @@ for i_k = 1:size(k,2)
             end    
 
             if clearGlobalMatrices
-                clear A_fluid_o A_fluid_i A_solid A_coupling
+                clear A_fluid_o A_fluid_i A_solid A_coupling A_gamma_a
             end
 
             % Apply Neumann conditions
@@ -724,7 +724,7 @@ for i_k = 1:size(k,2)
                 varCol.tau = computeTau(varCol);
             end
     end
-    if strcmp(scatteringCase,'Sweep')
+    if useROM && strcmp(scatteringCase,'Sweep')
         U_sweep{i_k} = U_fluid_o(1:varCol.noDofs,:);
         if strcmp(BC,'SSBC') || strcmp(BC,'NNBC')
             error('not implemented due to noDofs')
