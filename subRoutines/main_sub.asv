@@ -30,9 +30,9 @@ collectVariables
 if plot3Dgeometry || plot2Dgeometry
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
-    plotMeshAndGeometry
+%     plotMeshAndGeometry
     fprintf('using %12f seconds.', toc)
-    return
+%     return
 end
 
 %% Build connectivity
@@ -720,9 +720,7 @@ for i_k = 1:size(k,2)
                 clear A FF P1
             end
             postProcessSolution
-            if boundaryMethod
-                varCol.tau = computeTau(varCol);
-            end
+            varCol.tau = computeTau(varCol);
     end
     if strcmp(scatteringCase,'Sweep')
         U_sweep{i_k} = U_fluid_o(1:varCol.noDofs,:);
@@ -1132,16 +1130,14 @@ if storeFullVarCol || useROM
 else
     varColTemp.alpha = varCol.alpha;
     varColTemp.beta = varCol.beta;
-    varColTemp.k = varCol.k;
-    varColTemp.f = varCol.f;
+    varColTemp.k = k;
+    varColTemp.f = k*varCol.c_f(1)/(2*pi);
     varColTemp.c_f = varCol.c_f;
     if ~strcmp(method,'RT')
         varColTemp.dofs = varCol.dofs;
         varColTemp.dofsAlg = (varCol.dofs)^(1/3);
         varColTemp.h_max = varCol.h_max;
-        if isfield(varCol,'tau')
-            varColTemp.tau = varCol.tau;
-        end
+        varColTemp.tau = varCol.tau;
         varColTemp.nepw = varCol.nepw;
         varColTemp.tot_time = varCol.tot_time;
         varColTemp.noElems = varCol.noElems;

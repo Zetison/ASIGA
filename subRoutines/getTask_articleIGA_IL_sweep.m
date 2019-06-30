@@ -13,6 +13,8 @@ beta = beta_s;
 parm = 1;
 N = 4; % not sure if this was the original choice in the article
 
+plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
+plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 1;
 calculateVolumeError = 1;
@@ -22,11 +24,12 @@ loopParameters = {'M','degree','coreMethod','BC','f'};
 
 % for coreMethod = {'IGA','hp_FEM','linear_FEM'}
 %     for BC = {'SHBC','SSBC','NNBC'}
-coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
+coreMethods = {'linear_FEM','hp_FEM','IGA','IGA'}; % [5, 4, 2, 1, 3]
+% coreMethods = {'linear_FEM'}; % [5, 4, 2, 1, 3]
 % coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
-    for BC = {'NNBC'} %,'SSBC','NNBC'} %
+    for BC = {'NNBC','SSBC','NNBC'} %
         npts = 1500;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;
@@ -85,7 +88,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
 
         switch coreMethod{1}
             case 'IGA'
-                if i_coreM == 1
+                if i_coreM == 3
                     M = 4; % 4
                     degree = 3; %1
                 else
@@ -96,7 +99,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                 degree = 2;
                 M = 5; % 5
             case 'linear_FEM'
-                degree = 2;
+                degree = 1;
                 M = 6; % 6
         end
 %         M = 1;

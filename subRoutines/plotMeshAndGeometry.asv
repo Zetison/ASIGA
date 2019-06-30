@@ -131,18 +131,14 @@ if plot2Dgeometry && ~boundaryMethod
         if useInnerFluidDomain
             switch model
                 case 'IL'
-                    plotCuttingPlaneConstXi(fluid_i{1}, [npts npts],'xz',0);
-                otherwise
-                    plotCuttingPlaneConstXi(fluid_i{1}, [npts npts],'xz',0.5);
-            end
+            plotCuttingPlaneConstXi(fluid_i{1}, [npts npts],'xz',0.25);
+%             plotCuttingPlaneConstXi(fluid_i{1}, [npts npts],'xz',0.5);
+    %         plotCuttingPlaneConstEta(fluid_i, [npts npts],'yz',0.5);
         end
         if useSolidDomain
-            switch model
-                case 'IL'
-                    plotCuttingPlaneConstXi(solid{1}, [npts npts],'xz',0, [0.8 0 0]);
-                otherwise
-                    plotCuttingPlaneConstXi(solid{1}, [npts npts],'xz',0.5, [0.8 0 0]);
-            end
+            plotCuttingPlaneConstXi(solid{1}, [npts npts],'xz',0.25, [0.8 0 0]);
+%             plotCuttingPlaneConstXi(solid{1}, [npts npts],'xz',0.5, [0.8 0 0]);
+    %         plotCuttingPlaneConstEta(solid, [npts npts],'yz',0.5, [0.8 0 0]);
         end
     end
     hold off

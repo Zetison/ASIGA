@@ -1,5 +1,5 @@
 close all
-for study_i = 1:numel(studies)  
+for study_i = 1:2 %numel(studies)  
     study = studies(study_i);
     options = struct('xname',           'alpha',  ...
                      'yname',           'TS', ...
@@ -46,7 +46,7 @@ else
     alpha = studies(1).tasks(6).task.alpha;
     alphaCOMSOL = alpha(1:end-1);
     % for res = [4,8]
-    p_ref = studies(1).tasks(6).task.results.abs_p;
+    p_ref = studies(2).tasks(1).task.results.abs_p;
     T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(80) '_noPMLayers_' num2str(10) '_f_' num2str(100) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
 
@@ -161,7 +161,7 @@ else
     figure(42)
     l2errorIGA = zeros(1,6);
     l2errorIGA2 = zeros(1,6);
-    for task_i = 1:6 
+    for task_i = 1:4 
         p = studies(1).tasks(task_i).task.results.abs_p;
         degree = studies(1).tasks(task_i).task.degree;
         M = studies(1).tasks(task_i).task.M;
@@ -169,7 +169,7 @@ else
         l2errorIGA(task_i) = 100*sqrt(sum((p-p_ref).^2)./sum(p_ref.^2));
         l2errorIGA2(task_i) = 100*sqrt(sum((p(1:end-1)-p_ref2).^2)./sum(p_ref2.^2));
         filename = ['M' num2str(M) 'degree' num2str(degree) 'f100'];
-        printResultsToFile2(['../results/articleBEM_BCA/BCA_BEM_IGA_CBM_' filename], 180/pi*alpha.', Error)
+        printResultsToFile2(['../results/articleBEM_BCA/BCA_BEM_IGA_CCBIE_' filename], 180/pi*alpha.', Error)
         semilogy(180/pi*alpha,Error,'DisplayName',filename)
         counter = counter + 1;
         hold on
