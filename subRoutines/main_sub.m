@@ -745,7 +745,7 @@ if calculateFarFieldPattern && ~useROM
     if ~runTasksInParallel
         fprintf(['\n%-' num2str(stringShift) 's'], 'Computing far-field pattern ... ')
     end
-    getFarFielsPoints
+    v = getFarFieldPoints(task.alpha,task.beta,task.r);
 
     switch method
         case {'IE','ABC'}
@@ -802,8 +802,9 @@ if calculateFarFieldPattern && ~useROM
                 case 'MS'
                     d_vec = varCol.d_vec;
                     p = zeros(size(d_vec,2),1);
-                    for i = 1:size(d_vec,2) %874%
-%                     parfor i = 1:size(d_vec,2)
+%                     for i = 1:size(d_vec,2) %874%
+                    plotFarField = task.plotFarField;
+                    parfor i = 1:size(d_vec,2)
                         varColTemp2 = varCol;
                         varColTemp2.d_vec = d_vec(:,i);
                         tic

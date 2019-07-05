@@ -1,3 +1,4 @@
+function v = getFarFieldPoints(alpha,beta,r)
 if length(beta) ~= 1
     error('Not fully implemented')
 end
