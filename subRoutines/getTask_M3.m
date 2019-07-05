@@ -68,7 +68,7 @@ parm = 6:8;
 r = 10;
 
 loopParameters = {'parm','M','method'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
@@ -83,7 +83,7 @@ f = [1e2,1e3];
 solveForPtot = true;
 plot3Dgeometry = 0;
 method = {'BEM'};
-formulation = {'CCBIE','GBM'};
+formulation = {'CCBIE','CBM'};
 M = 5:7;
 loopParameters = {'formulation','M','method','f'};
-% collectIntoTasks
+collectIntoTasks
