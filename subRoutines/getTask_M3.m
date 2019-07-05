@@ -64,12 +64,18 @@ calculateSurfaceError = 0;
 computeCondNumber = false;
 plotFarField = 1;
 applyLoad = 'planeWave';
-parm = 6:8;
+parm = 6;
 r = 10;
 
 loopParameters = {'parm','M','method'};
 % collectIntoTasks
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% KDT simulation
+method = {'KDT'};
+M = 5:7;
+% M = 1;
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
@@ -80,4 +86,4 @@ method = {'BEM'};
 formulation = {'CCBIE','GBM'};
 M = 5:7;
 loopParameters = {'formulation','M','method','f'};
-collectIntoTasks
+% collectIntoTasks
