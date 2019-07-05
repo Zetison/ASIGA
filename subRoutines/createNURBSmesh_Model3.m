@@ -47,7 +47,7 @@ if varCol.boundaryMethod
 
     nn = 2^(M-1)-1;
 
-%     solid = insertKnotsInNURBS(solid,{[] linspace2(eta1, eta2, 5) []});
+    solid = insertKnotsInNURBS(solid,{[] linspace2(eta1, eta2, 5) []});
 
     solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, nn) ...
                                       insertUniform2(solid.knots{2}, nn) []});

@@ -1,4 +1,4 @@
-
+close all
 for study_i = 1:numel(studies)  
     study = studies(study_i);
     options = struct('xname',           'alpha',  ...
@@ -16,10 +16,10 @@ for study_i = 1:numel(studies)
     figure(5)
     printResultsToTextFiles(study,options)
 end
-if 0
-    files = dir('plotData/refSolutions/M3_HWBC_MS_0_1*.txt');
+if 1
+    files = dir('../plotData/refSolutions/M3_HWBC_MS_0_1*.txt');
     for file = files'
-        temp = importdata(['plotData/refSolutions/' file.name], ',', 7);
+        temp = importdata(['../plotData/refSolutions/' file.name], ',', 7);
     %             T = readtable('plotData/refSolutions/PH_HWBC_MS_AS_E0_F1.txt','FileType','text', 'HeaderLines',12);
         x = temp.data(:,1);
         y = temp.data(:,2);

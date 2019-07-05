@@ -32,7 +32,7 @@ if plot3Dgeometry || plot2Dgeometry
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
     plotMeshAndGeometry
     fprintf('using %12f seconds.', toc)
-    return
+%     return
 end
 
 %% Build connectivity
@@ -82,9 +82,6 @@ if ~runTasksInParallel
 end
 varCol.totNoElems = totNoElems;
 if plot3Dgeometry || plot2Dgeometry
-%     tic
-%     tau = computeTau(varCol)
-%     toc
     return
 end
 %% Build stiffness matrix
@@ -847,9 +844,6 @@ if calculateFarFieldPattern && ~useROM
     end
 end
 
-if strcmp(method,'KDT') || strcmp(method,'RT')
-    return
-end
 % task.results.U_fluid_o = U_fluid_o;
 % if useSolidDomain
 %     task.results.varCol_solid = varCol_solid;
@@ -864,7 +858,7 @@ if strcmp(scatteringCase,'Ray')
 end
 
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
-if ~useROM
+if ~useROM && ~(strcmp(method,'KDT') || strcmp(method,'RT'))
     switch scatteringCase
         case {'BI', 'Sweep','Ray'}    
     %         keyboard

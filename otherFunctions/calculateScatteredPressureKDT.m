@@ -23,7 +23,6 @@ k = varCol.k;
 
 p_inc = varCol.p_inc;
 
-dPhi_kdny = varCol.dPhi_kdny;
 extraGP = varCol.extraGP;
 
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);  
@@ -65,16 +64,16 @@ parfor e = 1:noElems
         Y = R*pts;
 
         p_h_gp = 2*p_inc(Y);
-        p_h_gp(dot3(n.',d_vec*k) > 0) = 0;
+        p_h_gp(n.'*d_vec > 0) = 0;
         
         if plotFarField
-            x_d_n = dot3(P_far, n)./norm2(P_far);
-            x_d_y = dot3(P_far, Y.')./norm2(P_far);
-            p_h = p_h - 1/(4*pi)*1i*k.*p_h_gp.*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
+            x_d_n = P_far*n./norm2(P_far);
+            x_d_y = P_far*Y.'./norm2(P_far);
+            p_h = p_h - 1/(4*pi)*1i*k.*p_h_gp.'.*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
         else
             xmy = P_far - repmat(Y,size(P_far,1),1);
             r = norm2(xmy);
-            p_h = p_h + p_h_gp.*dPhi_kdny(xmy,r,n)* J_1 * J_2 * wt;  
+            p_h = p_h + p_h_gp.'.*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
         end
     end
 end

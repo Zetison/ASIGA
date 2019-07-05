@@ -1,4 +1,4 @@
-function [varCol, fluid, solid, fluid_i] = createNURBSmesh_PH(varCol,parms, M, degreeElev)
+function [varCol, fluid, solid, fluid_i] = createNURBSmesh_PH(varCol,parms, M, degree)
 
 solid = NaN;
 fluid_i = NaN;
@@ -9,7 +9,7 @@ for j = 1:numel(names)
     name = names{j};
     eval([name, ' = parms.(names{j});']);
 end
-
+L = gd;
 x_0 = [-L/2, 0, 0]; % The origin of the model
 alignWithAxis = 'Xaxis';
 switch varCol.method
@@ -41,7 +41,7 @@ if varCol.boundaryMethod
 
     solid = getPHData(R_1, R_2, t, L);
     solid = elevateNURBSdegree(solid,[0 0 1]);
-    solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
+    solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
 
     nn = max(2^(M-1)-1,0);
 
@@ -85,11 +85,11 @@ else
                                       insertUniform2(fluid.knots{2}, nn) ...
                                       insertUniform2(fluid.knots{3}, nn)});
 
-    fluid = elevateNURBSdegree(fluid,[1 1 1]*degreeElev);
+    fluid = elevateNURBSdegree(fluid,[1 1 1]*(degree-2));
 
     solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, nn) ...
                                       insertUniform2(solid.knots{2}, nn) []});
-    solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
+    solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
 end
 L_gamma = L + R_1 + R_2;
 

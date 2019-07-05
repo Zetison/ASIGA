@@ -9,7 +9,7 @@ method = {'IENSG'};
 method = {'IE'};
 formulation = 'BGU';
 
-f = 1e2; %[1e2 5e2 1e3];             % Frequency
+f = 1e3; %[1e2 5e2 1e3];             % Frequency
 omega = 2*pi*f;
 k = omega/1500;
 
@@ -40,15 +40,6 @@ loopParameters = {'degree','M','method'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% BEM simulation
-method = {'BEM'};
-formulation = {'CCBIE','GBM'};
-M = 8;
-loopParameters = {'formulation','M','method'};
-% collectIntoTasks
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MFS simulation
 method = {'MFS'};
 formulation = 'SS'; % PS = point solution, SS = spherical solution
@@ -60,7 +51,7 @@ computeCondNumber = false;
 loopParameters = {'parm','M','N','method'};
 
 N = 10;
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
@@ -78,3 +69,15 @@ r = 10;
 
 loopParameters = {'parm','M','method'};
 % collectIntoTasks
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% BEM simulation
+f = [1e2,1e3];
+solveForPtot = true;
+plot3Dgeometry = 0;
+method = {'BEM'};
+formulation = {'CCBIE','GBM'};
+M = 5:7;
+loopParameters = {'formulation','M','method','f'};
+collectIntoTasks

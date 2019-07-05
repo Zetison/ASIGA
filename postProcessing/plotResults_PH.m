@@ -1,4 +1,4 @@
-
+close all
 for study_i = 1:numel(studies)  
     study = studies(study_i);
     options = struct('xname',           'alpha',  ...
@@ -8,13 +8,14 @@ for study_i = 1:numel(studies)
                      'axisType',        'plot', ... 
                      'lineStyle',       '-', ... 
                      'xLoopName',       'N', ...
+                     'subFolderName',   '../results/PH', ...
                      'noXLoopPrms',     0); 
 
     options.xScale = 180/pi;
     figure(5)
     printResultsToTextFiles(study,options)
 end
-T = readtable('plotData/refSolutions/PH_HWBC_MS_AS_E0_F1.txt','FileType','text', 'HeaderLines',12);
+T = readtable('../plotData/refSolutions/PH_HWBC_MS_AS_E0_F1.txt','FileType','text', 'HeaderLines',12);
 x = T.Var1;
 y = T.Var2;
 plot(x,y,'DisplayName','Reference solution')
