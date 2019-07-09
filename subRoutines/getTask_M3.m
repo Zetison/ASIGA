@@ -79,7 +79,7 @@ M = 5:7;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-f = [1e2,1e3];
+f = 1e3;
 solveForPtot = true;
 plot3Dgeometry = 0;
 method = {'BEM'};
