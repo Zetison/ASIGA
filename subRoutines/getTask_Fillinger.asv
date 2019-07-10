@@ -58,7 +58,7 @@ loopParameters = {'f','M','method'};
 %% KDT simulation
 method = {'KDT'};
 formulation = '';
-plot3Dgeometry = 0;
+plot3Dgeometry = 1;
 degree = 4;
 calculateSurfaceError = 0;
 computeCondNumber = false;
@@ -66,7 +66,7 @@ loopParameters = {'method','M','parm','coreMethod'};
 coreMethod = {'linear_FEM'};
 % coreMethod = {'IGA'};
 M = [6,8,10];
-% M = 5;
+M = 1;
 parm = 2;
 collectIntoTasks
 

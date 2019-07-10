@@ -763,7 +763,36 @@ if calculateFarFieldPattern && ~useROM
         case 'KDT'
             switch coreMethod
                 case 'linear_FEM'
-                    element = varCol.element(:,[1,2,4,3]);
+                    element = varCol.element;
+                    tri = NaN(size(element,1),2,3);
+                    P = varCol.controlPts;
+                    Eps = 1e2*eps;
+                    parfor e = 1:noElems
+                        sctr = element(e,:);
+                        P1 = P(sctr(1),:);
+                        P2 = P(sctr(2),:);
+                        P3 = P(sctr(3),:);
+                        P4 = P(sctr(4),:);
+                        tri_e = NaN(1,2,3);
+                        if norm(P1-P2) < Eps
+                            tri_e(e,1,:) = element(e,[1,4,3]);
+                        elseif norm(P1-P3) < Eps
+                            tri_e(e,1,:) = element(e,[1,2,4]);
+                        elseif norm(P2-P4) < Eps || norm(P3-P4) < Eps
+                            tri_e(e,1,:) = element(e,[1,2,3]);
+                        else
+                            if norm(P2-P3) > norm(P1-P4)
+                                tri_e(e,1,:) = element(e,[1,2,4]);
+                                tri_e(e,2,:) = element(e,[1,4,3]);
+                            else
+                                tri_e(e,1,:) = element(e,[1,2,3]);
+                                tri_e(e,2,:) = element(e,[2,4,3]);
+                            end                                
+                        end
+                        tri(e,:,:) = tri_e;
+                    end
+                        
+                        
 
                     indices = or(or(or(or(or(element(:,1) == element(:,2), element(:,1) == element(:,3)), ...
                                                 element(:,1) == element(:,4)), ...
@@ -780,12 +809,16 @@ if calculateFarFieldPattern && ~useROM
                            element(~indices,[1,3,4])
                            element(indices,1:3)];
 
-                    P = varCol.controlPts;
                     p = kirchApprTri(tri,P,v,varCol);
                     trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', 1.5*[44 77 32]/255)
+                    view(106,26) % sphere and cube
                     axis off
                     axis equal
                     camlight
+                    ax = gca;               % get the current axis
+                    ax.Clipping = 'off';    % turn clipping off
+                    figureFullScreen(gcf)
+                    export_fig('../../graphics/sphericalShell/trianglesParm2', '-png', '-transparent', '-r300')
 %                     
                     %% Find h_max and store results
                     varCol.h_max = max([norm2(P(tri(:,1),:)-P(tri(:,2),:)); 
