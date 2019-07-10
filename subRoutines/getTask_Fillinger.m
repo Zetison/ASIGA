@@ -25,8 +25,8 @@ eigenValues = [3.141592653589794 % pi
                    9.355812111042747]';
 
 k = 10.^linspace(-1,4,1000); % 10.^linspace(-1,2,1000)
-k = sort([eigenValues, k]);
-eigenValues = eigenValues*1500/(2*pi);
+% k = sort([eigenValues, k]);
+% eigenValues = eigenValues*1500/(2*pi);
 c_f = 1500;
 f = k*c_f/(2*pi);
 
@@ -48,7 +48,7 @@ method = {'MFS'};
 coreMethod = 'IGA';
 formulation = '';
 M = 5;
-degreeElev = 0;
+degree = 2;
 calculateSurfaceError = 0;
 computeCondNumber = false;
 loopParameters = {'f','M','method'};
@@ -59,16 +59,20 @@ loopParameters = {'f','M','method'};
 method = {'KDT'};
 formulation = '';
 plot3Dgeometry = 0;
-degreeElev = 0;
+degree = 4;
 calculateSurfaceError = 0;
 computeCondNumber = false;
-loopParameters = {'M','coreMethod','method'};
+loopParameters = {'method','M','parm','coreMethod'};
 coreMethod = {'linear_FEM'};
-M = 5;
+M = [6,8,10];
+% M = 6;
+parm = 2;
 collectIntoTasks
-coreMethod = {'IGA'};
-% M = 3;
-collectIntoTasks
+
+
+% coreMethod = {'IGA'};
+% % M = 3;
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
@@ -76,7 +80,7 @@ method = {'RT'};
 formulation = '';
 M = 3;
 plot3Dgeometry = 0;
-degreeElev = 0;
+degree = 2;
 calculateSurfaceError = 0;
 computeCondNumber = false;
 plotFarField = 1;

@@ -782,10 +782,10 @@ if calculateFarFieldPattern && ~useROM
 
                     P = varCol.controlPts;
                     p = kirchApprTri(tri,P,v,varCol);
-%                     trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', 1.5*[44 77 32]/255)
-%                     axis off
-%                     axis equal
-%                     camlight
+                    trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', 1.5*[44 77 32]/255)
+                    axis off
+                    axis equal
+                    camlight
 %                     
                     %% Find h_max and store results
                     varCol.h_max = max([norm2(P(tri(:,1),:)-P(tri(:,2),:)); 

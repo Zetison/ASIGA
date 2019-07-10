@@ -1,4 +1,4 @@
-function I = nsdMethod_2D(cps,f,g,dgdx,dgdy,omega,noGLpts,plotPaths,useFreudQuad,task,nwpe0,noGpts_,Eps,maxItrs)
+function I = nsdMethod_2D(cps,f,g,dgdx,dgdy,omega,noGLpts,plotPaths,useFreudQuad,task,nwpe0,noGpts_,Eps,maxItrs,Q2D,W2D)
 
 a = cps.a;
 b = cps.b;
@@ -120,8 +120,7 @@ elseif xy && nwpe_xi > nwpe0
         end
     end
 else
-    [W2D,Q2D] = gaussianQuadNURBS(noGpts_(nwpe_xi),noGpts_(nwpe_eta));
-%     [W2D,Q2D] = gaussianQuadNURBS(64,64);
+%     [W2D,Q2D] = gaussianQuadNURBS(noGpts_(nwpe_xi),noGpts_(nwpe_eta));
     x  = parent2ParametricSpace([a,b],  Q2D(:,1));
     y  = parent2ParametricSpace([c,d],  Q2D(:,2));
     J2 = 1/4*(b-a)*(d-c);
