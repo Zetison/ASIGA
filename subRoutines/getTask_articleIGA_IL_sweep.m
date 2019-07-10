@@ -27,7 +27,7 @@ loopParameters = {'M','degree','coreMethod','BC','f'};
 %     for BC = {'SHBC','SSBC','NNBC'}
 coreMethods = {'linear_FEM','hp_FEM','IGA','IGA'}; % [5, 4, 2, 1, 3]
 % coreMethods = {'linear_FEM'}; % [5, 4, 2, 1, 3]
-% coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
     for BC = {'NNBC','SSBC','SHBC'} %
@@ -94,7 +94,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                     degree = 3; %1
                 else
                     M = 5; % 5
-                    degree = 2:3;
+                    degree = 3;
                 end
             case 'hp_FEM'
                 degree = 2;

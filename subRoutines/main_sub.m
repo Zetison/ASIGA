@@ -91,6 +91,11 @@ if strcmp(scatteringCase,'Sweep')
 end
 
 if strcmp(method,'KDT') && ~strcmp(method,'RT')
+    k_1 = k(1,:);
+    varCol.k = k_1;
+    omega = k_1*varCol.c_f(1);
+    varCol.omega = omega;
+    varCol.f = omega/(2*pi);
     getAnalyticSolutions
 else
     for i_k = 1:size(k,2)

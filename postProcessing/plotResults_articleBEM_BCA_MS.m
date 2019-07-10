@@ -43,6 +43,6 @@ T = readtable(['../plotData/refSolutions/WTD71/Mo_RES' num2str(5) '_1000Hz.txt']
 
 y = T.Var2;
 x = T.Var1;
-l2Error = 100*sqrt(sum(p_ref5.^2-p_ref6.^2)/sum(p_ref6.^2))
+l2Error = 100*sqrt(sum((p_ref5-p_ref6).^2)/sum(p_ref6.^2))
 l2ErrorWTD = 100*sqrt(sum((10.^(y(3601:end)/20)-p_ref6).^2)./sum(p_ref6.^2))
 
