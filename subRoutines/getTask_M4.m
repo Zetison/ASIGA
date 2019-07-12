@@ -11,9 +11,9 @@ f = [1e3, 3e3, 10e3];             % Frequency
 % f = 1e3;             % Frequency
 
 M = 3:6;
-% M = 3:4;
-% parm = 2;
+M = 4;
 parm = [2,1];
+parm = 1;
 degree = 2;
 beta_s = 30*pi/180;
 alpha = (0:0.05:360)*pi/180;

@@ -94,7 +94,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                     degree = 3; %1
                 else
                     M = 5; % 5
-                    degree = 3;
+                    degree = 2;
                 end
             case 'hp_FEM'
                 degree = 2;

@@ -22,7 +22,7 @@ if plot3Dgeometry
                     else 
                         resolution = [10,10];
                     end
-                    if 1
+                    if 0
                         colorFun = @(v) abs(varCol.analytic(v));
 %                         colorFun = @(v) real(varCol.analytic(v));
 %                         plotNURBS(fluid{i},{'resolution',[10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
@@ -32,8 +32,8 @@ if plot3Dgeometry
                     else
 %                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
 %                         plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-%                         plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-                        plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
+                        plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
 %                         plotNURBS(fluid{i},{'resolution',resolution, 'elementBasedSamples',true,'samplingDistance',0.1});
                     end
             end
@@ -87,8 +87,9 @@ if plot3Dgeometry
 %     view(120,10)
 %     view(18,10) % BeTSSi
 %     view(62,43)
-    view(106,26) % sphere and cube
-%     view(0,90) % above
+%     view(46,32) % BeTSSi M4
+%     view(106,26) % sphere and cube
+    view(0,90) % above
     camproj('perspective')
 %     camproj('orthographic')
     
@@ -107,6 +108,8 @@ if plot3Dgeometry
 % 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
 % 	export_fig('../../graphics/M3/M3_above', '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/Cube_mesh' num2str(M)], '-png', '-transparent', '-r300')
+% 	export_fig('../../graphics/M4', '-png', '-transparent', '-r300')
+% 	export_fig('../../graphics/M4_above', '-png', '-transparent', '-r300')
            
 
 %     export_fig('../../graphics/sphericalShell/Sphere1controlPolygon' , '-png', '-transparent')
