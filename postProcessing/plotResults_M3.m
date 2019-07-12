@@ -17,7 +17,7 @@ for study_i = 1:numel(studies)
     printResultsToTextFiles(study,options)
 end
 if 1
-    f = 100;
+    f = 1000;
     switch f
         case 100
             files = dir('../plotData/M3_HWBC_MS_old/f_100_*.dat');

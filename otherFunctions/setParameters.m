@@ -21,6 +21,8 @@ switch model
         setIhlenburgParameters
     case {'M1','M1_P'}
         setBeTSSi_M1Parameters
+    case {'M2','M2_P'}
+        setBeTSSi_M2Parameters
     case {'M3','M3_P'}
         setBeTSSi_M3Parameters
     case {'PH','PH_P'}

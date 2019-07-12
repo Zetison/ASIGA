@@ -102,37 +102,37 @@ else
     
     controlPts = zeros(4,7,4);
     % outer surface
-    controlPts(:,1,1) = [ 0   0     0      1           ];
-    controlPts(:,2,1) = [ 0   0     0      1/sqrt(2)   ];
-    controlPts(:,3,1) = [ 0   0     0      1           ];
-    controlPts(:,4,1) = [ 0   0     0      1/sqrt(2)   ];
-    controlPts(:,5,1) = [ 0   0     0      1           ];
-    controlPts(:,6,1) = [ 0   0     0      1/sqrt(2)   ];
-    controlPts(:,7,1) = [ 0   0     0      1           ];
+    controlPts(:,1,1) = [  -t/2  -t/2     -t/2  	1           ];
+    controlPts(:,2,1) = [  -t/2  -t/2     -t/2      1/sqrt(2)   ];
+    controlPts(:,3,1) = [  -t/2  -t/2     -t/2   	1           ];
+    controlPts(:,4,1) = [  -t/2  -t/2     -t/2   	1/sqrt(2)   ];
+    controlPts(:,5,1) = [  -t/2  -t/2     -t/2    	1           ];
+    controlPts(:,6,1) = [  -t/2  -t/2     -t/2   	1/sqrt(2)   ];
+    controlPts(:,7,1) = [  -t/2  -t/2     -t/2    	1           ];
+    
+    controlPts(:,1,2) = [  	R       -t/2 	-t/2  	1           ];
+    controlPts(:,2,2) = [	R       R       -t/2  	1/sqrt(2)	];
+    controlPts(:,3,2) = [	-t/2	R       -t/2 	1           ];
+    controlPts(:,4,2) = [	-t/2	R       R     	1/sqrt(2) 	];
+    controlPts(:,5,2) = [	-t/2	-t/2   	R       1           ];
+    controlPts(:,6,2) = [	R       -t/2  	R       1/sqrt(2)  	];
+    controlPts(:,7,2) = [   R      -t/2     -t/2   	1           ];
 
-    controlPts(:,1,2) = [  	R  0     0           1   ];
-    controlPts(:,2,2) = [	R  R     0  	1/sqrt(2)           ];
-    controlPts(:,3,2) = [	0  R     0	1   ];
-    controlPts(:,4,2) = [	0  R    R           1/sqrt(2)          ];
-    controlPts(:,5,2) = [	0  0    R	1   ];
-    controlPts(:,6,2) = [	R  0    R 	1/sqrt(2)           ];
-    controlPts(:,7,2) = [   R  0    0           1   ];
+    controlPts(:,1,3) = [  	R   t/2 	t/2    	1           ];
+    controlPts(:,2,3) = [	R   R       t/2  	1/sqrt(2)	];
+    controlPts(:,3,3) = [	t/2	R       t/2     1           ];
+    controlPts(:,4,3) = [	t/2	R       R     	1/sqrt(2) 	];
+    controlPts(:,5,3) = [	t/2	t/2     R       1           ];
+    controlPts(:,6,3) = [	R   t/2     R       1/sqrt(2)  	];
+    controlPts(:,7,3) = [   R   t/2     t/2   	1           ];
 
-    controlPts(:,1,3) = [  	R  t     t           1   ];
-    controlPts(:,2,3) = [	R  R     t  	1/sqrt(2)           ];
-    controlPts(:,3,3) = [	t  R     t	1   ];
-    controlPts(:,4,3) = [	t  R    R           1/sqrt(2)         ];
-    controlPts(:,5,3) = [	t  t    R	1   ];
-    controlPts(:,6,3) = [	R  t    R 	1/sqrt(2)           ];
-    controlPts(:,7,3) = [   R  t    t           1   ];
-
-    controlPts(:,1,4) = [  t  t     t       1           ];
-    controlPts(:,2,4) = [  t  t     t     1/sqrt(2)   ];
-    controlPts(:,3,4) = [  t  t     t      1           ];
-    controlPts(:,4,4) = [  t  t     t       1/sqrt(2)   ];
-    controlPts(:,5,4) = [  t  t     t       1           ];
-    controlPts(:,6,4) = [  t  t     t       1/sqrt(2)   ];
-    controlPts(:,7,4) = [  t  t     t        1           ];
+    controlPts(:,1,4) = [  t/2  t/2     t/2  	1           ];
+    controlPts(:,2,4) = [  t/2  t/2     t/2     1/sqrt(2)   ];
+    controlPts(:,3,4) = [  t/2  t/2     t/2   	1           ];
+    controlPts(:,4,4) = [  t/2  t/2     t/2   	1/sqrt(2)   ];
+    controlPts(:,5,4) = [  t/2  t/2     t/2    	1           ];
+    controlPts(:,6,4) = [  t/2  t/2     t/2   	1/sqrt(2)   ];
+    controlPts(:,7,4) = [  t/2  t/2     t/2    	1           ];
 end
 
 

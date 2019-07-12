@@ -30,7 +30,7 @@ for patch = 1:varCol.noPatches
 end
 
 d_min = zeros(n_cp,1);
-parfor i = 1:n_cp
+for i = 1:n_cp
     d_min(i) = min(norm2(repmat(cp(i,:),n_cp-1,1)-cp(setdiff(1:end,i),:)));
 end
 tau = lambda(1)/max(d_min);

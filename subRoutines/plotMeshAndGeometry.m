@@ -22,16 +22,18 @@ if plot3Dgeometry
                     else 
                         resolution = [10,10];
                     end
-                    if 0
+                    if 1
                         colorFun = @(v) abs(varCol.analytic(v));
 %                         colorFun = @(v) real(varCol.analytic(v));
-                        plotNURBS(fluid{i},{'resolution',[10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
-                                                        'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',[10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
+%                                                         'samplingDistance',0.1});
+                        plotNURBS(fluid{i},{'resolution',[10 10], 'elementBasedSamples',false});
+%                         plotNURBS(fluid{i},{'resolution',[10 10], 'elementBasedSamples',false,'alphaValue',0.8,'color','blue'});
                     else
 %                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
 %                         plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-                        plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-%                         plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
+                        plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
 %                         plotNURBS(fluid{i},{'resolution',resolution, 'elementBasedSamples',true,'samplingDistance',0.1});
                     end
             end
@@ -86,15 +88,15 @@ if plot3Dgeometry
 %     view(18,10) % BeTSSi
 %     view(62,43)
     view(106,26) % sphere and cube
-%     view(0,0)
+%     view(0,90) % above
     camproj('perspective')
 %     camproj('orthographic')
     
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
-    camlight
+%     camlight
 %     keyboard 
-%     plotControlPts(fluid{8},'red','red','red','black')
+%     plotControlPts(fluid,'red','red','red','black')
     figureFullScreen(gcf)
 % 	export_fig(['../../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/S1/S13D_' coreMethod], '-png', '-transparent', '-r300')
@@ -103,6 +105,7 @@ if plot3Dgeometry
 % 	export_fig(['../../graphics/sphericalShell/S1patched'], '-png', '-transparent', '-r300')
 % 	export_fig('C:\Users\jonvegar\Desktop\trond\mesh3D', '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
+% 	export_fig('../../graphics/M3/M3_above', '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/Cube_mesh' num2str(M)], '-png', '-transparent', '-r300')
            
 

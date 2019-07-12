@@ -10,6 +10,8 @@ switch model
         error('Clean up this subRoutine')
     case {'M3','M3_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_Model3(varCol,parms, M, degree);
+    case {'M3','M3_P'}
+        [varCol, fluid, solid, fluid_i] = createNURBSmesh_Model2(varCol,parms, M, degree);
     case {'PH','PH_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_PH(varCol,parms, M, degree);
     case {'M4','M4_P'}

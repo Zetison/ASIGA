@@ -634,8 +634,8 @@ elseif strcmp(nurbs.type, '3Dsurface')
         Z = cell(noElems,1);
         C = cell(noElems,1);
         hold on
-%         parfor e = 1:noElems
-        for e = 1:noElems
+        parfor e = 1:noElems
+%         for e = 1:noElems
             idXi = index(e,1);
             idEta = index(e,2);
 
@@ -653,8 +653,8 @@ elseif strcmp(nurbs.type, '3Dsurface')
             noXiValues  = max([round(dxi/d)+1, 2]);
             noEtaValues = max([round(deta/d)+1, 2]);
             if noXiValues*noEtaValues < resolution(1)*resolution(2)
-                noXiValues = round(resolution(1)*sqrt(dxi/deta));
-                noEtaValues = round(resolution(2)*sqrt(deta/dxi));
+                noXiValues = max([round(resolution(1)*sqrt(dxi/deta)),2]);
+                noEtaValues = max([round(resolution(2)*sqrt(deta/dxi)),2]);
             end
             Xi_values2 = linspace(Xi_e(1),Xi_e(2),noXiValues).';
             Eta_values2 = linspace(Eta_e(1),Eta_e(2),noEtaValues).';

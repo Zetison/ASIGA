@@ -24,6 +24,7 @@ alpha = (0:0.1:180)*pi/180;
 alpha = sort([alpha, pi/2-atan((5-3)/41)]);
 % alpha = 88*pi/180;
 
+alpha_s = 240*pi/180;
 beta_s = 0*pi/180;        
 % beta_s = 30*pi/180;
 plot3Dgeometry = 0;
@@ -39,37 +40,6 @@ loopParameters = {'degree','M','method'};
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MFS simulation
-method = {'MFS'};
-formulation = 'SS'; % PS = point solution, SS = spherical solution
-M = 1:3;
-parm = linspace(0.1,0.4,8);
-parm = 0.5/sqrt(k);
-calculateSurfaceError = 0;
-computeCondNumber = false;
-loopParameters = {'parm','M','N','method'};
-
-N = 10;
-% collectIntoTasks
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% RT simulation
-method = {'RT'};
-% coreMethod = 'hp_FEM';
-formulation = '';
-M = 1;
-plot3Dgeometry = 0;
-calculateSurfaceError = 0;
-computeCondNumber = false;
-plotFarField = 1;
-applyLoad = 'planeWave';
-parm = 6:8;
-r = 10;
-
-loopParameters = {'parm','M','method'};
-% collectIntoTasks
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
 method = {'KDT'};
 M = 5:7;
@@ -81,9 +51,10 @@ M = 1;
 %% BEM simulation
 f = 1e3;
 solveForPtot = true;
-plot3Dgeometry = 0;
+plot3Dgeometry = 1;
 method = {'BEM'};
-formulation = {'CCBIE','CBM'};
+formulation = {'CBM'};
 M = 5:7;
+M = 1;
 loopParameters = {'formulation','M','method','f'};
-% collectIntoTasks
+collectIntoTasks
