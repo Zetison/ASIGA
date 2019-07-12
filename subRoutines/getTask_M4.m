@@ -8,10 +8,10 @@ method = {'BEM'};
 formulation = {'CBM','CCBIE'};
 
 f = [1e3, 3e3, 10e3];             % Frequency
-f = 1e3;             % Frequency
+% f = 1e3;             % Frequency
 
-M = 4:6;
-M = 3:4;
+M = 3:6;
+% M = 3:4;
 % parm = 2;
 parm = [2,1];
 degree = 2;
