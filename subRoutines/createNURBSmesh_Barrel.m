@@ -1,16 +1,21 @@
+function [varCol, fluid, solid, fluid_i] = createNURBSmesh_Barrel(varCol, parms, M, degree)
+solid = NaN;
+fluid_i = NaN;
 
-x_0 = [-L/2, 0, 0]; % The origin of the model
-switch method
-    case {'IE','IENSG'}
-        % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
-        % the z-axis to the y-axis
-        A_2 = [0 1 0;
-                      0 0 1;
-                      1 0 0];
-        varCol.x_0 = x_0;
-        varCol.A_2 = A_2;
+names = fieldnames(parms);
+for j = 1:numel(names)
+    name = names{j};
+    eval([name, ' = parms.(names{j});']);
 end
 
+x_0 = [0, 0, 0];
+switch varCol.method
+    case {'IE','IENSG','ABC'}
+        varCol.x_0 = x_0; % The origin of the model
+        varCol.A_2 = [0 1 0;
+              0 0 1;
+              1 0 0];
+end
 if varCol.boundaryMethod
     eta2 = 0.765;
     eta1 = 0.235;
@@ -22,35 +27,41 @@ if varCol.boundaryMethod
     Upsilon = sqrt(c_z^2 - c_xy^2);
     chimin = 9.8;
     chimax = 11.2;
+    
+    if varCol.parm(1) == 1
+        solid = getBarrelData(R_o,R_i,eta1,eta2,L);
 
-    solid = getBarrelData(R_o,R_i,eta1,eta2,L);
-
-    noNewXiKnots = 2^(M-1)-1;  
-    noNewZetaKnots = 2^(M-1)-1;
-    i_M1 = 2^(M-1)-1;
-    i_M2 = (2^(M-1)-1)*L/R_o;
-    i_M3 = 2^(M-1)-1;
-
-
-    solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
-
-    solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, noNewXiKnots) ...
-                                      [insertUniform2([0 eta1], i_M1); ...
-                                       insertUniform2([eta1 eta2], i_M2);
-                                       insertUniform2([eta2 1], i_M3)] ...
-                                      insertUniform2(solid.knots{3}, noNewZetaKnots)});
+        noNewXiKnots = 2^M-1;  
+        noNewZetaKnots = 2^M-1;
+        i_M1 = 2^M-1;
+        i_M2 = 2^(M+1)-1;
+        i_M3 = 2^M-1;
 
 
+        solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
 
-    principalLengthXiDir = 2*pi*R_o;
-    principalLengthEtaDir = 2*R_o + L;
-    L_gamma = L;
+        solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, noNewXiKnots) ...
+                                          [insertUniform2([0 eta1], i_M1); ...
+                                           insertUniform2([eta1 eta2], i_M2);
+                                           insertUniform2([eta2 1], i_M3)] ...
+                                          insertUniform2(solid.knots{3}, noNewZetaKnots)});
 
 
-    if ~strcmp(BC, 'SHBC')
-        error('This is not implemented')
+
+        principalLengthXiDir = 2*pi*R_o;
+        principalLengthEtaDir = 2*R_o + L;
+        L_gamma = L;
+
+
+        fluid = extractOuterSurface(solid);
+    else
+        fluid = getBarrelData2(R_o,R_i,L);
+        noNewXiKnots = 2^(M-1)-1; % 8*i_mesh
+        noNewEtaKnots = noNewXiKnots;
+        fluid = elevateDegreeInPatches(fluid,[1 1]*(degree-2));
+        fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots);
     end
-    fluid = extractOuterSurface(solid);
+    varCol.patchTop = getPatchTopology(fluid);
 else
 
     eta2 = 0.765;
@@ -103,7 +114,7 @@ else
 
     findEtaKnots
 
-    fluid = elevateNURBSdegree(fluid,[1 1 1]*degreeElev);
+    fluid = elevateNURBSdegree(fluid,[1 1 1]*(degree-2));
 
     fluid = insertKnotsInNURBS(fluid,{insertUniform2(fluid.knots{1}, noNewXiKnots) ...
                                       [newEtaValues1 ...

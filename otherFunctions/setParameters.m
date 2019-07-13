@@ -39,7 +39,7 @@ switch model
         L = mult*R_o*pi/2; 
     case 'TAP'
         setTAPParameters
-    case {'BA','BA_P'}
+    case {'Barrel','Barrel_P'}
         setBarrelParameters
     case {'BC','BC_P','BCA','BCA_P'}
         setBCParameters

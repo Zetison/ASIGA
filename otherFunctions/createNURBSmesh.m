@@ -27,9 +27,8 @@ switch model
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_MockShell(varCol,parms, M, degree);
     case 'TAP'
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_TAP(varCol,parms, M, degree);
-    case {'BA','BA_P'}
+    case {'Barrel','Barrel_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_Barrel(varCol,parms, M, degree);
-        error('Clean up this subRoutine')
     case {'BC','BC_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_BC(varCol,parms, M, degree);
     case {'BCA','BCA_P'}

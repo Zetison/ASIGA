@@ -32,9 +32,9 @@ if plot3Dgeometry
                     else
 %                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
 %                         plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-                        plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
 %                         plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
-%                         plotNURBS(fluid{i},{'resolution',resolution, 'elementBasedSamples',true,'samplingDistance',0.1});
+                        plotNURBS(fluid{i},{'resolution',resolution, 'elementBasedSamples',true,'samplingDistance',0.1});
                     end
             end
         else
@@ -87,9 +87,9 @@ if plot3Dgeometry
 %     view(120,10)
 %     view(18,10) % BeTSSi
 %     view(62,43)
-%     view(46,32) % BeTSSi M4
+    view(46,32) % BeTSSi M4
 %     view(106,26) % sphere and cube
-    view(0,90) % above
+%     view(0,90) % above
     camproj('perspective')
 %     camproj('orthographic')
     
