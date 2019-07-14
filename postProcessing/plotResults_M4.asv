@@ -18,7 +18,4 @@ for study_i = 1:numel(studies)
 end
 
 
-temp = importdata('../../../FFI/BeTSSiIIb/NTNUFFI results/M4_HWBC_MS_AS_E30_F3.txt', ',', 7);
-x = temp.data(:,1);
-y = temp.data(:,2);
-plot(x,y,'DisplayName','old')
+                temp = importdata(['../plotData/M3_HWBC_MS_old/' file.name], ' ', 1);

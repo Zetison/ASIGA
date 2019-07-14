@@ -15,7 +15,7 @@ M = 7;
 parm = [2,1];
 % parm = 2;
 degree = 4;
-beta_s = 30*pi/180;
+beta = 30*pi/180;
 alpha = (0:0.05:360)*pi/180;
 
 loopParameters = {'M','parm','f','method','formulation'};
