@@ -893,7 +893,7 @@ if strcmp(scatteringCase,'Ray')
 end
 
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
-if ~useROM && ~strcmp(method,'RT')
+if ~useROM && ~(strcmp(method,'KDT') || strcmp(method,'RT'))
     switch scatteringCase
         case {'BI', 'Sweep','Ray'}    
     %         keyboard
@@ -972,9 +972,6 @@ if ~useROM && ~strcmp(method,'RT')
                 testFun = @(v) -analytic(v) - P_inc(v);
                 varCol.testFun = testFun;
                 if boundaryMethod
-                    if strcmp(method, 'KDT')
-                        U_fluid_o = zeros(varCol.noDofs,1);
-                    end
                     if strcmp(model,'SS_P')
                         options = struct('name',vtfFileName, 'celltype', 'VTK_QUAD', ...
                                     'plotTimeOscillation', plotTimeOscillation, 'plotError', plotError, 'plotTotField', 1, ...
@@ -983,7 +980,7 @@ if ~useROM && ~strcmp(method,'RT')
                         options = struct('name',vtfFileName, 'celltype', 'VTK_QUAD', 'plotTimeOscillation', plotTimeOscillation, ...
                                         'plotScalarField',1, 'plotError', plotError, 'plotP_inc', 1, 'plotTotField', 1, ...
                                         'plotTotFieldAbs', 1, ...
-                                        'plotErrorFunc', 0, 'plotTestFun', 0, 'plotTestField', 0, 'plotAnalytic', analyticSolutionExist);
+                                        'plotErrorFunc', 0, 'plotTestFun', 0, 'plotTestField', 1, 'plotAnalytic', analyticSolutionExist);
                         if strcmp(varCol.applyLoad,'radialPulsation')
                             options.plotP_inc = false;
                             options.plotTotField = false;
@@ -1002,7 +999,7 @@ if ~useROM && ~strcmp(method,'RT')
                     end
                 end
                 varCol.isOuterDomain = true;
-        
+
                 if ~boundaryMethod
                     createParaviewFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options, plotMesh, e3Dss_options);
                 end
@@ -1011,13 +1008,8 @@ if ~useROM && ~strcmp(method,'RT')
                     createVTKmeshFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options)
                 end
                 if strcmp(method,'KDT')
-                    xb = [-5,5];
-                    yb = [-5,5];
-                    zb = [1,1];
-                    xb = xb + 1.5;
-                    yb = yb + 1.5;
-                    delta = 0.1/9;
-                    plotTriangulationKDT(varCol,delta,xb,yb,zb,options,'_exterior')
+                    xb = [-
+                    plotTriangulationKDT(varCol,U,delta,xb,yb,zb,options,nameAppendix)
                 else
                     delta = 0.5;
                     xb = [-65,20]+pi*1e-6;

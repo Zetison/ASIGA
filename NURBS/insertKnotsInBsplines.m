@@ -6,7 +6,7 @@ if isempty(newKnots)
     P_new = P;
     return;
 else   
-    P_new = zeros(size(P,1), n+length(newKnots));
+    P_new = zeros(size(P,1), n+length(newKnots),class(P));
 end
 for k = 1:length(newKnots)
     xi = newKnots(k);

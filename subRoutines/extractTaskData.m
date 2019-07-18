@@ -71,6 +71,8 @@ if strcmp(method,'IENSG') || strcmp(method,'IE')
 else
     if ~isfield(task,'N')
         task.N = 2;
+    else
+        varCol.N = task.N;
     end
 end
 

@@ -63,8 +63,10 @@ figure(2)
 
 E = 100*abs(data.p.'-p_ref)./abs(data.p).';
 E2 = 100*abs(data.p.'-p_ref2)./abs(data.p).';
+E2abs = 100*abs(abs(data.p.')-abs(p_ref2))./abs(data.p).';
 figure(46)
 loglog(k,E,k,E2)
 printResultsToFile2('../results/Fillinger/kirchhoff', k, E, 'k', 'error_p');
 printResultsToFile2('../results/Fillinger/asymptotic', k, E2, 'k', 'error_p');
+printResultsToFile2('../results/Fillinger/asymptotic', k, E2abs, 'k', 'error_pAbs');
 

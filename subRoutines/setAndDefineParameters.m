@@ -109,7 +109,7 @@ end
 varCol.boundaryMethod = boundaryMethod;
 
 switch scatteringCase
-    case 'MS'
+    case {'MS','Sweep'}
         alpha_s = alpha;
         beta_s = beta;
 end

@@ -73,7 +73,7 @@ parfor e = 1:noElems
         else
             xmy = P_far - repmat(Y,size(P_far,1),1);
             r = norm2(xmy);
-            p_h = p_h + p_h_gp.'.*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
+            p_h = p_h + p_h_gp.'.*dPhi_kdny(xmy,r,n.',k)* J_1 * J_2 * wt;  
         end
     end
 end

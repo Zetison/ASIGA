@@ -57,33 +57,9 @@ if varCol.boundaryMethod
 %                               NaN, NaN];
         nurbsDegree = solid.degree(1); % assume all degrees are equal
     else
+%         solid = getShericalShellOctPart(c_z,t);
         solid = getSphericalShellDataPatched(c_z, t); 
         solid = elevateDegreeInPatches(solid,[0 0 3]);
-%         varCol.patchTop = cell(6,1);
-%         varCol.patchTop{1} = [2 0;
-%                               6 0;
-%                               4 0;
-%                               5 0];
-%         varCol.patchTop{2} = [3 0;
-%                               6 3;
-%                               1 0;
-%                               5 1];
-%         varCol.patchTop{3} = [4 0;
-%                               6 2;
-%                               2 0;
-%                               5 2];
-%         varCol.patchTop{4} = [1 0;
-%                               6 1;
-%                               3 0;
-%                               5 3];
-%         varCol.patchTop{5} = [2 3;
-%                               1 0;
-%                               4 1;
-%                               3 2];
-%         varCol.patchTop{6} = [2 1;
-%                               3 2;
-%                               4 3;
-%                               1 0];
         nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
     end
 %     solid = explodeNURBS(solid,'eta');

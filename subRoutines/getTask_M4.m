@@ -9,9 +9,10 @@ formulation = {'CBM','CCBIE'};
 % formulation = {'CCBIE'};
 
 f = 10e3;             % Frequency
+f = 1e3;             % Frequency
 
 M = 3:6;
-M = 7;
+% M = 1;
 parm = [2,1];
 % parm = 2;
 degree = 4;

@@ -12,7 +12,7 @@ formulation = 'BGU';
 f = 1e3; %[1e2 5e2 1e3];             % Frequency
 omega = 2*pi*f;
 k = omega/1500;
-
+parm = 1;
 M = 3;
 degree = 2;
 N = [3,5];
@@ -24,8 +24,6 @@ alpha = (0:0.1:180)*pi/180;
 alpha = sort([alpha, pi/2-atan((5-3)/41)]);
 % alpha = 88*pi/180;
 
-beta_s = 0*pi/180;        
-% beta_s = 30*pi/180;
 plot3Dgeometry = 0;
 
 plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
@@ -81,9 +79,11 @@ M = 1;
 %% BEM simulation
 f = 1e3;
 solveForPtot = true;
-plot3Dgeometry = 0;
+plot3Dgeometry = 1;
 method = {'BEM'};
 formulation = {'CCBIE','CBM'};
+formulation = {'CBM'};
 M = 5:7;
+M = 1;
 loopParameters = {'formulation','M','method','f'};
-% collectIntoTasks
+collectIntoTasks

@@ -24,8 +24,6 @@ alpha = (0:0.1:180)*pi/180;
 alpha = sort([alpha, pi/2-atan((5-3)/41)]);
 % alpha = 88*pi/180;
 
-alpha_s = 240*pi/180;
-beta_s = 0*pi/180;        
 % beta_s = 30*pi/180;
 plot3Dgeometry = 0;
 

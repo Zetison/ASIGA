@@ -40,17 +40,22 @@ if varCol.boundaryMethod
     totLength = R_o1*pi/2 + sqrt(L^2+(R_o1-R_o2)^2)+ R_o2*pi/2;
     eta1 = R_o1*pi/2/totLength;
     eta2 = (R_o1*pi/2 + sqrt(L^2+(R_o1-R_o2)^2))/totLength;
-
-    solid = getModel3Data(R_o1, R_o2, t, L);
-    solid = elevateNURBSdegree(solid,[0 0 1]);
-    solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
-
     nn = 2^(M-1)-1;
 
-    solid = insertKnotsInNURBS(solid,{[] linspace2(eta1, eta2, 5) []});
+    if varCol.parm(1) == 1
+        solid = getModel3Data(R_o1, R_o2, t, L);
+        solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
+        solid = elevateNURBSdegree(solid,[0 0 1]);
+        solid = insertKnotsInNURBS(solid,{[] linspace2(eta1, eta2, 5) []});
+        solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, nn) ...
+                                          insertUniform2(solid.knots{2}, nn) []});
+    else
+        solid = getModel3Data2(R_o1, R_o2, L);
+%         solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, nn) ...
+%                                           insertUniform2(solid.knots{2}, nn) []});
+    end
 
-    solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, nn) ...
-                                      insertUniform2(solid.knots{2}, nn) []});
+
 
     fluid = extractOuterSurface(solid);
     varCol.patchTop = getPatchTopology(fluid);

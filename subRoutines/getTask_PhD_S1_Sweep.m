@@ -36,43 +36,9 @@ beta = pi;
 M = 1:3;
 calculateSurfaceError = 1;
 
-% collectIntoTasks
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MFS simulation
-method = {'MFS'};
-coreMethod = 'IGA';
-formulation = '';
-M = 5;
-degree = 2;
-calculateSurfaceError = 0;
-computeCondNumber = false;
-loopParameters = {'f','M','method'};
-% collectIntoTasks
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% KDT simulation
-method = {'KDT'};
-formulation = '';
-plot3Dgeometry = 0;
-degree = 4;
-calculateSurfaceError = 0;
-computeCondNumber = false;
-loopParameters = {'method','M','parm','coreMethod'};
-coreMethod = {'linear_FEM'};
-% coreMethod = {'IGA'};
-M = [6,8,10];
-% M = 5;
-parm = 2;
-% collectIntoTasks
-
-
-% coreMethod = {'IGA'};
-% % M = 3;
-% collectIntoTasks
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
+coreMethod = {'IGA'};
 method = {'RT'};
 formulation = '';
 M = 3;

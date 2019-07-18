@@ -180,8 +180,8 @@ if ~plotFarField
 else
     temp = norm2(P_far);
     P_far = P_far./temp(:,[1,1,1]);
-%     for i = 1:size(P_far,1)
-    parfor i = 1:size(P_far,1)
+    for i = 1:size(P_far,1)
+%     parfor i = 1:size(P_far,1)
         x = P_far(i,:);
         t = dot(repmat(x,size(x_n,1),1),d_n,2);
         indices = t > 0;
@@ -200,11 +200,15 @@ else
 %             camlight
 %             [X,Y,Z] = sphere(1000);
 % %             surf(0.02*X+x(1),0.02*Y+x(2),0.02*Z+x(3), 'FaceColor', [1,0,0],'LineStyle','none')
-%             plot3(d(:,1),d(:,2),d(:,3),'*','color','blue')
+%             xh_n = O(beami,:,2);
+%             plot3(xh_n(:,1),xh_n(:,2),xh_n(:,3),'*','color','blue')
 %             plot3(x(1),x(2),x(3),'*','color','red')
-%             for j = 1:size(d,1)
-%                 text(d(j,1),d(j,2),d(j,3),num2str(j))
-%             end
+% %             for j = 1:size(d,1)
+% %                 text(x_n(j,1),x_n(j,2),x_n(j,3),num2str(j))
+% %             end
+%             ax = gca;               % get the current axis
+%             ax.Clipping = 'off';    % turn clipping off
+%             keyboard
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             for j = 1:6 % loop over triangles in beam
                 I2 = beams(indices,j+1);
@@ -254,7 +258,7 @@ else
                     end
                     triIndices = [beams(indicesm,1), beams(indicesm,idx), beams(indicesm,idx2)];
                     d1m = d(triIndices(1),:);
-                    x1m = O(triIndices(1),:,end-1);
+                    x1m = O(triIndices(1),:,end);
                     
                     beamArea = 0; 
                     for jj = 1:6 % loop over triangles in beam
@@ -276,8 +280,10 @@ else
                     d3m = d(triIndices(3),:);
                     xi1m = norm(cross(d2m/dot(d1m,d2m),d3m/dot(d1m,d3m)) + cross(x/xd1,d2m/dot(d1m,d2m)-d3m/dot(d1m,d3m))) ...
                           /norm(cross(d2m/dot(d1m,d2m),d3m/dot(d1m,d3m)) + cross(d1m,  d2m/dot(d1m,d2m)-d3m/dot(d1m,d3m)));
-                    
-        %                 p_h(i,:) = p_h(i,:) + sqrt(beamEnergy/beamArea)*xi_1*A(I1(hit),:).*expFact;
+
+%                     nrmx = norm(x);
+%                     expFact = nrmx*exp(-1i*k*dot(x/nrmx,x1m));
+%                     p_h(i,:) = p_h(i,:) + sqrt(beamEnergy/beamArea)*xi1m*A(I1(hit),:).*expFact;
                     p_h(i,:) = p_h(i,:) + sqrt(beamEnergy/beamArea)*xi1m*p_inc(x1m).*exp(-1i*k*dot(x,x1m));
                 end
             end

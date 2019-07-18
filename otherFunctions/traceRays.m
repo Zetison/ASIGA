@@ -17,158 +17,123 @@ R1 = 5;
 R2 = 3;
 x0 = L*R2/(R1-R2);
 mu = (R2/x0)^2;
-% 
-% for n = 1:size(O,1)
-% % parfor n = 1:size(O,1)
-%     Otemp = O(n,:,:);
-%     o = Otemp(1,:,1);
-%     if false
-%         do = dot(d_inc,o);
-%         discriminant = do^2-norm(o)^2+R^2;
-%         if discriminant >= 0
-%             s = -do - sqrt(discriminant);
-%             x_n = o + d_inc*s;
-% 
-%             n_vec = x_n;
-%             d(n,:) = d_inc-2*dot(d_inc,n_vec)*n_vec; % reflected ray
-% 
-%             O(n,:,2) = x_n;
-% 
-%     %         normals(n,:) = n_vec;
-%     %         O(n,:,3) = O(n,:,2) + 1.1*r;
-%             objectHit(n) = true;
-%     %         if plotRays
-%     %             hold on
-%     %             x = O(n,1,1:2);
-%     %             y = O(n,2,1:2);
-%     %             z = O(n,3,1:2);
-%     %             plot3(x(:),y(:),z(:),'black')
-%     %             x = [varCol.o(n,1); reshape(O(n,1,2:end),size(O,3)-1,1)];
-%     %             y = [varCol.o(n,2); reshape(O(n,2,2:end),size(O,3)-1,1)];
-%     %             z = [varCol.o(n,3); reshape(O(n,3,2:end),size(O,3)-1,1)];
-%     %             plot3(x(:),y(:),z(:),'black')
-%     %         end
-%         end
-%     else
-%         do = dot(d_inc,o);
-%         s = zeros(1,3);
-%         discriminant = do^2-norm(o)^2+R2^2;
-%         stemp = -do - sqrt(discriminant);
-%         x_n = o + d_inc*stemp;
-%         if discriminant >= 0 && x_n(1) >= -Eps
-%             s(1) = stemp;
-%         else
-%             s(1) = inf;
-%         end
-%         a = 1;
-%         b = 2*d_inc(1)*L+2*do;
-%         c = norm(o)^2 + 2*o(1)*L+L^2-R1^2;
-%         
-%         discriminant = b^2-4*a*c;
-%         stemp = (-b-sqrt(discriminant))/(2*a);
-%         x_n = o + d_inc*stemp;
-%         if discriminant >= 0 && x_n(1)+L <= Eps
-%             s(2) = stemp;
-%         else
-%             s(2) = inf;
-%         end
-%         a = d_inc(2)^2+d_inc(3)^2-mu*d_inc(1)^2;
-%         b = 2*o(3)*d_inc(3)+2*o(2)*d_inc(2)-2*mu*o(1)*d_inc(1)+2*d_inc(1)*x0*mu;
-%         c = o(2)^2+o(3)^2 - mu*o(1)^2 + 2*mu*o(1)*x0 - mu*x0^2;
-%         
-%         discriminant = b^2-4*a*c;
-%         stemp = (-b-sqrt(discriminant))/(2*a);
-%         x_n = o + d_inc*stemp;
-%         if discriminant >= 0 && x_n(1) < 0 && x_n(1) > -L
-%             s(3) = stemp;
-%         else
-%             s(3) = inf;
-%         end
-%         if any(~isinf(s))
-%             [mins,I] = min(s);
-%             x_n = o + d_inc*mins;
-%             
-%             switch I
-%                 case 1
-%                     n_vec = x_n/norm(x_n);
-%                 case 2
-%                     n_vec = (x_n+[L,0,0]);
-%                     n_vec = n_vec/norm(n_vec);
-%                 case 3
-%                     theta = atan2(x_n(2),x_n(3));
-%                     n_vec = [1,sin(theta)/sqrt(mu),cos(theta)/sqrt(mu)];
-%                     n_vec = n_vec/norm(n_vec);
-%             end
-%             d(n,:) = d_inc-2*dot(d_inc,n_vec)*n_vec; % reflected ray
-% 
-%             O(n,:,:) = [o; x_n].';
-% 
-%     %         normals(n,:) = n_vec;
-%     %         O(n,:,3) = O(n,:,2) + 1.1*r;
-%             objectHit(n) = true;
-% %             if plotRays
-% %                 hold on
-% %                 x = O(n,1,1:2);
-% %                 y = O(n,2,1:2);
-% %                 z = O(n,3,1:2);
-% %                 plot3(x(:),y(:),z(:),'black')
-% %                 x = [O(n,1,2); x_n(1)+3*d(n,1)];
-% %                 y = [O(n,2,2); x_n(2)+3*d(n,2)];
-% %                 z = [O(n,3,2); x_n(3)+3*d(n,3)];
-% %                 plot3(x(:),y(:),z(:),'red')
-% %                 keyboard
-% %             end
-%         end
-%     end
-% end
+switch varCol.model
+    case 'S1'
+        R = varCol.parms.R_o;
+        if 1
+            for n = 1:size(O,1)
+            % parfor n = 1:size(O,1)
+                Otemp = O(n,:,:);
+                o = Otemp(1,:,1);
+                do = dot(d_inc,o);
+                discriminant = do^2-norm(o)^2+R^2;
+                if discriminant >= 0
+                    s = -do - sqrt(discriminant);
+                    x_n = o + d_inc*s;
 
-o = O(:,:,1);
-d_INC = repmat(d_inc,N,1);
-do = dot(d_INC,o,2);
-s = Inf(N,3);
-discriminant = do.^2-norm2(o).^2+R2^2;
-stemp = -do - sqrt(discriminant);
-x_n = o + stemp*d_inc;
-indices = and(discriminant >= 0, x_n(:,1) >= -Eps);
-s(indices,1) = stemp(indices);
-a = 1;
-b = 2*d_inc(1)*L+2*do;
-c = norm2(o).^2 + 2*o(:,1)*L + L^2-R1^2;
+                    n_vec = x_n;
+                    d(n,:) = d_inc-2*dot(d_inc,n_vec)*n_vec; % reflected ray
 
-discriminant = b.^2-4*a*c;
-stemp = (-b-sqrt(discriminant))/(2*a);
-x_n = o + stemp*d_inc;
-indices = and(discriminant >= 0, x_n(:,1)+L <= Eps);
-s(indices,2) = stemp(indices);
-a = d_inc(2)^2+d_inc(3)^2-mu*d_inc(1)^2;
-b = 2*o(:,3)*d_inc(3)+2*o(:,2)*d_inc(2)-2*mu*o(:,1)*d_inc(1)+2*d_inc(1)*x0*mu;
-c = o(:,2).^2+o(:,3).^2 - mu*o(:,1).^2 + 2*mu*o(:,1)*x0 - mu*x0^2;
+                    O(n,:,2) = x_n;
 
-discriminant = b.^2-4*a*c;
-stemp = (-b-sqrt(discriminant))/(2*a);
-x_n = o + stemp*d_inc;
-indices = and(discriminant >= 0, and(x_n(:,1) < 0, x_n(:,1) > -L));
-s(indices,3) = stemp(indices);
-objectHit = any(~isinf(s),2);
+            %         normals(n,:) = n_vec;
+            %         O(n,:,3) = O(n,:,2) + 1.1*r;
+                    objectHit(n) = true;
+            %         if plotRays
+            %             hold on
+            %             x = O(n,1,1:2);
+            %             y = O(n,2,1:2);
+            %             z = O(n,3,1:2);
+            %             plot3(x(:),y(:),z(:),'black')
+            %             x = [varCol.o(n,1); reshape(O(n,1,2:end),size(O,3)-1,1)];
+            %             y = [varCol.o(n,2); reshape(O(n,2,2:end),size(O,3)-1,1)];
+            %             z = [varCol.o(n,3); reshape(O(n,3,2:end),size(O,3)-1,1)];
+            %             plot3(x(:),y(:),z(:),'black')
+            %         end
+                end
+            end
+        else
+            o = O(:,:,1);
+            d_INC = repmat(d_inc,N,1);
+            do = dot(d_INC,o,2);
+            s = Inf(N,3);
+            discriminant = do.^2-norm2(o).^2+R^2;
+            stemp = -do - sqrt(discriminant);
+            x_n = o + stemp*d_inc;
+            indices = discriminant >= 0;
+            s(indices,1) = stemp(indices);
+            objectHit = any(~isinf(s),2);
+            
+            [mins,I] = min(s,[],2);
+            x_n = o + mins*d_inc;
+            n_vec = zeros(size(o));
+            indices = I == 1;
+            n_vec(indices,:) = normr(x_n(indices,:));
+            indices = I == 2;
+            xtemp = x_n(indices,:);
+            xtemp(:,1) = xtemp(:,1) + L;
+            n_vec(indices,:) = normr(xtemp);
+            indices = I == 3;
+            theta = atan2(x_n(:,2),x_n(:,3));
+            n_vectemp = [ones(N,1),sin(theta)/sqrt(mu),cos(theta)/sqrt(mu)];
+            n_vec(indices,:) = normr(n_vectemp(indices,:));
 
-[mins,I] = min(s,[],2);
-x_n = o + mins*d_inc;
-n_vec = zeros(size(o));
-indices = I == 1;
-n_vec(indices,:) = normr(x_n(indices,:));
-indices = I == 2;
-xtemp = x_n(indices,:);
-xtemp(:,1) = xtemp(:,1) + L;
-n_vec(indices,:) = normr(xtemp);
-indices = I == 3;
-theta = atan2(x_n(:,2),x_n(:,3));
-n_vectemp = [ones(N,1),sin(theta)/sqrt(mu),cos(theta)/sqrt(mu)];
-n_vec(indices,:) = normr(n_vectemp(indices,:));
+            dn = dot(d_INC,n_vec,2);
+            d = d_INC-2*dn(:,[1,1,1]).*n_vec; % reflected ray
 
-dn = dot(d_INC,n_vec,2);
-d = d_INC-2*dn(:,[1,1,1]).*n_vec; % reflected ray
+            O(:,:,2) = x_n;
+            
+        end
+    case 'M3'
 
-O(:,:,2) = x_n;
+        o = O(:,:,1);
+        d_INC = repmat(d_inc,N,1);
+        do = dot(d_INC,o,2);
+        s = Inf(N,3);
+        discriminant = do.^2-norm2(o).^2+R2^2;
+        stemp = -do - sqrt(discriminant);
+        x_n = o + stemp*d_inc;
+        indices = and(discriminant >= 0, x_n(:,1) >= -Eps);
+        s(indices,1) = stemp(indices);
+        a = 1;
+        b = 2*d_inc(1)*L+2*do;
+        c = norm2(o).^2 + 2*o(:,1)*L + L^2-R1^2;
+
+        discriminant = b.^2-4*a*c;
+        stemp = (-b-sqrt(discriminant))/(2*a);
+        x_n = o + stemp*d_inc;
+        indices = and(discriminant >= 0, x_n(:,1)+L <= Eps);
+        s(indices,2) = stemp(indices);
+        a = d_inc(2)^2+d_inc(3)^2-mu*d_inc(1)^2;
+        b = 2*o(:,3)*d_inc(3)+2*o(:,2)*d_inc(2)-2*mu*o(:,1)*d_inc(1)+2*d_inc(1)*x0*mu;
+        c = o(:,2).^2+o(:,3).^2 - mu*o(:,1).^2 + 2*mu*o(:,1)*x0 - mu*x0^2;
+
+        discriminant = b.^2-4*a*c;
+        stemp = (-b-sqrt(discriminant))/(2*a);
+        x_n = o + stemp*d_inc;
+        indices = and(discriminant >= 0, and(x_n(:,1) < 0, x_n(:,1) > -L));
+        s(indices,3) = stemp(indices);
+        objectHit = any(~isinf(s),2);
+
+        [mins,I] = min(s,[],2);
+        x_n = o + mins*d_inc;
+        n_vec = zeros(size(o));
+        indices = I == 1;
+        n_vec(indices,:) = normr(x_n(indices,:));
+        indices = I == 2;
+        xtemp = x_n(indices,:);
+        xtemp(:,1) = xtemp(:,1) + L;
+        n_vec(indices,:) = normr(xtemp);
+        indices = I == 3;
+        theta = atan2(x_n(:,2),x_n(:,3));
+        n_vectemp = [ones(N,1),sin(theta)/sqrt(mu),cos(theta)/sqrt(mu)];
+        n_vec(indices,:) = normr(n_vectemp(indices,:));
+
+        dn = dot(d_INC,n_vec,2);
+        d = d_INC-2*dn(:,[1,1,1]).*n_vec; % reflected ray
+
+        O(:,:,2) = x_n;
+end
 % if plotRays
 %     axis equal
 %     [X,Y,Z] = sphere(1000);

@@ -5,13 +5,12 @@ switch varCol.applyLoad
     case 'pointSource'
         error('not implemented')
     case 'planeWave'
-        parm = varCol.parm;
         X = varCol.controlPts;
         d_vec = varCol.d_vec;
         [X_m, A] = orthogonalTransform(X, d_vec);
 
         convexHull = boundary(X_m(:,1),X_m(:,2),0);
-        n = round(10^(parm/2));
+        n = round(10^(varCol.N/2));
 %         n = round(2^parm)-1;
         minX_m_x = min(X_m(:,1));
         minX_m_y = min(X_m(:,2));
@@ -40,10 +39,10 @@ switch varCol.applyLoad
         beams = reshape(temp(beams(:)),size(beams,1),size(beams,2));
         beams(any(~beams,2),:) = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%         varCol.oXX_m = XX_m;
-%         varCol.oYY_m = YY_m;
-%         varCol.X_m = X_m;
-%         varCol.convexHull = convexHull;
+        varCol.oXX_m = XX_m;
+        varCol.oYY_m = YY_m;
+        varCol.X_m = X_m;
+        varCol.convexHull = convexHull;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         XX_m = XX_m(IN).';
         YY_m = YY_m(IN).';
@@ -79,7 +78,7 @@ switch varCol.applyLoad
 % 
 %         varCol.convexHull = convexHull;
 %         varCol.X_m = X_m;
-%         
+% %         
 end
 
 

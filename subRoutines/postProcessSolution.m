@@ -28,7 +28,6 @@ else
     % save([resultsFolderName '/' saveName  '_' coreMethod method '_mesh' num2str(M) '_degree' num2str(max(varCol.nurbs.degree)) ...
     %                         '_formulation' varCol.formulation '.mat'], 'varCol', 'U_fluid_o')
 end
-varCol.tot_time = varCol.timeSolveSystem + varCol.timeBuildSystem;
 
 %% Find h_max and store results
 if i_k == 1

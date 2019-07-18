@@ -16,7 +16,6 @@ M = 3:6;
 parm = [2,1];
 % parm = 1;
 degree = 2;
-beta_s = 0;
 alpha = (0:0.05:90)*pi/180;
 
 loopParameters = {'M','parm','f','method','formulation'};

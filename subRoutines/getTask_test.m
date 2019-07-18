@@ -51,7 +51,7 @@ delta = [0.1,0.2,0.4,0.6,0.8];
 extraGP = [1,2,4,8,16,32];
 loopParameters = {'delta','extraGP','method'};
 
-collectIntoTasks
+% collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % %% BA simulation
 % method = {'BA'};
@@ -110,4 +110,18 @@ collectIntoTasks
 % loopParameters = {'M','method'};
 % % collectIntoTasks
 % 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% BEM simulation
+method = {'BEM'};
+formulation = 'CCBIE';
+parm = 2;
+M = 2;
+plot3Dgeometry = 1;
+degree = 4;
+calculateSurfaceError = 0;
+computeCondNumber = false;
+loopParameters = {'M','method'};
+solveForPtot = true;
+collectIntoTasks
+
 

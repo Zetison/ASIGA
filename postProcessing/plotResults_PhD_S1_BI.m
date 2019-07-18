@@ -1,4 +1,5 @@
 close all
+
 for study_i = 1:numel(studies)  
     study = studies(study_i);
     options = struct('xname',           'alpha',  ...
@@ -8,14 +9,25 @@ for study_i = 1:numel(studies)
                      'axisType',        'plot', ... 
                      'lineStyle',       '-', ... 
                      'xLoopName',       'N', ...
-                     'subFolderName',   '../results/M4/', ...
-                     'legendEntries',   {{'M','parm','f','method','formulation'}}, ...
+                     'xScale',       	180/pi, ...
+                     'subFolderName',   '../results/PhD_S1_BI', ...
+                     'legendEntries',   {{'method','N'}}, ...
                      'noXLoopPrms',     0); 
+    figure(4)
+    printResultsToTextFiles(study,options)
 
+    options.noXLoopPrms = 0;
+    options.lineStyle = '-';
+    options.xname = 'alpha';
+    options.yname = 'error_pAbs';
+    options.axisType = 'semilogy';
     options.xScale = 180/pi;
     figure(5)
+    printResultsToTextFiles(study,options)
+
+    options.yname = 'error_p';
+    figure(6)
     printResultsToTextFiles(study,options)
 end
 
 
-                temp = importdata(['../plotData/M3_HWBC_MS_old/' file.name], ' ', 1);

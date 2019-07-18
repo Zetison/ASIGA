@@ -15,9 +15,9 @@ function [N, dNdxi, d2Ndxi2, d3Ndxi3] = Bspline_basisDers2(i, xi, p, Xi)
 
 computeDers = nargout > 1;
 noxi = numel(xi);
-N = zeros(noxi,p+1);
+N = zeros(noxi,p+1,class(xi));
 N(:,1) = 1;
-saved = ones(noxi,1);
+saved = ones(noxi,1,class(xi));
 
 for j = 2:p+1
     % For k = 1 there is no dependence on N(k-1) of the previous run.
@@ -55,7 +55,7 @@ end
 
 if computeDers
     %% Calculate first derivatives
-    dNdxi = zeros(noxi,p+1);
+    dNdxi = zeros(noxi,p+1,class(xi));
     a = 1./(Xi(i+1:i+p)-Xi(i-p+1:i));
     a = repmat(a,noxi,1);
     dNdxi(:,1:p)   = -N_tilde.*a;
@@ -63,7 +63,7 @@ if computeDers
     dNdxi = p*dNdxi;
 
     %% Calculate second derivatives
-    d2Ndxi2 = zeros(noxi,p+1);
+    d2Ndxi2 = zeros(noxi,p+1,class(xi));
     if p > 1
         a2 = 1./(Xi(i+1:i+p-1)-Xi(i-p+2:i));
         a2 = repmat(a2,noxi,1);
@@ -75,7 +75,7 @@ if computeDers
 
     %% Calculate third derivatives
     if nargout == 4
-        d3Ndxi3 = zeros(noxi,p+1);
+        d3Ndxi3 = zeros(noxi,p+1,class(xi));
         if p > 2
             a3 = 1./(Xi(i+1:i+p-2)-Xi(i-p+3:i));
             a3 = repmat(a3,noxi,1);

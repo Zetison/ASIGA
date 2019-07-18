@@ -82,6 +82,10 @@ task.computeCondNumber = computeCondNumber;
 if ~exist('loopParameters','var')
     loopParameters = {};
 end
+if (~isnan(alpha_s) || ~isnan(beta_s)) && (strcmp(scatteringCase,'MS') || strcmp(scatteringCase,'Sweep'))
+    error(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
+          'Note that alpha_s = alpha and beta_s = beta.'])
+end
 loopParametersArr = cell(length(loopParameters),1);
 for i = 1:length(loopParameters)
     loopParametersArr{i} = task.(loopParameters{i});

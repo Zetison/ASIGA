@@ -28,7 +28,7 @@ switch nurbs.type
         L = Bspline_basisDers2(i3, parm_pt(:,3), p_zeta, Zeta);
 
         noxi = size(parm_pt,1);
-        W = zeros(noxi,1);
+        W = zeros(noxi,1,class(parm_pt));
 
         for k3 = 1:p_zeta+1
             A3 = i3 - p_zeta + k3 - 1;
@@ -43,7 +43,7 @@ switch nurbs.type
             end
         end
 
-        v = zeros(noxi,d);
+        v = zeros(noxi,d,class(parm_pt));
         counter = 1;
         for k3 = 1:p_zeta+1
             A3 = i3 - p_zeta + k3 - 1;
@@ -87,12 +87,12 @@ switch nurbs.type
         end
 
         noxi = size(parm_pt,1);
-        W = zeros(noxi,1);
-        dWdxi = zeros(noxi,1);
-        dWdeta = zeros(noxi,1);
-        d2Wdxi2 = zeros(noxi,1);
-        d2Wdeta2 = zeros(noxi,1);
-        d2Wdxideta = zeros(noxi,1);
+        W = zeros(noxi,1,class(parm_pt));
+        dWdxi = zeros(noxi,1,class(parm_pt));
+        dWdeta = zeros(noxi,1,class(parm_pt));
+        d2Wdxi2 = zeros(noxi,1,class(parm_pt));
+        d2Wdeta2 = zeros(noxi,1,class(parm_pt));
+        d2Wdxideta = zeros(noxi,1,class(parm_pt));
 
         for k2 = 1:p_eta+1
             A2 = i2 - p_eta + k2 - 1;
@@ -111,13 +111,13 @@ switch nurbs.type
             end
         end
 
-        v = zeros(noxi,d);
+        v = zeros(noxi,d,class(parm_pt));
         if computeDers
-            dvdxi = zeros(noxi,d);
-            dvdeta = zeros(noxi,d);
-            d2vdxi2 = zeros(noxi,d);
-            d2vdeta2 = zeros(noxi,d);
-            d2vdxideta = zeros(noxi,d);
+            dvdxi = zeros(noxi,d,class(parm_pt));
+            dvdeta = zeros(noxi,d,class(parm_pt));
+            d2vdxi2 = zeros(noxi,d,class(parm_pt));
+            d2vdeta2 = zeros(noxi,d,class(parm_pt));
+            d2vdxideta = zeros(noxi,d,class(parm_pt));
         end
         counter = 1;
         for k2 = 1:p_eta+1
@@ -163,10 +163,10 @@ switch nurbs.type
 
         [N, dNdxi, d2Ndxi2] = Bspline_basisDers2(i1, xi, p_xi, Xi);
 
-        v = zeros(d,1);
-        dvdxi = zeros(d,1);
+        v = zeros(d,1,class(parm_pt));
+        dvdxi = zeros(d,1,class(parm_pt));
         
-        d2vdxi2 = zeros(d,1);
+        d2vdxi2 = zeros(d,1,class(parm_pt));
 
         W = 0;
         dWdxi = 0;

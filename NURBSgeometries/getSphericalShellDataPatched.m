@@ -6,10 +6,16 @@ Zeta = [0 0 1 1];
 R_i = R_o-t;
 
 nurbs = cell(1,6);
-sr2 = sqrt(2);                                                        
-sr3 = sqrt(3);                                                        
-sr6 = sqrt(6);   
-controlPts = zeros(4,5,5,2); 
+if isa(R_o,'sym')
+    sr2 = sqrt(sym('2'));                                                        
+    sr3 = sqrt(sym('3'));                                                        
+    sr6 = sqrt(sym('6'));   
+else
+    sr2 = sqrt(2);                                                        
+    sr3 = sqrt(3);                                                        
+    sr6 = sqrt(6);   
+end
+controlPts = zeros(4,5,5,2,class(R_o)); 
 
 if true
     controlPts(:,1,1,1) = [4*(1-sr3)    4*(1-sr3)       4*(sr3-1)       4*(3-sr3)];
@@ -87,13 +93,3 @@ for i = 2:4
 end
 nurbs(5) = rotateNURBS(nurbs{1},pi/2,'Xaxis');
 nurbs(6) = rotateNURBS(nurbs{1},-pi/2,'Xaxis');
-   
-% 
-% nurbs = rotateNURBS(nurbs,3*pi/4,'Zaxis');
-% nurbs = rotateNURBS(nurbs,0.955316618124510,'Yaxis');
-% nurbs = rotateNURBS(nurbs,0.1,'Zaxis');
-% nurbs = rotateNURBS(nurbs,0.1,'Yaxis');
-   
-% 
-% nurbs = rotateNURBS(nurbs,3.5*pi/4,'Zaxis');
-% nurbs = rotateNURBS(nurbs,1,'Yaxis');
