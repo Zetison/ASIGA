@@ -90,7 +90,7 @@ if strcmp(scatteringCase,'Sweep')
     U_sweep = cell(1,numel(k));
 end
 
-if strcmp(method,'KDT') || strcmp(method,'RT')
+if strcmp(method,'RT') || strcmp(method,'KDT')
     k_1 = k(1,:);
     varCol.k = k_1;
     omega = k_1*varCol.c_f(1);
@@ -541,6 +541,22 @@ else
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', varCol.timeBuildSystem)
                 end
+            case 'KDT'
+                tic
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
+                end
+                [A, FF, varCol] = bestApproximationVec(varCol);
+                dofsToRemove = varCol.dofsToRemove;
+                A(dofsToRemove,:) = [];  
+                A(:,dofsToRemove) = [];
+
+                FF(dofsToRemove,:) = [];
+                noDofs_tot = varCol.noDofs;
+                varCol.timeBuildSystem = toc;
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', varCol.timeBuildSystem)
+                end
         end
         switch method
             case {'IE','IENSG','BEM','BA','ABC','MFS'}
@@ -826,8 +842,9 @@ if calculateFarFieldPattern && ~useROM
                 case 'IGA'
                     varCol.h_max = findMaxElementDiameter(varCol.patches);
                     varCol.nepw = lambda(1)./varCol.h_max;
-                    p = calculateScatteredPressureKDT(varCol, v, plotFarField);
                     varCol.dofs = varCol.noDofs;
+%                     p = calculateScatteredPressureBA(varCol, U_fluid_o, v, 0, plotFarField);
+                    p = calculateScatteredPressureKDT(varCol, v, plotFarField);
             end
         case 'MFS'
             p = calculateScatteredPressureMFS(varCol, U_fluid_o, v, plotFarField);

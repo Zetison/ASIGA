@@ -36,7 +36,7 @@ computeCondNumber = false;
 loopParameters = {'method','M','coreMethod'};
 % coreMethod = {'linear_FEM'};
 coreMethod = {'IGA'};
-M = [1,2];
+M = [1,2,3];
 collectIntoTasks
 
 

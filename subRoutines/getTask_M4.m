@@ -17,15 +17,22 @@ parm = [2,1];
 % parm = 2;
 degree = 4;
 beta = 30*pi/180;
+beta = 0;
 alpha = (0:0.05:360)*pi/180;
 
 loopParameters = {'M','parm','f','method','formulation'};
 plot3Dgeometry = 0;
 solveForPtot = true;
-collectIntoTasks
+% collectIntoTasks
 
 
 method = {'KDT'};
+M = 3;
+parm = 2;
 solveForPtot = false;
-formulation = {''};
+extraGP = 0; % extra quadrature points
+extraGPBEM = 10; % extra quadrature points around singularities for BEM formulations
+agpBEM = 0.6; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
+
+formulation = {'MS1'};
 collectIntoTasks
