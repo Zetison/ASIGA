@@ -9,6 +9,8 @@ switch axisType
         h = semilogy(x,y,lineStyle,'color',color,'DisplayName',legendEntry);
     case 'loglog'
         h = loglog(x,y,lineStyle,'color',color,'DisplayName',legendEntry);
+    case 'polar'
+        h = polarplot(x*pi/180,y,lineStyle,'color',color,'DisplayName',legendEntry);
 end
 legend('off');
 leg1 = legend('show');

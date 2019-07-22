@@ -6,7 +6,7 @@ model = 'Barrel'; % BeTSSi model 5A and BeTSSi model 5B
 
 method = {'BEM'};
 formulation = {'CBM','CCBIE'};
-% formulation = {'CCBIE'};
+formulation = {'CCBIE'};
 
 f = [1e3, 3e3, 10e3];             % Frequency
 % f = 1e3;             % Frequency
@@ -21,7 +21,7 @@ alpha = (0:0.05:90)*pi/180;
 loopParameters = {'M','parm','f','method','formulation'};
 plot3Dgeometry = 0;
 solveForPtot = true;
-collectIntoTasks
+% collectIntoTasks
 
 
 method = {'KDT'};

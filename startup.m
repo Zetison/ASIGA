@@ -11,3 +11,4 @@ addpath integration
 addpath subRoutines
 addpath ../export_fig
 addpath ../
+set(0,'DefaultLegendAutoUpdate','off')

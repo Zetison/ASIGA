@@ -45,13 +45,14 @@ if 0
     end
 else
     alpha = studies(1).tasks(6).task.alpha;
-    alphaCOMSOL = alpha(1:end-1);
+    alphaCOMSOL = alpha;
     % for res = [4,8]
     p_ref = studies(1).tasks(6).task.results.abs_p;
     T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(80) '_noPMLayers_' num2str(10) '_f_' num2str(100) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
 
     y = T.Var2;
+    y = [y; y(1)];
     l2errorCOMSOL = zeros(1,4);
     l2errorCOMSOL2 = zeros(1,4);
     p_ref2 = 10.^(y/20);
@@ -63,16 +64,16 @@ else
         alpha_s = 240;
         T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(res) '_noPMLayers_' num2str(10) '_f_' num2str(f) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
-        x = T.Var1;
         y = T.Var2;
+        y = [y; y(1)];
         figure(1)
-        plot(x,y,'DisplayName',['COMSOL, M = ' num2str(res) ', f = ' num2str(f)])
+        plot(180/pi*alpha,y,'DisplayName',['COMSOL, M = ' num2str(res) ', f = ' num2str(f)])
         legend('off');
         legend('show');
         hold on
-        ErrorIGA = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
+        ErrorIGA = 100*abs(10.^(y/20)-p_ref)./max(p_ref);
         Error = 100*abs(10.^(y/20)-p_ref2)./max(p_ref2);
-        l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
+        l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref).^2)./sum(p_ref.^2));
         l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref2.^2));
         counter = counter + 1;
         printResultsToFile2(['../results/articleBEM_BCA/COMSOL_Error_res' num2str(res)], 180/pi*alphaCOMSOL.', Error)
@@ -82,10 +83,9 @@ else
         hold on
     end
     T = readtable(['../plotData/refSolutions/WTD71/Bi_res' num2str(6) '_100Hz.txt'],'FileType','text', 'HeaderLines',0);
-    x = T.Var1;
     y = T.Var2;
+    y = [y; y(1)];
     idx = 7200/2;
-    x(idx) = [];
     y(idx) = [];
     l2errorWTD71 = zeros(1,4);
     l2errorWTD712 = zeros(1,4);
@@ -100,18 +100,17 @@ else
         T = readtable(['../plotData/refSolutions/WTD71/Bi_res' num2str(res) '_100Hz.txt'],'FileType','text', 'HeaderLines',0);
     %     T = readtable(['../../comsol/models/BC/BeTSSi_mod/BC_resolution_' num2str(res) '_noPMLayers_' num2str(10) '_A' num2str(alpha_s) '_F' num2str(f) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
-        x = T.Var1;
         y = T.Var2;
-        x(idx) = [];
+        y = [y; y(1)];
         y(idx) = [];
         figure(1)
-        plot(x,y,'DisplayName',['WTD71, M = ' num2str(res) ', f = ' num2str(f)])
+        plot(180/pi*alpha,y,'DisplayName',['WTD71, M = ' num2str(res) ', f = ' num2str(f)])
         legend('off');
         legend('show');
         hold on
-        Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
+        Error = 100*abs(10.^(y/20)-p_ref)./max(p_ref);
 %         Error = 100*abs(10.^(y/20)-p_ref3)./max(p_ref3);
-        l2errorWTD71(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
+        l2errorWTD71(counter) = 100*sqrt(sum((10.^(y/20)-p_ref).^2)./sum(p_ref.^2));
 %         l2errorWTD712(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref2(1:end-1).^2));
         l2errorWTD713(counter) = 100*sqrt(sum((10.^(y/20)-p_ref3).^2)./sum(p_ref3(1:end-1).^2));
         counter = counter + 1;
@@ -132,20 +131,20 @@ else
         alpha_s = 240;
         T = readtable(['../../comsol/models/BC/BeTSSi_BEM_output/BC_resolution_' num2str(res) '.txt'],'FileType','text', 'HeaderLines',8);
     %             T = readtable(['../comsol/models/BC/BeTSSi_mod/BETSSI~' num2str(res) '.TXT'],'FileType','text', 'HeaderLines',8);
-        x = T.Var1;
         y = T.Var2;
+        y = [y; y(1)];
         figure(1)
-        plot(x,y,'DisplayName',['COMSOL, M = ' num2str(res) ', BEM'])
+        plot(180/pi*alpha,y,'DisplayName',['COMSOL, M = ' num2str(res) ', BEM'])
         legend('off');
         legend('show');
         hold on
-    %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./p_ref(1:end-1);
-    %     Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
-        Error = 100*abs(10.^(y/20)-p_ref(1:end-1))./max(p_ref(1:end-1));
-        l2errorCOMSOL_BEM(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
+    %     Error = 100*abs(10.^(y/20)-p_ref)./p_ref;
+    %     Error = 100*abs(10.^(y/20)-p_ref)./max(p_ref);
+        Error = 100*abs(10.^(y/20)-p_ref)./max(p_ref);
+        l2errorCOMSOL_BEM(counter) = 100*sqrt(sum((10.^(y/20)-p_ref).^2)./sum(p_ref.^2));
         l2errorCOMSOL_BEM2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref2(1:end-1).^2));
-    %     l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref(1:end-1)).^2)./sum(p_ref(1:end-1).^2));
-    %     l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref(1:end-1).^2));
+    %     l2errorCOMSOL(counter) = 100*sqrt(sum((10.^(y/20)-p_ref).^2)./sum(p_ref.^2));
+    %     l2errorCOMSOL2(counter) = 100*sqrt(sum((10.^(y/20)-p_ref2).^2)./sum(p_ref.^2));
         counter = counter + 1;
 %         printResultsToFile2(['../results/articleBEM_BCA/COMSOL_Error_res' num2str(res)], 180/pi*alpha.', Error)
         figure(42)
@@ -169,7 +168,7 @@ else
         M = studies(1).tasks(task_i).task.M;
         Error = 100*abs(p-p_ref)./max(p_ref);
         l2errorIGA(task_i) = 100*sqrt(sum((p-p_ref).^2)./sum(p_ref.^2));
-        l2errorIGA2(task_i) = 100*sqrt(sum((p(1:end-1)-p_ref2).^2)./sum(p_ref2.^2));
+        l2errorIGA2(task_i) = 100*sqrt(sum((p-p_ref2).^2)./sum(p_ref2.^2));
         filename = ['M' num2str(M) 'degree' num2str(degree) 'f100'];
         printResultsToFile2(['../results/articleBEM_BCA/BCA_BEM_IGA_CCBIE_' filename], 180/pi*alpha.', Error)
         semilogy(180/pi*alpha,Error,'DisplayName',filename)
