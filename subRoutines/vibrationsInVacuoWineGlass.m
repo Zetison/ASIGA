@@ -35,13 +35,14 @@ runInParallell = 321;
 
 M = 5;
 scaling = 1/10;
-degreeElevArr = [0 0 0;
-                 1 1 1;
-                 2 2 2];
+degreeElevArr = [1 1 1;
+                 2 2 2;
+                 3 3 3;
+                 4 4 4];
 
 stringShift = 40;
 for degreeCase = 1:size(degreeElevArr,1)
-    fprintf('Calculating data for case %d\n', degreeCase)
+    fprintf('\n\nCalculating data for case %d\n', degreeCase)
     nurbs = getWineGlassData2();
     Etas = unique(nurbs{2}.knots{2});
     arcLengths = zeros(numel(Etas)-1,1);
@@ -121,44 +122,46 @@ for degreeCase = 1:size(degreeElevArr,1)
         fprintf(fid,'%d\t%1.15f\n', i, eigenFrequencies(i));
     end
     fclose(fid);
-    continue
+%     continue
     %% POST-PROCESSING
-    for vibration = 7 %:10 %:12
-        fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(vibration) ' ... ' ])
-        varCol.omega = sqrt(D(vibration,vibration));
-        %% Add solution to removed nodes
-        U = zeros(noDofs,1);
-        U(setdiff(1:noDofs, dofsToRemove')) = V(:,vibration);  
-        U = addSolutionToRemovedNodes_new(U, varCol);
+    if degreeCase == size(degreeElevArr,1)
+        for vibration = [7,10,12,14,16]
+            fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(vibration) ' ... ' ])
+            varCol.omega = sqrt(D(vibration,vibration));
+            %% Add solution to removed nodes
+            U = zeros(noDofs,1);
+            U(setdiff(1:noDofs, dofsToRemove')) = V(:,vibration);  
+            U = addSolutionToRemovedNodes_new(U, varCol);
 
-        U = 0.2*U;
-        resultsFolderNameParaview = '../../graphics/paraview/wineGlass';
-        if ~exist(resultsFolderNameParaview, 'dir')
-            mkdir(resultsFolderNameParaview);
-        end              
-        tic
-        vtfFileName = [resultsFolderNameParaview '/mode' num2str(vibration) '_' fileNameApp];
+            U = 0.2*U;
+            resultsFolderNameParaview = '../../graphics/paraview/wineGlass';
+            if ~exist(resultsFolderNameParaview, 'dir')
+                mkdir(resultsFolderNameParaview);
+            end              
+            tic
+            vtfFileName = [resultsFolderNameParaview '/mode' num2str(vibration) '_' fileNameApp];
 
 
-        extraXiPts = round(10/2^(M-3)); % .. per element
-        extraEtaPts = round(10/2^(M-3)); % .. per element
-        extraZetaPts = round(2/2^(M-3)); % .. per element
-%         extraXiPts = 0; % .. per element
-%         extraEtaPts = 0; % .. per element
-%         extraZetaPts = 0; % .. per element
-%       
-        options = struct('name',vtfFileName, 'celltype', 'VTK_HEXAHEDRON', 'plotTimeOscillation', plotTimeOscillation, ...
-                                    'plotErrorGrad', 0, 'plotDisplacementVectors',1, 'plotErrorEnergy', 0, ...                   
-                        'plotSphericalStress_rr',0, 'plotError', 0,'plotVonMisesStress',1, ...
-                         'plotStressXX',1,...
-                         'plotStressYY',1,...
-                         'plotStressZZ',1,...
-                         'plotStressYZ',1,...
-                         'plotStressXZ',1,...
-                         'plotStressXY',1); 
-                     
-        varCol.isOuterDomain = false;
-        createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options, []);
-        createVTKmeshFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options)
+            extraXiPts = round(10/2^(M-3)); % .. per element
+            extraEtaPts = round(10/2^(M-3)); % .. per element
+            extraZetaPts = round(2/2^(M-3)); % .. per element
+    %         extraXiPts = 0; % .. per element
+    %         extraEtaPts = 0; % .. per element
+    %         extraZetaPts = 0; % .. per element
+    %       
+            options = struct('name',vtfFileName, 'celltype', 'VTK_HEXAHEDRON', 'plotTimeOscillation', plotTimeOscillation, ...
+                                        'plotErrorGrad', 0, 'plotDisplacementVectors',1, 'plotErrorEnergy', 0, ...                   
+                            'plotSphericalStress_rr',0, 'plotError', 0,'plotVonMisesStress',1, ...
+                             'plotStressXX',1,...
+                             'plotStressYY',1,...
+                             'plotStressZZ',1,...
+                             'plotStressYZ',1,...
+                             'plotStressXZ',1,...
+                             'plotStressXY',1); 
+
+            varCol.isOuterDomain = false;
+            createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options, []);
+            createVTKmeshFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options)
+        end
     end
 end
