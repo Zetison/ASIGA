@@ -180,7 +180,6 @@ else
     Nq = noSteps;
 end
 
-[noVisElems, noCorners] = size(visElements);
 [noNodes, d] = size(nodes);
 if ~exist(fileparts(vtfFileName),'dir')
     mkdir(fileparts(vtfFileName))
@@ -191,6 +190,7 @@ end
 
 parfor i = 1:Nq
 % for i = 1:Nq
+    [noVisElems, noCorners] = size(visElements);
     if Nq == 1
         fid = fopen([vtfFileName '.vtu'],'wt+','b');
     else
@@ -218,6 +218,7 @@ parfor i = 1:Nq
     switch options.celltype
         case {'VTK_POLY_LINE', 'VTK_TRIANGLE_STRIP', 'VTK_POLYGON'}
             for eVis = 1:noVisElems
+                noCorners = numel(visElements{eVis});
                 fprintf(fid,['\t\t\t\t\t' repmat('%d ', 1, noCorners) '\n'], visElements{eVis}-1);
             end            
         otherwise

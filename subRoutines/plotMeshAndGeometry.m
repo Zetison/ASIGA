@@ -38,6 +38,11 @@ if plot3Dgeometry
                     end
             end
         else
+            if strcmp(coreMethod, 'linear_FEM')
+                resolution = [0,0,0];
+            else 
+                resolution = [10,10,10];
+            end
             if strcmp(coreMethod,'SEM')
                 varColPlot.plotAt = [0, 0;
                                      0, 0;
@@ -47,18 +52,15 @@ if plot3Dgeometry
             else
                 plotAt = [0, 0;
                          0, 0;
-                         1, 0];
-                if boundaryMethod
-                    plotNURBS(fluid{i},{'resolution',[10 10 10]});
+                         1, 1];
+                colorFun = @(x) log10(abs(norm(x)-2)/2);
+                if false
+                    plotNURBS(fluid{i},{'resolution',[100 100 100],'alphaValue',0.8,'colorFun',colorFun,'plotAt',plotAt});
+                    caxis([-17,1])
+                    plotControlPts(fluid{i})
                 else
-                    colorFun = @(x) log10(abs(norm(x)-2)/2);
-                    if false
-                        plotNURBS(fluid{i},{'resolution',[100 100 100],'alphaValue',0.8,'colorFun',colorFun,'plotAt',plotAt});
-                        caxis([-17,1])
-                        plotControlPts(fluid{i})
-                    else
-                        plotNURBS(fluid{i},{'resolution',[10 10 10],'alphaValue',0.8,'plotAt',plotAt});
-                    end
+                    plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',0.8,'plotAt',plotAt});
+%                     plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',1,'plotAt',plotAt});
                 end
             end
 %                 plotNURBS(fluid{i},[100 100 0], 1, 1.5*[44 77 32]/255, 1);

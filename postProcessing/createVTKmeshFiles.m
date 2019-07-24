@@ -2,11 +2,13 @@ function createVTKmeshFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, op
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
-
+p_zeta = varCol.degree(3); % assume p_zeta is equal in all patches
+Eps = 1e4*eps;
 index = varCol.index;
 noElems = varCol.noElems;
 elRangeXi = varCol.elRange{1};
 elRangeEta = varCol.elRange{2};
+elRangeZeta = varCol.elRange{3};
 element = varCol.element;
 element2 = varCol.element2;
 weights = varCol.weights;
@@ -21,6 +23,12 @@ omega = varCol.omega;
 isOuterDomain = varCol.isOuterDomain;
 if isOuterDomain
     model = varCol.model;
+end
+if d == 3
+    Ux = U(1:d:noDofs);
+    Uy = U(2:d:noDofs);
+    Uz = U(3:d:noDofs);
+    U = [Ux, Uy, Uz];
 end
 switch type
     case '3Dsurface'
@@ -146,125 +154,225 @@ switch type
 
         makeVTKfile(data, options);
     case '3Dvolume'
-        Zeta = nurbs.knots{3};
+        counter2 = 0;
         %% Create Mesh vtk files
-        noXiKnots = visObj.noXiKnots;
-        noEtaKnots = visObj.noEtaKnots;
-        noZetaKnots = visObj.noZetaKnots;
-        uniqueXiKnots = unique(Xi);
-        uniqueEtaKnots = unique(Eta);
-        uniqueZetaKnots = unique(Zeta);
-        noUniqueXiKnots = numel(uniqueXiKnots);
-        noUniqueEtaKnots = numel(uniqueEtaKnots);
-        noUniqueZetaKnots = numel(uniqueZetaKnots);
-        meshNodes = zeros(noUniqueZetaKnots*noUniqueEtaKnots*noXiKnots ...
-                         +noUniqueZetaKnots*noEtaKnots*noUniqueXiKnots ...
-                         +noZetaKnots*noUniqueEtaKnots*noUniqueXiKnots,3);
-        if exist('U','var')
-            displacement = zeros(noUniqueZetaKnots*noUniqueEtaKnots*noXiKnots ...
-                             +noUniqueZetaKnots*noEtaKnots*noUniqueXiKnots ...
-                             +noZetaKnots*noUniqueEtaKnots*noUniqueXiKnots,3);
-        end
-        count = 1;
-        count2 = 1;
-        visElements = cell(noUniqueEtaKnots*noUniqueZetaKnots + noUniqueXiKnots*noUniqueZetaKnots + noUniqueXiKnots*noUniqueEtaKnots, 1);
-        % const eta and zeta
-        for k = 1:noUniqueZetaKnots
-            for j = 1:noUniqueEtaKnots
-                visElements{count2} = count:(count+noXiKnots-1);
-                count2 = count2 + 1;
-                for i = 1:noXiKnots
-                    zeta = uniqueZetaKnots(k);
-                    eta = uniqueEtaKnots(j);
-                    xi = XiVec(i);    
+        container = cell(1,noElems);
+%         for e = 1:noElems
+        parfor e = 1:noElems
+            patch = pIndex(e);
+            Xi = knotVecs{patch}{1};
+            Eta = knotVecs{patch}{2};
+            Zeta = knotVecs{patch}{3};
 
-                    if exist('U','var')
-                        [u, v] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-                        if d == 3
-                            displacement(count,:) = u.';
-                        end
-                    else
-                        v = evaluateNURBS(nurbs,[xi,eta,zeta]);
-                    end
+            idXi = index(e,1);
+            idEta = index(e,2);
+            idZeta = index(e,3);
 
+            Xi_e = elRangeXi(idXi,:);
+            Eta_e = elRangeEta(idEta,:);
+            Zeta_e = elRangeZeta(idZeta,:);
+            Xi_e(2) = Xi_e(2)-eps;
+            Eta_e(2) = Eta_e(2)-eps;
+            Zeta_e(2) = Zeta_e(2)-eps;
 
-                    meshNodes(count,:) = v';
-
-                    count = count + 1;
+            sctr = element(e,:);
+            pts = controlPts(sctr,:);
+            wgts = weights(element2(e,:),:); % New
+            Usctr = U(sctr,:);
+            
+            noXiKnots = 2+extraXiPts;
+            noEtaKnots = 2+extraEtaPts;
+            noZetaKnots = 2+extraZetaPts;
+            
+            xi = linspace(Xi_e(1)+Eps,Xi_e(2)-Eps,noXiKnots).';        
+            eta = linspace(Eta_e(1)+Eps,Eta_e(2)-Eps,noEtaKnots).';
+            zeta = linspace(Zeta_e(1)+Eps,Zeta_e(2)-Eps,noZetaKnots).';
+            container_e = cell(12,1);
+            counter = 1;
+            for i = 1:2
+                for j = 1:2
+                    R = NURBS3DBasisVec(Xi_e(i)*ones(noZetaKnots,1), Eta_e(j)*ones(noZetaKnots,1), zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
+                    container_e{counter}.nodes = R*pts;
+                    container_e{counter}.displacement = R*Usctr;
+                    container_e{counter}.noNodes = noZetaKnots;
+                    container_e{counter}.visElements = 1:noZetaKnots;
+                    container_e{counter}.noVisElems = noZetaKnots;
+                    counter = counter + 1;
                 end
             end
-        end
-
-        % const xi and zeta
-        for k = 1:noUniqueZetaKnots
-            for i = 1:noUniqueXiKnots 
-                visElements{count2} = count:(count+noEtaKnots-1);
-                count2 = count2 + 1;
-                for j = 1:noEtaKnots
-                    zeta = uniqueZetaKnots(k);
-                    eta = EtaVec(j);
-                    xi = uniqueXiKnots(i);    
-
-                    if exist('U','var')
-                        [u, v] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-                        if d == 3
-                            displacement(count,:) = u.';
-                        end
-                    else
-                        v = evaluateNURBS(nurbs,[xi,eta,zeta]);
-                    end
-
-                    meshNodes(count,:) = v';
-
-                    count = count + 1;
+            for i = 1:2
+                for j = 1:2
+                    R = NURBS3DBasisVec(Xi_e(i)*ones(noEtaKnots,1), eta, Zeta_e(j)*ones(noEtaKnots,1), p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
+                    container_e{counter}.nodes = R*pts;
+                    container_e{counter}.displacement = R*Usctr;
+                    container_e{counter}.noNodes = noEtaKnots;
+                    container_e{counter}.visElements = 1:noEtaKnots;
+                    container_e{counter}.noVisElems = noEtaKnots;
+                    counter = counter + 1;
                 end
             end
-        end
-
-        % const xi and eta 
-        for j = 1:noUniqueEtaKnots
-            for i = 1:noUniqueXiKnots   
-                visElements{count2} = count:(count+noZetaKnots-1);
-                count2 = count2 + 1;           
-                for k = 1:noZetaKnots
-                    zeta = ZetaVec(k);
-                    eta = uniqueEtaKnots(j);
-                    xi = uniqueXiKnots(i);       
-
-                    if exist('U','var')
-                        [u, v] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-                        if d == 3
-                            displacement(count,:) = u.';
-                        end
-                    else
-                        v = evaluateNURBS(nurbs,[xi,eta,zeta]);
-                    end
-
-                    meshNodes(count,:) = v';
-
-                    count = count + 1;
+            for i = 1:2
+                for j = 1:2
+                    R = NURBS3DBasisVec(xi, Eta_e(i)*ones(noXiKnots,1), Zeta_e(j)*ones(noXiKnots,1), p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
+                    container_e{counter}.nodes = R*pts;
+                    container_e{counter}.displacement = R*Usctr;
+                    container_e{counter}.noNodes = noXiKnots;
+                    container_e{counter}.visElements = 1:noXiKnots;
+                    container_e{counter}.noVisElems = noXiKnots;
+                    counter = counter + 1;
                 end
             end
+            container{e}.container_e = container_e;
+        end
+        noNodes = 0;
+        for e = 1:noElems
+            for i = 1:12
+                noNodes = noNodes + container{e}.container_e{i}.noNodes;
+            end
+        end
+        visElements = cell(noElems*12,1);
+        nodes = zeros(noNodes,3);
+        displacement = zeros(noNodes,3);
+        nodesCount = 0;
+        for e = 1:noElems
+            for i = 1:12
+                visElements{12*(e-1)+i} = nodesCount + container{e}.container_e{i}.visElements;
+                nodes(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.nodes;
+                displacement(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.displacement;
+                nodesCount = nodesCount + container{e}.container_e{i}.noNodes;
+            end
         end
 
-        if exist('U','var')
-            if d == 1
-                options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE',  'plotTimeOscillation', options.plotTimeOscillation);
-            else
-                options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE', 'plotTimeOscillation', options.plotTimeOscillation, 'plotDisplacementVectors',1);
-            end
-            if max(max(abs(displacement))) < 1e-6
-                data.displacement = 0.25*displacement*4e9;
-            else
-                data.displacement = displacement;
-            end
-        else
-            options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE');
-        end
-
-        data.nodes = meshNodes;
+        options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE', 'plotDisplacementVectors', 1);
+            
+        data.nodes = nodes;
+        data.displacement = displacement;
         data.visElements = visElements;
 
 
         makeVTKfile(data, options);
+        
+        
+%         
+%         Zeta = nurbs.knots{3};
+%         %% Create Mesh vtk files
+%         noXiKnots = visObj.noXiKnots;
+%         noEtaKnots = visObj.noEtaKnots;
+%         noZetaKnots = visObj.noZetaKnots;
+%         uniqueXiKnots = unique(Xi);
+%         uniqueEtaKnots = unique(Eta);
+%         uniqueZetaKnots = unique(Zeta);
+%         noUniqueXiKnots = numel(uniqueXiKnots);
+%         noUniqueEtaKnots = numel(uniqueEtaKnots);
+%         noUniqueZetaKnots = numel(uniqueZetaKnots);
+%         meshNodes = zeros(noUniqueZetaKnots*noUniqueEtaKnots*noXiKnots ...
+%                          +noUniqueZetaKnots*noEtaKnots*noUniqueXiKnots ...
+%                          +noZetaKnots*noUniqueEtaKnots*noUniqueXiKnots,3);
+%         if exist('U','var')
+%             displacement = zeros(noUniqueZetaKnots*noUniqueEtaKnots*noXiKnots ...
+%                              +noUniqueZetaKnots*noEtaKnots*noUniqueXiKnots ...
+%                              +noZetaKnots*noUniqueEtaKnots*noUniqueXiKnots,3);
+%         end
+%         count = 1;
+%         count2 = 1;
+%         visElements = cell(noUniqueEtaKnots*noUniqueZetaKnots + noUniqueXiKnots*noUniqueZetaKnots + noUniqueXiKnots*noUniqueEtaKnots, 1);
+%         % const eta and zeta
+%         for k = 1:noUniqueZetaKnots
+%             for j = 1:noUniqueEtaKnots
+%                 visElements{count2} = count:(count+noXiKnots-1);
+%                 count2 = count2 + 1;
+%                 for i = 1:noXiKnots
+%                     zeta = uniqueZetaKnots(k);
+%                     eta = uniqueEtaKnots(j);
+%                     xi = XiVec(i);    
+% 
+%                     if exist('U','var')
+%                         [u, v] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
+%                         if d == 3
+%                             displacement(count,:) = u.';
+%                         end
+%                     else
+%                         v = evaluateNURBS(nurbs,[xi,eta,zeta]);
+%                     end
+% 
+% 
+%                     meshNodes(count,:) = v';
+% 
+%                     count = count + 1;
+%                 end
+%             end
+%         end
+% 
+%         % const xi and zeta
+%         for k = 1:noUniqueZetaKnots
+%             for i = 1:noUniqueXiKnots 
+%                 visElements{count2} = count:(count+noEtaKnots-1);
+%                 count2 = count2 + 1;
+%                 for j = 1:noEtaKnots
+%                     zeta = uniqueZetaKnots(k);
+%                     eta = EtaVec(j);
+%                     xi = uniqueXiKnots(i);    
+% 
+%                     if exist('U','var')
+%                         [u, v] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
+%                         if d == 3
+%                             displacement(count,:) = u.';
+%                         end
+%                     else
+%                         v = evaluateNURBS(nurbs,[xi,eta,zeta]);
+%                     end
+% 
+%                     meshNodes(count,:) = v';
+% 
+%                     count = count + 1;
+%                 end
+%             end
+%         end
+% 
+%         % const xi and eta 
+%         for j = 1:noUniqueEtaKnots
+%             for i = 1:noUniqueXiKnots   
+%                 visElements{count2} = count:(count+noZetaKnots-1);
+%                 count2 = count2 + 1;           
+%                 for k = 1:noZetaKnots
+%                     zeta = ZetaVec(k);
+%                     eta = uniqueEtaKnots(j);
+%                     xi = uniqueXiKnots(i);       
+% 
+%                     if exist('U','var')
+%                         [u, v] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
+%                         if d == 3
+%                             displacement(count,:) = u.';
+%                         end
+%                     else
+%                         v = evaluateNURBS(nurbs,[xi,eta,zeta]);
+%                     end
+% 
+%                     meshNodes(count,:) = v';
+% 
+%                     count = count + 1;
+%                 end
+%             end
+%         end
+% 
+%         if exist('U','var')
+%             if d == 1
+%                 options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE',  'plotTimeOscillation', options.plotTimeOscillation);
+%             else
+%                 options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE', 'plotTimeOscillation', options.plotTimeOscillation, 'plotDisplacementVectors',1);
+%             end
+%             if max(max(abs(displacement))) < 1e-6
+%                 data.displacement = 0.25*displacement*4e9;
+%             else
+%                 data.displacement = displacement;
+%             end
+%         else
+%             options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE');
+%         end
+% 
+%         data.nodes = meshNodes;
+%         data.visElements = visElements;
+% 
+% 
+%         makeVTKfile(data, options);
 end

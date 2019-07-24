@@ -1021,7 +1021,7 @@ if ~useROM && ~strcmp(method,'RT')
                 varCol.isOuterDomain = true;
         
                 if ~boundaryMethod
-                    createParaviewFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options, plotMesh, e3Dss_options);
+                    createParaviewFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options);
                 end
 
                 if plotMesh

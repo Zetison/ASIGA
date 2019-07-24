@@ -1,14 +1,18 @@
-function maxU = createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options, plotMesh, e3Dss_options)
+function maxU = createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options)
 
 maxU = NaN;
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
+p_zeta = varCol.degree(3); % assume p_eta is equal in all patches
+n_en = (p_xi+1)*(p_eta+1)*(p_zeta+1);
+Eps = 1e4*eps;
 
 index = varCol.index;
 noElems = varCol.noElems;
 elRangeXi = varCol.elRange{1};
 elRangeEta = varCol.elRange{2};
+elRangeZeta = varCol.elRange{3};
 element = varCol.element;
 element2 = varCol.element2;
 weights = varCol.weights;
@@ -77,15 +81,6 @@ switch type
             wgts = weights(element2(e,:),:); % New
             Usctr = U(sctr,:);
             
-%             nurbs = patches.nurbs;
-%             visObj_p = buildVisualizationMesh(nurbs, [extraXiPts, extraEtaPts]);
-%             nodes_p = visObj_p.nodes;
-%             noNodes = visObj_p.noNodes;
-%             visElements = visObj_p.visElements;
-%             noXiKnots = visObj_p.noXiKnots;
-%             noEtaKnots = visObj_p.noEtaKnots;
-%             XiVec = visObj_p.XiVec;
-%             EtaVec = visObj_p.EtaVec;
             noXiKnots = 2+extraXiPts;
             noEtaKnots = 2+extraEtaPts;
             noVisElems  = (noXiKnots-1)*(noEtaKnots-1);
@@ -149,168 +144,111 @@ switch type
             count_vis = count_vis + container{e}.noVisElems;
         end
     case '3Dvolume'
-        tic
-        fprintf(['\n%-' num2str(stringShift) 's'], '    Creating post-processing mesh ... ')
-        Zeta = varCol.nurbs.knots{3};
-        p_zeta = varCol.nurbs.degree(3);
-        
-        visObj_p = buildVisualizationMesh(nurbs, [extraXiPts, extraEtaPts, extraZetaPts]);
-        fprintf('using %12f seconds.', toc)
-        
-        
-%         keyboard
-        nodes = visObj_p.nodes;
-        visElements = visObj_p.visElements;
+        container = cell(1,noElems);
+%         for e = 1:noElems
+        parfor e = 1:noElems
+            patch = pIndex(e);
+            Xi = knotVecs{patch}{1};
+            Eta = knotVecs{patch}{2};
+            Zeta = knotVecs{patch}{3};
 
-        tic
-        fprintf(['\n%-' num2str(stringShift) 's'], '    Compute solution ... ')
-        multiValuedNodes = 0;
-        if multiValuedNodes
-            nodes = visObj_p.nodes;
-            elRangeXi = visObj_p.elRangeXi;
-            elRangeEta = visObj_p.elRangeEta;
-            elRangeZeta = visObj_p.elRangeZeta;
-            index = visObj_p.index;
-            d_test = 3;
-    %         d_test = 1;
-            noVisElems = size(visElements,1);
+            idXi = index(e,1);
+            idEta = index(e,2);
+            idZeta = index(e,3);
+
+            Xi_e = elRangeXi(idXi,:);
+            Eta_e = elRangeEta(idEta,:);
+            Zeta_e = elRangeZeta(idZeta,:);
+
+            sctr = element(e,:);
+            pts = controlPts(sctr,:);
+            wgts = weights(element2(e,:),:); % New
+            Usctr = U(sctr,:);
             
-            scalarField = zeros(8, noVisElems);
-%             gScalarField = zeros(8, noVisElems, d_test);
-            gScalarField_p = zeros(8, noVisElems, 3);
-            strain_h = zeros(8, noVisElems, 6);
-            displacement = zeros(8, noVisElems, 3);
-            parfor e = 1:noVisElems
-%             for e = 1:noVisElems
-                idXi = index(e,1);
-                idEta = index(e,2);
-                idZeta = index(e,3);
-                
-                scalarField_temp = zeros(8,1);
-%                 gScalarField_temp2 = zeros(8, d_test);
-                gScalarField_temp = zeros(8, 3);
-                displacement_temp = zeros(8, 3);
-                strain_temp = zeros(8, 6);
-                Xi_e = elRangeXi(idXi,:);
-                Eta_e = elRangeEta(idEta,:);
-                Zeta_e = elRangeZeta(idZeta,:);
-                rot = [1, 4; 
-                       2, 3];
-                for l = 1:2
-                    zeta = Zeta_e(l) + eps*(3-2*l);
-                    for j = 1:2
-                        eta = Eta_e(j) + eps*(3-2*j);
-                        for i = 1:2
-                            xi = Xi_e(i) + eps*(3-2*i);
-                            count = 4*(l-1) + rot(i,j);
-%                             count = 4*(l-1) + 2*(j-1) + i;
-                            if d == 1
-                %                 u = numericalSolEval_final(xi, eta, zeta, p, q, r, Xi, Eta, Zeta, weights, controlPts, U);
-%                                 u = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-%                                 du = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, dU);
-                                
-%                                 gScalarField_temp(count,:) = du; %[dudx, dudy, dudz];
-                                [u, ~, dudx, dudy, dudz] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-                                scalarField_temp(count) = u;
-                                gScalarField_temp(count,:) = [dudx, dudy, dudz];
-                %                 keyboard
-                            elseif d == 3
-                                [u, ~, dudx, dudy, dudz] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-                                displacement_temp(count,:) = u;
+            noXiKnots = 2+extraXiPts;
+            noEtaKnots = 2+extraEtaPts;
+            noZetaKnots = 2+extraZetaPts;
+            noVisElems  = (noXiKnots-1)*(noEtaKnots-1)*(noZetaKnots-1);
+            visElements_e = zeros(noVisElems,8);
+            eVis = 1;
+            for k = 1:noZetaKnots-1
+                for j = 1:noEtaKnots-1
+                    for i = 1:noXiKnots-1
+                        visElements_e(eVis,1) = i   +   (j-1)*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                        visElements_e(eVis,2) = i+1 +   (j-1)*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                        visElements_e(eVis,3) = i+1 +       j*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                        visElements_e(eVis,4) = i   +       j*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                        visElements_e(eVis,5) = i   +   (j-1)*noXiKnots +       k*noEtaKnots*noXiKnots;
+                        visElements_e(eVis,6) = i+1 +   (j-1)*noXiKnots +       k*noEtaKnots*noXiKnots;
+                        visElements_e(eVis,7) = i+1 +       j*noXiKnots +       k*noEtaKnots*noXiKnots;
+                        visElements_e(eVis,8) = i   +       j*noXiKnots +       k*noEtaKnots*noXiKnots;
 
-                                strain_temp(count,:) = calculateStrainVector(dudx, dudy, dudz);
-                            end
-                        end
+                        eVis = eVis + 1;
                     end
                 end
-                scalarField(:,e) = scalarField_temp;
-%                 gScalarField(:,e,:) = gScalarField_temp2;
-                gScalarField_p(:,e,:) = gScalarField_temp;
-                displacement(:,e,:) = displacement_temp;
-                strain_h(:,e,:) = strain_temp;
-                du_h(:,e,:) = du_h_temp;
             end
-            temp = visElements.';
-            nodes = nodes(temp(:),:);
-            visElements = reshape((1:numel(visElements)).',8,[]).';
-            gScalarField_p = reshape(gScalarField_p, noVisElems*8, d_test);
-            gScalarField_p = reshape(gScalarField_p, noVisElems*8, 3);
-            scalarField = reshape(scalarField, noVisElems*8, 1);
-            % errorFunc = reshape(errorFunc, noVisElems*8, 1);
-            displacement = reshape(displacement, noVisElems*8, 3);
-            strain_h = reshape(strain_h, noVisElems*8, 6);
-        else
-            noNodes = visObj_p.noNodes;
-            noXiKnots = visObj_p.noXiKnots;
-            noEtaKnots = visObj_p.noEtaKnots;
-            noZetaKnots = visObj_p.noZetaKnots;
-            XiVec = visObj_p.XiVec;
-            EtaVec = visObj_p.EtaVec;
-            ZetaVec = visObj_p.ZetaVec;
-            scalarField = zeros(noEtaKnots*noZetaKnots, noXiKnots);
+            noNodes = noXiKnots*noEtaKnots*noZetaKnots;     
+            xiKnots = linspace(Xi_e(1)+Eps,Xi_e(2)-Eps,noXiKnots);        
+            etaKnots = linspace(Eta_e(1)+Eps,Eta_e(2)-Eps,noEtaKnots);
+            zetaKnots = linspace(Zeta_e(1)+Eps,Zeta_e(2)-Eps,noZetaKnots);
+            [xi,eta,zeta] = ndgrid(xiKnots,etaKnots,zetaKnots);
+            xi = xi(:);
+            eta = eta(:);
+            zeta = zeta(:);
             
-            gScalarField_p = zeros(noEtaKnots*noZetaKnots, noXiKnots, 3);
-            strain_h = zeros(noEtaKnots*noZetaKnots, noXiKnots, 6);
-            displacement = zeros(noEtaKnots*noZetaKnots, noXiKnots, 3);
-            
-            parfor i = 1:noXiKnots
-%             for i = 1:noXiKnots
-                scalarField_temp = zeros(noEtaKnots*noZetaKnots, 1);
-%                 gScalarField_temp2 = zeros(noEtaKnots*noZetaKnots, d_test);
-                gScalarField_temp = zeros(noEtaKnots*noZetaKnots, 3);
-                displacement_temp = zeros(noEtaKnots*noZetaKnots, 3);
-                strain_temp = zeros(noEtaKnots*noZetaKnots, 6);
-                count = 1;
-                xi = XiVec(i);
-                for j = 1:noEtaKnots
-                    eta = EtaVec(j);
-                    for l = 1:noZetaKnots
-                        zeta = ZetaVec(l);    
+            [R, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
+            dXdxi = dRdxi*pts;
+            dXdeta = dRdeta*pts;
+            dXdzeta = dRdzeta*pts;
+            J_1 = dot(dXdxi,cross(dXdeta,dXdzeta,2),2);
 
-
-                        if d == 1
-            %                 u = numericalSolEval_final(xi, eta, zeta, p, q, r, Xi, Eta, Zeta, weights, controlPts, U);
-%                             u = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-%                             du = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, dU);
-%                             gScalarField_temp2(count,:) = du; %[dudx, dudy, dudz];
-                            [u, ~, dudx, dudy, dudz] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-                            scalarField_temp(count) = u;
-                            gScalarField_temp(count,:) = [dudx, dudy, dudz];
-            %                 keyboard
-                        elseif d == 3
-                            [u, ~, dudx, dudy, dudz] = numericalSolEval_final(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, weights, controlPts, U);
-                            displacement_temp(count,:) = u;
-
-                            strain_temp(count,:) = calculateStrainVector(dudx, dudy, dudz);
-                        end
-                        count = count + 1;
-                    end
-                end
-                scalarField(:,i) = scalarField_temp;
-%                 gScalarField(:,i,:) = gScalarField_temp2;
-                gScalarField_p(:,i,:) = gScalarField_temp;
-                displacement(:,i,:) = displacement_temp;
-                strain_h(:,i,:) = strain_temp;
-            end
-            gScalarField_p = reshape(gScalarField_p, noZetaKnots, noEtaKnots, noXiKnots, 3);
-            gScalarField_p = permute(gScalarField_p, [3,2,1,4]);
-            gScalarField_p = reshape(gScalarField_p, noNodes, 3);
+            a11 = dXdxi(:,1);
+            a21 = dXdxi(:,2);
+            a31 = dXdxi(:,3);
+            a12 = dXdeta(:,1);
+            a22 = dXdeta(:,2);
+            a32 = dXdeta(:,3);
+            a13 = dXdzeta(:,1);
+            a23 = dXdzeta(:,2);
+            a33 = dXdzeta(:,3);
+            Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
+            Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
+            Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
+            dRdx = repmat(Jinv1(:,1),1,n_en).*dRdxi + repmat(Jinv1(:,2),1,n_en).*dRdeta + repmat(Jinv1(:,3),1,n_en).*dRdzeta;
+            dRdy = repmat(Jinv2(:,1),1,n_en).*dRdxi + repmat(Jinv2(:,2),1,n_en).*dRdeta + repmat(Jinv2(:,3),1,n_en).*dRdzeta;
+            dRdz = repmat(Jinv3(:,1),1,n_en).*dRdxi + repmat(Jinv3(:,2),1,n_en).*dRdeta + repmat(Jinv3(:,3),1,n_en).*dRdzeta;
             
-            scalarField = reshape(scalarField, noZetaKnots, noEtaKnots, noXiKnots);
-            scalarField = permute(scalarField, [3,2,1]);
-            scalarField = reshape(scalarField, noNodes, 1);
-            
-            displacement = reshape(displacement, noZetaKnots, noEtaKnots, noXiKnots, 3);
-            displacement = permute(displacement, [3,2,1,4]);
-            displacement = reshape(displacement, noNodes, 3);
-            
-            strain_h = reshape(strain_h, noZetaKnots, noEtaKnots, noXiKnots, 6);
-            strain_h = permute(strain_h, [3,2,1,4]);
-            strain_h = reshape(strain_h, noNodes, 6);
+            dudxi = dRdx*Usctr;
+            dudeta = dRdy*Usctr;
+            dudzeta = dRdz*Usctr;
+            container{e}.nodes = R*pts;
+            container{e}.noNodes = noNodes;
+            container{e}.noVisElems = noVisElems;
+            container{e}.displacement = R*Usctr;
+            container{e}.strain = calculateStrainVectorVec(dudxi, dudeta, dudzeta);
+            container{e}.visElements = visElements_e;
         end
-        fprintf('using %12f seconds.', toc)
+        noNodes = 0;
+        noVisElems = 0;
+        for e = 1:noElems
+            noNodes = noNodes + container{e}.noNodes;
+            noVisElems = noVisElems + container{e}.noVisElems;
+        end
+        visElements = zeros(noVisElems,8);
+        displacement = zeros(noNodes,3);
+        strain = zeros(noNodes,6);
+        nodes = zeros(noNodes,3);
+        nodesCount = 0;
+        count_vis = 0;
+        for e = 1:noElems
+            visElements(count_vis+1:count_vis+container{e}.noVisElems,:) = nodesCount + container{e}.visElements;
+            nodes(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.nodes;
+            displacement(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.displacement;
+            strain(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.strain;
+            nodesCount = nodesCount + container{e}.noNodes;
+            count_vis = count_vis + container{e}.noVisElems;
+        end
 end
-% data.gradient = real(makeDynamic(gScalarField_p, options, omega)); 
 data.nodes = nodes;
 data.visElements = visElements;
 data.omega = omega;
@@ -441,7 +379,8 @@ else
         data.ErrorGrad = sqrt(eCe/max(uCu));
         data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
     end
-    data.stress = real(makeDynamic(strain_h, options, omega));
+    data.stress = real(makeDynamic(strain, options, omega));
+    data.displacement = real(makeDynamic(displacement, options, omega));
 end
 fprintf('using %12f seconds.', toc)
 % data.displacement = real(makeDynamic(displacement, options, omega));

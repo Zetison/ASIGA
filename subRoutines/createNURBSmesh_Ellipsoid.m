@@ -51,6 +51,7 @@ if varCol.boundaryMethod
     noNewZetaKnots = initMeshFactZeta*2^(M-1);
     if varCol.parm(1) == 1
         solid = getEllipsoidalShellData(c_xy,c_xy,c_z,t,alignWithAxis);
+        solid = elevateDegreeInPatches(solid,[0 0 1]);
 %         varCol.patchTop{1} = [1, 0;
 %                               NaN, NaN;
 %                               1, 0;
