@@ -107,7 +107,7 @@ for degreeCase = 1:size(degreeElevArr,1)
     %% SOLVE SYSTEM
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Solving eigen value problem ... ')
-    noModes = 23-6;
+    noModes = 50;
     [V,D] = eigs(A_K,A_M,noModes+6,'smallestabs','Tolerance',1e-6);
     fprintf('using %12f seconds.', toc)
 
@@ -122,15 +122,15 @@ for degreeCase = 1:size(degreeElevArr,1)
         fprintf(fid,'%d\t%1.15f\n', i+6, eigenFrequencies(i));
     end
     fclose(fid);
-%     continue
+    continue
     %% POST-PROCESSING
     if degreeCase == size(degreeElevArr,1)
-        for vibration = [7,10,12,14,16,18,19,20,21,23]
-            fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(vibration-6) ' ... ' ])
-            varCol.omega = sqrt(D(vibration,vibration));
+        for i = [6,4,6,8,10,12,13,14,15,17,19,21]
+            fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(i) ' ... ' ])
+            varCol.omega = sqrt(D(i+6,i+6));
             %% Add solution to removed nodes
             U = zeros(noDofs,1);
-            U(setdiff(1:noDofs, dofsToRemove')) = V(:,vibration);  
+            U(setdiff(1:noDofs, dofsToRemove')) = V(:,i+6);  
             U = addSolutionToRemovedNodes_new(U, varCol);
 
             U = 0.2*U;
@@ -139,7 +139,7 @@ for degreeCase = 1:size(degreeElevArr,1)
                 mkdir(resultsFolderNameParaview);
             end              
             tic
-            vtfFileName = [resultsFolderNameParaview '/mode' num2str(vibration-6) '_' fileNameApp];
+            vtfFileName = [resultsFolderNameParaview '/mode' num2str(i) '_' fileNameApp];
 
 
             extraXiPts = round(10/2^(M-3)); % .. per element
