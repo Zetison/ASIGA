@@ -39,9 +39,10 @@ degreeElevArr = [1 1 1;
                  2 2 2;
                  3 3 3;
                  4 4 4];
+degreeElevArr = [1 1 1];
 
 stringShift = 40;
-for degreeCase = 1 %:size(degreeElevArr,1)
+for degreeCase = 1:size(degreeElevArr,1)
     fprintf('\n\nCalculating data for case %d\n', degreeCase)
     nurbs = getWineGlassData2();
     Etas = unique(nurbs{2}.knots{2});
@@ -119,13 +120,13 @@ for degreeCase = 1 %:size(degreeElevArr,1)
     fid = fopen(['../plotData/wineGlass/sortedEigenFrequencies' fileNameApp '.txt'],'wt+','b');
     fprintf(fid,'mode\tEigenFrequency\n');
     for i = 1:noModes
-        fprintf(fid,'%d\t%1.15f\n', i, eigenFrequencies(i));
+        fprintf(fid,'%d\t%1.15f\n', i+6, eigenFrequencies(i));
     end
     fclose(fid);
-    continue
+%     continue
     %% POST-PROCESSING
     if degreeCase == size(degreeElevArr,1)
-        for vibration = [7,10,12,14,16]
+        for vibration = [7,10,12,14,16,18,19,20,21,23,25,27]
             fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(vibration) ' ... ' ])
             varCol.omega = sqrt(D(vibration,vibration));
             %% Add solution to removed nodes
