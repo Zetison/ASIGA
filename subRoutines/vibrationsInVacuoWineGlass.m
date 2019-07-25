@@ -33,7 +33,7 @@ runInParallell = 321;
 
 
 
-M = 1;
+M = 5;
 scaling = 1/10;
 degreeElevArr = [1 1 1;
                  2 2 2;
@@ -146,9 +146,9 @@ for degreeCase = 1:size(degreeElevArr,1)
             extraXiPts = round(10/2^(M-3)); % .. per element
             extraEtaPts = round(10/2^(M-3)); % .. per element
             extraZetaPts = round(2/2^(M-3)); % .. per element
-            extraXiPts = round(5/2^(M-3)); % .. per element
-            extraEtaPts = round(5/2^(M-3)); % .. per element
-            extraZetaPts = round(1/2^(M-3)); % .. per element
+%             extraXiPts = round(5/2^(M-3)); % .. per element
+%             extraEtaPts = round(5/2^(M-3)); % .. per element
+%             extraZetaPts = round(1/2^(M-3)); % .. per element
     %         extraXiPts = 0; % .. per element
     %         extraEtaPts = 0; % .. per element
     %         extraZetaPts = 0; % .. per element
