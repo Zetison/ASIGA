@@ -243,10 +243,11 @@ switch type
             end
         end
 
-        options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE', 'plotDisplacementVectors', 1);
+        options = struct('name',[options.name 'mesh_'], 'celltype', 'VTK_POLY_LINE', ...
+            'plotDisplacementVectors', options.plotDisplacementVectors,'plotTimeOscillation', options.plotTimeOscillation);
             
         data.nodes = nodes;
-        data.displacement = displacement;
+        data.displacement = real(makeDynamic(displacement, options, omega));
         data.visElements = visElements;
 
 

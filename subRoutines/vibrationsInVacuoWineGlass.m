@@ -33,7 +33,7 @@ runInParallell = 321;
 
 
 
-M = 5;
+M = 1;
 scaling = 1/10;
 degreeElevArr = [1 1 1;
                  2 2 2;
@@ -108,7 +108,7 @@ for degreeCase = 1:size(degreeElevArr,1)
     %% SOLVE SYSTEM
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Solving eigen value problem ... ')
-    noModes = 32;
+    noModes = 23-6;
     [V,D] = eigs(A_K,A_M,noModes+6,'smallestabs','Tolerance',1e-6);
     fprintf('using %12f seconds.', toc)
 
@@ -126,8 +126,8 @@ for degreeCase = 1:size(degreeElevArr,1)
 %     continue
     %% POST-PROCESSING
     if degreeCase == size(degreeElevArr,1)
-        for vibration = [7,10,12,14,16,18,19,20,21,23,25,27]
-            fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(vibration) ' ... ' ])
+        for vibration = [7,10,12,14,16,18,19,20,21,23]
+            fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(vibration-6) ' ... ' ])
             varCol.omega = sqrt(D(vibration,vibration));
             %% Add solution to removed nodes
             U = zeros(noDofs,1);
@@ -140,12 +140,15 @@ for degreeCase = 1:size(degreeElevArr,1)
                 mkdir(resultsFolderNameParaview);
             end              
             tic
-            vtfFileName = [resultsFolderNameParaview '/mode' num2str(vibration) '_' fileNameApp];
+            vtfFileName = [resultsFolderNameParaview '/mode' num2str(vibration-6) '_' fileNameApp];
 
 
             extraXiPts = round(10/2^(M-3)); % .. per element
             extraEtaPts = round(10/2^(M-3)); % .. per element
             extraZetaPts = round(2/2^(M-3)); % .. per element
+            extraXiPts = round(5/2^(M-3)); % .. per element
+            extraEtaPts = round(5/2^(M-3)); % .. per element
+            extraZetaPts = round(1/2^(M-3)); % .. per element
     %         extraXiPts = 0; % .. per element
     %         extraEtaPts = 0; % .. per element
     %         extraZetaPts = 0; % .. per element

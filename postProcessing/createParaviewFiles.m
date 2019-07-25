@@ -98,8 +98,8 @@ switch type
             noNodes = noXiKnots*noEtaKnots;
             scalarField_e = zeros(noNodes, 1);    
             testField_e = zeros(noNodes, 1);            
-            xiKnots = linspace(Xi_e(1),Xi_e(2)-eps,noXiKnots);        
-            etaKnots = linspace(Eta_e(1),Eta_e(2)-eps,noEtaKnots);
+            xiKnots = linspace(Xi_e(1)+Eps,Xi_e(2)-Eps,noXiKnots);        
+            etaKnots = linspace(Eta_e(1)+Eps,Eta_e(2)-Eps,noEtaKnots);
             counter = 1;
             nodes_e = zeros(noNodes,3);
             for j = 1:noEtaKnots
