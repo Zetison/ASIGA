@@ -41,7 +41,7 @@ degreeElevArr = [1 1 1;
                  4 4 4];
 
 stringShift = 40;
-for degreeCase = 1:size(degreeElevArr,1)
+for degreeCase = 1 %:size(degreeElevArr,1)
     fprintf('\n\nCalculating data for case %d\n', degreeCase)
     nurbs = getWineGlassData2();
     Etas = unique(nurbs{2}.knots{2});
@@ -107,7 +107,7 @@ for degreeCase = 1:size(degreeElevArr,1)
     %% SOLVE SYSTEM
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Solving eigen value problem ... ')
-    noModes = 12;
+    noModes = 32;
     [V,D] = eigs(A_K,A_M,noModes+6,'smallestabs','Tolerance',1e-6);
     fprintf('using %12f seconds.', toc)
 
@@ -122,7 +122,7 @@ for degreeCase = 1:size(degreeElevArr,1)
         fprintf(fid,'%d\t%1.15f\n', i, eigenFrequencies(i));
     end
     fclose(fid);
-%     continue
+    continue
     %% POST-PROCESSING
     if degreeCase == size(degreeElevArr,1)
         for vibration = [7,10,12,14,16]
