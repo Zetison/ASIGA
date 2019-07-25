@@ -149,9 +149,9 @@ for degreeCase = 1:size(degreeElevArr,1)
 %             extraXiPts = round(5/2^(M-3)); % .. per element
 %             extraEtaPts = round(5/2^(M-3)); % .. per element
 %             extraZetaPts = round(1/2^(M-3)); % .. per element
-    %         extraXiPts = 0; % .. per element
-    %         extraEtaPts = 0; % .. per element
-    %         extraZetaPts = 0; % .. per element
+            extraXiPts = 0; % .. per element
+            extraEtaPts = 0; % .. per element
+            extraZetaPts = 0; % .. per element
     %       
             options = struct('name',vtfFileName, 'celltype', 'VTK_HEXAHEDRON', 'plotTimeOscillation', plotTimeOscillation, ...
                                         'plotErrorGrad', 0, 'plotDisplacementVectors',1, 'plotErrorEnergy', 0, ...                   
