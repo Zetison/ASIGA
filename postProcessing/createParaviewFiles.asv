@@ -225,9 +225,8 @@ switch type
             container{e}.visElements = visElements_e;
             
             indices = abs(J_1) < 100*Eps;
-            if any(indices)
-                digits(100)
-                [~, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(vpa(xi(indices)), vpa(eta(indices)), vpa(zeta(indices)), p_xi, p_eta, p_zeta, vpa(Xi), vpa(Eta), vpa(Zeta), vpa(wgts));
+            if ~any(indices)
+                [R, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(vpa(xi), vpa(eta), vpa(zeta), p_xi, p_eta, p_zeta, vpa(Xi), vpa(Eta), vpa(Zeta), vpa(wgts));
                 dXdxi = dRdxi*vpa(pts);
                 dXdeta = dRdeta*vpa(pts);
                 dXdzeta = dRdzeta*vpa(pts);
@@ -245,9 +244,9 @@ switch type
                 Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
                 Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
                 Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
-                dRdx(indices,:) = repmat(Jinv1(:,1),1,n_en).*dRdxi + repmat(Jinv1(:,2),1,n_en).*dRdeta + repmat(Jinv1(:,3),1,n_en).*dRdzeta;
-                dRdy(indices,:) = repmat(Jinv2(:,1),1,n_en).*dRdxi + repmat(Jinv2(:,2),1,n_en).*dRdeta + repmat(Jinv2(:,3),1,n_en).*dRdzeta;
-                dRdz(indices,:) = repmat(Jinv3(:,1),1,n_en).*dRdxi + repmat(Jinv3(:,2),1,n_en).*dRdeta + repmat(Jinv3(:,3),1,n_en).*dRdzeta;
+                dRdx = repmat(Jinv1(:,1),1,n_en).*dRdxi + repmat(Jinv1(:,2),1,n_en).*dRdeta + repmat(Jinv1(:,3),1,n_en).*dRdzeta;
+                dRdy = repmat(Jinv2(:,1),1,n_en).*dRdxi + repmat(Jinv2(:,2),1,n_en).*dRdeta + repmat(Jinv2(:,3),1,n_en).*dRdzeta;
+                dRdz = repmat(Jinv3(:,1),1,n_en).*dRdxi + repmat(Jinv3(:,2),1,n_en).*dRdeta + repmat(Jinv3(:,3),1,n_en).*dRdzeta;
             end
             dudx = dRdx*Usctr;
             dudy = dRdy*Usctr;

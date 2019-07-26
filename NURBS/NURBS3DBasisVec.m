@@ -40,11 +40,11 @@ if compDeriv
     dRdzeta = zeros(noxi, (p_xi+1)*(p_eta+1)*(p_zeta+1),class(xi));
 end
 
-W = zeros(noxi,1);
+W = zeros(noxi,1,class(xi));
 if compDeriv
-    dWdxi = zeros(noxi,1);
-    dWdeta = zeros(noxi,1);
-    dWdzeta = zeros(noxi,1);
+    dWdxi = zeros(noxi,1,class(xi));
+    dWdeta = zeros(noxi,1,class(xi));
+    dWdzeta = zeros(noxi,1,class(xi));
 end
 
 counter = 1;

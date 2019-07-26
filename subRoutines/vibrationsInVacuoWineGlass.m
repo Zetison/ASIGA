@@ -33,7 +33,7 @@ runInParallell = 321;
 
 
 
-M = 5;
+M = 5; % 5
 scaling = 1/10;
 degreeElevArr = [1 1 1;
                  2 2 2;
@@ -125,7 +125,8 @@ for degreeCase = 1:size(degreeElevArr,1)
 %     continue
     %% POST-PROCESSING
     if degreeCase == size(degreeElevArr,1)
-        for i = [7,10,12,14,16,18,19,20,21,23,25,27,28,29,31,33,35,36]-6
+%         for i = %[12, 13, 14, 15, 17, 19, 21, 22, 26, 27, 29, 30]
+        for i = [1, 4, 6, 8, 10, 12, 13, 14, 15, 17, 19, 21, 22, 26, 27, 29, 30] %[7,10,12,14,16,18,19,20,21,23,25,27,28,32,33,35,36]-6
             fprintf(['\n%-' num2str(stringShift) 's'], ['Post processing vibration ' num2str(i) ' ... ' ])
             varCol.omega = sqrt(D(i+6,i+6));
             %% Add solution to removed nodes

@@ -23,7 +23,7 @@ for j = 2:p+1
     % For k = 1 there is no dependence on N(k-1) of the previous run.
     for k = 1:j
         % Compute N_{i-j+k,j-1} according to the Cox-deBoor formula
-        temp = zeros(noxi,1);
+        temp = zeros(noxi,1,class(xi));
         if k ~= j
             temp = (Xi(i+k)-xi)/(Xi(i+k)-Xi(i-j+k+1)).*N(:,k);
         end
