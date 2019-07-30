@@ -1225,6 +1225,9 @@ else
         if isfield(varCol,'totNoQP')
             varColTemp.totNoQP = varCol.totNoQP;
         end
+        if isfield(varCol,'totNoQPnonPolar')
+            varColTemp.totNoQPnonPolar = varCol.totNoQPnonPolar;
+        end
     end 
     varColTemp.analyticSolutionExist = varCol.analyticSolutionExist;
     varColTemp.boundaryMethod = varCol.boundaryMethod;

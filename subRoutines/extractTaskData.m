@@ -46,7 +46,7 @@ plotResidualError       = task.plotResidualError;
 if isfield(task,'delta')
     varCol.delta = task.delta;
 end
-if strcmp(task.method,'BEM') && ~task.solveForPtot
+if strcmp(task.method,'BEM') && ~task.solveForPtot && ~strcmp(task.BC,'NBC')
     error('Use solveForPtot = true for BEM (this is reccomended)')
 end
 if isfield(task,'noVecsArr')

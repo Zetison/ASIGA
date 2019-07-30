@@ -12,6 +12,8 @@ for study_i = 1:numel(studies)
                      'subFolderName',   '../results/articleIGA_Simpson', ...
                      'legendEntries',   {{'method','formulation','M'}}, ...
                      'noXLoopPrms',     1); 
+    figure(4)
+    printResultsToTextFiles(study,options)
 
     options.noXLoopPrms = 0;
 %     options.legendEntries = {'method','M','formulation'};

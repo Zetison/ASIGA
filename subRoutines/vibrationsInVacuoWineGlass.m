@@ -33,12 +33,12 @@ runInParallell = 321;
 
 
 
-M = 5; % 5
+M = 1; % 5
 scaling = 1/10;
 degreeElevArr = [1 1 1;
                  2 2 2;
                  3 3 3];
-% degreeElevArr = [1 1 1];
+degreeElevArr = [1 1 1];
 
 stringShift = 40;
 for degreeCase = 1:size(degreeElevArr,1)
@@ -149,10 +149,10 @@ for degreeCase = 1:size(degreeElevArr,1)
 %             extraXiPts = round(5/2^(M-3)); % .. per element
 %             extraEtaPts = round(5/2^(M-3)); % .. per element
 %             extraZetaPts = round(1/2^(M-3)); % .. per element
-%             extraXiPts = 0; % .. per element
-%             extraEtaPts = 0; % .. per element
-%             extraZetaPts = 0; % .. per element
-    %       
+            extraXiPts = 0; % .. per element
+            extraEtaPts = 0; % .. per element
+            extraZetaPts = 0; % .. per element
+          
             options = struct('name',vtfFileName, 'celltype', 'VTK_HEXAHEDRON', 'plotTimeOscillation', plotTimeOscillation, ...
                                         'plotErrorGrad', 0, 'plotDisplacementVectors',1, 'plotErrorEnergy', 0, ...                   
                             'plotSphericalStress_rr',0, 'plotError', 0,'plotVonMisesStress',1, ...

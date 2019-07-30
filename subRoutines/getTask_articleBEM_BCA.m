@@ -33,6 +33,11 @@ agpBEM = 1.4;
 solveForPtot = true;
 loopParameters = {'method','formulation','M','degree','f','scatteringCase'};
 
+% collectIntoTasks
+
+formulation = {'GCBIE'};
+quadMethodBEM = {'Adaptive2'};
+M = 1;
 collectIntoTasks
 
 f = 1e3;

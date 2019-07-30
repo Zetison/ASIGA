@@ -31,6 +31,7 @@ degree = 3;
 N = 4;
 
 loopParameters = {'M','method','formulation'};
+calculateSurfaceError = 1;
 parm = 1;
 collectIntoTasks
 
@@ -38,14 +39,15 @@ collectIntoTasks
 %% BA simulation
 method = {'BA'};
 useNeumanProj = 0;
+solveForPtot = true;
 formulation = {'SL2E'};
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 method = {'BEM'};
-% formulation = {'CCBIE', 'CHBIE', 'CBM'};
-formulation = {'CCBIE'};
+formulation = {'CCBIE', 'CHBIE', 'CBM','GCBIE', 'GHBIE', 'GBM'};
+% formulation = {'CCBIE'};
 % formulation = 'CBM';
 % useNeumanProj = [0,1];
 colBEM_C0 = 0;

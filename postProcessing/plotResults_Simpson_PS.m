@@ -13,13 +13,14 @@ for study_i = 1:numel(studies)
                      'legendEntries',   {{'extraGP','extraGPBEM','colBEM_C0','formulation','quadMethodBEM'}}, ...
                      'noXLoopPrms',     1); 
 
-    figure(2)
-    printResultsToTextFiles(study,options)
-
-%     options.xLoopName = 'extraGPBEM';
-%     options.legendEntries = {'extraGP','agpBEM','colBEM_C0','formulation','quadMethodBEM'};
-%     figure(3)
+%     figure(2)
 %     printResultsToTextFiles(study,options)
+
+    options.xLoopName = 'extraGPBEM';
+%     options.axisType = 'loglog';
+    options.legendEntries = {'extraGP','agpBEM','colBEM_C0','formulation','quadMethodBEM'};
+    figure(3)
+    printResultsToTextFiles(study,options)
 
 %     options.xname = 'h_max';
 %     options.yScale = 1/100;

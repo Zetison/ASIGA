@@ -145,8 +145,8 @@ switch type
         end
     case '3Dvolume'
         container = cell(1,noElems);
-%         for e = 1:noElems
-        parfor e = 1:noElems
+        for e = 1:noElems
+%         parfor e = 1:noElems
             patch = pIndex(e);
             Xi = knotVecs{patch}{1};
             Eta = knotVecs{patch}{2};

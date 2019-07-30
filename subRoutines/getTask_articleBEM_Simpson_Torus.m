@@ -18,7 +18,7 @@ useNeumanProj = 0;
 computeCondNumber = 0;
 runTasksInParallel = false;
 
-solveForPtot = true;
+solveForPtot = false;
 loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','agpBEM','useNeumanProj'};
 
 collectIntoTasks

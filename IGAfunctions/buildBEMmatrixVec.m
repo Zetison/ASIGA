@@ -196,6 +196,7 @@ n_en = (p_xi+1)*(p_eta+1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_GP = 0;
 % pD = plotBEMGeometry(patches,plot_GP,100,1);
+% pD = plotBEMGeometry(patches,plot_GP,10,0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % A = complex(zeros(1000, noDofs));
@@ -350,4 +351,5 @@ parfor i = 1:n_cp
 end
 
 % totNoQP
-varCol.totNoQP = totNoQPnonPolar;
+varCol.totNoQPnonPolar = totNoQPnonPolar;
+varCol.totNoQP = totNoQP;

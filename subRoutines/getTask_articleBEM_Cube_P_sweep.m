@@ -42,7 +42,7 @@ plot3Dgeometry = 0;
 calculateSurfaceError = 1;
 
 runTasksInParallel = 1;
-solveForPtot = true;
+solveForPtot = false;
 loopParameters = {'f','method','formulation'};
 
 collectIntoTasks

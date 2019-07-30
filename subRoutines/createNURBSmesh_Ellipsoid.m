@@ -52,17 +52,12 @@ if varCol.boundaryMethod
     if varCol.parm(1) == 1
         solid = getEllipsoidalShellData(c_xy,c_xy,c_z,t,alignWithAxis);
         solid = elevateDegreeInPatches(solid,[0 0 1]);
-%         varCol.patchTop{1} = [1, 0;
-%                               NaN, NaN;
-%                               1, 0;
-%                               NaN, NaN];
-        nurbsDegree = solid.degree(1); % assume all degrees are equal
     else
 %         solid = getShericalShellOctPart(c_z,t);
         solid = getSphericalShellDataPatched(c_z, t); 
         solid = elevateDegreeInPatches(solid,[0 0 3]);
-        nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
     end
+    nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
 %     solid = explodeNURBS(solid,'eta');
 %     solid = explodeNURBS(solid,'xi');
     degree = max(degree,nurbsDegree);

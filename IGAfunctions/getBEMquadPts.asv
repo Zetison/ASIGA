@@ -178,7 +178,7 @@ if collocationPointIsInElement % use polar integration
             J_4 = zeros(no_gpSource^2*noSubElements,1);
             J_5 = zeros(no_gpSource^2*noSubElements,1);
 
-            Q_theta = repmat(Q{no_gpSource},no_gpSource,1);
+            Q_zeta = repmat(Q{no_gpSource},no_gpSource,1);
             Q_r = repmat(Q{no_gpSource}.',no_gpSource,1);
             Q_r = Q_r(:);
 
@@ -189,25 +189,25 @@ if collocationPointIsInElement % use polar integration
                 if n_div(area) == 0
                     continue
                 end
-                n_div_theta = n_div(area);
-                rho_t = zeros(no_gpSource^2,n_div_r*n_div_theta);
-                theta = zeros(no_gpSource^2,n_div_r*n_div_theta);
-                thetas2_arr  = linspace(0,1,n_div_theta+1);
+                n_div_zeta = n_div(area);
+                rho_t = zeros(no_gpSource^2,n_div_r*n_div_zeta);
+                zeta = zeros(no_gpSource^2,n_div_r*n_div_zeta);
+                thetas2_arr  = linspace(0,1,n_div_zeta+1);
                 counter = 1;
 
 
-                for i_theta = 1:n_div_theta
+                for i_theta = 1:n_div_zeta
                     theta_sub2 = thetas2_arr(i_theta:i_theta+1);
                     for i_rho_t = 1:n_div_r
                         rho_t_sub = rho_t_arr(i_rho_t:i_rho_t+1);
                         rho_t(:,counter) = parent2ParametricSpace(rho_t_sub, Q_r);
-                        theta(:,counter) = parent2ParametricSpace(theta_sub2, Q_theta);
+                        zeta(:,counter) = parent2ParametricSpace(theta_sub2, Q_zeta);
                         counter = counter + 1;
                     end
                 end
-                noSubElementsTri = n_div_r*n_div_theta;
+                noSubElementsTri = n_div_r*n_div_zeta;
                 rho_t = reshape(rho_t,noSubElementsTri*no_gpSource^2,1);
-                theta = reshape(theta,noSubElementsTri*no_gpSource^2,1);
+                zeta = reshape(zeta,noSubElementsTri*no_gpSource^2,1);
                 
                 switch areas{area}
                     case 'East'
@@ -232,21 +232,21 @@ if collocationPointIsInElement % use polar integration
                         eta_2_t = -1;
                 end
                 
-                xi_t  = xi_x_t + rho_t.*(xi_1_t-xi_x_t+(xi_2_t-xi_1_t)*theta);
-                eta_t = eta_x_t + rho_t.*(eta_1_t-eta_x_t+(eta_2_t-eta_1_t)*theta);
+                xi_t  = xi_x_t + rho_t.*(xi_1_t-xi_x_t+(xi_2_t-xi_1_t)*zeta);
+                eta_t = eta_x_t + rho_t.*(eta_1_t-eta_x_t+(eta_2_t-eta_1_t)*zeta);
                 
                 indices = counter2:counter2+numel(xi_t)-1;
                 xi_y(indices) = parent2ParametricSpace(Xi_e_y, xi_t);
                 eta_y(indices) = parent2ParametricSpace(Eta_e_y, eta_t);
-                J_3(indices) = rho_t.*(  (xi_1_t-xi_x_t+(xi_2_t-xi_1_t)*theta)*(eta_2_t-eta_1_t) ...
+                J_3(indices) = rho_t.*(  (xi_1_t-xi_x_t+(xi_2_t-xi_1_t)*zeta)*(eta_2_t-eta_1_t) ...
                                        - (eta_1_t-eta_x_t+(eta_2_t-eta_1_t)*theta)*(xi_2_t-xi_1_t));
-                J_4(indices) = 1/n_div_r/n_div_theta;                
+                J_4(indices) = 1/n_div_r/n_div_zeta;                
                 J_5(indices) = 0.25;
                 
                 counter2 = counter2 + numel(xi_t);
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 if pD.plotGP
-                    for i_theta = 1:n_div_theta
+                    for i_theta = 1:n_div_zeta
                         theta_sub = thetas2_arr(i_theta:i_theta+1);
                         rho_t2 = linspace(Eps,1-Eps,100).';
                         for ii = 1:2
@@ -282,8 +282,7 @@ if collocationPointIsInElement % use polar integration
                             if any(xi2 > 1) || any(xi2 < 0) || any(eta2 < 0) || any(eta2 > 1)
                                 keyboard
                             end
-                            if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) ...
-                                    || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
+                            if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
                                 yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2]);
                                 pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                             end

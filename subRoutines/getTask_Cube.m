@@ -36,7 +36,7 @@ computeCondNumber = 0;
 runTasksInParallel = false;
 useNeumanProj = [1,0];
 
-solveForPtot = true;
+solveForPtot = false;
 loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','agpBEM','useNeumanProj'};
 colBEM_C0 = 0;
 quadMethodBEM = 'New';

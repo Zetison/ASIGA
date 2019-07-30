@@ -30,7 +30,7 @@ formulation = 'CCBIE';
 M = 2;
 storeSolution = true;
 storeFullVarCol = true;
-solveForPtot = true;
+solveForPtot = false;
 loopParameters = {'method','M','degree'};
 degree = 2;
 collectIntoTasks

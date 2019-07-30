@@ -7,7 +7,6 @@ switch model
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_Ellipsoid(varCol,parms, M, degree, model); 
     case {'M1','M1_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_Model1(varCol,parms, M, degree);
-        error('Clean up this subRoutine')
     case {'M3','M3_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_Model3(varCol,parms, M, degree);
     case {'M3','M3_P'}
