@@ -25,7 +25,7 @@ formulation = {'CCBIE'};
 M = 1:3;
 % M = 1;
 degree = [2,6];
-degree = 2;
+% degree = 2;
 storeSolution = 0;
 storeFullVarCol = 0;
 % agpBEM = 0.6;
@@ -35,7 +35,8 @@ loopParameters = {'method','formulation','M','degree','f','scatteringCase'};
 
 % collectIntoTasks
 
-formulation = {'CCBIE','GCBIE'};
+formulation = {'GCBIE'};
+extraGPBEM = 200; % extra quadrature points around singularities for BEM formulations
 quadMethodBEM = 'Adaptive';
 M = 1;
 collectIntoTasks
