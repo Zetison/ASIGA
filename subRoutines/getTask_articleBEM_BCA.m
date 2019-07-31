@@ -36,7 +36,7 @@ loopParameters = {'method','formulation','M','degree','f','scatteringCase'};
 % collectIntoTasks
 
 formulation = {'GCBIE'};
-quadMethodBEM = 'Adaptive2';
+quadMethodBEM = 'Adaptive';
 M = 1;
 collectIntoTasks
 
