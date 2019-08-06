@@ -282,8 +282,9 @@ end
 
 
 if 1
+    noCoresToUse = feature('numCores');
     formulation = varCol.formulation;
-    if n_sp > 1e4 && varCol.runInParallell < 10
+    if n_sp > 1e4 && noCoresToUse < 10
         error('This is a little bit too much?')
     end
     switch formulation
