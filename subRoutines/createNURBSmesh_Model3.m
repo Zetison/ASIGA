@@ -13,7 +13,7 @@ end
 x_0 = [-L/2-(R_o1-R_o2)/2, 0, 0]; % The origin of the model
 alignWithAxis = 'Xaxis';
 switch varCol.method
-    case {'IE','IENSG','MFS'}
+    case {'IE','IENSG','ABC','MFS'}
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
         A_2 = [0 1 0;

@@ -8,7 +8,8 @@ if SHBC
         dpdn = @(x,n) 0;
     else
         homNeumanCond = false;
-        dpdn = @(x,n) -varCol.dp_inc(x,n);
+        dp_inc = varCol.dp_inc;
+        dpdn = @(x,n) -dp_inc(x,n);
     end
 else
     homNeumanCond = false;
@@ -104,7 +105,7 @@ switch formulation
                     p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
                 end
                 if ~homNeumanCond
-                    dp_h_gp = dpdn(Y, n);
+                    dp_h_gp = dpdn(Y, n).';
                     if computeFarField
                         p_h = p_h - 1/(4*pi)*dp_h_gp.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
                     else

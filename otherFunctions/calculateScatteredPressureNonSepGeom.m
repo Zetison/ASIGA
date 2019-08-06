@@ -3,6 +3,8 @@ function p_h = calculateScatteredPressureNonSepGeom(varCol, U, P_far, computeFar
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
 N = varCol.N;
+solveForPtot = varCol.solveForPtot;
+SHBC = strcmp(varCol.BC, 'SHBC');
 
 index = varCol.index;
 noElems = varCol.noElems;
@@ -16,6 +18,9 @@ knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
 
 dp_inc = varCol.dp_inc;
+homNeumanCond = false;
+dpdn = @(x,n) -dp_inc(x,n);
+
 Phi_k = varCol.Phi_k;
 dPhi_kdny = varCol.dPhi_kdny;
 
@@ -112,7 +117,7 @@ else
             J = pts'*[dRdxi' dRdeta'];
             crossProd = cross(J(:,1),J(:,2));
             J_1 = norm(crossProd);
-            n = crossProd/J_1;
+            n = crossProd.'/J_1;
 
             Y = R*pts;
             Yt = A_2*(Y-x_0)';
@@ -151,25 +156,26 @@ else
                 end
                 p_h_gp = p_h_gp + temp2*R*U(sctr + noDofs*(m-1),:);
             end    
-            dp_h_gp = -dp_inc(Y,n);
+            xmy = -elementAddition(Y, -P_far);
+
+            r = norm2(xmy);
             
             if computeFarField
+                x_d_n = dot3(P_far, n.')./norm2(P_far);
                 x_d_y = dot3(P_far, Y.')./norm2(P_far);
-                x_d_n = dot3(P_far, n)./norm2(P_far);
-                p_h = p_h - 1/(4*pi)*(1i*k* (p_h_gp.').*x_d_n + dp_h_gp).*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
+                p_h = p_h - 1/(4*pi)*1i*k* (p_h_gp.').*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
             else
-                xmy = -elementAddition(Y, -P_far);
-
-                r = norm2(xmy);  
-                p_h = p_h + ((p_h_gp.').*dPhi_kdny(xmy,r,n) - dp_h_gp.*Phi_k(r))* J_1 * J_2 * wt; 
+                p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
+            end
+            if ~homNeumanCond
+                dp_h_gp = dpdn(Y,n).';
+                if computeFarField
+                    p_h = p_h - 1/(4*pi)*dp_h_gp.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
+                else
+                    p_h = p_h - dp_h_gp.*Phi_k(r,k)* J_1 * J_2 * wt;  
+                end
             end
         end
-    %     if length(P_far) > 3
-    %         disp(['Completed ' num2str(i) ' out of ' num2str(length(innerSurfaceElements)) ' Elapsed time: ' num2str(toc)])
-    %     end
     end
 end
-
-
-
 

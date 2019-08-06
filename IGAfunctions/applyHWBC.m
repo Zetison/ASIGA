@@ -133,7 +133,7 @@ parfor e = 1:noElems
         X = R*pts;
         n = -crossProd.'/J_1;
                 
-        deriv = -dp_inc(X,n).';
+        deriv = -dp_inc(X,n);
         f_e = f_e + R'*deriv*J_1 * J_2 * wt;  
     end    
     indices(:,e) = sctrXiEta';

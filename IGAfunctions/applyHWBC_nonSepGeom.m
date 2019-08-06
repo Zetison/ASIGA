@@ -70,7 +70,7 @@ parfor e = 1:noElems
         
         n = -crossProd.'/norm(crossProd);
         
-        deriv = -dp_inc(v,n).';
+        deriv = -dp_inc(v,n);
         
         f_e = f_e + R_fun'*deriv*norm(crossProd) * J_2 * wt;  
     end    

@@ -83,7 +83,7 @@ if true
             p_h_gp = R_fun*U_sctr;
 
             if strcmp(BC, 'SHBC')
-                dp_h_gp = -dp_inc(Y,n); 
+                dp_h_gp = -dp_inc(Y,n).'; 
             else
 %                 dp_h_gp = dot3((J'\[dRdxi; dRdeta; dRdzeta]*U_sctr).',n);
                 dp_h_gp = (J'\[dRdxi; dRdeta; dRdzeta]*U_sctr).'*n.';
