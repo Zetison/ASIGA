@@ -7,7 +7,7 @@ coreMethod = 'IGA';
 
 f = 1e2;
 
-M = 1:3;
+M = 1:5;
 parm = 1;
 alpha = (0:0.5:180)*pi/180;
 % alpha = (0:10:180)*pi/180;
