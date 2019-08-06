@@ -37,6 +37,7 @@ end
 
 extraGP = varCol.extraGP;
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+3+extraGP,p_eta+3+extraGP);  
+% [W2D,Q2D] = gaussianQuadNURBS(p_xi+3+extraGP,p_eta+3+extraGP);  
 
 p_h = zeros(size(W2D,1),length(surfaceElements));
 fact = zeros(size(W2D,1),length(surfaceElements));

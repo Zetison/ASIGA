@@ -5,9 +5,9 @@ k = 1;
 f = k*1500/(2*pi);
 N = 6;
 M = 1:6;
-% M = 1:2;
+M = 1:2;
 parm = [1,2];
-% parm = 2;
+parm = 2;
 degree = 4;
 
 alpha_s = 240*pi/180;
@@ -25,6 +25,7 @@ loopParameters = {'M','parm','method','formulation'};
 
 method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'GCBIE', 'GBM', 'GHBIE'};
+formulation = {'CCBIE', 'GCBIE'};
 % formulation = {'CCBIE'};
 useNeumannProj = false;
 

@@ -32,9 +32,9 @@ if plot3Dgeometry
                     else
 %                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
 %                         plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-%                         plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
+                        plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
 %                         plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
-                        plotNURBS(fluid{i},{'resolution',resolution, 'elementBasedSamples',true,'samplingDistance',0.1});
+%                         plotNURBS(fluid{i},{'resolution',resolution, 'elementBasedSamples',true,'samplingDistance',0.1});
                     end
             end
         else
@@ -88,7 +88,9 @@ if plot3Dgeometry
 %     view(-70,30)
 %     view(120,10)
 %     view(18,10) % BeTSSi
-    view(18+180,10) % BeTSSi M1
+%     view(-72.3139,-1.5837)
+%     view(18+180,10) % BeTSSi M1
+    view(11,25) % BeTSSi M2
 %     view(62,43)
 %     view(46,32) % BeTSSi M4
 %     view(106,26) % sphere and cube
@@ -112,7 +114,7 @@ if plot3Dgeometry
 % 	export_fig('../../graphics/M3/M3_above', '-png', '-transparent', '-r300')
 % 	export_fig(['../../graphics/Cube_mesh' num2str(M)], '-png', '-transparent', '-r300')
 % 	export_fig('../../graphics/M4', '-png', '-transparent', '-r300')
-	export_fig('../../graphics/M1', '-png', '-transparent', '-r300')
+% 	export_fig('../../graphics/M2', '-png', '-transparent', '-r300')
 % 	export_fig('../../graphics/M4_above', '-png', '-transparent', '-r300')
            
 
@@ -131,7 +133,11 @@ if plot2Dgeometry && ~boundaryMethod
                 if parm == 2 && i > 4
                     continue
                 end
-                plotCuttingPlaneConstEta(fluid{i}, [npts npts],'xz',0.5);
+                if parm == 1
+                    plotCuttingPlaneConstXi(fluid{i}, [npts npts],'xz',0);
+                else
+                    plotCuttingPlaneConstEta(fluid{i}, [npts npts],'xz',0.5);
+                end
             case {'BC','BC_P'}
     %             plotCuttingPlaneConstXi(fluid, [npts npts],'xz',0);
     %             plotCuttingPlaneConstXi(fluid, [npts npts],'xz',0.5);

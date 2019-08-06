@@ -1,8 +1,9 @@
-P_ince = 1; % Amplitude of incident wave
+P_inc = 1; % Amplitude of incident wave
 rho_f = [1000,1.2]; % Density of fluid inner part
 rho_s = 7850; % Density of solid
 c_f = [1500,340]; % Speed of sound
 t = 0.02; % The thickness
+% t = 1; % The thickness
 E = 210e9; % Youngs modulus of elastic material
 nu = 0.3; % Poisson ratio of elastic material
 R_o = 3; % Outer radius of shell

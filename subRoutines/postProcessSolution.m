@@ -44,6 +44,7 @@ if i_k == 1
     varCol.h_max = h_max;
     varCol.nepw = lambda(1)./h_max;
     varCol.dofs = actualNoDofs;
+    varCol.surfDofs = getNoSurfDofs(varCol);
     if storeSolution
         varCol.U = U_fluid_o;
     end

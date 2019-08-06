@@ -93,8 +93,8 @@ spIdxCol = zeros(n_en^2,noElems);
 Avalues = zeros(n_en^2,noElems);
 
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
-for e = 1:noElems
-% parfor e = 1:noElems
+% for e = 1:noElems
+parfor e = 1:noElems
     patch = pIndex(e); % New
     Xi = knotVecs{patch}{1}; % New
     Eta = knotVecs{patch}{2}; % New

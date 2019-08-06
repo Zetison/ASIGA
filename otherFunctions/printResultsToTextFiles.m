@@ -347,6 +347,8 @@ if plotResults
             xLabel = '$$\beta$$';
         case 'dofs'
             xLabel = 'Degrees of freedom';
+        case {'surfDofs'}
+            xLabel = 'Dofs at $$\Gamma$$';
         case 'dofsAlg'
             xLabel = 'Degrees of freedom in algebraic scale $$N^{1/3}$$';
             xt = get(gca, 'XTick');

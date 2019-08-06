@@ -59,9 +59,9 @@ if varCol.boundaryMethod
 
     fluid = extractOuterSurface(solid);
     varCol.patchTop = getPatchTopology(fluid);
-    varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
-    varCol.patchTop{1}(2,2) = NaN;
-    varCol.patchTop{1}(4,2) = NaN;
+%     varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
+%     varCol.patchTop{1}(2,2) = NaN;
+%     varCol.patchTop{1}(4,2) = NaN;
 else
     R_max = max(R_o1,R_o2);
     s = 0.25 + 0.05*(L-R_max)/R_max;

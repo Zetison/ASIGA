@@ -201,6 +201,8 @@ switch formulation
                     x_d_y = dot3(P_far, Y.')./norm2(P_far);
                     p_h = p_h - 1/(4*pi)*1i*k* (p_h_gp.').*x_d_n.*exp(-1i*k*x_d_y)* J_1 * J_2 * wt;  
                 else
+                    xmy = -elementAddition(Y, -P_far);
+                    r = norm2(xmy);    
                     p_h = p_h + (p_h_gp.').*dPhi_kdny(xmy,r,n,k)* J_1 * J_2 * wt;  
                 end
                 if ~homNeumanCond

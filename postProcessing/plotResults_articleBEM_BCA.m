@@ -79,7 +79,8 @@ else
         printResultsToFile2(['../results/articleBEM_BCA/COMSOL_Error_res' num2str(res)], 180/pi*alphaCOMSOL.', Error)
         printResultsToFile2(['../results/articleBEM_BCA/COMSOL_ErrorIGA_res' num2str(res)], 180/pi*alphaCOMSOL.', ErrorIGA)
         figure(42)
-        semilogy(180/pi*alphaCOMSOL,Error,'DisplayName',['COMSOL res' num2str(res)])
+%         semilogy(180/pi*alphaCOMSOL,Error,'DisplayName',['COMSOL res' num2str(res)])
+        semilogy(180/pi*alphaCOMSOL,ErrorIGA,'DisplayName',['COMSOL res' num2str(res)])
         hold on
     end
     T = readtable(['../plotData/refSolutions/WTD71/Bi_res' num2str(6) '_100Hz.txt'],'FileType','text', 'HeaderLines',0);

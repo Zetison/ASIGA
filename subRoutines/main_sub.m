@@ -32,7 +32,7 @@ if plot3Dgeometry || plot2Dgeometry
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
     plotMeshAndGeometry
     fprintf('using %12f seconds.', toc)
-%     return
+    return
 end
 
 %% Build connectivity
@@ -1197,6 +1197,7 @@ else
     varColTemp.f = varCol.f;
     varColTemp.c_f = varCol.c_f;
     if ~strcmp(method,'RT')
+        varColTemp.surfDofs = varCol.surfDofs;
         varColTemp.dofs = varCol.dofs;
         varColTemp.dofsAlg = (varCol.dofs)^(1/3);
         varColTemp.h_max = varCol.h_max;

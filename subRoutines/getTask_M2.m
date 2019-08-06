@@ -2,7 +2,7 @@
 
 scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'M3'; % BeTSSi model 5A
+model = 'M2'; % BeTSSi model 5A
 
 method = {'IENSG','IE'};
 method = {'IENSG'};
