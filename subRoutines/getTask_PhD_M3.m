@@ -12,12 +12,6 @@ parm = 1;
 alpha = (0:0.5:180)*pi/180;
 % alpha = (0:10:180)*pi/180;
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% ABC simulation
-method = {'ABC'};
-% formulation = {'HH','BGT'};
-formulation = {'BGT'};
 plot2Dgeometry = 0;
 plot3Dgeometry = 0;
 degree = 2;
@@ -26,16 +20,14 @@ calculateSurfaceError = 0;
 computeCondNumber = false;
 calculateFarFieldPattern = 1;
 applyLoad = 'planeWave';
-N = 1:2;
 
 loopParameters = {'M','N','formulation','method'};
-collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
 method = {'IE'};
-formulation = {'BGU'};
-N = 1:3;
+formulation = {'BGU','BGC'};
+N = [1,3,5];
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

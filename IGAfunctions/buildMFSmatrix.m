@@ -283,7 +283,7 @@ end
 
 if 1
     formulation = varCol.formulation;
-    if n_sp > 1e4
+    if n_sp > 1e4 && varCol.runInParallell < 10
         error('This is a little bit too much?')
     end
     switch formulation
