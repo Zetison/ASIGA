@@ -107,6 +107,7 @@ idxRow = zeros(n_en, noElems);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
 totNoQP = 0;
+totNoQPnonPolar = 0;
 parfor e_x = 1:noElems
 % for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
@@ -175,8 +176,9 @@ parfor e_x = 1:noElems
             idxCol(:,e_y) = sctr_y;
             A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*BIE*fact_x;
             if ~collocationPointIsInElement
-                totNoQP = totNoQP + noGp;
+                totNoQPnonPolar = totNoQPnonPolar + noGp;
             end
+            totNoQP = totNoQP + noGp;
         end
         R_xScaled = getR_x_Coeff(R_x,useEnrichedBfuns,k,d_vec,x,useRegul,integrals,sgn,constants,...
                         psiType,useCBIE,useHBIE,dXIdv,dR_xdxi,dR_xdeta,v_1,v_2,alpha);
@@ -199,4 +201,5 @@ parfor i = 1:no_angles
 end
 
 
+varCol.totNoQPnonPolar = totNoQPnonPolar;
 varCol.totNoQP = totNoQP;

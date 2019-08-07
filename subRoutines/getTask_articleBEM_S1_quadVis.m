@@ -39,9 +39,9 @@ extraGPBEM = 8; % extra quadrature points around singularities for BEM formulati
 % agpBEM = 2;
 agpBEM = 2;
 
-% collectIntoTasks
+collectIntoTasks
 
-quadMethodBEM = {'Adaptive2'};
+quadMethodBEM = {'Adaptive2','Adaptive'};
 agpBEM = 1;
 collectIntoTasks
 

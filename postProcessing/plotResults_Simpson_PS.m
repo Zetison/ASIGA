@@ -2,7 +2,7 @@
 close all
 for study_i = 1:numel(studies)
     study = studies(study_i);
-    options = struct('xname',           'totNoQP',  ...
+    options = struct('xname',           'totNoQPnonPolar',  ...
                      'yname',           'surfaceError', ...
                      'plotResults', 	1, ... 
                      'printResults',	1, ... 
@@ -13,14 +13,15 @@ for study_i = 1:numel(studies)
                      'legendEntries',   {{'extraGP','extraGPBEM','colBEM_C0','formulation','quadMethodBEM'}}, ...
                      'noXLoopPrms',     1); 
 
-%     figure(2)
-%     printResultsToTextFiles(study,options)
-
-    options.xLoopName = 'extraGPBEM';
-%     options.axisType = 'loglog';
-    options.legendEntries = {'extraGP','agpBEM','colBEM_C0','formulation','quadMethodBEM'};
-    figure(3)
+    figure(2)
     printResultsToTextFiles(study,options)
+% 
+%     options.xname = 'totNoQP';
+%     options.xLoopName = 'extraGPBEM';
+% %     options.axisType = 'loglog';
+%     options.legendEntries = {'extraGP','agpBEM','colBEM_C0','formulation','quadMethodBEM'};
+%     figure(3)
+%     printResultsToTextFiles(study,options)
 
 %     options.xname = 'h_max';
 %     options.yScale = 1/100;
