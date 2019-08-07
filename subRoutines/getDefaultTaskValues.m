@@ -64,7 +64,7 @@ exteriorProblem = true;
 initMeshFactXi = 1;
 initMeshFactZeta = 1;
 colBEM_C0 = 0;
-quadMethodBEM = 'Adaptive';
+quadMethodBEM = 'Adaptive2';
 colMethod = 'Grev';
 M = 1;
 

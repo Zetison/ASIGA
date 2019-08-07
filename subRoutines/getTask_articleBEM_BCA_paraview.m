@@ -14,12 +14,12 @@ alpha = (0:0.05:360)*pi/180;
 BC = 'SHBC';
 
 method = {'BEM'};
-formulation = 'CCBIEC';
+formulation = 'CBM';
 
 
 f = 1e3;             % Frequency
 M = 3;
-degree = 5;
+degree = 6;
 plotResultsInParaview = 1;
 plotMesh              = 1;	% Create additional Paraview files to visualize IGA mesh
 calculateSurfaceError = 0;

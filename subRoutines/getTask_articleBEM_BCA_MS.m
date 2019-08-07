@@ -37,7 +37,7 @@ loopParameters = {'method','formulation','M','degree','f','formulation','scatter
 
 f = 1e3;             % Frequency
 M = 3;
-degree = 6;
+degree = [5,6];
 formulation = {'CBM'};
 collectIntoTasks
 

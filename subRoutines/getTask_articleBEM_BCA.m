@@ -33,18 +33,19 @@ agpBEM = 1.4;
 solveForPtot = true;
 loopParameters = {'method','formulation','M','degree','f','scatteringCase'};
 
-% collectIntoTasks
-
-formulation = {'GCBIE'};
-extraGPBEM = 200; % extra quadrature points around singularities for BEM formulations
-quadMethodBEM = 'Adaptive';
-M = 1;
 collectIntoTasks
 
 f = 1e3;
+degree = 6;
+M = 3;
 formulation = {'CBM'};
-% collectIntoTasks
+collectIntoTasks
 
+
+formulation = {'GCBIE'};
+extraGPBEM = 200; % extra quadrature points around singularities for BEM formulations
+M = 1;
+% collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 calculateSurfaceError = 1;

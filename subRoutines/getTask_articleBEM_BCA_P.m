@@ -9,7 +9,7 @@ plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 BC = 'NBC';
 
 f = [1e2 1e3];             % Frequency
-% f = 1e2;             % Frequency
+f = 1e2;             % Frequency
 plotResultsInParaview = 1;
 plotMesh              = 1;	% Create additional Paraview files to visualize IGA mesh
 calculateSurfaceError = true;
@@ -30,10 +30,10 @@ agpBEM = 0.6;
 % degree = 2;
 solveForPtot = true;
 loopParameters = {'method','degree','formulation','M','f'};
-% collectIntoTasks
+collectIntoTasks
 
-% formulation = {'CBM'};
-formulation = {'CCBIEC'};
+formulation = {'CBM','CCBIE'};
+% formulation = {'CCBIEC'};
 degree = 5;
 M = 2;
 % degree = 2;
@@ -43,7 +43,7 @@ collectIntoTasks
 
 method = {'BA'};
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 
 
