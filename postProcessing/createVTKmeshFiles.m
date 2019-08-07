@@ -2,13 +2,11 @@ function createVTKmeshFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, op
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
-p_zeta = varCol.degree(3); % assume p_zeta is equal in all patches
 Eps = 1e4*eps;
 index = varCol.index;
 noElems = varCol.noElems;
 elRangeXi = varCol.elRange{1};
 elRangeEta = varCol.elRange{2};
-elRangeZeta = varCol.elRange{3};
 element = varCol.element;
 element2 = varCol.element2;
 weights = varCol.weights;
@@ -154,6 +152,8 @@ switch type
 
         makeVTKfile(data, options);
     case '3Dvolume'
+        elRangeZeta = varCol.elRange{3};
+        p_zeta = varCol.degree(3); % assume p_zeta is equal in all patches
         counter2 = 0;
         %% Create Mesh vtk files
         container = cell(1,noElems);
