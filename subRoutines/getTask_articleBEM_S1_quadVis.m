@@ -35,13 +35,13 @@ colBEM_C0 = 0;
 % colBEM_C0 = Inf;
 extraGP = 0; % extra quadrature points
 extraGPBEM = 8; % extra quadrature points around singularities for BEM formulations
-extraGPBEM = 12; % extra quadrature points around singularities for BEM formulations
+% extraGPBEM = 12; % extra quadrature points around singularities for BEM formulations
 % agpBEM = 2;
 agpBEM = 2;
 
 % collectIntoTasks
 
-quadMethodBEM = {'Adaptive'};
+quadMethodBEM = {'Adaptive2'};
 agpBEM = 1;
 collectIntoTasks
 

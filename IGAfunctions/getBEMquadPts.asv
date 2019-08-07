@@ -210,15 +210,38 @@ if collocationPointIsInElement % use polar integration
                 noSubElementsTri = n_div_r*n_div_theta;
                 rho = reshape(rho,noSubElementsTri*no_gpSource^2,1);
                 theta = reshape(theta,noSubElementsTri*no_gpSource^2,1);
-                                
+                
+                switch areas{i}
+                    case 'East'
+                        xi_t_v(i) = 1;
+                        xi_t_v(i+1) = 1;
+                        eta_1_t = -1;
+                        eta_t_v(i+1) = 1;
+                    case 'North'
+                        xi_t_v(i) = 1;
+                        xi_t_v(i+1) = -1;
+                        eta_1_t = 1;
+                        eta_t_v(i+1) = 1;
+                    case 'West'
+                        xi_t_v(i) = -1;
+                        xi_t_v(i+1) = -1;
+                        eta_1_t = 1;
+                        eta_t_v(i+1) = -1;
+                    case 'South'
+                        xi_t_v(i) = -1;
+                        xi_t_v(i+1) = 1;
+                        eta_1_t = -1;
+                        eta_t_v(i+1) = -1;
+                end
+                
                 xi_t  = xi_x_t + rho.*(xi_t_v(i)-xi_x_t+(xi_t_v(i+1)-xi_t_v(i))*theta);
-                eta_t = eta_x_t + rho.*(eta_t_v(i)-eta_x_t+(eta_t_v(i+1)-eta_t_v(i))*theta);
+                eta_t = eta_x_t + rho.*(eta_1_t-eta_x_t+(eta_t_v(i+1)-eta_1_t)*theta);
                 
                 indices = counter2:counter2+numel(xi_t)-1;
                 xi_y(indices) = parent2ParametricSpace(Xi_e_y, xi_t);
                 eta_y(indices) = parent2ParametricSpace(Eta_e_y, eta_t);
-                J_3(indices) = rho.*(  (xi_t_v(i)-xi_x_t+(xi_t_v(i+1)-xi_t_v(i))*theta)*(eta_t_v(i+1)-eta_t_v(i)) ...
-                                       - (eta_t_v(i)-eta_x_t+(eta_t_v(i+1)-eta_t_v(i))*theta)*(xi_t_v(i+1)-xi_t_v(i)));
+                J_3(indices) = rho.*(  (xi_t_v(i)-xi_x_t+(xi_t_v(i+1)-xi_t_v(i))*theta)*(eta_t_v(i+1)-eta_1_t) ...
+                                       - (eta_1_t-eta_x_t+(eta_t_v(i+1)-eta_1_t)*theta)*(xi_t_v(i+1)-xi_t_v(i)));
                 J_4(indices) = 1/n_div_r/n_div_theta;                
                 J_5(indices) = 0.25;
                 
@@ -228,11 +251,33 @@ if collocationPointIsInElement % use polar integration
                     for i_theta = 1:n_div_theta
                         theta_sub = thetas2_arr(i_theta:i_theta+1);
                         rho2 = linspace(Eps,1-Eps,100).';
-                        for j = 1:2
-                            theta2 = theta_sub(j)+Eps*(-1)^(j+1);
+                        for i = 1:2
+                            theta2 = theta_sub(i)+Eps*(-1)^(i+1);
+                            switch areas{i}
+                                case 'East'
+                                    xi_t_v(i) = 1;
+                                    xi_t_v(i+1) = 1;
+                                    eta_1_t = -1;
+                                    eta_t_v(i+1) = 1;
+                                case 'North'
+                                    xi_t_v(i) = 1;
+                                    xi_t_v(i+1) = -1;
+                                    eta_1_t = 1;
+                                    eta_t_v(i+1) = 1;
+                                case 'West'
+                                    xi_t_v(i) = -1;
+                                    xi_t_v(i+1) = -1;
+                                    eta_1_t = 1;
+                                    eta_t_v(i+1) = -1;
+                                case 'South'
+                                    xi_t_v(i) = -1;
+                                    xi_t_v(i+1) = 1;
+                                    eta_1_t = -1;
+                                    eta_t_v(i+1) = -1;
+                            end
 
                             xi_t2  = xi_x_t + rho2.*(xi_t_v(i)-xi_x_t+(xi_t_v(i+1)-xi_t_v(i))*theta2);
-                            eta_t2 = eta_x_t + rho2.*(eta_t_v(i)-eta_x_t+(eta_t_v(i+1)-eta_t_v(i))*theta2);
+                            eta_t2 = eta_x_t + rho2.*(eta_1_t-eta_x_t+(eta_t_v(i+1)-eta_1_t)*theta2);
                             
                             xi2 = parent2ParametricSpace(Xi_e_y, xi_t2);
                             eta2 = parent2ParametricSpace(Eta_e_y, eta_t2);
@@ -250,9 +295,31 @@ if collocationPointIsInElement % use polar integration
                         rho_sub = rho_arr(i_rho:i_rho+1);
                         rho2 = rho_sub(2);
                         theta2 = linspace(Eps,1-Eps,100).';
+                        switch areas{i}
+                            case 'East'
+                                xi_t_v(i) = 1;
+                                xi_t_v(i+1) = 1;
+                                eta_1_t = -1;
+                                eta_t_v(i+1) = 1;
+                            case 'North'
+                                xi_t_v(i) = 1;
+                                xi_t_v(i+1) = -1;
+                                eta_1_t = 1;
+                                eta_t_v(i+1) = 1;
+                            case 'West'
+                                xi_t_v(i) = -1;
+                                xi_t_v(i+1) = -1;
+                                eta_1_t = 1;
+                                eta_t_v(i+1) = -1;
+                            case 'South'
+                                xi_t_v(i) = -1;
+                                xi_t_v(i+1) = 1;
+                                eta_1_t = -1;
+                                eta_t_v(i+1) = -1;
+                        end
 
                         xi_t2  = xi_x_t + rho2.*(xi_t_v(i)-xi_x_t+(xi_t_v(i+1)-xi_t_v(i))*theta2);
-                        eta_t2 = eta_x_t + rho2.*(eta_t_v(i)-eta_x_t+(eta_t_v(i+1)-eta_t_v(i))*theta2);
+                        eta_t2 = eta_x_t + rho2.*(eta_1_t-eta_x_t+(eta_t_v(i+1)-eta_1_t)*theta2);
                         xi2 = parent2ParametricSpace(Xi_e_y, xi_t2);
                         eta2 = parent2ParametricSpace(Eta_e_y, eta_t2);
                         if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
