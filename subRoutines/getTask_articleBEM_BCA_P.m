@@ -30,6 +30,7 @@ agpBEM = 0.6;
 % degree = 2;
 solveForPtot = true;
 loopParameters = {'method','degree','formulation','M','f'};
+quadMethodBEM = 'Adaptive';
 collectIntoTasks
 
 formulation = {'CBM','CCBIE'};
