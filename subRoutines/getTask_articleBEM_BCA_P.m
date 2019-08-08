@@ -28,9 +28,9 @@ degree = [2,5];
 % degree = 5;
 agpBEM = 0.6;
 % degree = 2;
-solveForPtot = true;
+solveForPtot = false;
 loopParameters = {'method','degree','formulation','M','f'};
-quadMethodBEM = 'Adaptive';
+% quadMethodBEM = 'Adaptive2';
 collectIntoTasks
 
 formulation = {'CBM','CCBIE'};
