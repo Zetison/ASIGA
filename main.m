@@ -28,7 +28,7 @@ while exist(subFolderName, 'dir')
 end
 mkdir(subFolderName);
 t_start_study = tic;
-
+keyboard
 for study_i = 1:numel(studies)    
     loopParameters = studies(study_i).loopParameters;
     loopParametersArr = studies(study_i).loopParametersArr;
