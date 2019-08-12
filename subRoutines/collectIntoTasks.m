@@ -14,6 +14,7 @@ if exist('internalPts','var')
     task.internalPts = internalPts;
 end
 task.calculateVolumeError = calculateVolumeError;
+task.calculateSurfEnrgErr = calculateSurfEnrgErr;
 task.calculateFarFieldPattern = calculateFarFieldPattern;
 task.useROM = useROM;
 if useROM

@@ -28,22 +28,20 @@ colBEM_C0 = 0;
 useNeumanProj = 0;
 degree = 2;
 M = 1:3;
-quadMethodBEM = 'Adaptive';
+calculateSurfEnrgErr = true;
 
 collectIntoTasks
 
 formulation = {'GCBIE','GBM'};
 useNeumanProj = 0;
 colBEM_C0 = NaN;
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 % degree = 2;
-extraGPBEM = NaN;
 extraGP = 1;
-agpBEM = NaN; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
-M = 1:7;
+% M = 1:7;
 method = {'BA'};
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks

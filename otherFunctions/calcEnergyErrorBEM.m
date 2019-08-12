@@ -25,6 +25,9 @@ quadMethodBEM = varCol.quadMethodBEM;
 
 Eps = 10*eps;
 
+kPhi = 1i;
+Phi_ = @(r) exp(1i*kPhi*r)./(4*pi*r);
+
 k = varCol.k;
 
 if strcmp(varCol.coreMethod, 'XI')
@@ -34,7 +37,6 @@ else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
- 
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
 
@@ -43,6 +45,7 @@ centerPts = findCenterPoints(patches);
 [Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 % [W2D,Q2D] = gaussianQuadNURBS(p_xi+10,p_eta+10);  
 
+dpdn = @(x,n) 0;
 if solveForPtot
     analytic = @(x) analytic(x) + varCol.p_inc(x);
 end
@@ -86,16 +89,14 @@ parfor e_x = 1:noElems
         analytic_x = analytic(x);
         u_x = R_x*U(sctr_x);
         for e_y = 1:noElems   
-            [~, ~, ~, sctr_y, ~, ~, ~,y,R_y,Phi_k_y,dPhi_k_y,fact_y] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,NaN,NaN,...
-                    useEnrichedBfuns,k,d_vec,0,solveForPtot,1,0,NaN,NaN,...
+            [~, ~, ~, sctr_y, ~, ~, ~,y,R_y,r,fact_y] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,NaN,NaN,...
+                    useEnrichedBfuns,k,d_vec,0,solveForPtot,1,0,dpdn,NaN,...
                     x,nx,pt_x(1),pt_x(2),e_x,NaN,NaN,0,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                     patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
             analytic_y = analytic(y);
-%             Error = Error + conj(analytic_x-u_x)*(dPhi_k_y.*(analytic_y-R_y*U(sctr_y))).'*fact_y*fact_x;
-%             normalization = normalization + conj(analytic_x)*(dPhi_k_y.*analytic_y).'*fact_y*fact_x;
-            Error = Error + conj(analytic_x-u_x)*(Phi_k_y.*(analytic_y-R_y*U(sctr_y))).'*fact_y*fact_x;
-            normalization = normalization + conj(analytic_x)*(Phi_k_y.*analytic_y).'*fact_y*fact_x;
+            Error = Error + conj(analytic_x-u_x)*(Phi_(r).*(analytic_y-R_y*U(sctr_y))).'*fact_y*fact_x;
+            normalization = normalization + conj(analytic_x)*(Phi_(r).*analytic_y).'*fact_y*fact_x;
         end
     end
 end

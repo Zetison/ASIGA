@@ -16,6 +16,7 @@ beta_s = 30*pi/180;
 alpha = (0:0.5:360)*pi/180;
 beta = 30*pi/180;
 calculateSurfaceError = 1;
+calculateSurfEnrgErr = true;
 calculateFarFieldPattern = 1;
 solveForPtot = 1;
 % runTasksInParallel = true;

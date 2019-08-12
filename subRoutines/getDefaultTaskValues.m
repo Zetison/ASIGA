@@ -42,6 +42,7 @@ BC = 'SHBC';
 plot2Dgeometry        = false;  % Plot cross section of mesh and geometry
 plot3Dgeometry        = false;  % Plot visualization of mesh and geometry in 3D
 calculateSurfaceError = false;	% Only if scatteringCase == 'Bi'
+calculateSurfEnrgErr  = false;	% Only if scatteringCase == 'Bi'
 calculateVolumeError  = false;	% Only if scatteringCase == 'Bi'
 plotResultsInParaview = false;	% Only if scatteringCase == 'Bi'
 plotTimeOscillation   = false;	% Create 30 paraview files in order to visualize a dynamic result

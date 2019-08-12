@@ -27,6 +27,7 @@ initMeshFactZeta = 32;
 
 plotFarField          = 0;
 calculateSurfaceError = 1;
+calculateSurfEnrgErr = true;
 calculateFarFieldPattern = 0;
 plot3Dgeometry = 0;
 solveForPtot = false;

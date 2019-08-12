@@ -5,7 +5,6 @@ if varCol.boundaryMethod
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         end
         surfaceError = calcSurfErrorBndryMethodVec(varCol, U_fluid_o, task.LpOrder);
-%         energyError = calcEnergyErrorBEM(varCol, U_fluid_o);
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface error = %.16g', surfaceError)
@@ -14,7 +13,21 @@ if varCol.boundaryMethod
             task.results.surfaceError = zeros(1,size(k,2));
         end
         task.results.surfaceError(i_k) = surfaceError;
-%         task.results.energyError(i_k) = energyError;
+    end
+    if task.calculateSurfEnrgErr
+        tic 
+        if ~runTasksInParallel
+            fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface energy error ... ')
+        end
+        energyError = calcEnergyErrorBEM(varCol, U_fluid_o);
+        if ~runTasksInParallel
+            fprintf('using %12f seconds.', toc)   
+            fprintf('\nSurface energy error = %.16g', energyError)
+        end
+        if i_k == 1
+            task.results.energyError = zeros(1,size(k,2));
+        end
+        task.results.energyError(i_k) = energyError;
     end
 else
     if task.calculateSurfaceError
