@@ -14,7 +14,7 @@ if varCol.boundaryMethod
         end
         task.results.surfaceError(i_k) = surfaceError;
     end
-    dbstop
+    keyboard
     if task.calculateSurfEnrgErr
         tic 
         if ~runTasksInParallel
