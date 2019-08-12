@@ -1,6 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Main file of ASIGA
-keyboard
 if exist('../availableStudies.m', 'file')
     clear all %#ok
     printAndPlotResults = true;
