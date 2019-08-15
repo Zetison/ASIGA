@@ -6,8 +6,8 @@ formulation = {'GCBIE','GBM','CCBIE','CBM'};
 k = 2;
 % f = 1e2;             % Frequency
 f = k*1500/(2*pi);
-M = 1:5; %1:5
-degree = [2,4];
+M = 1:6; %1:5
+degree = 2:4;
 calculateSurfaceError = 1;
 calculateSurfEnrgErr = true;
 calculateFarFieldPattern = 0;
@@ -28,7 +28,7 @@ collectIntoTasks
 %% BA simulation
 useNeumanProj = 0;
 extraGP = 0;
-M = 1:7;
+M = 1:6;
 method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks
