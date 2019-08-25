@@ -338,7 +338,7 @@ for patch = 1:noPatches
     normals = reshape(cross(dCdxi(:,:,:,1),dCdeta(:,:,:,1),1),3,Nxi*Neta);
     H = reshape(norm2(normals.'),Nxi,Neta);
     
-    g = reshape(-dp_dinc(reshape(c(:,:,:,1),3,Nxi*Neta).', -normals./repmat(reshape(H,1,Nxi*Neta),3,1)),Nxi,Neta);
+    g = reshape(-dp_dinc(reshape(c(:,:,:,1),3,Nxi*Neta).', -(normals./repmat(reshape(H,1,Nxi*Neta),3,1)).'),Nxi,Neta);
     F = multiplyByWeightsAtBoundary(g.*H,rho,Nxi,Neta);
     
     %% Collect matrices

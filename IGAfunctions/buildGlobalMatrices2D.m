@@ -1,4 +1,4 @@
-function [K, M, F] = buildGlobalMatrices2D_FEM(varCol, newOptions)
+function [K, M, F] = buildGlobalMatrices2D(varCol, newOptions)
 % Create IGA global matrices
 % Implemented for linear elasticity operator and the laplace operator, with
 % possibility of computing the mass matrix and loading vector from body

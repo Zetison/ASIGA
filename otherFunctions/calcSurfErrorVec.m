@@ -43,8 +43,8 @@ p_h = zeros(size(W2D,1),length(surfaceElements));
 fact = zeros(size(W2D,1),length(surfaceElements));
 points = zeros(size(W2D,1), length(surfaceElements),3);
 
-% for i = 1:length(surfaceElements) %[8 7 3 4 5 6 2 1]% 
-parfor i = 1:length(surfaceElements) %[8 7 3 4 5 6 2 1]% 
+% for i = 1:length(surfaceElements)
+parfor i = 1:length(surfaceElements)
 
     e = surfaceElements(i);
     patch = pIndex(e); % New

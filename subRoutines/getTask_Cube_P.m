@@ -26,9 +26,9 @@ loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','ag
 colBEM_C0 = [0,1/2];
 colBEM_C0 = 0;
 useNeumanProj = 0;
-degree = 2;
-M = 1:3;
-calculateSurfEnrgErr = true;
+% degree = 2;
+% M = 1:5;
+calculateSurfEnrgErr = false;
 
 collectIntoTasks
 
@@ -41,7 +41,7 @@ collectIntoTasks
 %% BA simulation
 % degree = 2;
 extraGP = 1;
-% M = 1:7;
+M = 1:7;
 method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks

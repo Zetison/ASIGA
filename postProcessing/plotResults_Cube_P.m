@@ -15,7 +15,7 @@ for study_i = 1:numel(studies)
     figure(2)
     printResultsToTextFiles(study,options)
     
-    figure(3)
-    options.yname = 'energyError';
-    printResultsToTextFiles(study,options)
+%     figure(3)
+%     options.yname = 'energyError';
+%     printResultsToTextFiles(study,options)
 end

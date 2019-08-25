@@ -12,7 +12,7 @@ startMatlabPool
 % parpool(myCluster,2)
 % delete(myCluster.Jobs)
 Eps = 1e-12;
-plot3Dgeometry = 0;
+plot3Dgeometry = 1;
 plot2Dgeometry = false;
 boundaryMethod = false;
 plotTimeOscillation = true;
@@ -39,6 +39,7 @@ degreeElevArr = [1 1 1;
                  2 2 2;
                  3 3 3];
 degreeElevArr = [1 1 1];
+degreeElevArr = [0 0 0];
 
 stringShift = 40;
 for degreeCase = 1:size(degreeElevArr,1)

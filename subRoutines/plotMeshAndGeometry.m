@@ -41,7 +41,8 @@ if plot3Dgeometry
             if strcmp(coreMethod, 'linear_FEM')
                 resolution = [0,0,0];
             else 
-                resolution = [10,10,10];
+%                 resolution = [10,10,10];
+                resolution = [200,400,0];
             end
             if strcmp(coreMethod,'SEM')
                 varColPlot.plotAt = [0, 0;
@@ -59,8 +60,8 @@ if plot3Dgeometry
                     caxis([-17,1])
                     plotControlPts(fluid{i})
                 else
-                    plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',0.8,'plotAt',plotAt});
-%                     plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',1,'plotAt',plotAt});
+%                     plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',0.8,'plotAt',plotAt});
+                    plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',1,'plotAt',plotAt});
                 end
             end
 %                 plotNURBS(fluid{i},[100 100 0], 1, 1.5*[44 77 32]/255, 1);
@@ -87,10 +88,10 @@ if plot3Dgeometry
     varCol.dimension = 1;
 %     view(-70,30)
 %     view(120,10)
-%     view(18,10) % BeTSSi
+    view(18,10) % BeTSSi
 %     view(-72.3139,-1.5837)
 %     view(18+180,10) % BeTSSi M1
-    view(11,25) % BeTSSi M2
+%     view(11,25) % BeTSSi M2
 %     view(62,43)
 %     view(46,32) % BeTSSi M4
 %     view(106,26) % sphere and cube
@@ -116,6 +117,7 @@ if plot3Dgeometry
 % 	export_fig('../../graphics/M4', '-png', '-transparent', '-r300')
 % 	export_fig('../../graphics/M2', '-png', '-transparent', '-r300')
 % 	export_fig('../../graphics/M4_above', '-png', '-transparent', '-r300')
+% 	export_fig('../../graphics/wineGlassFine', '-png', '-transparent', '-r300')
            
 
 %     export_fig('../../graphics/sphericalShell/Sphere1controlPolygon' , '-png', '-transparent')

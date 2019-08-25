@@ -1,5 +1,4 @@
-% Convert gaus quadrature weights and points from a php file to the
-% GLLpoints.m file
+% Create GLLpoints.m file
 addpath('C:\Users\Zetison\Documents\Multiprecision Computing Toolbox\')
 type = 'mp';
 mp.Digits(100);
