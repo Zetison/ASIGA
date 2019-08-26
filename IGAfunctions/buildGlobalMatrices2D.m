@@ -36,6 +36,9 @@ end
 
 %% Extract all needed data from options and varCol
 d = options.fieldDimension;
+buildMassMatrix = options.buildMassMatrix;
+applyBodyLoading = options.applyBodyLoading;
+operator = options.operator;
 
 Xi = varCol.patches{1}.nurbs.knots{1};
 Eta = varCol.patches{1}.nurbs.knots{2};
@@ -61,25 +64,29 @@ end
 
 %% Preallocation and initiallizations
 n_en = (p+1)*(q+1);
+sizeKe = (d*n_en)^2;
 
 spIdxRow = zeros((d*n_en)^2,noElems);
 spIdxCol = zeros((d*n_en)^2,noElems);
 Kvalues = zeros((d*n_en)^2,noElems); 
 
-if options.buildMassMatrix
-    Mvalues = zeros((d*n_en)^2,noElems); 
+if buildMassMatrix
+    Mvalues = zeros(sizeKe,noElems); 
 end
-if options.applyBodyLoading
+if applyBodyLoading
     F_indices = zeros(d*n_en,noElems); 
     Fvalues = zeros(d*n_en,noElems); 
+    force = varCol.f;
+else
+    force = NaN;
 end
 
 [W2D,Q2D] = gaussianQuadNURBS(p+1,q+1); 
 % [W2D,Q2D] = gaussianQuadNURBS(60,60); 
 
 %% Build global matrices
-parfor e = 1:noElems
-% for e = 1:noElems
+% parfor e = 1:noElems
+for e = 1:noElems
     idXi = index(e,1);
     idEta = index(e,2);
     
@@ -90,15 +97,16 @@ parfor e = 1:noElems
     
     sctr = element(e,:);
     pts = controlPts(sctr,:);
+    wgts = weights(element(e,:),:); % New
     sctr_k_e = zeros(1,d*n_en);
     for i = 1:d
-        sctr_k_e(1+(i-1)*n_en:i*n_en) = sctr+(i-1)*noCtrlPts;
+        sctr_k_e(i:d:end) = d*(sctr-1)+i;
     end
     k_e = zeros(d*n_en);
-    if options.buildMassMatrix
-        m_e = zeros(d*n_en);
+    if buildMassMatrix
+        m_e = zeros(n_en);
     end
-    if options.applyBodyLoading
+    if applyBodyLoading
         f_e = zeros(d*n_en,1);
     end
     
@@ -109,42 +117,47 @@ parfor e = 1:noElems
         xi   = parent2ParametricSpace(Xi_e,  pt(1));
         eta  = parent2ParametricSpace(Eta_e, pt(2));
         
-        [R_fun, dRdxi, dRdeta] = NURBS2DBasis(xi, eta, p, q, Xi, Eta, weights);
+        [R, dRdxi, dRdeta] = NURBS2DBasis(xi, eta, p, q, Xi, Eta, wgts);
         
         J = pts'*[dRdxi' dRdeta'];
         J_1 = det(J);
         dRdX = J'\[dRdxi; dRdeta];
         
-        switch options.operator
+        switch operator
             case 'linearElasticity'
-                B = strainDispMatrix3d(n_en,dRdX);
-                k_e = k_e + B' * C * B * abs(J_1) * J_2 * wt; 
-                if options.buildMassMatrix
-                    m_e = m_e + blkdiag(R_fun'*R_fun, R_fun'*R_fun) * abs(J_1) * J_2 * wt;      
-                end
+                B = strainDispMatrix2d(n_en,dRdX);
+                k_e = k_e + B.' * C * B * abs(J_1) * J_2 * wt; 
             case 'Laplace'
                 k_e = k_e + dRdX'*dRdX* abs(J_1) * J_2 * wt;  
-                if options.buildMassMatrix
-                    m_e = m_e + R_fun'*R_fun * abs(J_1) * J_2 * wt;  
-                end
+        end
+        if buildMassMatrix
+            m_e = m_e + R'*R * abs(J_1) * J_2 * wt;  
         end
         
-        
-        if options.applyBodyLoading
-            v = R_fun*pts;
-            f_gp = varCol.f(v(1),v(2));
-            f_e = f_e + kron(f_gp, R_fun') * abs(J_1) * J_2 * wt;
+        if applyBodyLoading
+            v = R*pts;
+            f_gp = force(v(1),v(2));
+            f_e = f_e + kron(R.', f_gp.') * abs(J_1) * J_2 * wt;
         end
     end
-
     spIdxRow(:,e) = copyVector(sctr_k_e,d*n_en,1);
     spIdxCol(:,e) = copyVector(sctr_k_e,d*n_en,2);
-    Kvalues(:,e) = reshape(k_e, (d*n_en)^2, 1);
-
-    if options.buildMassMatrix
-        Mvalues(:,e) = reshape(m_e, (d*n_en)^2, 1);
+    temp = zeros(d*n_en,d*n_en);
+    for i = 1:d
+        for j = 1:d
+            temp(i:d:end, j:d:end) = k_e(1+(i-1)*n_en:i*n_en, 1+(j-1)*n_en:j*n_en);
+        end
     end
-    if options.applyBodyLoading
+    Kvalues(:,e) = reshape(temp, sizeKe, 1);
+
+    if buildMassMatrix
+        temp = zeros(d*n_en,d*n_en);
+        for i = 1:d
+            temp(i:d:end, i:d:end) = m_e;
+        end
+        Mvalues(:,e) = reshape(temp, sizeKe, 1);
+    end
+    if applyBodyLoading
         F_indices(:,e) = sctr_k_e';
         Fvalues(:,e) = f_e;
     end
@@ -168,3 +181,13 @@ if min(size(K)) < noDofs
         M(noDofs,noDofs) = 0;
     end
 end
+
+k_ee = 0;
+for xi = [-1/sqrt(3),1/sqrt(3)]
+    x = (xi+1)/2;
+    for eta = [-1/sqrt(3),1/sqrt(3)]
+        y = (eta+1)/2;
+        k_ee = k_ee + (x^2+y^2+(x+y)^2/2)*0.25;
+    end
+end
+k_ee

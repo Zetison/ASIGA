@@ -133,7 +133,7 @@ parfor e = 1:noElems
         switch operator
             case 'linearElasticity'
                 B = strainDispMatrix3d(n_en,dRdX);
-                k_e = k_e + B' * C * B * abs(J_1) * J_2 * wt; 
+                k_e = k_e + B.' * C * B * abs(J_1) * J_2 * wt; 
             case 'Laplace'
                 k_e = k_e + dRdX'*dRdX* abs(J_1) * J_2 * wt;  
         end

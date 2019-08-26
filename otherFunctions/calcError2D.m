@@ -29,8 +29,8 @@ H1sError = 0;
 normalizationL2 = 0;
 normalizationH1 = 0;
 normalizationH1s = 0;
-parfor e = 1:noElems
-% for e = 1:noElems
+% parfor e = 1:noElems
+for e = 1:noElems
     idXi = index(e,1);
     idEta = index(e,2);
     
@@ -41,7 +41,7 @@ parfor e = 1:noElems
     
     sctr = element(e,:);
     pts = controlPts(sctr,:);
-    U_sctr = U(sctr);
+    U_sctr = U(sctr,:);
     
     for gp = 1:size(W2D,1)
         pt = Q2D(gp,:);
@@ -57,19 +57,19 @@ parfor e = 1:noElems
         dRdX = J'\[dRdxi; dRdeta];
         
         u_h = R*U_sctr;
-        du_h = dRdX*U_sctr;
+%         du_h = dRdX*U_sctr;
         y = R*pts;
         u = analytic(y(1),y(2));
-        du = danalytic(y(1),y(2));
-        L2Error = L2Error + abs(u-u_h)^2 * abs(J_1) * J_2 * wt;
-        H1error = H1error + (norm(du-du_h)^2 + abs(u-u_h)^2) * abs(J_1) * J_2 * wt;
-        H1sError = H1sError + norm(du-du_h)^2 * abs(J_1) * J_2 * wt;
-        normalizationL2 = normalizationL2 + abs(u)^2 * abs(J_1) * J_2 * wt;
-        normalizationH1 = normalizationH1 + (norm(du)^2 + abs(u)^2) * abs(J_1) * J_2 * wt;
-        normalizationH1s = normalizationH1s + norm(du)^2 * abs(J_1) * J_2 * wt;
+%         du = danalytic(y(1),y(2));
+        L2Error = L2Error + norm(u-u_h)^2 * abs(J_1) * J_2 * wt;
+%         H1error = H1error + (norm(du-du_h)^2 + abs(u-u_h)^2) * abs(J_1) * J_2 * wt;
+%         H1sError = H1sError + norm(du-du_h)^2 * abs(J_1) * J_2 * wt;
+        normalizationL2 = normalizationL2 + norm(u)^2 * abs(J_1) * J_2 * wt;
+%         normalizationH1 = normalizationH1 + (norm(du)^2 + abs(u)^2) * abs(J_1) * J_2 * wt;
+%         normalizationH1s = normalizationH1s + norm(du)^2 * abs(J_1) * J_2 * wt;
     end
 end
 
 L2Error = 100*sqrt(L2Error/normalizationL2);
-H1error = 100*sqrt(H1error/normalizationH1);
-H1sError = 100*sqrt(H1sError/normalizationH1s);
+% H1error = 100*sqrt(H1error/normalizationH1);
+% H1sError = 100*sqrt(H1sError/normalizationH1s);
