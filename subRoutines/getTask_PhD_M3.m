@@ -20,7 +20,7 @@ computeCondNumber = false;
 calculateFarFieldPattern = 1;
 applyLoad = 'planeWave';
 
-loopParameters = {'M','N','formulation','method'};
+loopParameters = {'M','N','formulation','method','f'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
