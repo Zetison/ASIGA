@@ -29,8 +29,8 @@ H1sError = 0;
 normalizationL2 = 0;
 normalizationH1 = 0;
 normalizationH1s = 0;
-% parfor e = 1:noElems
-for e = 1:noElems
+parfor e = 1:noElems
+% for e = 1:noElems
     idXi = index(e,1);
     idEta = index(e,2);
     

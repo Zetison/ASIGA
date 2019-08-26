@@ -85,8 +85,8 @@ end
 % [W2D,Q2D] = gaussianQuadNURBS(60,60); 
 
 %% Build global matrices
-% parfor e = 1:noElems
-for e = 1:noElems
+parfor e = 1:noElems
+% for e = 1:noElems
     idXi = index(e,1);
     idEta = index(e,2);
     
@@ -181,13 +181,13 @@ if min(size(K)) < noDofs
         M(noDofs,noDofs) = 0;
     end
 end
-
-k_ee = 0;
-for xi = [-1/sqrt(3),1/sqrt(3)]
-    x = (xi+1)/2;
-    for eta = [-1/sqrt(3),1/sqrt(3)]
-        y = (eta+1)/2;
-        k_ee = k_ee + (x^2+y^2+(x+y)^2/2)*0.25;
-    end
-end
-k_ee
+% 
+% k_ee = 0;
+% for xi = [-1/sqrt(3),1/sqrt(3)]
+%     x = (xi+1)/2;
+%     for eta = [-1/sqrt(3),1/sqrt(3)]
+%         y = (eta+1)/2;
+%         k_ee = k_ee + (x^2+y^2+(x+y)^2/2)*0.25;
+%     end
+% end
+% k_ee
