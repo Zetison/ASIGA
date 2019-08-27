@@ -9,7 +9,7 @@ f = 1e3;
 
 M = 1:5;
 parm = 1;
-alpha = (0:0.5:180)*pi/180;
+alpha = (0:0.1:180)*pi/180;
 % alpha = (0:10:180)*pi/180;
 
 plot2Dgeometry = 0;
@@ -35,5 +35,5 @@ collectIntoTasks
 M = 1:6;
 method = {'IENSG'};
 N = [1,3,5,7,9];
-formulation = {'BGU'};
+formulation = {'BGU','BGC'};
 collectIntoTasks

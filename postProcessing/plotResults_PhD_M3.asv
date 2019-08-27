@@ -16,11 +16,10 @@ for study_i = 1:numel(studies)
     figure(5)
     printResultsToTextFiles(study,options)
 end
-temp = readtable('../results/M3/M3_BEM_IGA_CBM_M7_f1000_N10_TSVSalpha','FileType','text', 'HeaderLines',11);
+temp = readtable('../results/M3/M3_BEM_IGA_CBM_M7_f1000_N10_TSVSalpha','FileType','text', 'HeaderLines',1);
 x = temp.Var1;
 y = temp.Var2;
 plot(x,y,'DisplayName','BEM')
-legend('off');
 legend('show');
 
 % if 1
