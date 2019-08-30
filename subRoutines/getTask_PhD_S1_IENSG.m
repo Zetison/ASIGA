@@ -35,15 +35,13 @@ loopParameters = {'M','N','degree','formulation','method'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
 method = {'IE'};
-formulation = {'BGU'};
-N = 1:3;
-% collectIntoTasks
+formulation = {'BGC','BGU','PGU','PGC'};
+N = [1,3,6,9];
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
 method = {'IENSG'};
-formulation = {'BGC','BGU','PGU','PGC'};
-N = [1,3,6,9];
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
