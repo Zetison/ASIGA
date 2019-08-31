@@ -10,7 +10,7 @@ for j = 1:numel(names)
     eval([name, ' = parms.(names{j});']);
 end
 
-x_0 = [-R_o/2, 0, (L-R_o)/2]; % The origin of the model
+x_0 = [-(L-R_o)/2,R_o/2,0]; % The origin of the model
 alignWithAxis = 'Xaxis';
 switch varCol.method
     case {'IE','IENSG','MFS'}
@@ -29,6 +29,8 @@ if varCol.boundaryMethod
     c_z = 0.98*(L+R_o)/2;
     c_xy = 0.99*R_o/2; % 2.5, 3.75; 
     Upsilon = sqrt(c_z^2-c_xy^2);
+    varCol.c_z = c_z;
+    varCol.c_xy = c_xy;
 
     chimin = 21.07;
     chimax = 23.1;
@@ -61,3 +63,10 @@ if varCol.boundaryMethod
     varCol.patchTop{1}(2,2) = NaN;
     varCol.patchTop{1}(4,2) = NaN;
 end
+L_gamma = L + R_o;
+
+
+varCol.chimin = chimin;
+varCol.chimax = chimax;
+varCol.L_gamma = L_gamma;
+varCol.Upsilon = Upsilon;
