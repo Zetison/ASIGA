@@ -37,6 +37,8 @@ switch model
             mult = parm;
         end
         L = mult*R_o*pi/2; 
+    case {'Shirron'}
+        setShirronParameters
     case 'TAP'
         setTAPParameters
     case {'Barrel','Barrel_P'}

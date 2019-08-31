@@ -24,6 +24,8 @@ switch model
         error('Clean up this subRoutine')
     case {'MS','MS_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_MockShell(varCol,parms, M, degree);
+    case {'Shirron'}
+        [varCol, fluid, solid, fluid_i] = createNURBSmesh_Shirron(varCol,parms, M, degree);
     case 'TAP'
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_TAP(varCol,parms, M, degree);
     case {'Barrel','Barrel_P'}
@@ -37,7 +39,6 @@ switch model
             [varCol, fluid, solid, fluid_i] = createNURBSmesh_Ellipsoid(varCol, parms, M, degree, model);
         end
 end
-
 
 coreMethod = varCol.coreMethod;
 useSolidDomain = varCol.useSolidDomain;

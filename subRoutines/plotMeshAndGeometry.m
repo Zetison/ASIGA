@@ -41,8 +41,8 @@ if plot3Dgeometry
             if strcmp(coreMethod, 'linear_FEM')
                 resolution = [0,0,0];
             else 
-%                 resolution = [10,10,10];
-                resolution = [200,400,0];
+                resolution = [10,10,10];
+%                 resolution = [200,400,0];
             end
             if strcmp(coreMethod,'SEM')
                 varColPlot.plotAt = [0, 0;

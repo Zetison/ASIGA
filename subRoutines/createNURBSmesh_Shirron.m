@@ -1,4 +1,4 @@
-function [varCol, fluid, solid, fluid_i] = createNURBSmesh_MockShell(varCol,parms, M, degree)
+function [varCol, fluid, solid, fluid_i] = createNURBSmesh_Shirron(varCol,parms, M, degree)
 
 solid = NaN;
 fluid_i = NaN;
@@ -33,7 +33,7 @@ if varCol.boundaryMethod
     Upsilon = sqrt(c_z^2-c_xy^2);
 
     chimin = c_z;
-    chimax = 1.9;
+    chimax = 6.22;
 
     eta1 = R_o*pi/2/(L+R_o*pi);
     eta2 = 1-eta1;
@@ -58,8 +58,8 @@ else
 %     s = 0.25 + 0.05*(L-R_o)/R_o;
 %     c_z = (L+2*R_o)/2 + s*R_o;
 %     c_xy = R_o + s*R_o;
-    c_z = 1.2*(L+2*R_o)/2; % 30
-    c_xy = 1.3*R_o; % 2.5, 3.75
+    c_z = 1.1722*(L+2*R_o)/2; % 30
+    c_xy = 2.1212*R_o; % 2.5, 3.75
 
     Upsilon = sqrt(c_z^2-c_xy^2);
     varCol.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
@@ -67,7 +67,7 @@ else
 %     eta1Arr = [0.35, 0.3, 0.26, 0.25, 0.23, 0.22, 0.22, 0.21, 0.20, 0.19];
 %     eta1 = eta1Arr(mult);
 %     eta2 = 1-eta1;
-    eta1 = 0.37;
+    eta1 = 0.21;
     eta2 = 1-eta1;
 
     chimin = c_z;
@@ -78,7 +78,7 @@ else
     solid = insertKnotsInNURBS(solid,{[] linspace2(solid.knots{2}(4), solid.knots{2}(6), mult-1) []});
 
 %         noNewZetaKnots = max(2^(M-1)/2-1,0);
-    noNewZetaKnots = max(2^(M-1)/4-1,0);
+    noNewZetaKnots = max(2^(M-1)/2-1,0);
     if mult < 5
         nn = 2^(M-1)-1;
     else

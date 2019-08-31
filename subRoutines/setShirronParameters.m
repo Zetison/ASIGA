@@ -10,5 +10,4 @@ R_o = 1;
 t = 0.008; % BeTSSi thickness
 % L = 4*R_o; % Shirron example 1
 L = 10*R_o; % Shirron example 2
-
-% mult = 1;
+mult = round(L/(R_o*pi/2));
