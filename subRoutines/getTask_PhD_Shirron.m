@@ -33,12 +33,13 @@ M = 4:5;
 method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
-% N = 3;
+N = 3;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
-% M = 1:6;
+% N = [3,5,7];
+N = 3;
 method = {'IENSG'};
 % N = [1,3,5,7,9];
 collectIntoTasks
