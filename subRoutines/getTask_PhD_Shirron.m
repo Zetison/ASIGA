@@ -38,17 +38,18 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
-% N = [3,5,7];
-N = 3;
+M = 4:6;
+% N = 3;
 method = {'IENSG'};
-% N = [1,3,5,7,9];
+N = [3,5,7];
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 method = {'BEM'};
 % M = 2;
+M = 5;
 N = NaN;
-formulation = {'CBM','GBM'};
+formulation = {'GBM'};
 solveForPtot = true;
 collectIntoTasks
