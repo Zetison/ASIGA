@@ -1,58 +1,42 @@
-function generate_g2_file(solid,outputFileName)
-
-n = solid.number(1);
-m = solid.number(2);
-l = solid.number(3);
-
-p = solid.degree(1);
-q = solid.degree(2);
-r = solid.degree(3);
-
-Xi = solid.knots{1};
-Eta = solid.knots{2};
-Zeta = solid.knots{3};
-
-controlPts = solid.coeffs;      
-
-for i = 1:n
-    for j = 1:m
-        for k = 1:l
-            controlPts(1:3,i,j,k) = controlPts(1:3,i,j,k)*controlPts(4,i,j,k);
-        end
-    end
+function generate_g2_file(nurbs,outputFileName)
+patch = 1;
+parmDim = numel(nurbs{patch}.knots);
+controlPts = nurbs{patch}.coeffs;  
+d = size(controlPts,1)-1;
+switch parmDim
+    case 1
+        classType = 100;
+    case 2
+        classType = 200;
+    case 3
+        classType = 700;
 end
+    	
 
 fid = fopen(outputFileName,'wt+','b');
-fprintf(fid,'700 1 0 0\n');
-fprintf(fid,'3 1\n');
-
-fprintf(fid,'%d %d\n',n,p+1);
-for i = 1:length(Xi)
-    fprintf(fid, '%g ',Xi(i));
-end
-fprintf(fid, '\n');
-
-fprintf(fid,'%d %d\n',m,q+1);
-for j = 1:length(Eta)
-    fprintf(fid, '%g ',Eta(j));
-end
-fprintf(fid, '\n');
-
-fprintf(fid,'%d %d\n',l,r+1);
-for k = 1:length(Zeta)
-    fprintf(fid, '%g ',Zeta(k));
-end
-fprintf(fid, '\n');
+fprintf(fid,'%d 1 0 0\n',classType);
+fprintf(fid,'%d 1\n', d);    % latter number: 1=rational, 0=non-rational
 
 
 
-for k = 1:l
-    for j = 1:m
-        for i = 1:n
-            fprintf(fid, '%.15g %.15g %.15g %.15g\n', controlPts(:,i,j,k));
-        end
+for i = 1:parmDim
+    n = nurbs{patch}.number(i);
+    p = nurbs{patch}.degree(i);
+    Xi = nurbs{patch}.knots{i};
+    fprintf(fid,'%d %d\n',n,p+1);
+    for j = 1:length(Xi)
+        fprintf(fid, '%g ',Xi(j));
     end
+    fprintf(fid, '\n');
 end
-      
+ 
+for i = 1:d
+    controlPts(i,:,:,:) = controlPts(i,:,:,:).*controlPts(end,:,:,:);
+end
+controlPts = reshape(controlPts,d+1,[]);
 
+for i = 1:size(controlPts,2)
+    fprintf(fid, [repmat('%20.15g',1,size(controlPts,1)) '\n'], controlPts(:,i));
+end
 fclose(fid);
+
