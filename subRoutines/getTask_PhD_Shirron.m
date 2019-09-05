@@ -13,8 +13,8 @@ f = omega/(2*pi);
 parm = [];
 alpha = (0:0.1:180)*pi/180;
 % alpha = (0:10:180)*pi/180;
-alpha_s = [180,90]*pi/180;
-% alpha_s = 180*pi/180;
+alpha_s = [180,0]*pi/180;
+alpha_s = 0;
 beta_s = 0;
 
 plot2Dgeometry = 0;
@@ -29,7 +29,7 @@ loopParameters = {'M','N','formulation','method','f','alpha_s'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
-M = 4:5;
+M = 5;
 method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
@@ -38,10 +38,10 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
-M = 4:6;
+M = 5;
 % N = 3;
 method = {'IENSG'};
-N = [3,5,7];
+N = 3;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -52,4 +52,4 @@ M = 5;
 N = NaN;
 formulation = {'GBM'};
 solveForPtot = true;
-collectIntoTasks
+% collectIntoTasks
