@@ -1,7 +1,7 @@
 scatteringCase = 'BI';  % Bistatic scattering
 model = 'SS';           % Spherical shell
-method = 'IE';          % Method for handling the unbounded domain problem
-BC = 'SHBC';            % Boundary condition
+method = 'IE';          % Method for handling
+BC = 'SHBC';            
 
 plot2Dgeometry              = false;    % Plot cross section of mesh and geometry
 plot3Dgeometry              = false;    % Plot visualization of mesh and geometry in 3D
@@ -34,15 +34,21 @@ initMeshFactZeta = 1;       % initial number of knots in zeta direction
 colBEM_C0 = 0;              % In collocation BEM: the scaling factor moving collocation points away from C0-lines
 quadMethodBEM = 'Adaptive2';% In BEM: Quadrature method for handling weakly singular integrals
 colMethod = 'Grev';         % In collocation BEM: Location of collocation points
+
 applyLoad = 'planeWave';    % Acoustic scattering of plane wave
-coreMethod = 'IGA';         % Solution space
-N_max = inf;                % number of terms in analytic solution for scattering on spherical shell
+
+coreMethod = 'IGA';         
 
 alpha_s = NaN;          	% Aspect angle of incident wave
 beta_s = NaN;               % Elevation angle of incident wave
+
 alpha = (0:0.5:360)*pi/180; % Aspect angles of observation points
 beta = 0;                   % Elevation angle of observation points
+
 r = 1;                      % radii for near-field evaluation. Assume by default plotFarField = true
+
+N_max = inf;                % number of terms in analytic solution for scattering on spherical shell
+
 
 loopParameters = {'M'};     % parameter study arr to be investigated
 
