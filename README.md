@@ -131,7 +131,7 @@ applyLoad = 'planeWave';    % Acoustic scattering of plane wave
 coreMethod = 'IGA';         % Solution space
 N_max = inf;                % number of terms in analytic solution for scattering on spherical shell
 
-alpha_s = NaN;          	% Aspect angle of incident wave
+alpha_s = NaN;              % Aspect angle of incident wave
 beta_s = NaN;               % Elevation angle of incident wave
 alpha = (0:0.5:360)*pi/180; % Aspect angles of observation points
 beta = 0;                   % Elevation angle of observation points
