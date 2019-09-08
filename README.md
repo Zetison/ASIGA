@@ -1,13 +1,13 @@
 # ASIGA
 The ASIGA (Acoustic Scattering using IsoGeometric Analysis) toolbox provides a framework for simulating acoustic scattering problems using IGA. 
 
-## installation
+## Installation
 Get the tollbox from GitHub:
 ```
 git clone "https://github.com/Zetison/ASIGA" 
 ```
 
-## run program
+## Run program
 The following will run the input script <scriptName>.m
 ```
 matlab -nodisplay -nodesktop -nosplash -r "cd ASIGA, studyName = '<scriptName>'; main; quit"
@@ -18,7 +18,7 @@ Alternatively, from the MATLAB GUI a file availableStudies.m must be created in 
 studyName = '<scriptName>';
 ```
 
-## models
+## Models
 The following models are available
 - Sphere or spherical shells (i.e. model = 'S1')
 - BeTSSi model 1 (model = 'M1')
@@ -28,7 +28,7 @@ The following models are available
 - BeTSSi model 5A (model = 'M5A')
 - BeTSSi model 5B (model = 'M5B')
 - Barrel pressure hull (model = 'PH')
-- stripped BeTSSi submarine (model = 'BC')
+- Stripped BeTSSi submarine (model = 'BC')
 - BeTSSi submarine (model = 'BCA')
 - Mock shell (model = 'MS', model = 'Shirron', model = 'TAP')
 - Barrel (model = 'Barrel')
@@ -37,12 +37,12 @@ The following models are available
 
 ## Overview of available methods
 The main emphesis is acoustic scattering using plane wave (applyLoad = 'planeWave') in which the following cases are implemented
-- bistatic scattering (scatteringCase = 'BI')
-- monostatic scattering (scatteringCase = 'MS')
-- frequency sweep (scatteringCase = 'Sweep')
+- Bistatic scattering (scatteringCase = 'BI')
+- Monostatic scattering (scatteringCase = 'MS')
+- Frequency sweep (scatteringCase = 'Sweep')
 
 
-The following methods has been implemented (with availabel formulations)
+The following methods has been implemented (with available formulations)
 - IGA using the infinite element method (method = 'IE')
 	- The Bubnov--Galerkin Conjugated formulation (formulation = 'BGC')
 	- The Petrov--Galerkin Conjugated formulation (formulation = 'PGC')
@@ -90,12 +90,12 @@ where the latter option is used for simulating manufactored solutions
 ## Additional parameters
 In the getDefaultTaskValus.m file the addional parameters are described and set to some default values:
 
+```Matlab
 scatteringCase = 'BI';  % Bistatic scattering
 model = 'SS';           % Spherical shell
 method = 'IE';          % Method for handling the unbounded domain problem
 BC = 'SHBC';            % Boundary condition
 
-```Matlab
 plot2Dgeometry              = false;    % Plot cross section of mesh and geometry
 plot3Dgeometry              = false;    % Plot visualization of mesh and geometry in 3D
 calculateSurfaceError       = false;	% Only if scatteringCase == 'Bi'
