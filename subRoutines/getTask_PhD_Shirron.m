@@ -18,7 +18,7 @@ alpha_s = 0;
 beta_s = 0;
 
 plot2Dgeometry = 0;
-plot3Dgeometry = 0;
+plot3Dgeometry = 1;
 degree = 3;
 calculateSurfaceError = 0;
 computeCondNumber = false;
@@ -34,7 +34,7 @@ method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
 N = 3;
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
@@ -42,14 +42,14 @@ M = 5;
 % N = 3;
 method = {'IENSG'};
 N = 3;
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 method = {'BEM'};
-% M = 2;
-M = 5;
+M = 1;
+% M = 5;
 N = NaN;
 formulation = {'GBM'};
 solveForPtot = true;
-% collectIntoTasks
+collectIntoTasks

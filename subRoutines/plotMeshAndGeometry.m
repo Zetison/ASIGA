@@ -95,29 +95,31 @@ if plot3Dgeometry
 %     view(62,43)
 %     view(46,32) % BeTSSi M4
 %     view(106,26) % sphere and cube
-%     view(0,90) % above
+    view(0,90) % above
     camproj('perspective')
 %     camproj('orthographic')
     
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
-    camlight
+%     camlight
 %     keyboard 
 %     plotControlPts(fluid,'red','red','red','black')
     figureFullScreen(gcf)
-% 	export_fig(['../../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r300')
-% 	export_fig(['../../graphics/S1/S13D_' coreMethod], '-png', '-transparent', '-r300')
-% 	export_fig('../../graphics/TorusControlPts', '-png', '-transparent', '-r300')
-% 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
-% 	export_fig(['../../graphics/sphericalShell/S1patched'], '-png', '-transparent', '-r300')
-% 	export_fig('C:\Users\jonvegar\Desktop\trond\mesh3D', '-png', '-transparent', '-r300')
-% 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r300')
-% 	export_fig('../../graphics/M3/M3_above', '-png', '-transparent', '-r300')
-% 	export_fig(['../../graphics/Cube_mesh' num2str(M)], '-png', '-transparent', '-r300')
-% 	export_fig('../../graphics/M4', '-png', '-transparent', '-r300')
-% 	export_fig('../../graphics/M2', '-png', '-transparent', '-r300')
-% 	export_fig('../../graphics/M4_above', '-png', '-transparent', '-r300')
-% 	export_fig('../../graphics/wineGlassFine', '-png', '-transparent', '-r300')
+% 	export_fig(['../../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r200')
+% 	export_fig(['../../graphics/S1/S13D_' coreMethod], '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/TorusControlPts', '-png', '-transparent', '-r200')
+% 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r200')
+% 	export_fig(['../../graphics/sphericalShell/S1patched'], '-png', '-transparent', '-r200')
+% 	export_fig('C:\Users\jonvegar\Desktop\trond\mesh3D', '-png', '-transparent', '-r200')
+% 	export_fig(['../../graphics/BCA/mesh' num2str(M)], '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/M3/M3_above', '-png', '-transparent', '-r200')
+% 	export_fig(['../../graphics/Cube_mesh' num2str(M)], '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/M4', '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/M2', '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/M4_above', '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/wineGlassFine', '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/Shirron_above', '-png', '-transparent', '-r200')
+% 	export_fig('../../graphics/M1_above', '-png', '-transparent', '-r200')
            
 
 %     export_fig('../../graphics/sphericalShell/Sphere1controlPolygon' , '-png', '-transparent')
