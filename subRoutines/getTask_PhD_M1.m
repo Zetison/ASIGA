@@ -6,6 +6,7 @@ coreMethod = 'IGA';
 
 
 f = [1e2,1e3];
+f = 1e3;
 
 parm = [];
 alpha = (0:0.1:360)*pi/180;
@@ -24,12 +25,12 @@ loopParameters = {'M','N','formulation','method','f'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
 M = 4:6;
-% M = 2;
+M = 6;
 method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
 method = {'IENSG'};
-% N = [1,3,5,7,9];
+N = 5;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -40,4 +41,4 @@ N = NaN;
 formulation = {'GBM'};
 % formulation = {'CCBIE'};
 solveForPtot = true;
-collectIntoTasks
+% collectIntoTasks
