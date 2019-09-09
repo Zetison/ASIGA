@@ -12,7 +12,7 @@ parm = [];
 alpha = (0:0.1:360)*pi/180;
 
 plot2Dgeometry = 0;
-plot3Dgeometry = 1;
+plot3Dgeometry = 0;
 degree = 2;
 calculateSurfaceError = 0;
 computeCondNumber = false;
@@ -30,8 +30,8 @@ method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
 method = {'IENSG'};
-N = 5;
-% collectIntoTasks
+N = [3,5];
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
@@ -41,4 +41,4 @@ N = NaN;
 formulation = {'GBM'};
 % formulation = {'CCBIE'};
 solveForPtot = true;
-collectIntoTasks
+% collectIntoTasks
