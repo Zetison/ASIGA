@@ -25,12 +25,13 @@ loopParameters = {'M','N','formulation','method','f'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
 M = 4:6;
-M = 6;
+M = 4;
 method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
 method = {'IENSG'};
 N = [3,5];
+N = 5;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
