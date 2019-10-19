@@ -1,4 +1,4 @@
-function maxU = createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options)
+function maxU = createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options, rho)
 
 maxU = NaN;
 
@@ -22,7 +22,11 @@ pIndex = varCol.pIndex;
 noDofs = varCol.noDofs;
 patches = varCol.patches;
 d = varCol.dimension;
-omega = varCol.omega;
+if isfield('varCol','omega')
+    omega = varCol.omega;
+else
+    omega = NaN;
+end
 isOuterDomain = varCol.isOuterDomain;
 if isOuterDomain
     model = varCol.model;
@@ -164,6 +168,7 @@ switch type
             pts = controlPts(sctr,:);
             wgts = weights(element2(e,:),:); % New
             Usctr = U(sctr,:);
+            rhosctr = rho(sctr);
             
             noXiKnots = 2+extraXiPts;
             noEtaKnots = 2+extraEtaPts;
@@ -222,6 +227,7 @@ switch type
             container{e}.noNodes = noNodes;
             container{e}.noVisElems = noVisElems;
             container{e}.displacement = R*Usctr;
+            container{e}.density = R*rhosctr;
             container{e}.visElements = visElements_e;
             
             indices = abs(J_1) < 100*Eps;
@@ -262,6 +268,7 @@ switch type
         end
         visElements = zeros(noVisElems,8);
         displacement = zeros(noNodes,3);
+        density = zeros(noNodes,1);
         strain = zeros(noNodes,6);
         nodes = zeros(noNodes,3);
         nodesCount = 0;
@@ -270,6 +277,7 @@ switch type
             visElements(count_vis+1:count_vis+container{e}.noVisElems,:) = nodesCount + container{e}.visElements;
             nodes(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.nodes;
             displacement(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.displacement;
+            density(nodesCount+1:nodesCount+container{e}.noNodes) = container{e}.density;
             strain(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.strain;
             nodesCount = nodesCount + container{e}.noNodes;
             count_vis = count_vis + container{e}.noVisElems;
@@ -279,8 +287,8 @@ data.nodes = nodes;
 data.visElements = visElements;
 data.omega = omega;
 
-tic
-fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
+% tic
+% fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
 if isOuterDomain
     data.P_inc = real(makeDynamic(p_inc(nodes), options, omega)); 
     if strcmp(varCol.method,'BEM')
@@ -407,13 +415,14 @@ else
     end
     data.stress = real(makeDynamic(strain, options, omega));
     data.displacement = real(makeDynamic(displacement, options, omega));
+    data.density = real(makeDynamic(density, options, omega));
 end
-fprintf('using %12f seconds.', toc)
+% fprintf('using %12f seconds.', toc)
 % data.displacement = real(makeDynamic(displacement, options, omega));
 % keyboard
-tic
-fprintf(['\n%-' num2str(stringShift) 's'], '    Creating VTK-file ... ')
+% tic
+% fprintf(['\n%-' num2str(stringShift) 's'], '    Creating VTK-file ... ')
 % keyboard
 
 makeVTKfile(data, options);
-fprintf('using %12f seconds.', toc)
+% fprintf('using %12f seconds.', toc)

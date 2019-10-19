@@ -51,8 +51,11 @@ if plot3Dgeometry
 %                     colorFun = @(x) log10(abs(norm2(x)));
                 plotLagrange(fluid{i},[1000 1000 1000], 1, 1.5*[44 77 32]/255, 0.8, NaN, varColPlot);
             else
-                plotAt = [0, 0;
-                         0, 0;
+%                 plotAt = [0, 0;
+%                          0, 0;
+%                          1, 1];
+                plotAt = [1, 1;
+                         1, 1;
                          1, 1];
                 colorFun = @(x) log10(abs(norm(x)-2)/2);
                 if false
@@ -95,7 +98,7 @@ if plot3Dgeometry
 %     view(62,43)
 %     view(46,32) % BeTSSi M4
 %     view(106,26) % sphere and cube
-    view(0,90) % above
+%     view(0,90) % above
     camproj('perspective')
 %     camproj('orthographic')
     

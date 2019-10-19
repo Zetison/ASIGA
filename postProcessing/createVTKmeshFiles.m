@@ -17,7 +17,11 @@ noDofs = varCol.noDofs;
 patches = varCol.patches;
 type = patches{1}.nurbs.type;
 d = varCol.dimension;
-omega = varCol.omega;
+if isfield('varCol','omega')
+    omega = varCol.omega;
+else
+    omega = NaN;
+end
 isOuterDomain = varCol.isOuterDomain;
 if isOuterDomain
     model = varCol.model;

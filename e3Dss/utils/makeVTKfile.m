@@ -5,6 +5,7 @@ options = struct('name','untitled',...
                  'noSteps',30,...
                  'plotDisplacementVectors',0,...
                  'plotScalarField',0,...
+                 'plotDensity',0,...
                  'plotFarField',0,...
                  'plotFarFieldError',0,...
                  'plotPolarRadialDisplacement',0,...
@@ -96,6 +97,11 @@ if length(omega) > 1
     %% Scalar field
     if options.plotScalarField && timeStepMult > 1
         data.scalarField = interp1_new(t_arr, data.scalarField, tq_arr);
+    end
+
+    %% Density
+    if options.plotDensity && timeStepMult > 1
+        data.density = interp1_new(t_arr, data.density, tq_arr);
     end
 
     %% Far field
@@ -310,6 +316,11 @@ parfor i = 1:Nq
     %% Scalar field
     if options.plotScalarField
         printField(data.scalarField(:,:,i), 'Scalar field', fid)
+    end
+
+    %% Density field
+    if options.plotDensity
+        printField(data.density(:,:,i), 'Density', fid)
     end
 
     %% Far field

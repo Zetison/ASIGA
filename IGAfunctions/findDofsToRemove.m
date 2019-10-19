@@ -71,6 +71,7 @@ noChildrenNodes = sum(repeatedNode);
 % end
 % childrenNodes = zeros(size(nI));
 childrenNodes = zeros(1,noChildrenNodes);
+nodesMap = 1:noCtrlPts;
 element2 = element;
 counter = 1;
 for i = 1:length(gluedNodes)
@@ -79,6 +80,7 @@ for i = 1:length(gluedNodes)
         childrenIdx = gluedNodes{i}(j);
         indices = (element == childrenIdx);
         element(indices) = parentIdx;
+        nodesMap(nodesMap == childrenIdx) = parentIdx;
         childrenNodes(counter) = childrenIdx;        
         counter = counter + 1;
     end
@@ -91,6 +93,7 @@ end
 
 dofsToRemove = sort(unique(dofsToRemove));
 
+varCol.childrenNodes = unique(childrenNodes);
 varCol.noElemsPatch = noElemsPatch;
 varCol.noCtrlPtsPatch = noCtrlPtsPatch;
 varCol.noDofs = d*sum(noCtrlPtsPatch);
@@ -98,6 +101,7 @@ varCol.controlPts = controlPts;
 varCol.weights = weights;
 varCol.elRange = elRange;
 varCol.index = index;
+varCol.nodesMap = nodesMap;
 varCol.element = element;
 varCol.element2 = element2;
 varCol.dofsToRemove = dofsToRemove;
