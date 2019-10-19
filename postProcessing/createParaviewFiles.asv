@@ -152,16 +152,15 @@ switch type
         noEtaKnots = 2+extraEtaPts;
         noZetaKnots = 2+extraZetaPts;
         noNodes = noXiKnots*noEtaKnots*noZetaKnots;   
-        noVisElems  = (noXiKnots-1)*(noEtaKnots-1)*(noZetaKnots-1);
         container = cell(1,noElems);
         for e = 1:noElems
-            container{e}.nodes = zeros(noNodes,3);
+            container{e}.nodes = R*pts;
             container{e}.noNodes = noNodes;
             container{e}.noVisElems = noVisElems;
-            container{e}.displacement = zeros(noNodes,3);
-            container{e}.density = zeros(noNodes,1);
-            container{e}.visElements = zeros(noVisElems,8);
-            container{e}.strain = zeros(noNodes,6);
+            container{e}.displacement = R*Usctr;
+            container{e}.density = R*rhosctr;
+            container{e}.visElements = visElements_e;
+            container{e}.strain = calculateStrainVectorVec(dudx, dudy, dudz);
         end
 %         for e = 1:noElems
         parfor e = 1:noElems
@@ -184,6 +183,7 @@ switch type
             Usctr = U(sctr,:);
             rhosctr = rho(sctr);
             
+            noVisElems  = (noXiKnots-1)*(noEtaKnots-1)*(noZetaKnots-1);
             visElements_e = zeros(noVisElems,8);
             eVis = 1;
             for k = 1:noZetaKnots-1
@@ -233,6 +233,8 @@ switch type
             dRdz = repmat(Jinv3(:,1),1,n_en).*dRdxi + repmat(Jinv3(:,2),1,n_en).*dRdeta + repmat(Jinv3(:,3),1,n_en).*dRdzeta;
             
             container{e}.nodes = R*pts;
+            container{e}.noNodes = noNodes;
+            container{e}.noVisElems = noVisElems;
             container{e}.displacement = R*Usctr;
             container{e}.density = R*rhosctr;
             container{e}.visElements = visElements_e;
