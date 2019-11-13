@@ -13,5 +13,19 @@ switch type
             for i = 1:n_en
                 A(idx(i,e),:) = A(idx(i,e),:) + values(i,:,e);
             end
+        end  
+    case 3
+        A = zeros(n_en, noDofs);
+        for e = 1:noElems
+            for j = 1:3*n_en
+                A(:,idx(j,e)) = A(:,idx(j,e)) + values(:,j,e);
+            end
+        end
+    case 4
+        A = zeros(noDofs,noDofs*3);
+        for e = 1:noElems
+            for i = 1:n_en
+                A(idx(i,e),:) = A(idx(i,e),:) + values(i,:,e);
+            end
         end        
 end

@@ -1,15 +1,23 @@
+function [varCol, fluid, solid, fluid_i] = createNURBSmesh_Model5(varCol, parms, M, degree)
 
-x_0 = [0, 0, 0]; % The origin of the model
-switch method
-    case {'IE','IENSG'}
-        % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
-        % the z-axis to the y-axis
-        A_2 = [1 0 0;
-              0 1 0;
-              0 0 1];
-        varCol.x_0 = x_0;
-        varCol.A_2 = A_2;
+solid = NaN;
+fluid_i = NaN;
+
+names = fieldnames(parms);
+for j = 1:numel(names)
+    name = names{j};
+    eval([name, ' = parms.(names{j});']);
 end
+
+x_0 = [0, 0, 0];
+switch varCol.method
+    case {'IE','IENSG','ABC'}
+        varCol.x_0 = x_0; % The origin of the model
+        varCol.A_2 = [1 0 0;
+                      0 1 0;
+                      0 0 1];
+end
+
 
 if varCol.boundaryMethod
     principalLengthXiDir = R_o;
@@ -25,12 +33,13 @@ if varCol.boundaryMethod
             fluid = getModel5Data(R_o, eta1, eta2, L, l, 'Zaxis');
     end
 
-    fluid = elevateNURBSdegree(fluid,[1 1]*degreeElev);
-    if M ~= 0
-        fluid = insertKnotsInNURBS(fluid,{insertUniform2(fluid.knots{1}, 1) [linspace2(eta1/2,eta2/2,round(L/R_o)) linspace2((eta1+1)/2,(eta2+1)/2,round(L/R_o))]});
-    end
-    noNewXiKnots = 2^M-1; % 8*i_mesh
+    fluid = elevateDegreeInPatches(fluid,[1 1]*(degree-2));
+    newKnots = {[] linspace2(eta1,eta2,round(L/R_o))};
+    fluid{1} = insertKnotsInNURBS(fluid{1},newKnots);
+    fluid{2} = insertKnotsInNURBS(fluid{2},newKnots);
+    
+    noNewXiKnots = 2^(M-1)-1; % 8*i_mesh
     noNewEtaKnots = noNewXiKnots;
-    fluid = insertKnotsInNURBS(fluid,{insertUniform2(fluid.knots{1}, noNewXiKnots) ...
-                                      insertUniform2(fluid.knots{2}, noNewEtaKnots)});
+    fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots);
+    varCol.patchTop = getPatchTopology(fluid);
 end

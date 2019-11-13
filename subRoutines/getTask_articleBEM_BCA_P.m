@@ -20,30 +20,31 @@ applyLoad = 'radialPulsation';
 method = {'BEM'};
 formulation = {'CCBIE'};
 M = [1,2];
-% M = 2;
+% M = 1;
 extraGPBEM = 50; % extra quadrature points around singularities for BEM formulations
 storeSolution = 0;
 storeFullVarCol = 0;
 degree = [2,5];
-% degree = 5;
+% degree = 2;
 agpBEM = 0.6;
 % degree = 2;
 solveForPtot = false;
 loopParameters = {'method','degree','formulation','M','f'};
 % quadMethodBEM = 'Adaptive2';
-collectIntoTasks
+% collectIntoTasks
 
 formulation = {'CBM','CCBIE'};
 % formulation = {'CCBIEC'};
-degree = 5;
-M = 2;
-% degree = 2;
-% M = 1;
+% degree = 5;
+% M = 2;
+degree = 2;
+M = 1;
 f = 1e3; 
-collectIntoTasks
+% collectIntoTasks
 
 method = {'BA'};
 formulation = {'SL2E'};
+f = 1e2;             % Frequency
 collectIntoTasks
 
 

@@ -156,13 +156,13 @@ switch varCol.formulation
         
         %% Preallocation and initiallizations
         n_en = (p_xi+1)*(p_eta+1)*(p_zeta+1);
-        v_values = zeros(n_en,noElems,3); 
 
         [W3D,Q3D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP,p_zeta+1+extraGP); 
         Qxi = Q3D(:,1);
         Qeta = Q3D(:,2);
         Qzeta = Q3D(:,3);
 
+        v_values = zeros(size(W3D,1),noElems,3); 
         %% Find nodes at which to evaluate the exact solution
 %         for e = 1:noElems
         parfor e = 1:noElems

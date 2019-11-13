@@ -4,7 +4,7 @@ n_xi = length(Xi) - (p_xi+1);
 n_eta = length(Eta) - (p_eta+1);
 
 i1 = findKnotSpan(n_xi, p_xi, xi(1), Xi);
-i2 = findKnotSpan(n_eta, p_eta, eta(2), Eta);
+i2 = findKnotSpan(n_eta, p_eta, eta(1), Eta);
 
 [N, dNdxi] = Bspline_basisDers2(i1, xi, p_xi, Xi);
 [M, dMdeta] = Bspline_basisDers2(i2, eta, p_eta, Eta);

@@ -17,13 +17,14 @@ for i = 1:noPatches
     noCtrlPtsPatch(i) = nPts;
 end
 
+d = size(nurbs{1}.coeffs,1)-1;
 
 noCtrlPts = sum(noCtrlPtsPatch);
-controlPts = zeros(noCtrlPts,3);
+controlPts = zeros(noCtrlPts,d);
 jC = 1;
 for i = 1:noPatches
     nPts = prod(nurbs{i}.number);
-    controlPts(jC:jC+noCtrlPtsPatch(i)-1,:) = reshape(nurbs{i}.coeffs(1:3,:,:),3,nPts).';
+    controlPts(jC:jC+noCtrlPtsPatch(i)-1,:) = reshape(nurbs{i}.coeffs(1:d,:,:),d,nPts).';
     jC = jC + noCtrlPtsPatch(i);
 end
 [~, gluedNodes] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)), 'OutputAllIndices', true);
@@ -40,7 +41,7 @@ end
 counter = 1;
 for i = 1:numel(nurbs)
     nPts = prod(nurbs{i}.number);
-    nurbs{i}.coeffs(1:3,:,:) = reshape(controlPts(counter:counter+nPts-1,:).',3,nurbs{i}.number(1),nurbs{i}.number(2));
+    nurbs{i}.coeffs(1:d,:,:,:) = reshape(controlPts(counter:counter+nPts-1,:).',[d,nurbs{i}.number]);
     counter = counter + nPts;
 end
     

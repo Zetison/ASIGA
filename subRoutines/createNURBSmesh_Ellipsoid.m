@@ -43,12 +43,10 @@ if varCol.boundaryMethod
         chimax = 1.00000001*c_z;
     end
 
-    t = c_z/10;
-
     f_arc = @(s) sqrt(c_xy^2*sin(s).^2+c_z^2*cos(s).^2);
     noNewXiKnots = initMeshFactXi*2^(M-1)-1;
     noNewEtaKnots = round(integral(f_arc,0,pi/2)/(c_xy*pi/2)*(initMeshFactXi*2^(M-1)-1));
-    noNewZetaKnots = initMeshFactZeta*2^(M-1);
+    noNewZetaKnots = max(initMeshFactZeta*2^(M-1)/8-1,0);
     if varCol.parm(1) == 1
         solid = getEllipsoidalShellData(c_xy,c_xy,c_z,t,alignWithAxis);
         solid = elevateDegreeInPatches(solid,[0 0 1]);
@@ -65,8 +63,12 @@ if varCol.boundaryMethod
     solid = insertKnotsInPatches(solid,noNewXiKnots,noNewEtaKnots,noNewZetaKnots);
     L_gamma = 2*c_z;
 
-    fluid = extractOuterSurface(solid);
+    fluid = extractSurface(solid, 'zeta', 'outer');
     varCol.patchTop = getPatchTopology(fluid);
+    if varCol.useInnerFluidDomain
+        fluid_i = extractSurface(solid, 'zeta', 'inner');
+        varCol.patchTop = getPatchTopology(fluid_i);
+    end
 else
     switch model
         case 'EL'

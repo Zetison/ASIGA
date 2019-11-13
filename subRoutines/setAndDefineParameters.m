@@ -103,9 +103,6 @@ switch method
         end
 end
 
-if boundaryMethod && useSolidDomain
-    error('Not yet implemented!')
-end
 varCol.boundaryMethod = boundaryMethod;
 
 switch scatteringCase

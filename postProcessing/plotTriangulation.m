@@ -1,12 +1,10 @@
-function plotTriangulation(varCol,U,delta,xb,yb,zb,options,nameAppendix)
+function plotTriangulation(varCol,U,delta,xb,yb,zb,options,nameAppendix,cutPlanes,min_d_Xon,extraPts)
 Lx = xb(2)-xb(1);
 x = linspace(xb(1),xb(2), ceil(Lx/delta)+1);
 Ly = yb(2)-yb(1);
 y = linspace(yb(1),yb(2), ceil(Ly/delta)+1);
 Lz = zb(2)-zb(1);
 z = linspace(zb(1),zb(2), ceil(Lz/delta)+1);
-min_d_Xon = 1; % minimal distance from scatterer to points in X_exterior
-extraPts = 5; % extra knots in mesh for plotting on scatterer
 
 [x,y,z] = ndgrid(x,y,z);
 x = x(:);
@@ -139,14 +137,15 @@ parfor i = 1:size(X_exterior,1)
 end
 X_exterior(I1,:) = []; 
 
+
 Eps = 1e5*eps;
 createMeshForCutPlanes = true;
 if createMeshForCutPlanes
-    I2 = all([(abs(X_exterior(:,2)) > delta+Eps), ...      % xz-plane
-         	  (abs(X_exterior(:,3)) > delta+Eps), ...      % xy-plane
-              (abs(X_exterior(:,1)+5) > delta+Eps), ...    % x = -5
-          	  (abs(X_exterior(:,1)+18) > delta+Eps), ...   % x = -18
-              (abs(X_exterior(:,1)+53) > delta+Eps)], 2);         % x = -53
+    indices = zeros(size(X_exterior,1),size(cutPlanes,1));
+    for i = 1:size(cutPlanes,1)
+        indices(:,i) = abs(X_exterior(:,cutPlanes(i,1)) - cutPlanes(i,2)) > delta+Eps;
+    end
+    I2 = all(indices, 2);
     X_exterior(I2,:) = []; 
 end
 I3 = zeros(size(X_exterior,1),1,'logical');

@@ -398,12 +398,11 @@ else
                 dofsToRemove = varCol.dofsToRemove;  
                 switch formulation(1)
                     case 'G' % Galerkin
-                        [A, FF, varCol] = buildBEMmatrix_galerkinVec(varCol);  
-                        A(dofsToRemove,:) = [];
-                        FF(dofsToRemove,:) = [];
+                        [A_fluid_o, FF_fluid_o, varCol, C_mat] = buildBEMmatrix_galerkinVec(varCol,useSolidDomain);  
                     case 'C' % Collocation
-                        [A, FF, varCol] = buildBEMmatrixVec(varCol);  
-                end 
+                        [A_fluid_o, FF_fluid_o, varCol] = buildBEMmatrixVec(varCol);  
+                end
+                noDofs_tot = varCol.noDofs;
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
@@ -411,19 +410,133 @@ else
                     tic
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
                     [A_CHIEF, FF_CHIEF, varCol] = buildCHIEFmatrixVec(varCol);
-                    A = [A; A_CHIEF];
-                    FF = [FF; FF_CHIEF];
+                    A_fluid_o = [A_fluid_o; A_CHIEF];
+                    FF_fluid_o = [FF_fluid_o; FF_CHIEF];
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
                 end
-
-                A(:,dofsToRemove) = [];
-                if any(isinf(A(:))) || any(isnan(A(:)))
-                    warning('An element of A is NaN or Inf')
-                end
-                noDofs_tot = varCol.noDofs;
                 varCol.timeBuildSystem = toc(t_start);
+                if useSolidDomain 
+                    tic
+                    % Solid matrices
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
+                    end
+                    options = {'operator','linearElasticity',...
+                               'fieldDimension', 3,...
+                               'buildMassMatrix', 1};
+                    [A_K, A_M] = buildGlobalMatricesVec(varCol_solid, options);
+
+                    A_solid = A_K-rho_s*omega^2*A_M;
+                    if clearGlobalMatrices
+                        clear A_K A_M
+                    end
+
+                    noDofs_tot = noDofs_tot + varCol_solid.noDofs;
+                    dofsToRemove = [varCol_solid.dofsToRemove (varCol.dofsToRemove+varCol_solid.noDofs)];
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                end
+                % Collect all matrices
+                A = sparse(noDofs_tot,noDofs_tot);
+                FF = zeros(noDofs_tot,1);
+                if ~useSolidDomain
+                    varCol.noDofs_tot = noDofs_tot;
+                    A = A_fluid_o;   
+                    FF = FF_fluid_o;
+                elseif useSolidDomain && ~useInnerFluidDomain
+                    varCol.noDofs_tot = noDofs_tot;
+                    varCol_solid.noDofs_tot = noDofs_tot;
+                    A(1:varCol_solid.noDofs,1:varCol_solid.noDofs) = A_solid;  
+                    A(varCol_solid.noDofs+1:end,(1:3*varCol.noDofs)+varCol_solid.noDofs-3*varCol.noDofs) = -rho_f(1)*omega^2*C_mat;  
+                    A((varCol_solid.noDofs+1):noDofs_tot,(varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o; 
+                    shift = 0;
+                    FF((varCol_solid.noDofs+1):noDofs_tot) = FF_fluid_o;
+                else 
+                    varCol.noDofs_tot = noDofs_tot;
+                    A(1:varCol_fluid_i.noDofs,1:varCol_fluid_i.noDofs) = A_fluid_i; 
+                    A((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs),(varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs+varCol_solid.noDofs)) = A_solid;
+                    A((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot,(varCol_fluid_i.noDofs+varCol_solid.noDofs+1):noDofs_tot) = A_fluid_o;
+                    shift = varCol_fluid_i.noDofs;
+                end
+                % Apply coupling conditions    
+                if useSolidDomain 
+                    tic
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
+                    end
+                    A_coupling = applyCouplingCondition_FEBE(varCol,varCol_solid.noDofs);
+                    A = A + A_coupling.';
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                end
+
+                if useInnerFluidDomain 
+                    tic
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building second coupling matrix ... ')
+                    end
+                    A_coupling = applyCouplingCondition2(varCol_solid,varCol_fluid_i,varCol_fluid_i.noDofs);
+                    A = A + A_coupling;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
+                    varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+                end  
+                
+                % Apply Neumann conditions
+                tic
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
+                end
+%                 if useSolidDomain
+%                     varCol_solid.p_inc = p_inc;
+%                     varCol_solid.dp_inc = dp_inc;
+%                     FF = FF + applyNeumannCondition_CoupledProblem(varCol_solid,omega,rho_f(1),length(alpha_s), shift);
+%                 end 
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', toc)
+                end
+                varCol.timeBuildSystem = varCol.timeBuildSystem + toc;
+%                 figure(1)
+%                 spy(A)
+
+                %% Modify system of equations
+                % Remove the rows and columns of the global matrix corresponding to
+                % removed degrees of freedom
+                if useSolidDomain 
+                    P1 = speye(size(A));
+                    if useInnerFluidDomain
+                        P1(1:varCol_fluid_i.noDofs, 1:varCol_fluid_i.noDofs) = ...
+                            sqrt(omega^2*rho_f(2))*speye(varCol_fluid_i.noDofs);
+                    end
+
+                    P1(shift+1:shift+varCol_solid.noDofs, shift+1:shift+varCol_solid.noDofs) = ...
+                        1/max([omega^2*rho_s, C(1,1)])*speye(varCol_solid.noDofs);
+%                     P1(shift+1+varCol_solid.noDofs:end, shift+1+varCol_solid.noDofs:end) = ...
+%                         sqrt(omega^2*rho_f(1))*speye(varCol.noDofs);
+
+%                     A = P1*A;
+%                     FF = P1*FF;
+                    A = A*P1;
+
+                    P1(dofsToRemove,:) = [];  
+                    P1(:,dofsToRemove) = [];
+                end
+                
+                A(:,dofsToRemove) = [];
+                if strcmp(formulation(1),'G')
+                    A(dofsToRemove,:) = [];
+                    FF(dofsToRemove,:) = [];
+                end
+%                 figure(2)
+%                 spy(A)
+%                 keyboard
             case 'BA'
                 tic
                 if ~runTasksInParallel
@@ -443,6 +556,7 @@ else
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
                     end
+                    varCol_solid.formulation = 'VL2E';
                     [A_solid, FF_solid, varCol_solid] = bestApproximationVec(varCol_solid);
                     A_solid = kron(A_solid,eye(3));
                     FF_solid = FF_solid.';
@@ -504,18 +618,6 @@ else
                 % removed degrees of freedom
                 if useSolidDomain 
                     P1 = speye(size(A));
-    %                 if useInnerFluidDomain
-    %                     P1(1:varCol_fluid_i.noDofs, 1:varCol_fluid_i.noDofs) = ...
-    %                         sqrt(omega^2*rho_f(2))*speye(varCol_fluid_i.noDofs);
-    %                 end
-    % 
-    %                 P1(shift+1:shift+varCol_solid.noDofs, shift+1:shift+varCol_solid.noDofs) = ...
-    %                     1/sqrt(max([omega^2*rho_s, C(1,1)]))*speye(varCol_solid.noDofs);
-    %                 P1(shift+1+varCol_solid.noDofs:end, shift+1+varCol_solid.noDofs:end) = ...
-    %                     sqrt(omega^2*rho_f(1))*speye(varCol.noDofs);
-    % 
-    %                 A = P1*A*P1;
-    %                 FF = P1*FF;
 
                     P1(dofsToRemove,:) = [];  
                     P1(:,dofsToRemove) = [];
@@ -723,7 +825,7 @@ else
                 % max(abs(UU-UU2)./abs(UU2))
                 % return
 
-                if useSolidDomain 
+                if useSolidDomain && ~strcmp(method,'BA')
                     UU = P1*UU;
                 end
 
@@ -1020,13 +1122,13 @@ if ~useROM && ~strcmp(method,'RT')
                 end
                 varCol.isOuterDomain = true;
         
-                if ~boundaryMethod
-                    createParaviewFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options);
-                end
-
+                
+                createParaviewFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options);
+                
                 if plotMesh
                     createVTKmeshFiles(varCol, U_fluid_o, extraXiPts, extraEtaPts, extraZetaPts, options)
                 end
+                return
                 if strcmp(method,'KDT')
                     xb = [-5,5];
                     yb = [-5,5];
@@ -1036,15 +1138,36 @@ if ~useROM && ~strcmp(method,'RT')
                     delta = 0.1/9;
                     plotTriangulationKDT(varCol,delta,xb,yb,zb,options,'_exterior')
                 else
-                    delta = 0.5;
-                    xb = [-65,20]+pi*1e-6;
-                    yb = [-15,15]+pi*1e-6;
-                    zb = [-10,10]+pi*1e-6;
                     options = struct('name',vtfFileName, 'celltype', 'VTK_QUAD', 'plotTimeOscillation', plotTimeOscillation, ...
                                     'plotScalarField',1, 'plotError', plotError, 'plotP_inc', 1, 'plotTotField', 1, ...
                                     'plotTotFieldAbs', 1, ...
                                     'plotErrorFunc', 0, 'plotTestFun', 0, 'plotTestField', 0, 'plotAnalytic', analyticSolutionExist);
-                    plotTriangulation(varCol,U_fluid_o,delta,xb,yb,zb, options, '_exterior')
+
+                                
+                    switch model
+                        case 'BCA'
+                            delta = 0.5;
+                            delta = 1;
+                            xb = [-65,20]+pi*1e-6;
+                            yb = [-15,15]+pi*1e-6;
+                            zb = [-10,10]+pi*1e-6;
+                            cutPlanes = [2, 0; % xz-plane
+                                         3, 0; % xy-plane
+                                         1, -5; % x = -5
+                                         1, -18; % x = -18
+                                         1, -53]; % x = -53
+                            min_d_Xon = 1; % minimal distance from scatterer to points in X_exterior
+                            extraPts = 5; % extra knots in mesh for plotting on scatterer
+                        otherwise
+                            delta = 0.5;
+                            xb = [-10,10]+pi*1e-6;
+                            yb = xb;
+                            zb = xb;
+                            cutPlanes = [3, 0]; % xy-plane
+                            min_d_Xon = 0.1; % minimal distance from scatterer to points in X_exterior
+                            extraPts = 20; % extra knots in mesh for plotting on scatterer
+                    end
+                    plotTriangulation(varCol,U_fluid_o,delta,xb,yb,zb, options, '_exterior',cutPlanes,min_d_Xon,extraPts)
 
 
                     if boundaryMethod

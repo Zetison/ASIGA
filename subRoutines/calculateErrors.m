@@ -38,7 +38,7 @@ else
         if strcmp(varCol.coreMethod,'SEM')
             surfaceError = calcSurfErrorSEM(varCol, U_fluid_o, task.LpOrder);
             [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol, U_fluid_o(1:varCol.noDofs), e3Dss_options);
-%                     [L2Error, H1Error, H1sError, energyError] = calcError_testSEM({varCol}, {U_fluid_o(1:varCol.noDofs)}, e3Dss_options);
+%             [L2Error, H1Error, H1sError, energyError] = calcError_testSEM({varCol}, {U_fluid_o(1:varCol.noDofs)}, e3Dss_options);
         else
             surfaceError = calcSurfErrorVec(varCol, U_fluid_o, task.LpOrder);
         end

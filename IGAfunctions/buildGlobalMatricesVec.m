@@ -79,7 +79,8 @@ else
     force = NaN;
 end
 
-[W3D,Q3D] = gaussianQuadNURBS(p_xi+1,p_eta+1,p_zeta+1); 
+extraGP = varCol.extraGP;
+[W3D,Q3D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP,p_zeta+1+extraGP); 
 Qxi = Q3D(:,1);
 Qeta = Q3D(:,2);
 Qzeta = Q3D(:,3);

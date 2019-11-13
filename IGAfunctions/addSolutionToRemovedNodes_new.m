@@ -1,6 +1,7 @@
-function U = addSolutionToRemovedNodes_new(U, varCol)
-
-d = varCol.dimension;
+function U = addSolutionToRemovedNodes_new(U, varCol, d)
+if nargin < 3
+    d = varCol.dimension;
+end
 gluedNodes = varCol.gluedNodes;
 
 for i = 1:length(gluedNodes)

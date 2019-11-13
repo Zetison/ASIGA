@@ -21,7 +21,6 @@ switch model
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_Cube(varCol,parms, M, degree);
     case {'M5A','M5B','M5A_P','M5B_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_Model5(varCol,parms, M, degree);
-        error('Clean up this subRoutine')
     case {'MS','MS_P'}
         [varCol, fluid, solid, fluid_i] = createNURBSmesh_MockShell(varCol,parms, M, degree);
     case {'Shirron'}

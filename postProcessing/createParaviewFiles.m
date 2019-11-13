@@ -4,15 +4,12 @@ maxU = NaN;
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
-p_zeta = varCol.degree(3); % assume p_eta is equal in all patches
-n_en = (p_xi+1)*(p_eta+1)*(p_zeta+1);
 Eps = 1e4*eps;
 
 index = varCol.index;
 noElems = varCol.noElems;
 elRangeXi = varCol.elRange{1};
 elRangeEta = varCol.elRange{2};
-elRangeZeta = varCol.elRange{3};
 element = varCol.element;
 element2 = varCol.element2;
 weights = varCol.weights;
@@ -148,6 +145,9 @@ switch type
             count_vis = count_vis + container{e}.noVisElems;
         end
     case '3Dvolume'
+        p_zeta = varCol.degree(3); % assume p_eta is equal in all patches
+        elRangeZeta = varCol.elRange{3};
+        n_en = (p_xi+1)*(p_eta+1)*(p_zeta+1);
         noXiKnots = 2+extraXiPts;
         noEtaKnots = 2+extraEtaPts;
         noZetaKnots = 2+extraZetaPts;

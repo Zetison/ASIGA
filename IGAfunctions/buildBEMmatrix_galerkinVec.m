@@ -1,4 +1,4 @@
-function [A, FF, varCol] = buildBEMmatrix_galerkinVec(varCol)
+function [A, FF, varCol, C] = buildBEMmatrix_galerkinVec(varCol,useSolidDomain)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -23,6 +23,7 @@ exteriorProblem = varCol.exteriorProblem;
 model = varCol.model;
 
 quadMethodBEM = varCol.quadMethodBEM;
+
 
 Eps = 10*eps;
 
@@ -105,6 +106,12 @@ n_en = (p_xi+1)*(p_eta+1);
 
 idxRow = zeros(n_en, noElems);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
+d = 3;
+if useSolidDomain
+    Cvalues = complex(zeros(n_en, d*noDofs, noElems)); 
+else
+    Cvalues = NaN; 
+end
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
 totNoQP = 0;
 totNoQPnonPolar = 0;
@@ -126,6 +133,9 @@ parfor e_x = 1:noElems
 
     F_e = zeros(n_en, no_angles);
     A_e_temp = zeros(n_en, n_en, noElems);
+    if useSolidDomain
+        C_e_temp = zeros(n_en, d*n_en, noElems);
+    end
     
     J_2_x = 0.25*(Xi_e_x(2)-Xi_e_x(1))*(Eta_e_x(2)-Eta_e_x(1));
     
@@ -166,15 +176,27 @@ parfor e_x = 1:noElems
         [constants, integrals] = initializeBIE(psiType,useRegul,x,nx,k,model);
         FF_temp = complex(zeros(1, no_angles));
         idxCol = zeros(n_en, noElems);
+        idxCol2 = zeros(d*n_en, noElems);
     
         for e_y = 1:noElems   
-            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
+            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, ~,~,R_y,r,fact_y,ny] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                     useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                     x,nx,pt_x(1),pt_x(2),e_x,constants,psiType,useRegul,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                     patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
             idxCol(:,e_y) = sctr_y;
+            for i = 1:d
+                idxCol2(i:d:end,e_y) = d*(sctr_y-1)+i;
+            end
             A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*BIE*fact_x;
+            if useSolidDomain
+                Phi_kTemp = Phi_k(r,k);
+                nyR_y = zeros(numel(fact_y),d*n_en);
+                for i = 1:d
+                    nyR_y(:,i:d:end) = R_y.*ny(:,i);
+                end
+                C_e_temp(:,:,e_y) = C_e_temp(:,:,e_y) + R_x.'*sum((Phi_kTemp.*fact_y).*nyR_y)*fact_x;
+            end
             if ~collocationPointIsInElement
                 totNoQPnonPolar = totNoQPnonPolar + noGp;
             end
@@ -192,9 +214,19 @@ parfor e_x = 1:noElems
     
     idxRow(:,e_x) = sctr_x.';
     Avalues(:,:,e_x) = matrixAssembly(A_e_temp, idxCol, n_en, noDofs, noElems, 1);
+    if useSolidDomain
+        Cvalues(:,:,e_x) = matrixAssembly(C_e_temp, idxCol2, n_en, d*noDofs, noElems, 3); % matrixAssembly(C_e_temp, idxCol2, n_en, d*noDofs, noElems, 3);
+    else
+        Cvalues(:,:,e_x) = NaN;
+    end
     Fvalues(:,e_x,:) = F_e;
 end
 A = matrixAssembly(Avalues, idxRow, n_en, noDofs, noElems, 2);
+if useSolidDomain
+    C = matrixAssembly(Cvalues, idxRow, n_en, noDofs, noElems, 4);
+else
+    C = NaN;
+end
 FF = zeros(noDofs,no_angles);
 parfor i = 1:no_angles
     FF(:,i) = vectorAssembly(Fvalues(:,:,i), idxRow, noDofs);

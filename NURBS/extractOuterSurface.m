@@ -6,6 +6,7 @@ end
 if ~iscell(nurbs)
     nurbs = {nurbs};
 end
+extractSurface
 switch dir
     case 'zeta'
         nurbsSurf = cell(1,numel(nurbs));

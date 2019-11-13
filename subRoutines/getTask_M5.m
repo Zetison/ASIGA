@@ -1,26 +1,27 @@
 
 
-scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = {'M5A', 'M5B'}; % BeTSSi model 5A and BeTSSi model 5B
+% model = {'M5A', 'M5B'}; % BeTSSi model 5A and BeTSSi model 5B
+model = {'M5A'}; % BeTSSi model 5A and BeTSSi model 5B
 
-method = {'BEM'};
-if strcmp(method, 'BEM')
-    formulation = {'CCBIE'};
-end
+method = 'BEM';
+formulation = 'CCBIE';
 
-f_arr = [1e3 3e3];             % Frequency
+% f = [1e3 3e3];             % Frequency
+f = 1e3;             % Frequency
 
-M = 1;
+M = 2;
 
 alpha_s = 60*pi/180;
 beta_s = 0*pi/180;
 
-degreeElevArr = 2;
-plotResultsInParaview = 1;	% Only if scatteringCase == 'Bi'
+degree = 2;
+plotResultsInParaview = 0;	% Only if scatteringCase == 'Bi'
 
 solveForPtot = true;
-% plot3Dgeometry = true;
+plot3Dgeometry = 0;
+loopParameters = {'M','model','degree'};
 collectIntoTasks
 % 
 % scatteringCase = {'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering

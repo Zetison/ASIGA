@@ -52,9 +52,11 @@ for patch_i = 1:numel(patches)
 %     if patch_i == 140
 %         keyboard
 %     end
-    if any(norm2(X_m(:,1:2)-DT.Points) > 1e-12)
-        error('delaunay has shifted the ordering of the points')
-    end
+
+%     if any(norm2(X_m(:,1:2)-DT.Points) > 1e-12)
+%         error('delaunay has shifted the ordering of the points')
+%     end
+
 %     plotNURBS(nurbs,{'alphaValue',0.8});
 %     trisurf(TRI,X(:,1),X(:,2),X(:,3))
 %     axis equal

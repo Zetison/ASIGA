@@ -33,8 +33,8 @@ end
 % noQuadPts = max(9,max(p_xi,p_eta)+3);
 % [W2D,Q2D] = gaussianQuadNURBS(noQuadPts,noQuadPts);  
 extraGP = varCol.extraGP;
-% [W2D,Q2D] = gaussianQuadNURBS(p_xi+3+extraGP,p_eta+3+extraGP);  
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+10,p_eta+10);  
+[W2D,Q2D] = gaussianQuadNURBS(p_xi+3+extraGP,p_eta+3+extraGP);  
+% [W2D,Q2D] = gaussianQuadNURBS(p_xi+10,p_eta+10);  
 
 p_h = zeros(size(W2D,1), noElems);
 fact = zeros(size(W2D,1), noElems);
