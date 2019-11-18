@@ -36,7 +36,7 @@ The following models are available
 - Cube (model = 'Cube')
 
 ## Overview of available methods
-The main emphesis is acoustic scattering using plane wave (applyLoad = 'planeWave') in which the following cases are implemented
+The main emphasis is acoustic scattering using plane wave (applyLoad = 'planeWave') in which the following cases are implemented
 - Bistatic scattering (scatteringCase = 'BI')
 - Monostatic scattering (scatteringCase = 'MS')
 - Frequency sweep (scatteringCase = 'Sweep')
@@ -58,7 +58,7 @@ The following methods has been implemented (with available formulations)
 - IGA using best approximation (method = 'BA'). Only available when analytic solution exist
 	- Best approximation in L^2(\Gamma) (formulation = 'SL2E')
 	- Best approximation in L^2(\Omega_a) (formulation = 'VL2E')
-- IGA using the boundary element methdo (method = 'BEM')
+- IGA using the boundary element method (method = 'BEM')
 	- Conventional boundary integral equation using collocation method (formulation = 'CCBIE')
 	- Hypersingular boundary integral equation using collocation method (formulation = 'CHBIE')
 	- Buron-Miller formulation using collocation method (formulation = 'CBM')
@@ -85,7 +85,7 @@ The following boundary conditions are implemented
 - Sound soft boundary condition (BC = 'SSBC')
 - Neumann-Neumann boundary condition (BC = 'NNBC')
 - Neumann boundary condition (BC = 'NBC')
-where the latter option is used for simulating manufactored solutions
+where the latter option is used for simulating manufactured solutions
 
 ## Additional parameters
 In the getDefaultTaskValus.m file the addional parameters are described and set to some default values:
