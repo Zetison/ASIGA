@@ -17,6 +17,8 @@ switch model
         setCubeParameters
     case 'S5'
         setS5Parameters
+    case 'S15'
+        setS15Parameters
     case 'IL'
         setIhlenburgParameters
     case {'M1','M1_P'}
@@ -25,6 +27,8 @@ switch model
         setBeTSSi_M2Parameters
     case {'M3','M3_P'}
         setBeTSSi_M3Parameters
+    case 'M31'
+        setBeTSSi_M31Parameters
     case {'PH','PH_P'}
         setBeTSSi_PHParameters
     case {'M4','M4_P'}

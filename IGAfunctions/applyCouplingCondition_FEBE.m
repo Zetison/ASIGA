@@ -1,4 +1,4 @@
-function A = applyCouplingCondition_FEBE(varCol,shift)
+function A = applyCouplingCondition_FEBE(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -14,10 +14,6 @@ controlPts = varCol.controlPts;
 knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
 noDofs = varCol.noCtrlPts;
-extraGP = varCol.extraGP;
-
-
-noDofs_tot = varCol.noDofs_tot;
 
 d = 3;
 
@@ -48,7 +44,7 @@ parfor e = 1:noElems
     sctr = element(e,:);
     sctr_k_e = zeros(1,d*n_en);
     for i = 1:d
-        sctr_k_e(i:d:end) = d*(sctr-1)+i-d*noDofs;
+        sctr_k_e(i:d:end) = d*(sctr-1)+i;
     end
     pts = controlPts(sctr,:);
     wgts = weights(element2(e,:),:); % New
@@ -77,7 +73,7 @@ spIdxRow1 = reshape(spIdxRow1,numel(spIdxRow1),1);
 spIdxCol1 = reshape(spIdxCol1,numel(spIdxCol1),1);
 A1values = reshape(A1values,numel(A1values),1);
 
-[spIdx1,~,IuniqueIdx1] = unique([spIdxRow1, spIdxCol1]+shift,'rows');
+[spIdx1,~,IuniqueIdx1] = unique([spIdxRow1, spIdxCol1],'rows');
 A1values = accumarray(IuniqueIdx1,A1values);
 
-A = sparse(spIdx1(:,1),spIdx1(:,2),A1values,noDofs_tot,noDofs_tot,numel(IuniqueIdx1));
+A = sparse(spIdx1(:,1),spIdx1(:,2),A1values,noDofs,d*noDofs,numel(IuniqueIdx1));

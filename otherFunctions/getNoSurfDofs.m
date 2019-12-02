@@ -5,7 +5,14 @@ if varCol.boundaryMethod
         case 'IENSG'
             surfDofs = varCol.dofs/varCol.N;
         otherwise
-            surfDofs = varCol.dofs;
+            counter = 0;
+            surfDofs = [];
+            for patch = 1:varCol.noPatches
+                noCtrlPtsPatch = varCol.noCtrlPtsPatch(patch);
+                surfDofs = [surfDofs, 1:noCtrlPtsPatch+counter];
+                counter = counter + noCtrlPtsPatch;
+            end
+            surfDofs = numel(setdiff(surfDofs,varCol.dofsToRemove));
     end
 else
     counter = 0;

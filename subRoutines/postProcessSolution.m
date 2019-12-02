@@ -1,51 +1,51 @@
 
-%% Sort data from U into U_fluid_o, U_solid, and U_fluid_i
+%% Sort data from UU into Uc{1}, Uc{2}, and Uc{3}
 if strcmp(method,'MFS')
-    U_fluid_o = UU;
+    Uc{1} = UU;
 else
     U = zeros(noDofs_tot,size(UU,2),size(UU,3));
     U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU;   
 
     if ~useSolidDomain
-    %         U_fluid_o = U(1:varCol_fluid_o.noDofs,:,:); 
-        U_fluid_o = U; 
-        U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
+    %         Uc{1} = U(1:varCol_fluid_o.noDofs,:,:); 
+        Uc{1} = U; 
+        Uc{1} = addSolutionToRemovedNodes_new(Uc{1}, varCol{1});
     elseif useSolidDomain && ~useInnerFluidDomain
-        U_fluid_o = U((varCol_solid.noDofs+1):end,:,:);
-        U_solid = U(1:varCol_solid.noDofs,:,:); 
+        Uc{1} = U((varCol{2}.noDofs+1):end,:,:);
+        Uc{2} = U(1:varCol{2}.noDofs,:,:); 
 
-        U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
-        U_solid = addSolutionToRemovedNodes_new(U_solid, varCol_solid);
+        Uc{1} = addSolutionToRemovedNodes_new(Uc{1}, varCol{1});
+        Uc{2} = addSolutionToRemovedNodes_new(Uc{2}, varCol{2});
     else
-        U_fluid_o = U((varCol_fluid_i.noDofs+varCol_solid.noDofs+1):end,:,:); 
-        U_solid = U((varCol_fluid_i.noDofs+1):(varCol_fluid_i.noDofs + varCol_solid.noDofs),:,:);
-        U_fluid_i = U(1:varCol_fluid_i.noDofs,:,:);
+        Uc{1} = U((varCol{3}.noDofs+varCol{2}.noDofs+1):end,:,:); 
+        Uc{2} = U((varCol{3}.noDofs+1):(varCol{3}.noDofs + varCol{2}.noDofs),:,:);
+        Uc{3} = U(1:varCol{3}.noDofs,:,:);
 
-        U_fluid_o = addSolutionToRemovedNodes_new(U_fluid_o, varCol);
-        U_solid = addSolutionToRemovedNodes_new(U_solid, varCol_solid);
-        U_fluid_i = addSolutionToRemovedNodes_new(U_fluid_i, varCol_fluid_i);
+        Uc{1} = addSolutionToRemovedNodes_new(Uc{1}, varCol{1});
+        Uc{2} = addSolutionToRemovedNodes_new(Uc{2}, varCol{2});
+        Uc{3} = addSolutionToRemovedNodes_new(Uc{3}, varCol{3});
     end
     % save([resultsFolderName '/' saveName  '_' coreMethod method '_mesh' num2str(M) '_degree' num2str(max(varCol.nurbs.degree)) ...
-    %                         '_formulation' varCol.formulation '.mat'], 'varCol', 'U_fluid_o')
+    %                         '_formulation' varCol.formulation '.mat'], 'varCol', 'Uc{1}')
 end
 
 %% Find h_max and store results
 if i_k == 1
-    h_max_fluid = findMaxElementDiameter(varCol.patches);
+    h_max_fluid = findMaxElementDiameter(varCol{1}.patches);
     h_max = h_max_fluid;
     if useSolidDomain
-        h_max_solid = findMaxElementDiameter(varCol_solid.patches);
+        h_max_solid = findMaxElementDiameter(varCol{2}.patches);
         h_max = max([h_max, h_max_solid]);
     end
     if useInnerFluidDomain
-        h_max_fluid_i = findMaxElementDiameter(varCol_fluid_i.patches);
+        h_max_fluid_i = findMaxElementDiameter(varCol{3}.patches);
         h_max = max([h_max, h_max_fluid_i]);
     end
-    varCol.h_max = h_max;
-    varCol.nepw = lambda(1)./h_max;
-    varCol.dofs = actualNoDofs;
-    varCol.surfDofs = getNoSurfDofs(varCol);
+    varCol{1}.h_max = h_max;
+    varCol{1}.nepw = lambda(1)./h_max;
+    varCol{1}.dofs = actualNoDofs;
+    varCol{1}.surfDofs = getNoSurfDofs(varCol{1});
     if storeSolution
-        varCol.U = U_fluid_o;
+        varCol{1}.U = Uc{1};
     end
 end

@@ -20,5 +20,5 @@ if plotMesh
     noEtaKnots = data.noEtaKnots;
     XiVec = data.XiVec;
     EtaVec = data.EtaVec;
-    createVTKmeshFiles
+    createVTKmeshFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options)
 end

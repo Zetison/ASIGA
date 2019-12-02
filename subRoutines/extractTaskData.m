@@ -30,21 +30,22 @@ formulation             = task.formulation;
 coreMethod              = task.coreMethod;
 clearGlobalMatrices     = task.clearGlobalMatrices;
 computeCondNumber       = task.computeCondNumber;
-storeFullVarCol         = task.storeFullVarCol;
+storeFullvarCol         = task.storeFullVarCol;
 extraGP                 = task.extraGP;
 extraGPBEM              = task.extraGPBEM;
 agpBEM                  = task.agpBEM;
 useROM                  = task.useROM;
 exteriorProblem         = task.exteriorProblem;
-varCol.initMeshFactXi  	= task.initMeshFactXi;
-varCol.initMeshFactZeta	= task.initMeshFactZeta;
-varCol.useNeumanProj    = task.useNeumanProj;
-varCol.colBEM_C0        = task.colBEM_C0;
-varCol.colMethod        = task.colMethod;
-varCol.solveForPtot     = task.solveForPtot;
+useNeumanProj           = task.useNeumanProj;
+colBEM_C0               = task.colBEM_C0;
+colMethod               = task.colMethod;
+solveForPtot            = task.solveForPtot;
+varCol{1}.initMeshFactXi  	= task.initMeshFactXi;
+varCol{1}.initMeshFactZeta	= task.initMeshFactZeta;
+
 plotResidualError       = task.plotResidualError;
 if isfield(task,'delta')
-    varCol.delta = task.delta;
+    varCol{1}.delta = task.delta;
 end
 if strcmp(task.method,'BEM') && ~task.solveForPtot && ~strcmp(task.BC,'NBC')
     error('Use solveForPtot = true for BEM (this is reccomended)')
@@ -72,7 +73,7 @@ else
     if ~isfield(task,'N')
         task.N = 2;
     else
-        varCol.N = task.N;
+        varCol{1}.N = task.N;
     end
 end
 
@@ -113,7 +114,7 @@ if strcmp(method, 'IENSG') && ~(strcmp(formulation, 'PGU') || ...
 end
 
 
-varCol.method = method;
+varCol{1}.method = method;
 
 
 

@@ -1,61 +1,25 @@
-function F = applyNeumannCondition_CoupledProblem(varCol,omega,rho_f,no_angles,shift)
+function F = applyNeumannCondition_CoupledProblemPatches(varColSolid,varColFluid,omega,rho_f,no_angles,shift)
 
-Xi = varCol.knotVecs{1}{1};
-Eta = varCol.knotVecs{1}{2};
+knotVecs = varColSolid.knotVecs;
+elRangeXi = varColSolid.elRange{1};
+elRangeEta = varColSolid.elRange{2};
 
-p_xi = varCol.patches{1}.nurbs.degree(1);
-p_eta = varCol.patches{1}.nurbs.degree(2);
+p_xi = varColSolid.degree(1);
+p_eta = varColSolid.degree(2);
 
-n_xi = varCol.patches{1}.nurbs.number(1);
-n_eta = varCol.patches{1}.nurbs.number(2);
-n_zeta = varCol.patches{1}.nurbs.number(3);
+weights = varColSolid.weights;
+controlPts = varColSolid.controlPts;
 
-elRangeXi = varCol.patches{1}.elRange{1};
-elRangeEta = varCol.patches{1}.elRange{2};
-
-weights = varCol.patches{1}.weights;
-controlPts = varCol.patches{1}.controlPts;
-
-dp_inc = varCol.dp_inc;
-p_inc = varCol.p_inc;
+dp_inc = varColSolid.dp_inc;
+p_inc = varColSolid.p_inc;
 
 
-gluedNodes = varCol.gluedNodes;
-noDofs = varCol.noDofs;
-noDofs_tot = varCol.noDofs_tot;
+noDofs = varColSolid.noDofs;
+noDofs_tot = varColSolid.noDofs_tot;
+d = varColSolid.dimension;
 
-d = varCol.dimension;
-
-% Computes Neumann conditions if the analytic functions is only known at
-% the boundary, g_xi0, g_xi1 etc.
-
-solidNodes = zeros(1,n_xi*n_eta);
-counter = 1;
-for j = 1:n_eta
-    for i = 1:n_xi
-        solidNodes(counter) = (n_eta*n_xi)*(n_zeta-1) + n_xi*(j-1) + i;
-        counter = counter + 1;
-    end
-end
-fluidNodes = zeros(1,n_xi*n_eta);
-counter = 1;
-for j = 1:n_eta
-    for i = 1:n_xi
-        fluidNodes(counter) = n_xi*(j-1) + i;
-        counter = counter + 1;
-    end
-end
-
-[solidXiEtaMesh, solidIndexXiEta, solidNoElemsXiEta] = generateIGA2DMesh(Xi, Eta, p_xi, p_eta, n_xi, n_eta);
-
-% Glue nodes in 2D mesh
-for i = 1:length(gluedNodes)
-    parentIdx = gluedNodes{i}(1);
-    for j = 2:length(gluedNodes{i})
-        indices = (solidXiEtaMesh == gluedNodes{i}(j));
-        solidXiEtaMesh(indices) = parentIdx;
-    end
-end
+[solidNodes,fluidNodes,solidXiEtaMesh,solidIndexXiEta,solidNoElemsXiEta,pIndex,solidNodes2,fluidNodes2]...
+    = createSurfaceMesh(varColSolid,varColFluid);
 
 n_en = (p_xi+1)*(p_eta+1);
 
@@ -67,8 +31,12 @@ indices2 = zeros(n_en,solidNoElemsXiEta);
 
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
 % warning('parfor is not being used')
-% for e = 1:solidNoElemsXiEta
-parfor e = 1:solidNoElemsXiEta
+for e = 1:solidNoElemsXiEta
+% parfor e = 1:solidNoElemsXiEta
+    patch = pIndex(e); % New
+    Xi = knotVecs{patch}{1}; % New
+    Eta = knotVecs{patch}{2}; % New
+    
     idXi = solidIndexXiEta(e,1);   % the index matrix is made in generateIGA3DMesh
     idEta = solidIndexXiEta(e,2);
 
@@ -85,6 +53,7 @@ parfor e = 1:solidNoElemsXiEta
     fluidSctrXiEta = fluidNodes(solidXiEtaMesh(e,:))+noDofs;          %  element scatter vector
 
     pts = controlPts(solidSctrXiEta,:);
+    wgts = weights(solidNodes2(solidXiEtaMesh(e,:)));
     
     F1_e = zeros(d*n_en,no_angles);
     F2_e = zeros(n_en,no_angles);
@@ -95,7 +64,7 @@ parfor e = 1:solidNoElemsXiEta
         xi  = parent2ParametricSpace(Xi_e, pt(1));
         eta = parent2ParametricSpace(Eta_e,pt(2));
 
-        [R, dRxi, dRdeta] = NURBS2DBasis_old(xi, eta, p_xi, p_eta, Xi, Eta, weights(solidNodes));
+        [R, dRxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
 
         J = pts'*[dRxi' dRdeta'];
         crossProd = cross(J(:,1), J(:,2));  % pointing outwards if sphere
@@ -110,7 +79,6 @@ parfor e = 1:solidNoElemsXiEta
     
     indices1(:,e) = solidSctrXiEtadD';
     indices2(:,e) = fluidSctrXiEta';
-    
     F1values(:,e,:) = F1_e;
     F2values(:,e,:) = F2_e;
 end

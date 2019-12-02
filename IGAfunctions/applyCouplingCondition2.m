@@ -73,8 +73,8 @@ spIdxCol2 = zeros(d*n_en^2,solidNoElemsXiEta);
 
 
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
-parfor e = 1:solidNoElemsXiEta
-% for e = 1:solidNoElemsXiEta
+% parfor e = 1:solidNoElemsXiEta
+for e = 1:solidNoElemsXiEta
     idXi = solidIndexXiEta(e,1);   % the index matrix is made in generateIGA3DMesh
     idEta = solidIndexXiEta(e,2);
 
@@ -115,7 +115,7 @@ parfor e = 1:solidNoElemsXiEta
     spIdxCol1(:,e) = copyVector(solidSctrXiEtadD,n_en,2);
     
     spIdxRow2(:,e) = copyVector(solidSctrXiEtadD,n_en,1);
-    spIdxCol2(:,e) = copyVector(fluidSctrXiEta,3*n_en,2);
+    spIdxCol2(:,e) = copyVector(fluidSctrXiEta,d*n_en,2);
     
     temp = zeros(n_en,d*n_en);
     for j = 1:d
@@ -129,7 +129,6 @@ parfor e = 1:solidNoElemsXiEta
     end
     A2values(:,e) = reshape(temp,d*n_en^2,1);
 end
-
 
 spIdxRow1 = reshape(spIdxRow1,numel(spIdxRow1),1);
 spIdxCol1 = reshape(spIdxCol1,numel(spIdxCol1),1);

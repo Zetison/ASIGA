@@ -1,10 +1,10 @@
-if varCol.boundaryMethod
+if varCol{1}.boundaryMethod
     if task.calculateSurfaceError
         tic 
         if ~runTasksInParallel
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         end
-        surfaceError = calcSurfErrorBndryMethodVec(varCol, U_fluid_o, task.LpOrder);
+        surfaceError = calcSurfErrorBndryMethodVec(varCol{1}, Uc{1}, task.LpOrder);
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface error = %.16g', surfaceError)
@@ -19,7 +19,7 @@ if varCol.boundaryMethod
         if ~runTasksInParallel
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface energy error ... ')
         end
-        energyError = calcEnergyErrorBEM(varCol, U_fluid_o);
+        energyError = calcEnergyErrorBEM(varCol{1}, Uc{1});
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface energy error = %.16g', energyError)
@@ -35,12 +35,12 @@ else
         if ~runTasksInParallel
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         end
-        if strcmp(varCol.coreMethod,'SEM')
-            surfaceError = calcSurfErrorSEM(varCol, U_fluid_o, task.LpOrder);
-            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol, U_fluid_o(1:varCol.noDofs), e3Dss_options);
-%             [L2Error, H1Error, H1sError, energyError] = calcError_testSEM({varCol}, {U_fluid_o(1:varCol.noDofs)}, e3Dss_options);
+        if strcmp(varCol{1}.coreMethod,'SEM')
+            surfaceError = calcSurfErrorSEM(varCol{1}, Uc{1}, task.LpOrder);
+            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol{1}, Uc{1}(1:varCol{1}.noDofs), e3Dss_options);
+%             [L2Error, H1Error, H1sError, energyError] = calcError_testSEM({varCol}, {Uc{1}(1:varCol.noDofs)}, e3Dss_options);
         else
-            surfaceError = calcSurfErrorVec(varCol, U_fluid_o, task.LpOrder);
+            surfaceError = calcSurfErrorVec(varCol{1}, Uc{1}, task.LpOrder);
         end
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc) 
@@ -53,24 +53,14 @@ else
     end
     if task.calculateVolumeError
         tic 
-        varColCell = {varCol};
-        U_cell = {U_fluid_o};
-        if useSolidDomain
-            varColCell{2} = varCol_solid;
-            U_cell{2} = U_solid;
-        end
-        if useInnerFluidDomain
-            varColCell{3} = varCol_fluid_i;
-            U_cell{3} = U_fluid_i;
-        end
         if ~runTasksInParallel
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating error ... ')
         end
-        if strcmp(varCol.coreMethod,'SEM')
-            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol, U_fluid_o(1:varCol.noDofs), e3Dss_options);
-%                     [L2Error, H1Error, H1sError, energyError] = calcError_testSEM({varCol}, {U_fluid_o(1:varCol.noDofs)}, e3Dss_options);
+        if strcmp(varCol{1}.coreMethod,'SEM')
+            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol{1}, Uc{1}(1:varCol{1}.noDofs), e3Dss_options);
+%                     [L2Error, H1Error, H1sError, energyError] = calcError_testSEM({varCol}, {Uc{1}(1:varCol.noDofs)}, e3Dss_options);
         else
-            [L2Error, H1Error, H1sError, energyError] = calcErrorVec(varColCell, U_cell, e3Dss_options);
+            [L2Error, H1Error, H1sError, energyError] = calcErrorVec(varCol, Uc, e3Dss_options);
         end
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)

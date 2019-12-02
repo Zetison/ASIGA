@@ -1,5 +1,5 @@
-function nurbsPatches = repeatKnots(nurbsPatches,coreMethod)
-
+function varCol = repeatKnots(varCol,coreMethod)
+nurbsPatches = varCol.nurbs;
 if ~iscell(nurbsPatches)
     nurbsPatches = {nurbsPatches};
 end
@@ -54,3 +54,4 @@ for patch = 1:numel(nurbsPatches)
     end
     nurbsPatches{patch} = nurbs;
 end
+varCol.nurbs = nurbsPatches;

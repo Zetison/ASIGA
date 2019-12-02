@@ -1,8 +1,4 @@
-function [varCol, fluid, solid, fluid_i] = createNURBSmesh_Model3(varCol,parms, M, degree)
-
-solid = NaN;
-fluid_i = NaN;
-
+function varCol = createNURBSmesh_Model3(varCol,parms, M, degree)
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -12,25 +8,25 @@ end
 
 x_0 = [-L/2-(R_o1-R_o2)/2, 0, 0]; % The origin of the model
 alignWithAxis = 'Xaxis';
-switch varCol.method
+switch varCol{1}.method
     case {'IE','IENSG','ABC','MFS'}
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
         A_2 = [0 1 0;
                0 0 1;
                1 0 0];
-        varCol.x_0 = x_0;
-        varCol.A_2 = A_2;
-        varCol.alignWithAxis = alignWithAxis;
+        varCol{1}.x_0 = x_0;
+        varCol{1}.A_2 = A_2;
+        varCol{1}.alignWithAxis = alignWithAxis;
 end
 
-if varCol.boundaryMethod
+if varCol{1}.boundaryMethod
     c_z = (L+R_o1+R_o2)/2;
 %     c_xy = (R_o1+R_o2)/2; % 2.5, 3.75; 
     c_xy = 3*sqrt(665)*(1/20); % 2.5, 3.75; 
     
-    varCol.c_z = c_z;
-    varCol.c_xy = c_xy;
+    varCol{1}.c_z = c_z;
+    varCol{1}.c_xy = c_xy;
 
     Upsilon = sqrt(c_z^2-c_xy^2);
 
@@ -42,7 +38,7 @@ if varCol.boundaryMethod
     eta2 = (R_o1*pi/2 + sqrt(L^2+(R_o1-R_o2)^2))/totLength;
     nn = 2^(M-1)-1;
 
-    if varCol.parm(1) == 1
+    if varCol{1}.parm(1) == 1
         solid = getModel3Data(R_o1, R_o2, t, L);
         solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
         solid = elevateNURBSdegree(solid,[0 0 1]);
@@ -57,11 +53,15 @@ if varCol.boundaryMethod
 
 
 
-    fluid = extractOuterSurface(solid);
-    varCol.patchTop = getPatchTopology(fluid);
+    fluid = extractSurface(solid, 'zeta', 'outer');
+    varCol{1}.patchTop = getPatchTopology(fluid);
 %     varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
 %     varCol.patchTop{1}(2,2) = NaN;
 %     varCol.patchTop{1}(4,2) = NaN;
+    if varCol{1}.useInnerFluidDomain
+        fluid_i = extractSurface(solid, 'zeta', 'inner');
+        varCol{3}.patchTop = getPatchTopology(fluid_i);
+    end
 else
     R_max = max(R_o1,R_o2);
     s = 0.25 + 0.05*(L-R_max)/R_max;
@@ -69,7 +69,7 @@ else
     c_xy = R_max + s*R_max;
 
     Upsilon = sqrt(c_z^2-c_xy^2);
-    varCol.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
+    varCol{1}.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
 
     totLength = R_o1*pi/2 + sqrt(L^2+(R_o1-R_o2)^2)+ R_o2*pi/2;
     eta1 = R_o2*pi/2/totLength;
@@ -107,7 +107,15 @@ else
 end
 L_gamma = L + R_o1 + R_o2;
 
-varCol.chimin = chimin;
-varCol.chimax = chimax;
-varCol.L_gamma = L_gamma;
-varCol.Upsilon = Upsilon;
+varCol{1}.chimin = chimin;
+varCol{1}.chimax = chimax;
+varCol{1}.L_gamma = L_gamma;
+varCol{1}.Upsilon = Upsilon;
+
+varCol{1}.nurbs = fluid;
+if varCol{1}.useSolidDomain
+    varCol{2}.nurbs = solid;
+end
+if varCol{1}.useInnerFluidDomain
+    varCol{3}.nurbs = fluid_i;
+end

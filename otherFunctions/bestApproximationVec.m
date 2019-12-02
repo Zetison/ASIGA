@@ -24,7 +24,7 @@ pIndex = varCol.pIndex;
 noDofs = varCol.noCtrlPts;
 extraGP = varCol.extraGP;
 
-if varCol.solveForPtot
+if varCol.solveForPtot && varCol.exteriorProblem
     analytic = @(x) varCol.analytic(x) + varCol.p_inc(x);
 else
     analytic = varCol.analytic;

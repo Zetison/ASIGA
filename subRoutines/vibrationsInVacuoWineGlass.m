@@ -73,7 +73,7 @@ for degreeCase = 1:size(degreeElevArr,1)
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Collect varables into varCol, varCol_solid and varCol_fluid_i
+    %% Collect varables into varCol, varCol{2} and varCol{3}
     varCol.dimension = 3;     
     varCol.C = C;
     varCol = convertNURBS(nurbs, varCol);   

@@ -5,21 +5,21 @@
 % basisROM = 'Splines';
 % basisROM = 'Fourier';
 % basisROM = 'Bernstein';
-U_P = task.varCol.U_sweep;
+U_P = task.varCol{1}.U_sweep;
 stringShift = 40;
-task.varCol = rmfield(task.varCol,'U_sweep');
-task.varCol = rmfield(task.varCol,'U');
+task.varCol{1} = rmfield(task.varCol{1},'U_sweep');
+task.varCol{1} = rmfield(task.varCol{1},'U');
 runTasksInParallelOld = runTasksInParallel;
 basisROMcell = studies(study_i).basisROMcell;
 k_ROM = studies(study_i).k_ROM;
 noVecsArr = studies(study_i).noVecsArr;
 noDofs = size(U_P{1},1);
 varCol = task.varCol;
-e3Dss_options = varCol.e3Dss_options;
+e3Dss_options = varCol{1}.e3Dss_options;
 % noVec = size(U_P{1},2);
 for i_b = 1:numel(basisROMcell)
     basisROM = basisROMcell{i_b};
-    k_P = task.varCol.k;
+    k_P = task.varCol{1}.k;
 
     P = numel(k_P);
     k_start = k_P(1);
@@ -30,10 +30,14 @@ for i_b = 1:numel(basisROMcell)
         fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
         t_startROM = tic;
         switch basisROM
+            case 'Hermite'
+                mp.Digits(400);
+                Y = getInterpolatingHermite(mp(k_P.'),mp(k_ROM),noVecs);
+                Y = double(Y);
             case 'Pade'
                 p = cell(P,1);
                 q = cell(P,1);
-                useHP = 1;
+                useHP = 0;
                 if useHP
 %                     mp.Digits(400);
                     mp.Digits(1000);
@@ -82,9 +86,9 @@ for i_b = 1:numel(basisROMcell)
             case 'Bernstein'
                 Vsize = P*noVecs;
                 p_ROM = P*noVecs-1;
-                useHP = 1;
+                useHP = 0;
                 if useHP
-%                     mp.Digits(400);
+                    mp.Digits(400);
                     p_ROM = mp(p_ROM);
                 end
                 k_P = convert(k_P,class(p_ROM));
@@ -222,6 +226,15 @@ for i_b = 1:numel(basisROMcell)
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
             t_startROM = tic;
             switch basisROM
+                case 'Hermite'
+                    U_fluid_oArr = zeros(noDofs,numel(k_ROM));
+                    counter = 1;
+                    for i = 1:P
+                        for n = 1:noVecs
+                            U_fluid_oArr = U_fluid_oArr + U_P{i}(:,n)*Y(counter,:);
+                            counter = counter + 1;
+                        end
+                    end
                 case 'Pade'
                     if useHP
                         U_fluid_oArr = double(interPade(mp(k_ROM),mp(k_P),p,q));
@@ -241,12 +254,12 @@ for i_b = 1:numel(basisROMcell)
             t_startROM = tic;
             for i_k = 1:numel(k_ROM)
                 k = k_ROM(i_k);
-                varCol.k = k;
-                omega = varCol.c_f*k;
-                varCol.f = omega/(2*pi);
-                U_fluid_o = U_fluid_oArr(:,i_k);
+                varCol{1}.k = k;
+                omega = varCol{1}.c_f*k;
+                varCol{1}.f = omega/(2*pi);
+                Uc{1} = U_fluid_oArr(:,i_k);
                 e3Dss_options.omega = omega;
-                varCol.analytic = @(x)analytic_(x,e3Dss_options);
+                varCol{1}.analytic = @(x)analytic_(x,e3Dss_options);
                 calculateErrors
             end
             fprintf('using %12f seconds.', toc(t_startROM))
@@ -255,12 +268,12 @@ for i_b = 1:numel(basisROMcell)
                 case {'Taylor','Pade'}
                     if task.calculateSurfaceError
                         [temp_error,temp_k_ROM] = insertNaN(k_ROM,task.results.surfaceError,k_P);
-                        tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = temp_k_ROM;
+                        tasks(i_task,task_ROM,i_b).task.varCol{1}.k_ROM = temp_k_ROM;
                         tasks(i_task,task_ROM,i_b).task.results.surfaceError = temp_error;
                     end
                     if task.calculateVolumeError
                         [temp_error,temp_k_ROM] = insertNaN(k_ROM,task.results.energyError,k_P);
-                        tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = temp_k_ROM;
+                        tasks(i_task,task_ROM,i_b).task.varCol{1}.k_ROM = temp_k_ROM;
                         tasks(i_task,task_ROM,i_b).task.results.energyError = temp_error;
                         temp_error = insertNaN(k_ROM,task.results.L2Error,k_P);
                         tasks(i_task,task_ROM,i_b).task.results.L2Error = temp_error;
@@ -271,14 +284,14 @@ for i_b = 1:numel(basisROMcell)
                     end
                 otherwise
                     if task.calculateSurfaceError
-                        tasks(i_task,task_ROM,i_b).task.results.surfaceError = surfaceErrorArr;
+                        tasks(i_task,task_ROM,i_b).task.results.surfaceError = task.results.surfaceError;
                     end
                     if task.calculateVolumeError
-                        tasks(i_task,task_ROM,i_b).task.results.energyError = energyError;
-                        tasks(i_task,task_ROM,i_b).task.results.L2Error = L2Error;
-                        tasks(i_task,task_ROM,i_b).task.results.H1Error = H1Error;
-                        tasks(i_task,task_ROM,i_b).task.results.H1sError = H1sError;
-                        tasks(i_task,task_ROM,i_b).task.varCol.k_ROM = k_ROM;
+                        tasks(i_task,task_ROM,i_b).task.results.energyError = task.results.energyError;
+                        tasks(i_task,task_ROM,i_b).task.results.L2Error = task.results.L2Error;
+                        tasks(i_task,task_ROM,i_b).task.results.H1Error = task.results.H1Error;
+                        tasks(i_task,task_ROM,i_b).task.results.H1sError = task.results.H1sError;
+                        tasks(i_task,task_ROM,i_b).task.varCol{1}.k_ROM = k_ROM;
                     end
             end
             tasks(i_task,task_ROM,i_b).task.noVecs = noVecs;

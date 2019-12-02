@@ -2,10 +2,6 @@ function maxU = createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZet
 
 if nargin < 8
     rho = zeros(size(U,1),1);
-    withDensity = false;
-else
-    withDensity = true;
-    
 end
 maxU = NaN;
 
@@ -26,7 +22,7 @@ pIndex = varCol.pIndex;
 noDofs = varCol.noDofs;
 patches = varCol.patches;
 d = varCol.dimension;
-if isfield(varCol,'omega')
+if isfield('varCol','omega')
     omega = varCol.omega;
 else
     omega = NaN;
@@ -72,21 +68,7 @@ end
 type = patches{1}.nurbs.type;
 switch type
     case '3Dsurface'
-        noXiKnots = 2+extraXiPts;
-        noEtaKnots = 2+extraEtaPts;
-        noNodes = noXiKnots*noEtaKnots;   
-        noVisElems  = (noXiKnots-1)*(noEtaKnots-1);
         container = cell(1,noElems);
-        for e = 1:noElems
-            container{e}.nodes = zeros(noNodes,3);
-            container{e}.noNodes = noNodes;
-            container{e}.noVisElems = noVisElems;
-            container{e}.displacement = zeros(noNodes,3);
-            container{e}.scalarField = zeros(noNodes,3);
-            container{e}.density = zeros(noNodes,1);
-            container{e}.visElements = zeros(noVisElems,8);
-            container{e}.strain = zeros(noNodes,6);
-        end
         parfor e = 1:noElems
             patch = pIndex(e);
             Xi = knotVecs{patch}{1};
@@ -180,14 +162,12 @@ switch type
             container{e}.noNodes = noNodes;
             container{e}.noVisElems = noVisElems;
             container{e}.displacement = zeros(noNodes,3);
-            container{e}.scalarField = zeros(noNodes,1);
-            container{e}.gScalarField_p = zeros(noNodes,3);
             container{e}.density = zeros(noNodes,1);
             container{e}.visElements = zeros(noVisElems,8);
             container{e}.strain = zeros(noNodes,6);
         end
-%         for e = 1:noElems
-        parfor e = 1:noElems
+        for e = 1:noElems
+%         parfor e = 1:noElems
             patch = pIndex(e);
             Xi = knotVecs{patch}{1};
             Eta = knotVecs{patch}{2};
@@ -205,6 +185,7 @@ switch type
             pts = controlPts(sctr,:);
             wgts = weights(element2(e,:),:); % New
             Usctr = U(sctr,:);
+            rhosctr = rho(sctr);
             
             visElements_e = zeros(noVisElems,8);
             eVis = 1;
@@ -255,12 +236,12 @@ switch type
             dRdz = repmat(Jinv3(:,1),1,n_en).*dRdxi + repmat(Jinv3(:,2),1,n_en).*dRdeta + repmat(Jinv3(:,3),1,n_en).*dRdzeta;
             
             container{e}.nodes = R*pts;
+            container{e}.displacement = R*Usctr;
+            container{e}.density = R*rhosctr;
             container{e}.visElements = visElements_e;
-            if withDensity
-                container{e}.density = R*rho(sctr);
-            end
+            
             indices = abs(J_1) < 100*Eps;
-            if 0 %any(indices)
+            if any(indices)
                 digits(100)
                 [~, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(vpa(xi(indices)), vpa(eta(indices)), vpa(zeta(indices)), p_xi, p_eta, p_zeta, vpa(Xi), vpa(Eta), vpa(Zeta), vpa(wgts));
                 dXdxi = dRdxi*vpa(pts);
@@ -287,13 +268,7 @@ switch type
             dudx = dRdx*Usctr;
             dudy = dRdy*Usctr;
             dudz = dRdz*Usctr;
-            if d == 3
-                container{e}.strain = calculateStrainVectorVec(dudx, dudy, dudz);
-                container{e}.displacement = R*Usctr;
-            else
-                container{e}.scalarField = R*Usctr;
-                container{e}.gScalarField_p = [dudx,dudy,dudz];
-            end
+            container{e}.strain = calculateStrainVectorVec(dudx, dudy, dudz);
         end
         noNodes = 0;
         noVisElems = 0;
@@ -304,65 +279,40 @@ switch type
         visElements = zeros(noVisElems,8);
         displacement = zeros(noNodes,3);
         density = zeros(noNodes,1);
-        strain_h = zeros(noNodes,6);
+        strain = zeros(noNodes,6);
         nodes = zeros(noNodes,3);
-        gScalarField_p = zeros(noNodes,3);
         nodesCount = 0;
         count_vis = 0;
         for e = 1:noElems
             visElements(count_vis+1:count_vis+container{e}.noVisElems,:) = nodesCount + container{e}.visElements;
             nodes(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.nodes;
-            if d == 3
-                displacement(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.displacement;
-                strain_h(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.strain;
-            else
-                scalarField(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.scalarField;
-                gScalarField_p(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.gScalarField_p;
-            end
-            if withDensity
-                density(nodesCount+1:nodesCount+container{e}.noNodes) = container{e}.density;
-            end
+            displacement(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.displacement;
+            density(nodesCount+1:nodesCount+container{e}.noNodes) = container{e}.density;
+            strain(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.strain;
             nodesCount = nodesCount + container{e}.noNodes;
             count_vis = count_vis + container{e}.noVisElems;
         end
 end
-nodes(norm2(nodes) < 100*Eps) = 0;
 data.nodes = nodes;
 data.visElements = visElements;
 data.omega = omega;
 
 % tic
 % fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
-if d == 1
-    if isOuterDomain
-        data.P_inc = real(makeDynamic(p_inc(nodes), options, omega)); 
-        if varCol.solveForPtot
-            totField = scalarField;
-            if isOuterDomain && ~strcmp(model,'PS')
-                scalarField = scalarField - p_inc(nodes);
-            end
-%             data.errorFunc = errorFunc;
-        else   
-            totField = scalarField + p_inc(nodes);
-        end
-        data.scalarField = real(makeDynamic(scalarField, options, omega)); 
-        if strcmp(type,'3Dvolume')
-            rho_f = varCol.rho_f;
-            displacement = (gScalarField_p+gp_inc(nodes))/(rho_f*omega^2);
-            data.displacement = real(makeDynamic(displacement, options, omega));
-        end
-    else
-        data.totField = real(makeDynamic(scalarField, options, omega));
-        data.totFieldAbs = abs(makeDynamic(scalarField, options, omega));
+if isOuterDomain
+    data.P_inc = real(makeDynamic(p_inc(nodes), options, omega)); 
+    if strcmp(varCol.method,'BEM')
         totField = scalarField;
-        if strcmp(type,'3Dvolume')
-            rho_f = varCol.rho_f; 
-            displacement = gScalarField_p/(rho_f*omega^2);  
-            data.displacement = real(makeDynamic(displacement, options, omega));
+        if isOuterDomain && ~strcmp(model,'PS')
+            scalarField = scalarField - data.P_inc;
         end
+        data.errorFunc = errorFunc;
+    else   
+        totField = scalarField + p_inc(nodes);
     end
     if ~isempty(e3Dss_options)
-        if isOuterDomain && strcmp(varCol.applyLoad, 'radialPulsation')
+        
+        if strcmp(varCol.applyLoad, 'radialPulsation')
             data_e3Dss.p = varCol.analytic(nodes);
             dp = varCol.gAnalytic(nodes);
             data_e3Dss.dpdx = dp(:,1);
@@ -370,22 +320,14 @@ if d == 1
             data_e3Dss.dpdz = dp(:,3);
             data.Error = abs(data_e3Dss.p-scalarField)./abs(data_e3Dss.p);
         else
-            if isOuterDomain
-                data_e3Dss = e3Dss(nodes,e3Dss_options);
-            else
-                data_e3Dss = e3Dss({[],[],nodes},e3Dss_options);
-                data_e3Dss = data_e3Dss(2);
-            end
+            data_e3Dss = e3Dss(nodes,e3Dss_options);
         end
-        p = data_e3Dss(1).p;
-        data.analytic = real(makeDynamic(p, options, omega)); 
-        p_e = p-scalarField;
-        p2 = abs(p).^2;
-        p_e2 = abs(p_e).^2;
-        data.Error = sqrt(p_e2/max(p2));
+        analytic_v = data_e3Dss(1).p;
         if strcmp(type, '3Dvolume')
+            p = data_e3Dss(1).p;
             dp = [data_e3Dss(1).dpdx, data_e3Dss(1).dpdy, data_e3Dss(1).dpdz];
-            dp_e = dp-gScalarField_p;
+            p_e = p-scalarField;
+%             dp_e = dp-gScalarField_p;
 
             p2 = abs(p).^2;
             dp2 = sum(abs(dp).^2,2);
@@ -394,24 +336,48 @@ if d == 1
             
             k = varCol.k;
             data.Error = sqrt(p_e2/max(p2));
-            data.ErrorGrad = sqrt(dp_e2/max(dp2));
-            data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
-            dp_e = dp-gScalarField_p;
-            dp2 = sum(abs(dp).^2,2);
-            dp_e2 = sum(abs(dp_e).^2,2);
-            k = varCol.k;
-            data.ErrorGrad = sqrt(dp_e2/max(dp2));
-            data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
+%             data.ErrorGrad = sqrt(dp_e2/max(dp2));
+%             data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
         end
+        data.analytic = real(makeDynamic(analytic_v, options, omega)); 
     end
-%     data.testField = testField;
+    data.testField = testField;
 %     data.testFun = varCol.testFun(nodes); 
+    data.scalarField = real(makeDynamic(scalarField, options, omega)); 
     data.totField = real(makeDynamic(totField, options, omega));
     data.totFieldAbs = abs(makeDynamic(totField, options, omega));
 %     data.testFun = abs(norm2(gScalarField2-gScalarField)/max(norm2(gScalarField)));
 %     data.testFun = abs(norm2(scalarField-gScalarField)/max(abs(norm2(scalarField))));
 %     data.testFun = abs((norm2(gScalarField2-gAnalytic_v,0) - k(1)^2*abs(scalarField-analytic_v))/max(norm2(gAnalytic_v,0) - k(1)^2*abs(analytic_v)));
     
+    if strcmp(type, '3Dvolume')
+        if d == 1 && isOuterDomain
+            rho_f = varCol.rho_f;
+            displacement = (gScalarField_p+gp_inc(nodes))/(rho_f*omega^2);
+        end
+    end    
+elseif d == 1
+    data.totField = real(makeDynamic(scalarField, options, omega));
+    data.totFieldAbs = abs(makeDynamic(scalarField, options, omega));
+    rho_f = varCol.rho_f; 
+    displacement = gScalarField_p/(rho_f*omega^2);  
+    if ~isempty(e3Dss_options)
+        data_e3Dss = e3Dss({[],[],nodes},e3Dss_options);
+        p = data_e3Dss(2).p;
+        dp = [data_e3Dss(2).dpdx, data_e3Dss(2).dpdy, data_e3Dss(2).dpdz];
+        p_e = p-scalarField;
+        dp_e = dp-gScalarField_p;
+
+        p2 = abs(p).^2;
+        dp2 = sum(abs(dp).^2,2);
+        p_e2 = abs(p_e).^2;
+        dp_e2 = sum(abs(dp_e).^2,2);
+
+        k = varCol.k;
+        data.Error = sqrt(p_e2/max(p2));
+        data.ErrorGrad = sqrt(dp_e2/max(dp2));
+        data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
+    end
 else
     if ~isempty(e3Dss_options)
         e3Dss_options.calc_sigma_xx = 1;
@@ -456,14 +422,10 @@ else
         data.Error = sqrt(u_e2/max(u2));
         data.ErrorGrad = sqrt(eCe/max(uCu));
         data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
-        
-        data.analytic = real(makeDynamic(u, options, omega)); 
     end
-    data.stress = real(makeDynamic(strain_h*C, options, omega));
+    data.stress = real(makeDynamic(strain, options, omega));
     data.displacement = real(makeDynamic(displacement, options, omega));
-    if withDensity
-        data.density = real(makeDynamic(density, options, omega));
-    end
+    data.density = real(makeDynamic(density, options, omega));
 end
 % fprintf('using %12f seconds.', toc)
 % data.displacement = real(makeDynamic(displacement, options, omega));

@@ -3,26 +3,26 @@ if ~exist('F','var')
 elseif length(F) ~= noDofs
     F = zeros(noDofs,1);        % external force vector
 end
-n = varCol_solid.nurbs.number(1);
-m = varCol_solid.nurbs.number(2);
-l = varCol_solid.nurbs.number(3);
-weights = varCol_solid.weights;
-controlPts = varCol_solid.controlPts;
-p = varCol_solid.nurbs.degree(1);
-q = varCol_solid.nurbs.degree(2);
-r = varCol_solid.nurbs.degree(3);
-Xi = varCol_solid.nurbs.knots{1};
-Eta = varCol_solid.nurbs.knots{2};
-Zeta = varCol_solid.nurbs.knots{3};
-gluedNodes = varCol_solid.gluedNodes;
-elRangeXi = varCol_solid.elRangeXi;
-elRangeEta = varCol_solid.elRangeEta;
-elRangeZeta = varCol_solid.elRangeZeta;
-noCtrlPts = varCol_solid.noCtrlPts;
-noElems = varCol_solid.noElems;
-index = varCol_solid.index;
-element = varCol_solid.element;
-nurbs = varCol_solid.nurbs;
+n = varCol{2}.nurbs.number(1);
+m = varCol{2}.nurbs.number(2);
+l = varCol{2}.nurbs.number(3);
+weights = varCol{2}.weights;
+controlPts = varCol{2}.controlPts;
+p = varCol{2}.nurbs.degree(1);
+q = varCol{2}.nurbs.degree(2);
+r = varCol{2}.nurbs.degree(3);
+Xi = varCol{2}.nurbs.knots{1};
+Eta = varCol{2}.nurbs.knots{2};
+Zeta = varCol{2}.nurbs.knots{3};
+gluedNodes = varCol{2}.gluedNodes;
+elRangeXi = varCol{2}.elRangeXi;
+elRangeEta = varCol{2}.elRangeEta;
+elRangeZeta = varCol{2}.elRangeZeta;
+noCtrlPts = varCol{2}.noCtrlPts;
+noElems = varCol{2}.noElems;
+index = varCol{2}.index;
+element = varCol{2}.element;
+nurbs = varCol{2}.nurbs;
 
 if applyNeumannAtXi0
     % Apply Neumann boundary condition at surface where xi = 0

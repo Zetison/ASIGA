@@ -17,9 +17,9 @@ if type == 1
     controlPts(:,5,1,1) = [0, r, 0, 1];
     
     controlPts(:,1,2,1) = [l, 0, 0, 1];
-    controlPts(:,2,2,1) = [l, l/2, 0, w];
+    controlPts(:,2,2,1) = [l, l/2, 0, 1];
     controlPts(:,3,2,1) = [l, l, 0, 1];
-    controlPts(:,4,2,1) = [l/2, l, 0, w];
+    controlPts(:,4,2,1) = [l/2, l, 0, 1];
     controlPts(:,5,2,1) = [0, l, 0, 1];
     
     controlPts(:,1,1,2) = [r, 0, h, 1];
@@ -29,9 +29,9 @@ if type == 1
     controlPts(:,5,1,2) = [0, r, h, 1];
     
     controlPts(:,1,2,2) = [l, 0, h, 1];
-    controlPts(:,2,2,2) = [l, l/2, h, w];
+    controlPts(:,2,2,2) = [l, l/2, h, 1];
     controlPts(:,3,2,2) = [l, l, h, 1];
-    controlPts(:,4,2,2) = [l/2, l, h, w];
+    controlPts(:,4,2,2) = [l/2, l, h, 1];
     controlPts(:,5,2,2) = [0, l, h, 1];
     
     x = R*cos(theta);
@@ -44,9 +44,9 @@ if type == 1
     controlPts(:,5,1,3) = [0, R, t, 1];
     
     controlPts(:,1,2,3) = [l, 0, t, 1];
-    controlPts(:,2,2,3) = [l, l/2, t, w];
+    controlPts(:,2,2,3) = [l, l/2, t, 1];
     controlPts(:,3,2,3) = [l, l, t, 1];
-    controlPts(:,4,2,3) = [l/2, l, t, w];
+    controlPts(:,4,2,3) = [l/2, l, t, 1];
     controlPts(:,5,2,3) = [0, l, t, 1];
     
 else
@@ -71,11 +71,11 @@ else
     controlPts(:,7,1,1) = [0, r, 0, 1];
     
     controlPts(:,1,2,1) = [l, 0, 0, 1];
-    controlPts(:,2,2,1) = [l, s/2, 0, w];
+    controlPts(:,2,2,1) = [l, s/2, 0, 1];
     controlPts(:,3,2,1) = [l, s, 0, 1];
-    controlPts(:,4,2,1) = [(s+l)/2, (s+l)/2, 0, w];
+    controlPts(:,4,2,1) = [(s+l)/2, (s+l)/2, 0, 1];
     controlPts(:,5,2,1) = [s, l, 0, 1];
-    controlPts(:,6,2,1) = [s/2, l, 0, w];
+    controlPts(:,6,2,1) = [s/2, l, 0, 1];
     controlPts(:,7,2,1) = [0, l, 0, 1];
     
     controlPts(:,1,1,2) = [r, 0, h, 1];
@@ -87,11 +87,11 @@ else
     controlPts(:,7,1,2) = [0, r, h, 1];
     
     controlPts(:,1,2,2) = [l, 0, h, 1];
-    controlPts(:,2,2,2) = [l, s/2, h, w];
+    controlPts(:,2,2,2) = [l, s/2, h, 1];
     controlPts(:,3,2,2) = [l, s, h, 1];
-    controlPts(:,4,2,2) = [(s+l)/2, (s+l)/2, h, w];
+    controlPts(:,4,2,2) = [(s+l)/2, (s+l)/2, h, 1];
     controlPts(:,5,2,2) = [s, l, h, 1];
-    controlPts(:,6,2,2) = [s/2, l, h, w];
+    controlPts(:,6,2,2) = [s/2, l, h, 1];
     controlPts(:,7,2,2) = [0, l, h, 1];
         
     x = R*cos(theta);
@@ -110,11 +110,11 @@ else
     controlPts(:,7,1,3) = [0, R, t, 1];
     
     controlPts(:,1,2,3) = [l, 0, t, 1];
-    controlPts(:,2,2,3) = [l, s/2, t, w];
+    controlPts(:,2,2,3) = [l, s/2, t, 1];
     controlPts(:,3,2,3) = [l, s, t, 1];
-    controlPts(:,4,2,3) = [(s+l)/2, (s+l)/2, t, w];
+    controlPts(:,4,2,3) = [(s+l)/2, (s+l)/2, t, 1];
     controlPts(:,5,2,3) = [s, l, t, 1];
-    controlPts(:,6,2,3) = [s/2, l, t, w];
+    controlPts(:,6,2,3) = [s/2, l, t, 1];
     controlPts(:,7,2,3) = [0, l, t, 1];
 end
 

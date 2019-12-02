@@ -1,5 +1,6 @@
 
 if plot3Dgeometry
+    fluid = varCol{1}.nurbs;
     close all
     figure('Color','white','name',['3D plot of geometry with mesh ' num2str(M)])
     for i = 1:numel(fluid)
@@ -63,8 +64,8 @@ if plot3Dgeometry
                     caxis([-17,1])
                     plotControlPts(fluid{i})
                 else
-%                     plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',0.8,'plotAt',plotAt});
-                    plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',1,'plotAt',plotAt});
+                    plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',0.8,'plotAt',plotAt});
+%                     plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',1,'plotAt',plotAt});
                 end
             end
 %                 plotNURBS(fluid{i},[100 100 0], 1, 1.5*[44 77 32]/255, 1);
@@ -88,7 +89,6 @@ if plot3Dgeometry
     set(gca, 'Color', 'none');
 %     title(['Fluid 3D NURBS geometry. Mesh ' num2str(M)])
     drawnow
-    varCol.dimension = 1;
 %     view(-70,30)
 %     view(120,10)
     view(18,10) % BeTSSi
@@ -128,15 +128,27 @@ if plot3Dgeometry
 %     export_fig('../../graphics/sphericalShell/Sphere1controlPolygon' , '-png', '-transparent')
 end   
 if plot2Dgeometry && ~boundaryMethod
+    fluid = varCol{1}.nurbs;
+    solid = varCol{2}.nurbs;
+    if useInnerFluidDomain
+        fluid_i = varCol{3}.nurbs;
+    end
 %     figure(20+M)
     figure('Color','white','name',['3D plot of geometry with mesh ' num2str(M) ' - cross section'])
     hold on
     npts = 20;
     for i = 1:numel(fluid)
         switch model
-            case 'IL'
-                plotCuttingPlaneConstXi(fluid{i}, [npts npts],'xz',0);
-            case {'SS','S1','S2','S3','PS','IL_P','SS_P','S1_P','S1_P2','S2_P','S3_P'}
+%             case {'IL','S15'}
+%                 if parm == 2 && i > 4
+%                     continue
+%                 end
+%                 if parm == 1
+%                     plotCuttingPlaneConstXi(fluid{i}, [npts npts],'xz',0);
+%                 else
+%                     plotCuttingPlaneConstEta(fluid{i}, [npts npts],'xz',0.5);
+%                 end
+            case {'IL','S15','SS','S1','S2','S3','PS','IL_P','SS_P','S1_P','S1_P2','S2_P','S3_P'}
                 if parm == 2 && i > 4
                     continue
                 end
@@ -153,20 +165,28 @@ if plot2Dgeometry && ~boundaryMethod
                 plotCuttingPlaneConstXi(fluid{i}, [npts npts],'xz',0.25);
     %             plotCuttingPlaneConstXi(fluid, [npts npts],'xz',0.75);
         end
-        if useInnerFluidDomain
-            switch model
-                case 'IL'
-                    plotCuttingPlaneConstXi(fluid_i{1}, [npts npts],'xz',0);
-                otherwise
-                    plotCuttingPlaneConstXi(fluid_i{1}, [npts npts],'xz',0.5);
-            end
-        end
         if useSolidDomain
             switch model
-                case 'IL'
-                    plotCuttingPlaneConstXi(solid{1}, [npts npts],'xz',0, [0.8 0 0]);
+                case {'IL','S15','SS','S1','S2','S3','PS','IL_P','SS_P','S1_P','S1_P2','S2_P','S3_P'}
+                    if parm == 1
+                        plotCuttingPlaneConstXi(solid{i}, [npts npts],'xz',0, [0.8 0 0]);
+                    else
+                        plotCuttingPlaneConstEta(solid{i}, [npts npts],'xz',0.5, [0.8 0 0]);
+                    end
                 otherwise
-                    plotCuttingPlaneConstXi(solid{1}, [npts npts],'xz',0.5, [0.8 0 0]);
+                    plotCuttingPlaneConstXi(solid{i}, [npts npts],'xz',0.5, [0.8 0 0]);
+            end
+        end
+        if useInnerFluidDomain
+            switch model
+                case {'IL','S15','SS','S1','S2','S3','PS','IL_P','SS_P','S1_P','S1_P2','S2_P','S3_P'}
+                    if parm == 1
+                        plotCuttingPlaneConstXi(fluid_i{i}, [npts npts],'xz',0);
+                    else
+                        plotCuttingPlaneConstEta(fluid_i{i}, [npts npts],'xz',0.5);
+                    end
+                otherwise
+                    plotCuttingPlaneConstXi(fluid_i{i}, [npts npts],'xz',0.5);
             end
         end
     end

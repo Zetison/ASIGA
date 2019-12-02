@@ -6,12 +6,13 @@ parm = 1;
 % method = {'IENSG'};
 % method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
-for BC = {'SHBC', 'SSBC','NNBC'}
+% for BC = {'SHBC', 'SSBC','NNBC'}
+for BC = {'NNBC'}
     method = {'IE'};
 
 %     coreMethod = {'C0_IGA','hp_FEM'};
-%     coreMethod = {'IGA'};
-    coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
+    coreMethod = {'IGA'};
+%     coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
     formulation = {'BGU'};
 %     formulation = 'VL2E';
 %     formulation = 'SL2E';
@@ -53,11 +54,11 @@ for BC = {'SHBC', 'SSBC','NNBC'}
     formulation = {'BGU'};
     degree = 3:4;
 %     degree = 4;
-    collectIntoTasks
+%     collectIntoTasks
     
     method = {'BA'};
     formulation = {'VL2E'};
-    collectIntoTasks    
+%     collectIntoTasks    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     method = {'IE'};
@@ -65,9 +66,9 @@ for BC = {'SHBC', 'SSBC','NNBC'}
     coreMethod = {'linear_FEM'};
     degree = 1;
 
-    collectIntoTasks
+%     collectIntoTasks
     
     method = {'BA'};
     formulation = {'VL2E'};
-    collectIntoTasks    
+%     collectIntoTasks    
 end

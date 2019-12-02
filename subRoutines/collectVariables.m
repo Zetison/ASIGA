@@ -3,75 +3,70 @@ omega = 2*pi*f;
 k = (1./c_f.')*omega;
 lambda = 2*pi./k;  % Wave length for outer fluid domain
 
-varCol.saveName = saveName;
-varCol.scatteringCase = scatteringCase;
-varCol.BC = BC;
-varCol.model = model;
-varCol.M = M;
-varCol.f = f;
-varCol.rho_f = rho_f(1);
-varCol.c_f = c_f(1);
-varCol.k = k(1,:);
-varCol.formulation = formulation;
-varCol.coreMethod = coreMethod;
-varCol.omega = omega;
-varCol.applyLoad = applyLoad;
-varCol.alpha_s = alpha_s;
-varCol.beta_s = beta_s;
-varCol.alpha = alpha;
-varCol.beta = beta;
-varCol.extraGP = extraGP;
-varCol.extraGPBEM = extraGPBEM;
-varCol.agpBEM = agpBEM;
-varCol.parms = parms;
-varCol.P_inc = P_inc;
-varCol.analyticSolutionExist = analyticSolutionExist;
-varCol.exteriorProblem = exteriorProblem;
-varCol.quadMethodBEM = task.quadMethodBEM;
+varCol{1}.saveName = saveName;
+varCol{1}.scatteringCase = scatteringCase;
+varCol{1}.M = M;
+varCol{1}.f = f;
+varCol{1}.rho_f = rho_f(1);
+varCol{1}.c_f = c_f(1);
+varCol{1}.formulation = formulation;
+varCol{1}.coreMethod = coreMethod;
+varCol{1}.applyLoad = applyLoad;
+varCol{1}.alpha_s = alpha_s;
+varCol{1}.beta_s = beta_s;
+varCol{1}.alpha = alpha;
+varCol{1}.beta = beta;
+varCol{1}.parms = parms;
+varCol{1}.P_inc = P_inc;
+varCol{1}.analyticSolutionExist = analyticSolutionExist;
 if isfield(task,'parm')
-    varCol.parm = task.parm;
+    varCol{1}.parm = task.parm;
 end
 if isfield(task,'internalPts')
-    varCol.internalPts = task.internalPts;
+    varCol{1}.internalPts = task.internalPts;
 end
 
 if strcmp(method,'IENSG') || strcmp(method,'IE')
-    varCol.N = task.N;
-    varCol.IEbasis = task.IEbasis;
-    varCol = generateCoeffMatrix(varCol);
+    varCol{1}.N = task.N;
+    varCol{1}.IEbasis = task.IEbasis;
+    varCol{1} = generateCoeffMatrix(varCol{1});
 end
 if strcmp(method,'ABC')
-    varCol.N = task.N;
+    varCol{1}.N = task.N;
 end
+  
+for i = 1:numel(varCol)
+    varCol{i}.extraGP = extraGP;
+    varCol{i}.extraGPBEM = extraGPBEM;
+    varCol{i}.omega = omega;
+    if mod(i,2)
+        varCol{i}.dimension = 1;   
+        varCol{i}.k = k(1,:);
+        varCol{i}.agpBEM = agpBEM;
+        varCol{i}.quadMethodBEM =task.quadMethodBEM;
+        varCol{i}.omega = omega;
+        varCol{i}.rho_f = rho_f((i+1)/2);
+        varCol{i}.extraGP = extraGP;
+        varCol{i}.coreMethod = coreMethod;
+        varCol{i}.formulation = formulation;
+        varCol{i}.exteriorProblem = false;
+        varCol{i}.model = model;
+        varCol{i}.BC = BC;
+        varCol{i}.useNeumanProj = useNeumanProj;
+        varCol{i}.colBEM_C0 = colBEM_C0;
+        varCol{i}.colMethod = colMethod;
+        varCol{i}.solveForPtot = solveForPtot;
+        varCol{i}.useSolidDomain = useSolidDomain;
+    else
+    	varCol{i}.dimension = 3;   
+        varCol{i}.rho_s = rho_s;
 
-%% Convert NURBS data    
-varCol.dimension = 1;    
-varCol = convertNURBS(fluid, varCol);
-
-if useSolidDomain 
-    varCol_solid.dimension = 3;     
-    varCol_solid = convertNURBS(solid, varCol_solid);   
-    if varCol_solid.patches{1}.nurbs.degree(1) ~= varCol.patches{1}.nurbs.degree(1) || ...
-       varCol_solid.patches{1}.nurbs.degree(2) ~= varCol.patches{1}.nurbs.degree(2)
-        error('This case has not been implemented')
-    end
-    varCol_solid.omega = omega;
-    varCol_solid.rho_s = rho_s;
-    
-    varCol_solid.extraGP = extraGP;
-    varCol_solid.solveForPtot = false;
-    varCol_solid.coreMethod = coreMethod;
-    varCol_solid.k = NaN;
-    varCol_solid.formulation = formulation;
+        varCol{i}.extraGP = extraGP;
+        varCol{i}.solveForPtot = false;
+        varCol{i}.coreMethod = coreMethod;
+        varCol{i}.k = NaN;
+        varCol{i}.formulation = formulation;
+    end  
+    varCol{i} = convertNURBS(varCol{i});
 end
-if useInnerFluidDomain     
-    varCol_fluid_i.dimension = 1;   
-    varCol_fluid_i = convertNURBS(fluid_i, varCol_fluid_i);
-    varCol_fluid_i.omega = omega;
-    varCol_fluid_i.k = k(2,:);
-    varCol_fluid_i.rho_f = rho_f(2);
-    varCol_fluid_i.extraGP = extraGP;
-    varCol_fluid_i.solveForPtot = false;
-    varCol_fluid_i.coreMethod = coreMethod;
-    varCol_fluid_i.formulation = formulation;
-end
+varCol{1}.exteriorProblem = exteriorProblem;

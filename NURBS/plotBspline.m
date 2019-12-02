@@ -25,11 +25,11 @@ if ~plotDers
         xi_array = [Xi(1) Xi(i) xi_array Xi(end)];
         B = [0 0 B 1];
     elseif Xi(i) == Xi(i+p)        
-        xi_array = [Xi(1) Xi(i) Xi(i) xi_array Xi(i+p+1) Xi(end)];
-        B = [0 0 1 B 0 0];
+        xi_array = [Xi(1) Xi(i) Xi(i) Xi(i) xi_array Xi(i+p+1) Xi(end)];
+        B = [0 0 NaN 1 B 0 0];
     elseif Xi(i+1) == Xi(i+p+1)        
-        xi_array = [Xi(1) Xi(i) xi_array Xi(i+p+1) Xi(i+p+1) Xi(end)];
-        B = [0 0 B 1 0 0];
+        xi_array = [Xi(1) Xi(i) xi_array Xi(i+p+1) Xi(i+p+1) Xi(i+p+1) Xi(end)];
+        B = [0 0 B 1 NaN 0 0];
     else
         xi_array = [Xi(1) Xi(i) xi_array Xi(i+p+1) Xi(end)];
         B = [0 0 B 0 0];

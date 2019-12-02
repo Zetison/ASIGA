@@ -66,8 +66,8 @@ spIdxCol2 = zeros(d*n_en^2,solidNoElemsXiEta);
 
 
 [W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
-parfor e = 1:solidNoElemsXiEta
-% for e = 1:solidNoElemsXiEta
+% parfor e = 1:solidNoElemsXiEta
+for e = 1:solidNoElemsXiEta
     idXi = solidIndexXiEta(e,1);   % the index matrix is made in generateIGA3DMesh
     idEta = solidIndexXiEta(e,2);
 

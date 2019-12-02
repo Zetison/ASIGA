@@ -1,7 +1,4 @@
-function [varCol, fluid, solid, fluid_i] = createNURBSmesh_Ellipsoid(varCol, parms, M, degree, model)
-
-solid = NaN;
-fluid_i = NaN;
+function varCol = createNURBSmesh_Ellipsoid(varCol, parms, M, degree, model)
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -10,20 +7,20 @@ for j = 1:numel(names)
 end
 
 x_0 = [0, 0, 0];
-varCol.x_0 = x_0; % The origin of the model
+varCol{1}.x_0 = x_0; % The origin of the model
 alignWithAxis = 'Zaxis';
-switch varCol.method
+switch varCol{1}.method
     case {'IE','IENSG','ABC'}
-        varCol.A_2 = [1 0 0;
+        varCol{1}.A_2 = [1 0 0;
                       0 1 0;
                       0 0 1];
 end
 
 R_o = parms.R_o;
 t = parms.t;
-initMeshFactXi = varCol.initMeshFactXi;
-initMeshFactZeta = varCol.initMeshFactZeta;
-if varCol.boundaryMethod
+initMeshFactXi = varCol{1}.initMeshFactXi;
+initMeshFactZeta = varCol{1}.initMeshFactZeta;
+if varCol{1}.boundaryMethod
     switch model
         case 'EL'
             c_z = 6*R_o; % 6*R_o
@@ -47,7 +44,7 @@ if varCol.boundaryMethod
     noNewXiKnots = initMeshFactXi*2^(M-1)-1;
     noNewEtaKnots = round(integral(f_arc,0,pi/2)/(c_xy*pi/2)*(initMeshFactXi*2^(M-1)-1));
     noNewZetaKnots = max(initMeshFactZeta*2^(M-1)/8-1,0);
-    if varCol.parm(1) == 1
+    if varCol{1}.parm(1) == 1
         solid = getEllipsoidalShellData(c_xy,c_xy,c_z,t,alignWithAxis);
         solid = elevateDegreeInPatches(solid,[0 0 1]);
     else
@@ -62,13 +59,27 @@ if varCol.boundaryMethod
     solid = elevateDegreeInPatches(solid,[1 1 1]*(degree-nurbsDegree));
     solid = insertKnotsInPatches(solid,noNewXiKnots,noNewEtaKnots,noNewZetaKnots);
     L_gamma = 2*c_z;
-
+    
     fluid = extractSurface(solid, 'zeta', 'outer');
-    varCol.patchTop = getPatchTopology(fluid);
-    if varCol.useInnerFluidDomain
+    varCol{1}.patchTop = getPatchTopology(fluid);
+    if varCol{1}.useInnerFluidDomain
         fluid_i = extractSurface(solid, 'zeta', 'inner');
-        varCol.patchTop = getPatchTopology(fluid_i);
+        varCol{3}.patchTop = getPatchTopology(fluid_i);
+
+        varCol_fluid_i.dimension = 1;
+        varCol_fluid_i.nurbs = fluid_i;
+        varCol_fluid_i = findDofsToRemove(generateIGA2DMesh_new(convertNURBS(varCol_fluid_i)));
+        varCol{3}.elemsOuter = 1:varCol_fluid_i.noElems;
+        varCol{3}.noDofsInner = 0;
+        varCol{3}.noElemsInner = 0;
     end
+    varCol_dummy.dimension = 1;
+    varCol_dummy.nurbs = fluid;
+    varCol_dummy = findDofsToRemove(generateIGA2DMesh_new(convertNURBS(varCol_dummy)));
+    
+    varCol{1}.elemsOuter = 1:varCol_dummy.noElems;
+    varCol{1}.noDofsInner = 0;
+    varCol{1}.noElemsInner = 0;
 else
     switch model
         case 'EL'
@@ -94,11 +105,11 @@ else
                 noNewZetaKnots = round(2*t_fluid/(c_xy*pi/2)*(2^(i_M-1)+1));
                 L_gamma = 2*c_z;
             end
-        case {'SS', 'S1', 'S1_P', 'S1_P2', 'S2', 'S3', 'SS_P', 'IL'}
+        case {'SS', 'S1', 'S1_P', 'S1_P2', 'S3', 'S5', 'SS_P', 'IL'}
             c_z_g = R_o(1); % 30
             c_xy_g = R_o(1); % 2.5, 3.75
-            if isfield(varCol,'r_a')
-                c_z = varCol.r_a;
+            if isfield(varCol{1},'r_a')
+                c_z = varCol{1}.r_a;
                 c_xy = c_z;
                 t_fluid = c_z-c_z_g;
             else
@@ -117,48 +128,76 @@ else
     chimax = 1.00000001*c_z;
 
 
-    if varCol.parm(1) == 1
+    if varCol{1}.parm(1) == 1
         fluid = getEllipsoidalShellData(c_xy,c_xy,c_z,t_fluid,alignWithAxis);
         fluid = elevateDegreeInPatches(fluid,[0 0 1]);
     else
         fluid = getSphericalShellDataPatched(c_z, t_fluid); 
         fluid = elevateDegreeInPatches(fluid,[0 0 3]);
     end
-%     fluid = explodeNURBS(fluid,'eta');
-%     fluid = explodeNURBS(fluid,'xi');
+    explodeNURBSpatches = 1;
+    if explodeNURBSpatches
+        fluid = explodeNURBS(fluid,'eta');
+        fluid = explodeNURBS(fluid,'xi');
+    end
     nurbsDegree = fluid{1}.degree(1); % assume all degrees are equal
     degree = max(degree,nurbsDegree);
     fluid = elevateDegreeInPatches(fluid,[1 1 1]*(degree-nurbsDegree));
     fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots,noNewZetaKnots);
     
     Upsilon = sqrt(c_z^2-c_xy^2);
-    varCol.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
+    varCol{1}.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
 
-    if strcmp(model, 'SS') || strcmp(model, 'S1') || strcmp(model, 'S2') || strcmp(model, 'S3') || strcmp(model, 'IL')
-        if varCol.useSolidDomain
-            solid = getSphericalShellData(R_o, t, alignWithAxis);
-            solid = elevateNURBSdegree(solid,[0 0 1]);
-            solid = elevateNURBSdegree(solid,[1 1 1]*(degree-nurbsDegree));
-            noNewZetaKnots = max(round(t/t_fluid)*2^(M-1),0);
-            solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, noNewXiKnots) ...
-                                              insertUniform2(solid.knots{2}, noNewEtaKnots) ...
-                                              insertUniform2(solid.knots{3}, noNewZetaKnots)});
+    if strcmp(model, 'SS') || strcmp(model, 'S1') || strcmp(model, 'S3') || strcmp(model, 'S5') || strcmp(model, 'IL')
+        if varCol{1}.useSolidDomain
+            if varCol{1}.parm(1) == 1
+                solid = getSphericalShellData(R_o, t, alignWithAxis);
+                solid = elevateDegreeInPatches(solid,[0 0 1]);
+            else
+                solid = getSphericalShellDataPatched(R_o, t); 
+                solid = elevateDegreeInPatches(solid,[0 0 3]);
+            end
+            if explodeNURBSpatches
+                solid = explodeNURBS(solid,'eta');
+                solid = explodeNURBS(solid,'xi');
+            end
+            nurbsDegree = solid{1}.degree(1); % assume all degrees are equal
+            solid = elevateDegreeInPatches(solid,[1 1 1]*(degree-nurbsDegree));
+            noNewZetaKnotsSolid = max(round(t/t_fluid*2^(M-1)),0);
+%             noNewZetaKnots = 1;
+            solid = insertKnotsInPatches(solid,noNewXiKnots,noNewEtaKnots,noNewZetaKnotsSolid);
         end
 
-        if varCol.useInnerFluidDomain
-            fluid_i = getSolidSphereData(R_i, alignWithAxis);
-            fluid_i = elevateNURBSdegree(fluid_i,[0 0 1]);
-            fluid_i = elevateNURBSdegree(fluid_i,[1 1 1]*(degree-nurbsDegree));
+        if varCol{1}.useInnerFluidDomain
+            if varCol{1}.parm(1) == 1
+                fluid_i = getSolidSphereData(R_i, alignWithAxis);
+                fluid_i = elevateDegreeInPatches(fluid_i,[0 0 1]);
+            else
+                fluid_i = getSphericalShellDataPatched(R_i, R_i); 
+                fluid_i = elevateDegreeInPatches(fluid_i,[0 0 3]);
+            end
+            if explodeNURBSpatches
+                fluid_i = explodeNURBS(fluid_i,'eta');
+                fluid_i = explodeNURBS(fluid_i,'xi');
+            end
+            nurbsDegree = fluid_i{1}.degree(1); % assume all degrees are equal
+            fluid_i = elevateDegreeInPatches(fluid_i,[1 1 1]*(degree-nurbsDegree));
 
-            noNewZetaKnots = max(2^(M-1)/2-1,0);
-            fluid_i = insertKnotsInNURBS(fluid_i,{insertUniform2(fluid_i.knots{1}, noNewXiKnots) ...
-                                              insertUniform2(fluid_i.knots{2}, noNewEtaKnots) ...
-                                              insertUniform2(fluid_i.knots{3}, noNewZetaKnots)});
+            noNewZetaKnotsInner = max(round(R_i/t_fluid),0);
+            fluid_i = insertKnotsInPatches(fluid_i,0,0,noNewZetaKnotsInner);
+            fluid_i = insertKnotsInPatches(fluid_i,noNewXiKnots,noNewEtaKnots,noNewZetaKnots);
         end
     end
 end
+varCol{1}.nurbs = fluid;
+if varCol{1}.useSolidDomain
+    varCol{2}.nurbs = solid;
+end
+if varCol{1}.useInnerFluidDomain
+    varCol{3}.nurbs = fluid_i;
+end
 
-varCol.chimin = chimin;
-varCol.chimax = chimax;
-varCol.L_gamma = L_gamma;
-varCol.Upsilon = Upsilon;
+varCol{1}.chimin = chimin;
+varCol{1}.chimax = chimax;
+varCol{1}.L_gamma = L_gamma;
+varCol{1}.Upsilon = Upsilon;

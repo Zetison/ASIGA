@@ -44,7 +44,7 @@ end
 if ischar(subFolderName) && ~exist(subFolderName, 'dir')
     mkdir(subFolderName);
 end
-analyticSolutionExist = study.tasks(1).task.varCol.analyticSolutionExist;
+analyticSolutionExist = study.tasks(1).task.varCol{1}.analyticSolutionExist;
 % analyticSolutionExist = true;
 
 if isempty(options.fileDataHeaderX)
@@ -70,7 +70,7 @@ switch options.noXLoopPrms
     case 0
         if plotAnalyticSolution
             y_ref = study.tasks(1).task.results.([yname '_ref']);
-            x = study.tasks(1).task.varCol.(xname);
+            x = study.tasks(1).task.varCol{1}.(xname);
             x = x*options.xScale;
             y_ref = y_ref*options.yScale;
             plotXY(x,y_ref,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
@@ -78,8 +78,8 @@ switch options.noXLoopPrms
         end
         col = LaTeXcolorMap(noTasks);
         for i = 1:noTasks
-            if isfield(study.tasks(i).task.varCol,xname)
-                x = study.tasks(i).task.varCol.(xname);
+            if isfield(study.tasks(i).task.varCol{1},xname)
+                x = study.tasks(i).task.varCol{1}.(xname);
             else
                 x = study.tasks(i).task.(xname);
             end
@@ -183,8 +183,8 @@ switch options.noXLoopPrms
         idxMap = zeros(sizes); % y axis data 
 
         for i = 1:noTasks
-            if isfield(study.tasks(i).task.varCol,xname)
-                x(i) = study.tasks(i).task.varCol.(xname);  
+            if isfield(study.tasks(i).task.varCol{1},xname)
+                x(i) = study.tasks(i).task.varCol{1}.(xname);  
             else
                 x(i) = study.tasks(i).task.(xname);  
             end  

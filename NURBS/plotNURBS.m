@@ -620,9 +620,9 @@ elseif strcmp(nurbs.type, '3Dsurface')
     %     quiver3(reshape(X,mm*nn,1),reshape(Y,mm*nn,1),reshape(Z,mm*nn,1),reshape(Vx,mm*nn,1),reshape(Vy,mm*nn,1),reshape(Vz,mm*nn,1),0,'color','red')
 
     else
-        nurbspatches{1} = nurbs;
         varCol.dimension = 1;
-        varCol = convertNURBS(nurbspatches, varCol);  
+        varCol.nurbs = nurbs;
+        varCol = convertNURBS(varCol);  
         varCol = generateIGA2DMesh_new(varCol);
         noElems = varCol.patches{1}.noElems;
         index = varCol.patches{1}.index;

@@ -112,13 +112,11 @@ n_en = (p_xi+1)*(p_eta+1);
 [Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
 
 idxRow = zeros(n_en, noElems);
-idxRow2 = zeros(n_en, noElems);
-idxRow3 = zeros(n_en, noElemsInner);
 Avalues = complex(zeros(n_en, noDofs, noElems)); 
 d = 3;
 if useSolidDomain
-    Cvalues = complex(zeros(n_en, d*(noDofs-noDofsInner), noElems)); 
-    C2values = complex(zeros(n_en, d*noDofsInner, noElemsInner)); 
+    Cvalues = complex(zeros(n_en, d*noDofs, noElems)); 
+    C2values = complex(zeros(n_en, d*noDofs, noElems)); 
 else
     Cvalues = NaN; 
     C2values = NaN; 
@@ -126,8 +124,8 @@ end
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
 totNoQP = 0;
 totNoQPnonPolar = 0;
-parfor e_x = 1:noElems
-% for e_x = 1:noElems
+% parfor e_x = 1:noElems
+for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
     Xi_x = knotVecs{patch_x}{1}; % New
     Eta_x = knotVecs{patch_x}{2}; % New
@@ -145,8 +143,8 @@ parfor e_x = 1:noElems
     F_e = zeros(n_en, no_angles);
     A_e_temp = zeros(n_en, n_en, noElems);
     if useSolidDomain
-        C_e_temp = zeros(n_en, d*n_en, noElems-noElemsInner);
-        C2_e_temp = zeros(n_en, d*n_en, noElemsInner);
+        C_e_temp = zeros(n_en, d*n_en, noElems);
+        C2_e_temp = zeros(n_en, d*n_en, noElems);
     end
     
     J_2_x = 0.25*(Xi_e_x(2)-Xi_e_x(1))*(Eta_e_x(2)-Eta_e_x(1));
@@ -192,7 +190,7 @@ parfor e_x = 1:noElems
         idxCol3 = zeros(d*n_en, noElemsInner);
     
         for e_y = 1:noElems   
-            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, ~,y,R_y,r,fact_y,ny] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
+            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, ~,~,R_y,r,fact_y,ny] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                     useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                     x,nx,pt_x(1),pt_x(2),e_x,constants,psiType,useRegul,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
@@ -200,9 +198,9 @@ parfor e_x = 1:noElems
             idxCol(:,e_y) = sctr_y;
             for i = 1:d
                 if ismember(e_y,elemsOuter)
-                    idxCol2(i:d:end,e_y-noElemsInner) = d*(sctr_y-1)+i-d*noDofsInner;
+                    idxCol2(i:d:end,e_y) = d*(sctr_y-1)+i-noDofsInner;
                 else
-                    idxCol3(i:d:end,e_y) = d*(sctr_y-1)+i;
+                    idxCol2(i:d:end,e_y) = d*(sctr_y-1)+i;
                 end
             end
             A_e_temp(:,:,e_y) = A_e_temp(:,:,e_y) + R_x.'*BIE*fact_x;
@@ -213,7 +211,7 @@ parfor e_x = 1:noElems
                     nyR_y(:,i:d:end) = R_y.*ny(:,i);
                 end
                 if ismember(e_y,elemsOuter)
-                    C_e_temp(:,:,e_y-noElemsInner) = C_e_temp(:,:,e_y-noElemsInner) + R_x.'*sum((Phi_kTemp.*fact_y).*nyR_y)*fact_x;
+                    C_e_temp(:,:,e_y) = C_e_temp(:,:,e_y) + R_x.'*sum((Phi_kTemp.*fact_y).*nyR_y)*fact_x;
                 else
                     C2_e_temp(:,:,e_y) = C2_e_temp(:,:,e_y) + R_x.'*sum((Phi_kTemp.*fact_y).*nyR_y)*fact_x;
                 end
@@ -225,8 +223,9 @@ parfor e_x = 1:noElems
         end
         R_xScaled = getR_x_Coeff(R_x,useEnrichedBfuns,k,d_vec,x,useRegul,integrals,sgn,constants,...
                         psiType,useCBIE,useHBIE,dXIdv,dR_xdxi,dR_xdeta,v_1,v_2,alpha);
-             
+                
         A_e_temp(:,:,e_x) = A_e_temp(:,:,e_x) + R_x.'*R_xScaled*fact_x;
+
         if ~(useSolidDomain && ~exteriorProblem)
             F_eTemp = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                         U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
@@ -235,31 +234,23 @@ parfor e_x = 1:noElems
     end
     
     idxRow(:,e_x) = sctr_x.';
-    if ismember(e_x,elemsOuter)
-        idxRow2(:,e_x) = sctr_x.'-noDofsInner;
-    else
-        idxRow3(:,e_x) = sctr_x.';
-    end
     Avalues(:,:,e_x) = matrixAssembly(A_e_temp, idxCol, n_en, noDofs, noElems, 1);
     if useSolidDomain
         if ismember(e_x,elemsOuter)
-            Cvalues(:,:,e_x) = matrixAssembly(C_e_temp, idxCol2, n_en, d*(noDofs-noDofsInner), noElems-noElemsInner, 3);
+            Cvalues(:,:,e_x) = matrixAssembly(C_e_temp, idxCol2, n_en, d*(noDofs-noDofsInner), noElems, 3);
         else
-            C2values(:,:,e_x) = matrixAssembly(C2_e_temp, idxCol3, n_en, d*noDofsInner, noElemsInner, 3);
+            C2values(:,:,e_x) = matrixAssembly(C2_e_temp, idxCol2, n_en, d*(noDofs-noDofsInner), noElems, 3);
         end
     else
-        if ismember(e_x,elemsOuter)
-            Cvalues(:,:,e_x) = NaN;
-        else
-            C2values(:,:,e_x) = NaN;
-        end
+        Cvalues(:,:,e_x) = NaN;
+        C2values(:,:,e_x) = NaN;
     end
     Fvalues(:,e_x,:) = F_e;
 end
 A = matrixAssembly(Avalues, idxRow, n_en, noDofs, noElems, 2);
 if useSolidDomain
-    C = matrixAssembly(Cvalues(:,:,noElemsInner+1:end), idxRow2(:,noElemsInner+1:end), n_en, noDofs-noDofsInner, noElems-noElemsInner, 4);
-    C2 = matrixAssembly(C2values, idxRow3, n_en, noDofsInner, noElemsInner, 4);
+    C = matrixAssembly(Cvalues, idxRow, n_en, noDofs-noDofsInner, noElems, 4);
+    C2 = matrixAssembly(C2values, idxRow, n_en, noDofs-noDofsInner, noElems, 4);
 else
     C = NaN;
     C2 = NaN;

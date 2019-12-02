@@ -1,5 +1,5 @@
-function varCol = convertNURBS(nurbsPatches, varCol)
-
+function varCol = convertNURBS(varCol)
+nurbsPatches = varCol.nurbs;
 if ~iscell(nurbsPatches)
     nurbsPatches = {nurbsPatches};
 end
