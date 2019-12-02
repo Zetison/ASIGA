@@ -27,7 +27,7 @@ The following models are available
 - BeTSSi model 4 (model = 'M4')
 - BeTSSi model 5A (model = 'M5A')
 - BeTSSi model 5B (model = 'M5B')
-- Barrel pressure hull (model = 'PH')
+- BeTSSi pressure hull (model = 'PH')
 - Stripped BeTSSi submarine (model = 'BC')
 - BeTSSi submarine (model = 'BCA')
 - Mock shell (model = 'MS', model = 'Shirron', model = 'TAP')
@@ -36,7 +36,7 @@ The following models are available
 - Cube (model = 'Cube')
 
 ## Overview of available methods
-The main emphesis is acoustic scattering using plane wave (applyLoad = 'planeWave') in which the following cases are implemented
+The main emphasis is acoustic scattering using plane wave (applyLoad = 'planeWave') in which the following cases are implemented
 - Bistatic scattering (scatteringCase = 'BI')
 - Monostatic scattering (scatteringCase = 'MS')
 - Frequency sweep (scatteringCase = 'Sweep')
@@ -54,17 +54,17 @@ The following methods has been implemented (with available formulations)
 	- The Bubnov--Galerkin Unconjugated formulation (formulation = 'BGU')
 	- The Petrov--Galerkin Unconjugated formulation (formulation = 'PGU')
 - IGA using absorbing boundary conditions (method = 'ABC')
-	- Bayliss-GunzBurger-Turkel-operators (formulation = 'BGT')
+	- Bayliss-Gunzburger-Turkel-operators (formulation = 'BGT')
 - IGA using best approximation (method = 'BA'). Only available when analytic solution exist
 	- Best approximation in L^2(\Gamma) (formulation = 'SL2E')
 	- Best approximation in L^2(\Omega_a) (formulation = 'VL2E')
-- IGA using the boundary element methdo (method = 'BEM')
+- IGA using the boundary element method (method = 'BEM')
 	- Conventional boundary integral equation using collocation method (formulation = 'CCBIE')
-	- Hypersingular boundary integral equation using collocation method (formulation = 'CHBIE')
-	- Buron-Miller formulation using collocation method (formulation = 'CBM')
+	- Hyper-singular boundary integral equation using collocation method (formulation = 'CHBIE')
+	- Burton-Miller formulation using collocation method (formulation = 'CBM')
 	- Three regularized conventional boundary integral equations using collocation method (formulation = 'CCBIE1', formulation = 'CCBIE2' and formulation = 'CCBIE3')
   	
-  	The Gallerkin method may be used instead of the collocation method by replacing the prepended letter 'C' with 'G' (i.e. formulation = 'GCBIE'). Moreover, by appending the letter 'C' the CHIEF method is applied in an attempt to remove fictitious eigenfrequencies.
+  	The Galerkin method may be used instead of the collocation method by replacing the prepended letter 'C' with 'G' (i.e. formulation = 'GCBIE'). Moreover, by appending the letter 'C' the CHIEF method is applied in an attempt to remove fictitious eigenfrequencies.
 - IGA using Kirchhoff approximations (method = 'KDT')
 	- A first order multiple bounce implementation (formulation = 'MS1')
 	- (Not completed!) A second order multiple bounce implementation (formulation = 'MS2')
@@ -85,7 +85,7 @@ The following boundary conditions are implemented
 - Sound soft boundary condition (BC = 'SSBC')
 - Neumann-Neumann boundary condition (BC = 'NNBC')
 - Neumann boundary condition (BC = 'NBC')
-where the latter option is used for simulating manufactored solutions
+where the latter option is used for simulating manufactured solutions
 
 ## Additional parameters
 In the getDefaultTaskValus.m file the addional parameters are described and set to some default values:
