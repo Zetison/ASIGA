@@ -6,9 +6,9 @@
 % basisROM = 'Fourier';
 % basisROM = 'Bernstein';
 U_P = task.varCol{1}.U_sweep;
-stringShift = 40;
 task.varCol{1} = rmfield(task.varCol{1},'U_sweep');
 task.varCol{1} = rmfield(task.varCol{1},'U');
+stringShift = 40;
 runTasksInParallelOld = runTasksInParallel;
 basisROMcell = studies(study_i).basisROMcell;
 k_ROM = studies(study_i).k_ROM;
