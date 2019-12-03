@@ -48,6 +48,7 @@ formulation = {'SL2E'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 k_ROM = k(1):0.01:k(end);
+% k_ROM = k(1):0.1:k(end);
 % k_ROM = k(1):0.05:k(end);
 % k_ROM = k(1):0.005:k(end);
 % k_ROM = k(1):0.5:k(end);
@@ -60,12 +61,14 @@ f = k*c_f/(2*pi);
 
 method = {'IE'};
 formulation = {'BGC'};
-noVecsArr = [8,16,24,32,64];        % do not put noVecsArr in loopParameters (this is done automatically)
-basisROMcell = {'Hermite','Bernstein','Pade','Taylor'};  % do not put basisROMcell in loopParameters (this is done automatically)
+noVecsArr = [2,4,8,16,24,32,64];        % do not put noVecsArr in loopParameters (this is done automatically)
+basisROMcell = {'DGP','Hermite','Bernstein','Pade','Taylor'};  % do not put basisROMcell in loopParameters (this is done automatically)
 % basisROMcell = {'Pade'};  % do not put basisROMcell in loopParameters (this is done automatically)
 % basisROMcell = {'Taylor'};  % do not put basisROMcell in loopParameters (this is done automatically)
 % basisROMcell = {'Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
 % basisROMcell = {'Hermite'};  % do not put basisROMcell in loopParameters (this is done automatically)
+% basisROMcell = {'DGP','Hermite'};  % do not put basisROMcell in loopParameters (this is done automatically)
+useDGP = true;
 % noVecsArr = [8,16];        % do not put noVecsArr in loopParameters (this is done automatically)
 % noVecsArr = 1;
 % noVecsArr = [8,32,64,128];
@@ -84,7 +87,7 @@ N = 7; % 9
 % M = 1; 
 % N = 2;
 useROM = true;
-storeFullVarCol = false;
+storeFullVarCol = true;
 loopParameters = {'method','coreMethod','formulation','M','degree','parm'};
 collectIntoTasks
 

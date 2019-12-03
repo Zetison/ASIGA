@@ -5,31 +5,71 @@
 % basisROM = 'Splines';
 % basisROM = 'Fourier';
 % basisROM = 'Bernstein';
+k_P = task.varCol{1}.k;
+
+P = numel(k_P);
+k_start = k_P(1);
+k_end = k_P(end);
 U_P = task.varCol{1}.U_sweep;
+U_P2 = task.varCol{1}.U_sweep2;
+noDofs = size(U_P{1},1);
+noDofs2 = size(U_P2{1},1);
 task.varCol{1} = rmfield(task.varCol{1},'U_sweep');
+task.varCol{1} = rmfield(task.varCol{1},'U_sweep2');
 task.varCol{1} = rmfield(task.varCol{1},'U');
+A_K = task.varCol{1}.A_K;
+A_M = task.varCol{1}.A_M;
+A_gamma_a = task.varCol{1}.A_gamma_a;
+A2_gamma_a = task.varCol{1}.A2_gamma_a;
+A3_gamma_a = task.varCol{1}.A3_gamma_a;
+task.varCol{1} = rmfield(task.varCol{1},'A_K');
+task.varCol{1} = rmfield(task.varCol{1},'A_M');
+task.varCol{1} = rmfield(task.varCol{1},'A_gamma_a');
+task.varCol{1} = rmfield(task.varCol{1},'A2_gamma_a');
+task.varCol{1} = rmfield(task.varCol{1},'A3_gamma_a');
+
 stringShift = 40;
 runTasksInParallelOld = runTasksInParallel;
 basisROMcell = studies(study_i).basisROMcell;
 k_ROM = studies(study_i).k_ROM;
 noVecsArr = studies(study_i).noVecsArr;
-noDofs = size(U_P{1},1);
 varCol = task.varCol;
 e3Dss_options = varCol{1}.e3Dss_options;
 % noVec = size(U_P{1},2);
 for i_b = 1:numel(basisROMcell)
     basisROM = basisROMcell{i_b};
-    k_P = task.varCol{1}.k;
-
-    P = numel(k_P);
-    k_start = k_P(1);
-    k_end = k_P(end);
     for task_ROM = 1:numel(noVecsArr)
         noVecs = noVecsArr(task_ROM);
 
         fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
         t_startROM = tic;
         switch basisROM
+            case 'DGP'
+                V = zeros(noDofs2,P*noVecs);
+                counter = 1;
+                for i = 1:noVecs
+                    for j = 1:P
+                        V(:,counter) = U_P2{j}(:,i);
+                        counter = counter + 1;
+                    end
+                end
+                dofsToRemove = varCol{1}.dofsToRemove;
+                V(dofsToRemove,:) = [];
+                U = zeros(size(V));
+                U(:,1) = V(:,1)/sqrt(V(:,1)'*V(:,1));
+                for i = 2:size(V,2)
+                    U(:,i) = V(:,i);
+                    for j = 1:i-1
+                        U(:,i) = U(:,i) - ( U(:,j)'*U(:,i) )/( U(:,j)'*U(:,j) )*U(:,j);
+                    end
+                    U(:,i) = U(:,i)/sqrt(U(:,i)'*U(:,i));
+                end
+                V = U;
+                A_Km = V'*A_K*V;
+                A_Mm = V'*A_M*V;
+                A_gamma_am = V'*A_gamma_a*V;
+                A2_gamma_am = V'*A2_gamma_a*V;
+                A3_gamma_am = V'*A3_gamma_a*V;
             case 'Hermite'
                 mp.Digits(400);
                 Y = getInterpolatingHermite(mp(k_P.'),mp(k_ROM),noVecs);
@@ -39,8 +79,8 @@ for i_b = 1:numel(basisROMcell)
                 q = cell(P,1);
                 useHP = 0;
                 if useHP
-%                     mp.Digits(400);
-                    mp.Digits(1000);
+                    mp.Digits(400);
+%                     mp.Digits(1000);
                 end
                 for i = 1:P
                     n = ceil(noVecs/2)-1;
@@ -226,6 +266,20 @@ for i_b = 1:numel(basisROMcell)
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
             t_startROM = tic;
             switch basisROM
+                case 'DGP'
+                    U_fluid_oArr = zeros(noDofs2,numel(k_ROM));
+                    FF = applyHWBC_ROM_DGP(varCol{1},k_ROM);  
+                    FF(dofsToRemove,:) = [];
+                    FF = V'*FF;  
+                    freeDofs = setdiff(1:noDofs2,dofsToRemove);
+                    
+                    for i_k = 1:numel(k_ROM)
+                        k = k_ROM(i_k);
+                        Am = A_Km - k^2*A_Mm + k^2*A_gamma_am + k*A2_gamma_am + A3_gamma_am;
+                        U_fluid_oArr(freeDofs,i_k) = V*(Am\FF(:,i_k));
+                        U_fluid_oArr(:,i_k) = addSolutionToRemovedNodes_new(U_fluid_oArr(:,i_k), varCol{1});
+                    end
+                    U_fluid_oArr(noDofs+1:end,:) = [];
                 case 'Hermite'
                     U_fluid_oArr = zeros(noDofs,numel(k_ROM));
                     counter = 1;

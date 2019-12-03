@@ -61,7 +61,11 @@ end
 if exist('k_ROM','var')
     task.k_ROM = k_ROM;
 end
-
+if exist('useDGP','var')
+    task.useDGP = useDGP;
+else
+    task.useDGP = false;
+end
 if exist('IEbasis','var')
     task.IEbasis = IEbasis;
 end

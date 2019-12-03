@@ -129,7 +129,8 @@ else
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
                     end
                     if useROM
-                        [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM(varCol{1});
+%                         [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM(varCol{1});
+                        [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM2(varCol{1});
                     else
                         [A_gamma_a, newDofsToRemove] = addInfElements3(varCol{1});
                     end
@@ -770,9 +771,19 @@ else
                                 case 'BA'
                                     UU = A\FF;
                                 otherwise
-                                    A = A_K - k_1^2*A_M + A_gamma_a;
-                                    A2 = - 2*k_1*A_M + A2_gamma_a;
-                                    A3 = - 2*A_M + A3_gamma_a;
+%                                     A = A_K - k_1^2*A_M + A_gamma_a;
+%                                     A2 = - 2*k_1*A_M + A2_gamma_a;
+%                                     A3 = - 2*A_M + A3_gamma_a;
+                                    A = A_K - k_1^2*A_M + k_1^2*A_gamma_a + k_1*A2_gamma_a + A3_gamma_a;
+                                    A2 = - 2*k_1*A_M + 2*k_1*A_gamma_a + A2_gamma_a;
+                                    A3 = - 2*A_M + 2*A_gamma_a;
+                                    if task.useDGP
+                                        varCol{1}.A_K = A_K;
+                                        varCol{1}.A_M = A_M;
+                                        varCol{1}.A_gamma_a = A_gamma_a;
+                                        varCol{1}.A2_gamma_a = A2_gamma_a;
+                                        varCol{1}.A3_gamma_a = A3_gamma_a;
+                                    end
                                     UU = zeros(size(FF));
                 %                     [L_A,U_A,P] = lu(A);
                                     dA = decomposition(A,'lu');
@@ -877,6 +888,7 @@ else
         end
         if useROM && strcmp(scatteringCase,'Sweep')
             U_sweep{i_k} = Uc{1}(1:varCol{1}.noDofs,:);
+            U_sweep2{i_k} = Uc{1};
             if strcmp(BC,'SSBC') || strcmp(BC,'NNBC')
                 error('not implemented due to noDofs')
             end
@@ -891,6 +903,7 @@ else
 end
 if useROM
     varCol{1}.U_sweep = U_sweep;
+    varCol{1}.U_sweep2 = U_sweep2;
     varCol{1}.k = k;
 end
 
