@@ -21,7 +21,7 @@ beta = -pi/2;
 r_a = 1.2;
 
 M = 5; % 5
-N = 2; % 9
+N = 7; % 9
 
 degree = 4;
 % degree = 2:5;
@@ -38,16 +38,12 @@ useROM = false;
 useDGP = false;
 computeCondNumber = 0;
 
-loopParameters = {'f','method','coreMethod','formulation','M','N','degree','parm'};
+loopParameters = {'f','method','coreMethod','formulation','M','degree','parm'};
 collectIntoTasks
 
 method = {'BA'};
-N = 7; % 9
-formulation = {'VL2E'};
-% collectIntoTasks
-
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 k_ROM = k(1):0.01:k(end);
