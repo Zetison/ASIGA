@@ -12,6 +12,7 @@ formulation = {'BGU'};
 % k = 1;
 % k = [9, 22.5, 36]/10;
 k = [9, 22.5, 36]/5;
+k = k(1):0.01:k(end);
 c_f = 1500;
 f = k*c_f/(2*pi);
 
@@ -19,7 +20,7 @@ alpha = 0;
 beta = -pi/2;   
 r_a = 1.2;
 
-M = 1:5; % 5
+M = 5; % 5
 N = 2; % 9
 
 degree = 4;
@@ -33,10 +34,11 @@ plot2Dgeometry = 0;
 % initMeshFactXi = 3;
 % initMeshFactZeta = 4;
 useROM = false;
+useDGP = false;
 computeCondNumber = 0;
 
 loopParameters = {'f','method','coreMethod','formulation','M','N','degree','parm'};
-% collectIntoTasks
+collectIntoTasks
 
 method = {'BA'};
 N = 7; % 9
@@ -89,7 +91,7 @@ N = 7; % 9
 useROM = true;
 storeFullVarCol = true;
 loopParameters = {'method','coreMethod','formulation','M','degree','parm'};
-collectIntoTasks
+% collectIntoTasks
 
 M = M-1; 
 coreMethod = {'hp_FEM'};

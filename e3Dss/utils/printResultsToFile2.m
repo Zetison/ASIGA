@@ -10,7 +10,11 @@ if nargin < 6
     labels = [{xlabel}, {ylabel}];
     fprintf(fid, [repmat('%20s',1,size(x,2)) repmat(' %20s',1,size(y,2)) '\n'], labels{:});
     for i = 1:size(x,1)
-        fprintf(fid, [repmat('%20.15g',1,size(x,2)) repmat(' %20.15g',1,size(y,2)) '\n'], x(i,:), y(i,:));
+        if all(isnan(y(i,:)))
+            fprintf(fid,'\n');
+        else
+            fprintf(fid, [repmat('%20.15g',1,size(x,2)) repmat(' %20.15g',1,size(y,2)) '\n'], x(i,:), y(i,:));
+        end
     end
     fclose(fid); 
 else
@@ -49,7 +53,11 @@ else
     fprintf(fid, [repmat('%20s',1,size(x,2)) repmat(' %20s',1,size(y,2)) '\n'], labels{:});
 
     for i = 1:size(x,1)
-        fprintf(fid, [repmat('%20.15g',1,size(x,2)) repmat(' %20.15g',1,size(y,2)) '\n'], x(i,:), y(i,:));
+        if all(isnan(y(i,:)))
+            fprintf(fid,'\n');
+        else
+            fprintf(fid, [repmat('%20.15g',1,size(x,2)) repmat(' %20.15g',1,size(y,2)) '\n'], x(i,:), y(i,:));
+        end
     end
     fclose(fid); 
 end
