@@ -29,6 +29,7 @@ parm = 1;
 calculateSurfaceError = 1;
 calculateVolumeError  = 0;
 calculateFarFieldPattern = 0;
+runTasksInParallel = true;
 plot3Dgeometry = 0;
 plot2Dgeometry = 0;
 % initMeshFactXi = 3;
@@ -58,8 +59,7 @@ k_ROM = k(1):0.01:k(end);
 % k = k_ROM;
 % k = (9:1:36)/10;
 % k = 36;
-c_f = 1500;
-f = k*c_f/(2*pi);
+runTasksInParallel = false;
 
 method = {'IE'};
 formulation = {'BGC'};
