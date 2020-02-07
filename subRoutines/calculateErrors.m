@@ -4,7 +4,7 @@ if varCol{1}.boundaryMethod
         if ~runTasksInParallel
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         end
-        surfaceError = calcSurfErrorBndryMethodVec(varCol{1}, Uc{1}, task.LpOrder);
+        surfaceError = calcSurfErrorBndryMethodVec(varCol, Uc, task.LpOrder);
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface error = %.16g', surfaceError)

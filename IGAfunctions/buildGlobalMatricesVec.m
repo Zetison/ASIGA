@@ -6,31 +6,12 @@ function [K, M, F] = buildGlobalMatricesVec(varCol, newOptions)
 % elasticity, laplace- and poisson equation, and dynamic versions of these.
 
 %% Interpret input arguments
-
-% set default values
+% set default options values
 options = struct('operator','Laplace',...
                  'fieldDimension',1,...
                  'buildMassMatrix',0,...
                  'applyBodyLoading',0);
-
-% read the acceptable names
-optionNames = fieldnames(options);
-
-% count arguments
-nArgs = length(newOptions);
-if round(nArgs/2) ~= nArgs/2
-	error('Must have propertyName/propertyValue pairs')
-end
-
-for pair = reshape(newOptions,2,[]) %# pair is {propName;propValue}
-    inpName = pair{1}; %# make case insensitive
-
-    if any(strcmp(inpName,optionNames))
-        options.(inpName) = pair{2};
-    else
-        error('%s is not a recognized parameter name',inpName)
-    end
-end
+options = updateOptions(options,newOptions);
 
 %% Extract all needed data from options and varCol
 d = options.fieldDimension;
@@ -91,8 +72,8 @@ Qzeta = Q3D(:,3);
 %% Build global matrices
 % warning('Not running in Parallel')
 % keyboard
-% for e = 1:noElems
-parfor e = 1:noElems
+for e = 1:noElems
+% parfor e = 1:noElems
     patch = pIndex(e); % New
     Xi = knotVecs{patch}{1}; % New
     Eta = knotVecs{patch}{2}; % New
@@ -201,88 +182,102 @@ if applyBodyLoading
     F = vectorAssembly(Fvalues,F_indices,noDofs);
 end
 
-if 0
-    primes_noElems = factor(noElems);
-    prt = prod(primes_noElems(1:3));
-    Kvalues = reshape(Kvalues, sizeKe*prt,noElems/prt);
-    Mvalues = reshape(Mvalues, sizeKe*prt,noElems/prt);
-    spIdxRow = reshape(spIdxRow, sizeKe*prt,noElems/prt);
-    spIdxCol = reshape(spIdxCol, sizeKe*prt,noElems/prt);
-    for i = 1:noElems/prt
-        [spIdx,~,I] = unique([spIdxRow(:,i), spIdxCol(:,i)],'rows','stable');
-        KvaluesTemp = accumarray(I,Kvalues(:,i));
-        if buildMassMatrix
-            MvaluesTemp = accumarray(I,Mvalues(:,i));
-        end
-        m = numel(KvaluesTemp);
-        if m < sizeKe*prt
-            Kvalues(:,i) = [KvaluesTemp; zeros(sizeKe*prt-m,1)];
-            spIdxRow(:,i) = [spIdx(:,1); zeros(sizeKe*prt-m,1)];
-            spIdxCol(:,i) = [spIdx(:,2); zeros(sizeKe*prt-m,1)];
+optimization = 3; % at the expence of speed, optimization=1 reduces most memory consumption, optimization=2 reduces moderately memory consumption, optimization=3 does not reduce memory consumption
+
+switch optimization
+    case 1
+        primes_noElems = factor(noElems);
+        prt = prod(primes_noElems(1:3));
+        Kvalues = reshape(Kvalues, sizeKe*prt,noElems/prt);
+        Mvalues = reshape(Mvalues, sizeKe*prt,noElems/prt);
+        spIdxRow = reshape(spIdxRow, sizeKe*prt,noElems/prt);
+        spIdxCol = reshape(spIdxCol, sizeKe*prt,noElems/prt);
+        for i = 1:noElems/prt
+            [spIdx,~,I] = unique([spIdxRow(:,i), spIdxCol(:,i)],'rows','stable');
+            KvaluesTemp = accumarray(I,Kvalues(:,i));
             if buildMassMatrix
-                Mvalues(:,i) = [MvaluesTemp; zeros(sizeKe*prt-m,1)];
+                MvaluesTemp = accumarray(I,Mvalues(:,i));
+            end
+            m = numel(KvaluesTemp);
+            if m < sizeKe*prt
+                Kvalues(:,i) = [KvaluesTemp; zeros(sizeKe*prt-m,1)];
+                spIdxRow(:,i) = [spIdx(:,1); zeros(sizeKe*prt-m,1)];
+                spIdxCol(:,i) = [spIdx(:,2); zeros(sizeKe*prt-m,1)];
+                if buildMassMatrix
+                    Mvalues(:,i) = [MvaluesTemp; zeros(sizeKe*prt-m,1)];
+                end
             end
         end
-    end
-%     if noElems > 260000
-%         keyboard
-%     end
-    nnzEntries = sum(~(~spIdxRow(:)));
-    spIdxRowUnique = zeros(nnzEntries,1,'uint32');
-    spIdxColUnique = zeros(nnzEntries,1,'uint32');
-    KvaluesUnique = zeros(nnzEntries,1);
-    if buildMassMatrix
-        MvaluesUnique = zeros(nnzEntries,1);
-    end
-    counter = 1;
-    for i = 1:noElems/prt
-        indices = find(spIdxRow(:,i));
-        m = numel(indices);
-        spIdxRowUnique(counter:counter+m-1) = spIdxRow(indices,i);
-        spIdxColUnique(counter:counter+m-1) = spIdxCol(indices,i);
-        KvaluesUnique(counter:counter+m-1) = Kvalues(indices,i);
+    %     if noElems > 260000
+    %         keyboard
+    %     end
+        nnzEntries = sum(~(~spIdxRow(:)));
+        spIdxRowUnique = zeros(nnzEntries,1,'uint32');
+        spIdxColUnique = zeros(nnzEntries,1,'uint32');
+        KvaluesUnique = zeros(nnzEntries,1);
         if buildMassMatrix
-            MvaluesUnique(counter:counter+m-1) = Mvalues(indices,i);
+            MvaluesUnique = zeros(nnzEntries,1);
         end
-        counter = counter + m;
-    end
-    Kvalues = KvaluesUnique;
-    clear spIdxRow spIdxCol KvaluesUnique
-    if buildMassMatrix
-        Mvalues = MvaluesUnique;
-        clear MvaluesUnique
-    end
-    spIdx = [spIdxRowUnique, spIdxColUnique];
-    clear spIdxRowUnique spIdxColUnique
-    
-    [spIdx,~,I] = unique(spIdx,'rows','stable');
-    Kvalues = accumarray(I,Kvalues);
-    if buildMassMatrix
-        Mvalues = accumarray(I,Mvalues);
-    end
-else
-    spIdxRow = reshape(spIdxRow,numel(spIdxRow),1);
-    spIdxCol = reshape(spIdxCol,numel(spIdxCol),1);
-    Kvalues = reshape(Kvalues,numel(Kvalues),1);
-    if buildMassMatrix
-        Mvalues = reshape(Mvalues,numel(Mvalues),1);
-    end
-    spIdx = [spIdxRow, spIdxCol];
-    clear spIdxRow spIdxCol
-    [spIdx,~,I] = unique(spIdx,'rows','stable');
-    Kvalues = accumarray(I,Kvalues);
-    if buildMassMatrix
-        Mvalues = accumarray(I,Mvalues);
-    end
+        counter = 1;
+        for i = 1:noElems/prt
+            indices = find(spIdxRow(:,i));
+            m = numel(indices);
+            spIdxRowUnique(counter:counter+m-1) = spIdxRow(indices,i);
+            spIdxColUnique(counter:counter+m-1) = spIdxCol(indices,i);
+            KvaluesUnique(counter:counter+m-1) = Kvalues(indices,i);
+            if buildMassMatrix
+                MvaluesUnique(counter:counter+m-1) = Mvalues(indices,i);
+            end
+            counter = counter + m;
+        end
+        Kvalues = KvaluesUnique;
+        clear spIdxRow spIdxCol KvaluesUnique
+        if buildMassMatrix
+            Mvalues = MvaluesUnique;
+            clear MvaluesUnique
+        end
+        spIdx = [spIdxRowUnique, spIdxColUnique];
+        clear spIdxRowUnique spIdxColUnique
+
+        [spIdx,~,I] = unique(spIdx,'rows','stable');
+        Kvalues = accumarray(I,Kvalues);
+        if buildMassMatrix
+            Mvalues = accumarray(I,Mvalues);
+        end
+    case 2
+        spIdxRow = reshape(spIdxRow,numel(spIdxRow),1);
+        spIdxCol = reshape(spIdxCol,numel(spIdxCol),1);
+        Kvalues = reshape(Kvalues,numel(Kvalues),1);
+        if buildMassMatrix
+            Mvalues = reshape(Mvalues,numel(Mvalues),1);
+        end
+        spIdx = [spIdxRow, spIdxCol];
+        clear spIdxRow spIdxCol
+        [spIdx,~,I] = unique(spIdx,'rows','stable');
+        Kvalues = accumarray(I,Kvalues);
+        if buildMassMatrix
+            Mvalues = accumarray(I,Mvalues);
+        end
 end
 
-K = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kvalues,noDofs,noDofs,numel(Kvalues));
-clear Kvalues
+if optimization == 3
+    K = sparse(double(spIdxRow),double(spIdxCol),Kvalues,noDofs,noDofs,numel(Kvalues));
+    clear Kvalues
 
-if buildMassMatrix
-    M = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Mvalues,noDofs,noDofs,numel(Mvalues));
+    if buildMassMatrix
+        M = sparse(double(spIdxRow),double(spIdxCol),Mvalues,noDofs,noDofs,numel(Mvalues));
+    else
+        M = [];
+    end
 else
-    M = [];
+    K = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kvalues,noDofs,noDofs,numel(Kvalues));
+    clear Kvalues
+
+    if buildMassMatrix
+        M = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Mvalues,noDofs,noDofs,numel(Mvalues));
+    else
+        M = [];
+    end
 end
 
 

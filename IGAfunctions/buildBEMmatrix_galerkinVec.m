@@ -126,8 +126,8 @@ end
 Fvalues = complex(zeros(n_en, noElems, no_angles)); 
 totNoQP = 0;
 totNoQPnonPolar = 0;
-parfor e_x = 1:noElems
-% for e_x = 1:noElems
+% parfor e_x = 1:noElems
+for e_x = 1:noElems
     patch_x = pIndex(e_x); % New
     Xi_x = knotVecs{patch_x}{1}; % New
     Eta_x = knotVecs{patch_x}{2}; % New
@@ -192,7 +192,8 @@ parfor e_x = 1:noElems
         idxCol3 = zeros(d*n_en, noElemsInner);
     
         for e_y = 1:noElems   
-            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, ~,y,R_y,r,fact_y,ny] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
+            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, ~,~,R_y,r,fact_y,ny] ...
+                    = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                     useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                     x,nx,pt_x(1),pt_x(2),e_x,constants,psiType,useRegul,...
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...

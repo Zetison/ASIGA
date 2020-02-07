@@ -5,8 +5,8 @@ addpath ..
 addpath ../utils
 addpath ../models
 
-pathToResults = '../../../results/e3Dss/';
-% pathToResults = '../results';
+% pathToResults = '../../../results/e3Dss/';
+pathToResults = '../results';
 
 startMatlabPool
 
@@ -39,11 +39,11 @@ if 0
     v = [0,0,R_o*cos(pi)];
     f = @(k)-objFunc(k,options,v,c_f(1),1);
     specialValues = [specialValues; findExtremas(f, 2/nFreqs, 32, 100000)'];
-    save([pathToResults 'Fender_extremas'], 'specialValues')
+    save('../miscellaneous/Fender_extremas', 'specialValues')
     delta = 1e-4;
     specialValues = sort([specialValues; (specialValues-delta); (specialValues+delta)]);
 else
-    load([pathToResults 'Fender_extremas'])
+    load('../miscellaneous/Fender_extremas')
 end
 k = unique(sort([k; specialValues]));
 omega = k*c_f(1);   % Wave number for outer fluid domain

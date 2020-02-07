@@ -101,7 +101,7 @@ function data = e3Dss(X, newOptions)
 %   - Generalize to general input sources on both the outer and inner
 %   surface.
 %
-% Author: Jon Vegard Venås
+% Author: Jon Vegard VenÃ¥s
 % E-mail: jon.venas@ntnu.no
 % Release: 1
 % Release date: 1/7/2017
@@ -120,9 +120,10 @@ options = struct('d_vec',   [0;0;1],  ... 	% Direction of the incident wave
                  'Eps',     eps,  ...       % Small parameter for series truncation
                  'N_max',   inf,  ...       % Upper limit for the number of terms in the series
                  'prec',    'double', ...   % Precision of the calculations
+                 'applyLoad', 'planeWave',  ...  % Incident wave type: I.e. planeWave, pointCharge, radialPulsation
                  'calc_farField',       false, ...  % Set true if the far field is to be calculated for outer fluid domain
-                 'usePlaneWave',        true,  ...  % Set true for plane incident waves
                  'usePointChargeWave',  false, ...  % Set true for point charge incident waves
+                 'usePulsatingSphere',  false, ...  % Set true for point charge incident waves
                  'r_s',                 NaN,   ...	% Radius to source location for point charge incident waves
                  'calc_p',              true,  ...  % Calculate the scattered pressure
                  'calc_dpdx',           false, ...  % Calculate the derivative of the scattered pressure fields w.r.t. the cartesian coordinate x
@@ -140,12 +141,13 @@ options = struct('d_vec',   [0;0;1],  ... 	% Direction of the incident wave
                  'calc_du_zdx',         false, ...  % Calculate the derivative of the z component of the displacement field w.r.t. x
                  'calc_du_zdy',         false, ...  % Calculate the derivative of the z component of the displacement field w.r.t. y
                  'calc_du_zdz',         false, ...  % Calculate the derivative of the z component of the displacement field w.r.t. z
-                 'calc_sigma_xx',       false, ...  % Calculate the derivative of the xx component of the stress field (cartesian coordinates)
-                 'calc_sigma_yy',       false, ...  % Calculate the derivative of the yy component of the stress field (cartesian coordinates)
-                 'calc_sigma_zz',       false, ...  % Calculate the derivative of the zz component of the stress field (cartesian coordinates)
-                 'calc_sigma_yz',       false, ...  % Calculate the derivative of the yz component of the stress field (cartesian coordinates)
-                 'calc_sigma_xz',       false, ...  % Calculate the derivative of the xz component of the stress field (cartesian coordinates)
-                 'calc_sigma_xy',       false, ...  % Calculate the derivative of the xy component of the stress field (cartesian coordinates)
+                 'calc_sigma_xx',       false, ...  % Calculate the xx component of the stress field (cartesian coordinates)
+                 'calc_sigma_yy',       false, ...  % Calculate the yy component of the stress field (cartesian coordinates)
+                 'calc_sigma_zz',       false, ...  % Calculate the zz component of the stress field (cartesian coordinates)
+                 'calc_sigma_yz',       false, ...  % Calculate the yz component of the stress field (cartesian coordinates)
+                 'calc_sigma_xz',       false, ...  % Calculate the xz component of the stress field (cartesian coordinates)
+                 'calc_sigma_xy',       false, ...  % Calculate the xy component of the stress field (cartesian coordinates)
+                 'calc_sigma_rr',       false, ...  % Calculate the derivative of the xy component of the stress field (cartesian coordinates)
                  'calc_p_laplace',      false, ...  % Calculate the Laplace operator of the scattered pressure fields
                  'calc_errorsDisplacementCondition', false, ... % Calculate the errors for the displacement conditions
                  'calc_errorsPressureCondition', 	 false, ... % Calculate the errors for the pressure conditions
@@ -203,6 +205,7 @@ calc_sigma_zz = options.calc_sigma_zz;
 calc_sigma_yz = options.calc_sigma_yz;
 calc_sigma_xz = options.calc_sigma_xz;
 calc_sigma_xy = options.calc_sigma_xy;
+calc_sigma_rr = options.calc_sigma_rr;
 calc_p_laplace = options.calc_p_laplace;
 calc_errors = calc_errorsDisplacementCondition || calc_errorsPressureCondition || calc_errorsHelmholtz || calc_errorsNavier;
 
@@ -219,8 +222,8 @@ options.calc_du_tdr = calcCartesianDispDerivatives;
 options.calc_du_tdt = calcCartesianDispDerivatives;
 
 calcStresses =  calc_sigma_xx || calc_sigma_yy || calc_sigma_zz || calc_sigma_yz || calc_sigma_xz ...
-                             || calc_sigma_xy || calc_errorsNavier || calc_errorsPressureCondition;
-options.calc_sigma_rr = calcStresses;
+                             || calc_sigma_xy || calc_errorsNavier || calc_errorsPressureCondition || calc_sigma_rr;
+options.calc_sigma_rr = calcStresses || calc_sigma_rr;
 options.calc_sigma_tt = calcStresses;
 options.calc_sigma_pp = calcStresses;
 options.calc_sigma_rt = calcStresses;
@@ -229,7 +232,7 @@ options.calc_errorsNavier = calc_errorsNavier;
 if isrow(omega)
     options.omega = omega.';
 end
-if options.usePointChargeWave 
+if strcmp(options.applyLoad, 'pointCharge')
     if isnan(options.r_s)
         options.r_s = 2*R_o(1);
     elseif abs(options.r_s) < R_o(1)
@@ -237,12 +240,6 @@ if options.usePointChargeWave
     end
     warning(['It is not implemented an efficient routine to evaluate Equation (D.7). ' ...
              'The built in MATLAB routine is used for this purpose.'])
-end
-if options.usePointChargeWave
-    options.usePlaneWave = false;
-end
-if ~(options.usePointChargeWave || options.usePlaneWave)
-    error('Only plane waves and point charge waves are implemented for the incident wave.')
 end
 if numel(E) < numel(R_o)
     SHBC = true;
@@ -266,7 +263,7 @@ options.ESBC = ESBC;
 options.SHBC = SHBC;
 options.SSBC = SSBC;
 
-if omega(1) == 0 && options.usePointChargeWave
+if omega(1) == 0 && strcmp(options.applyLoad, 'pointCharge')
     error('This case has no unique solution')
 end
     
@@ -475,6 +472,9 @@ for j = 1:length(X)
                 end
                 if calc_sigma_xy
                     data(m).sigma_xy = sigma_X{6};
+                end
+                if calc_sigma_rr
+                    data(m).sigma_rr = data_0(m).sigma_rr.';
                 end
             end
             if calcCartesianDispDerivatives

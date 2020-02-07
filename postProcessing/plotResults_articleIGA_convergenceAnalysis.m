@@ -22,4 +22,8 @@ for study_i = 1:numel(studies)
     options.xname = 'nepw';
     figure(4)
     printResultsToTextFiles(study,options)
+
+    options.xname = 'h_max';
+    figure(5)
+    printResultsToTextFiles(study,options)
 end

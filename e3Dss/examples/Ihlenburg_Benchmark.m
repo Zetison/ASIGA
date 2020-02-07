@@ -5,8 +5,8 @@ addpath ..
 addpath ../utils
 addpath ../models
 
-pathToResults = '../../../results/e3Dss/';
-% pathToResults = '../results';
+% pathToResults = '../../../results/e3Dss/';
+pathToResults = '../results/';
 
 startMatlabPool
 
@@ -71,9 +71,9 @@ for i = 1:3
             v = R_o*[cos(pi),0,0];
             f = @(k)-objFunc(k,options,v,c_f(1),0);
             specialValues = [specialValues; findExtremas(f, 2/nFreqs, 2, 100000)'];
-            save([pathToResults 'Ihlenburg_' BC '_extremas'], 'specialValues')
+            save(['../miscellaneous/Ihlenburg_' BC '_extremas'], 'specialValues')
         else
-            load([pathToResults 'Ihlenburg_' BC '_extremas'])
+            load(['../miscellaneous/Ihlenburg_' BC '_extremas'])
         end
         delta = 1e-4;
         specialValues = sort([specialValues; (specialValues-delta); (specialValues+delta)]);

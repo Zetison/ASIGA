@@ -46,47 +46,54 @@ for m = 1:M+1
     if m == 1
         zeta = k(:,1)*R_o(1);
         H11 = -1./rho_f_omega2.*(n*hankel_s(n,zeta,1) - zeta.*hankel_s(n+1,zeta,1));
-        if options.usePlaneWave
-            if isa(P_inc,'function_handle') 
-                D1 = P_inc(omega)*(2*n+1)*1i^n./rho_f_omega2.*dbessel_s(n,zeta,1,[],1);  % dbessel_s = zeta*dj_n
-            else
-                D1 = P_inc*(2*n+1)*1i^n./rho_f_omega2.*dbessel_s(n,zeta,1,[],1);  % dbessel_s = zeta*dj_n
-            end
-        elseif options.usePointChargeWave
-            q = @(v) sqrt(R_o(1)^2 + 2*r_s*R_o(1)*v + r_s^2);
-            F2 = zeros(size(k,1),1,class(R_o));
-            
-            parfor i = 1:size(k,1)
-                Phi_k = @(v) exp(1i*k(i,1)*q(v))./(4*PI*q(v));
-                integrand = @(v) 4*PI*r_s*(R_o(1) + r_s*v).*Phi_k(v)./q(v).^2.*(1i*k(i,1)*q(v) - 1).*legendre_(n,v);
-                if isa(P_inc,'function_handle')
-                    F2(i) = P_inc(omega(i))*(2*n+1)/2*integral(integrand,-1,1);
-                else
-                    F2(i) = P_inc*(2*n+1)/2*integral(integrand,-1,1);
+        switch options.applyLoad
+            case 'planeWave'
+                D1 = (2*n+1)*1i^n/R_o(1)*dbessel_s(n,zeta,1,[],1);
+            case 'pointCharge'
+                q = @(v) sqrt(R_o(1)^2 + 2*r_s*R_o(1)*v + r_s^2);
+                D1 = zeros(size(k,1),1,class(R_o));
+                parfor i = 1:size(k,1)
+                    Phi_k = @(v) exp(1i*k(i,1)*q(v))./(4*PI*q(v));
+                    integrand = @(v) 4*PI*r_s*(R_o(1) + r_s*v).*Phi_k(v)./q(v).^2.*(1i*k(i,1)*q(v) - 1).*legendre_(n,v);
+                    D1(i) = (2*n+1)/2*integral(integrand,-1,1);
                 end
-            end
-            D1 = R_o(1)./rho_f_omega2.*F2;
+            case 'radialPulsation'
+                if n == 0
+                    D1 = -(1/R_o(1)+1i*k(:,1));
+                else
+                    D1 = zeros(size(omega));
+                end
+        end
+        D1 = R_o(1)./rho_f_omega2.*D1;
+        if isa(P_inc,'function_handle') 
+            D1 = D1.*P_inc(omega);  % dbessel_s = zeta*dj_n
+        else
+            D1 = D1*P_inc;  % dbessel_s = zeta*dj_n
         end
         if ~(SHBC && M == 1)
             H21 = R_o(1)^2/(2*G(1))*hankel_s(n,zeta,1);   
-            if options.usePlaneWave    
-                if isa(P_inc,'function_handle') 
-                    D2 = -P_inc(omega)*R_o(1)^2/(2*G(1))*(2*n+1)*1i^n.*bessel_s(n,k(:,1)*R_o(1),1);
-                else
-                    D2 = -P_inc*R_o(1)^2/(2*G(1))*(2*n+1)*1i^n*bessel_s(n,k(:,1)*R_o(1),1);
-                end
-            elseif options.usePointChargeWave
-                F1 = zeros(size(k,1),1,class(R_o));
-                parfor i = 1:size(k,1)
-                    Phi_k = @(v) exp(1i*k(i,1)*q(v))./(4*PI*q(v));
-                    integrand = @(v) 4*PI*r_s*Phi_k(v).*legendre_(n,v);
-                    if isa(P_inc,'function_handle')
-                        F1(i) = P_inc(omega(i))*(2*n+1)/2*integral(integrand,-1,1);
-                    else
-                        F1(i) = P_inc*(2*n+1)/2*integral(integrand,-1,1);
+            switch options.applyLoad
+                case 'planeWave'  
+                    D2 = (2*n+1)*1i^n.*bessel_s(n,k(:,1)*R_o(1),1);
+                case 'pointCharge'
+                    D2 = zeros(size(k,1),1,class(R_o));
+                    parfor i = 1:size(k,1)
+                        Phi_k = @(v) exp(1i*k(i,1)*q(v))./(4*PI*q(v));
+                        integrand = @(v) 4*PI*r_s*Phi_k(v).*legendre_(n,v);
+                        D2(i) = (2*n+1)/2*integral(integrand,-1,1);
                     end
-                end
-                D2 = -R_o(1)^2/(2*G(1))*F1;
+                case 'radialPulsation' 
+                    if n == 0
+                        D2 = ones(size(omega));
+                    else
+                        D2 = zeros(size(omega));
+                    end
+            end
+            D2 = -R_o(1)^2/(2*G(1))*D2;
+            if isa(P_inc,'function_handle') 
+                D2 = D2.*P_inc(omega);  % dbessel_s = zeta*dj_n
+            else
+                D2 = D2*P_inc;  % dbessel_s = zeta*dj_n
             end
             if M == 1 && ESBC
                 H1(:,:,:,1) = H1_solid_(n,a(:,1),b(:,1),R_o(1));

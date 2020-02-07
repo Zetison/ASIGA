@@ -108,7 +108,7 @@ elseif strcmp(nurbs.type, '2Dcurve') || strcmp(nurbs.type, '3Dcurve')
     p = nurbs.degree;
     n = nurbs.number;
     
-    Xi = nurbs.knots;
+    Xi = nurbs.knots{1};
     P = nurbs.coeffs;
     
     i1 = findKnotSpan(n, p, xi, Xi);
@@ -129,7 +129,7 @@ elseif strcmp(nurbs.type, '1Dnurbs')
     p = nurbs.degree;
     n = nurbs.number;
     
-    Xi = nurbs.knots;
+    Xi = nurbs.knots{1};
     P = nurbs.coeffs;
     
     i1 = findKnotSpan(n, p, xi, Xi);

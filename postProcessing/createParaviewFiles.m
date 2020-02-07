@@ -352,8 +352,6 @@ if d == 1
             data.displacement = real(makeDynamic(displacement, options, omega));
         end
     else
-        data.totField = real(makeDynamic(scalarField, options, omega));
-        data.totFieldAbs = abs(makeDynamic(scalarField, options, omega));
         totField = scalarField;
         if strcmp(type,'3Dvolume')
             rho_f = varCol.rho_f; 
@@ -368,7 +366,6 @@ if d == 1
             data_e3Dss.dpdx = dp(:,1);
             data_e3Dss.dpdy = dp(:,2);
             data_e3Dss.dpdz = dp(:,3);
-            data.Error = abs(data_e3Dss.p-scalarField)./abs(data_e3Dss.p);
         else
             if isOuterDomain
                 data_e3Dss = e3Dss(nodes,e3Dss_options);

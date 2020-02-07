@@ -21,9 +21,6 @@ d_n = d(beami,:);
 x_n = O(beami,:,end-1);
 
 if ~plotFarField
-    if plotFarField
-        P_far = P_far*1e15;
-    end
 %     for i = 1:size(P_far,1)
     parfor i = 1:size(P_far,1)
         x = P_far(i,:);
@@ -180,8 +177,8 @@ if ~plotFarField
 else
     temp = norm2(P_far);
     P_far = P_far./temp(:,[1,1,1]);
-    for i = 1:size(P_far,1)
-%     parfor i = 1:size(P_far,1)
+%     for i = 1:size(P_far,1)
+    parfor i = 1:size(P_far,1)
         x = P_far(i,:);
         t = dot(repmat(x,size(x_n,1),1),d_n,2);
         indices = t > 0;

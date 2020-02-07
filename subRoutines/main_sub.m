@@ -1154,7 +1154,7 @@ if ~useROM && ~strcmp(method,'RT')
                         'plotDisplacementVectors', computeGrad, 'plotError', plotError, 'plotErrorEnergy', plotError && computeGrad,...
                         'plotErrorGrad', plotError && computeGrad, 'plotTestFun', 0', 'plotP_inc', isOuterDomain, 'plotTotField', ~isSolid, ...
                         'plotTotFieldAbs', ~isSolid, 'plotAnalytic', analyticSolutionExist);
-                    if strcmp(varCol{1}.applyLoad,'radialPulsation')
+                    if strcmp(varCol{1}.applyLoad,'pointPulsation')
                         options.plotP_inc = false;
                         options.plotTotField = false;
                         options.plotTotFieldAbs = false;
@@ -1363,7 +1363,7 @@ else
     varColTemp.k = varCol{1}.k;
     varColTemp.f = varCol{1}.f;
     varColTemp.c_f = varCol{1}.c_f;
-    if ~strcmp(method,'RT')
+    if ~strcmp(method,'RT') && ~strcmp(method,'KDT')
         varColTemp.surfDofs = varCol{1}.surfDofs;
         varColTemp.dofs = varCol{1}.dofs;
         varColTemp.dofsAlg = (varCol{1}.dofs)^(1/3);

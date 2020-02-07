@@ -152,12 +152,12 @@ switch options.noXLoopPrms
                     y = y.';
                 end
                 saveName(saveName == '.') = [];
-                printResultsToFile2([subFolderName '/' saveName], x.', y, {fileDataHeaderX}, {yname}, study.tasks(i).task);
+                printResultsToFile2([subFolderName '/' saveName], {'x', x.', 'y', y, 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
+                                                                                                            'task', study.tasks(i).task});
             end
             if plotResults
                 legendName(legendName == '_') = [];
                 plotXY(x,y,options.axisType,options.lineStyle,col(i,:),legendName);
-                xlim([min(x),max(x)])
                 hold on
             end
         end
@@ -165,7 +165,8 @@ switch options.noXLoopPrms
             if isrow(y_ref)
                 y_ref = y_ref.';
             end
-            printResultsToFile2([subFolderName '/analytic'], x.', y_ref, {fileDataHeaderX}, {yname}, study.tasks(i).task);
+            printResultsToFile2([subFolderName '/' saveName], {'x', x.', 'y', y_ref, 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
+                                                                                                            'task', study.tasks(i).task});
         end
     case 1
         idx = 1;
@@ -188,7 +189,11 @@ switch options.noXLoopPrms
             else
                 x(i) = study.tasks(i).task.(xname);  
             end  
-            y(i) = study.tasks(i).task.results.(yname);
+            if ~isfield(study.tasks(i).task.results, yname)
+                y(i) = NaN*x(i);
+            else
+                y(i) = study.tasks(i).task.results.(yname);
+            end
             if plotAnalyticSolution
                 y_ref(i) = study.tasks(i).task.results.([yname '_ref']);
             end
@@ -297,15 +302,12 @@ switch options.noXLoopPrms
             end
             if printResults
                 saveName(saveName == '.') = [];
-                printResultsToFile2([subFolderName '/' saveName], x_temp(:), y_temp(:), {fileDataHeaderX}, {yname}, study.tasks(idxMap(i)).task, options.xLoopName);
+                printResultsToFile2([subFolderName '/' saveName], {'x', x_temp(:), 'y', y_temp(:), 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
+                                                                                'task', study.tasks(idxMap(i)).task, 'xLoopName',options.xLoopName});
             end
             if plotResults
                 x_temp = x_temp(:);
                 y_temp = y_temp(:);
-                xlimOld = xlim;
-                if xlimOld(1) == 0 && xlimOld(2) == 1
-                    xlimOld = [inf,-inf];
-                end
                 if plotAnalyticSolution
                     y_ref_temp = y_ref_temp(:);
                     plotXY(x_temp,y_ref_temp,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
@@ -313,10 +315,6 @@ switch options.noXLoopPrms
                 end
                 legendName(legendName == '_') = [];
                 plotXY(x_temp,y_temp,options.axisType,options.lineStyle,col(i,:),legendName);
-                xLim = [min(min(x_temp),xlimOld(1)),max(max(x_temp),xlimOld(2))];
-                if xLim(1) ~= xLim(2)
-                    xlim(xLim)
-                end
                 hold on
             end
         end
@@ -328,7 +326,8 @@ switch options.noXLoopPrms
             if isrow(y_ref)
                 y_ref = y_ref.';
             end
-            printResultsToFile2([subFolderName '/analytic'], x.', y_ref, {fileDataHeaderX}, {yname}, study.tasks(i).task);
+            printResultsToFile2([subFolderName '/' saveName], {'x', x.', 'y', y_ref, 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
+                                                                'task', study.tasks(i).task});
         end
 end
 
@@ -370,7 +369,11 @@ if plotResults
             intrprtrX = 'none';
     end
     if (strcmp(xname,'alpha') || strcmp(xname,'beta')) && (options.xScale == 180/pi)
-        xtickformat('degrees')
+        if strcmp(options.axisType,'polar')
+            thetatickformat('degrees')
+        else
+            xtickformat('degrees')
+        end
     end
     switch yname
         case 'p'
@@ -401,9 +404,11 @@ if plotResults
         yLabel = [yLabel, ' [\%]'];
     end
             
-            
-    xlabel(xLabel,'interpreter',intrprtrX)
-    ylabel(yLabel,'interpreter',intrprtrY)
+          
+    if ~strcmp(options.axisType,'polar')  
+        ylabel(yLabel,'interpreter',intrprtrY)
+        xlabel(xLabel,'interpreter',intrprtrX)
+    end
     h = gca;
     noGraphs = numel(h.Children);
     col = LaTeXcolorMap(noGraphs);

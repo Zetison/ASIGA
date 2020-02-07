@@ -289,6 +289,7 @@ if 1
     end
     switch formulation
         case 'SS'
+            error('Implementation of formulation=SS not finished.')
 %             n_sp = 1;
 %             x_vec = x_vec(1:n_sp,:);
 %             n_vec = n_vec(1:n_sp,:);

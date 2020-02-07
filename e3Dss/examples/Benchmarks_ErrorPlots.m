@@ -5,15 +5,16 @@ addpath ..
 addpath ../utils
 addpath ../models
 
-pathToResults = '../../../results/e3Dss/';
-% pathToResults = '../results';
+% pathToResults = '../../../results/e3Dss/';
+pathToResults = '../results';
 % mpstartup
 startMatlabPool
+mp = NaN;
 %% Calculate errors
-for useSymbolicPrecision = [0,1]
+for useSymbolicPrecision = 0 %[0,1]
     if useSymbolicPrecision
-        prec = 'mp';
-%         prec = 'sym';
+%         prec = 'mp';
+        prec = 'sym';
     else
         prec = 'double';
     end
@@ -35,8 +36,8 @@ for useSymbolicPrecision = [0,1]
             end
         end
     end
-%     for i = 1:length(models)
-    parfor i = 1:length(tasks)
+    for i = 1:length(tasks)
+%     parfor i = 1:length(tasks)
         switch prec
             case 'single'
                 Eps = 1e-7;
@@ -251,7 +252,7 @@ for useSymbolicPrecision = [0,1]
         end
 
         C = (R_o(1)./c_f(1))^(3/2)/Upsilon^(1/2);
-        if 1
+        if 0
             nFreqs = 2; %
 %             f = 10.^linspaceHP(-log10(1e3*C),-log10(5e2*C),nFreqs);
             f = 10.^linspaceHP(-log10(1e3*C),log10(4e2/C),nFreqs);
@@ -341,7 +342,7 @@ for useSymbolicPrecision = [0,1]
         set(leg1,'Interpreter','latex');
         filename = [pathToResults 'errors_' model '_' BC '_Symbolic' num2str(useSymbolicPrecision)];
 
-        printResultsToFile(filename, double(sc.'), double(err.'), [], 0, 1, [], [], {'Cf'},legendArr)
+        printResultsToFile(filename, {'x',double(sc.'), 'y', double(err.')})
         xlabel('$C f$','interpreter','latex')
         ylabel('Relative residual error')
         title(['Errors for model ' model '_' BC], 'interpreter', 'none')

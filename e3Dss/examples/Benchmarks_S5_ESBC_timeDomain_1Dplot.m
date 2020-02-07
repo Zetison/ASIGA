@@ -5,10 +5,13 @@ addpath ..
 addpath ../utils
 addpath ../models
 
-pathToResults = '../../../results/e3Dss/';
-% pathToResults = '../results';
-
+% pathToResults = '../../../results/e3Dss/';
+pathToResults = '../results';
+set(0,'defaultTextInterpreter','latex');
 startMatlabPool
+
+% applyLoad = 'planeWave';
+applyLoad = 'radialPulsation';
 
 if 0
     f_c = 300; % (300) source pulse center freq.
@@ -54,6 +57,7 @@ if 0
                      'omega', omega(2:end), ...
                      'R_o', R_o, ...
                      'P_inc', P_inc, ...
+                     'applyLoad',applyLoad,...
                      'c_f', c_f);
     data = e3Dss(vv, options);
 else
@@ -100,17 +104,16 @@ else
     ylabel('$\breve{P}_{\mathrm{inc}}(t)$ [Pa]')
     xlabel('$t$ [s]')
     savefig([pathToResults 'Figure17a'])
-            return
+%             return
     %%%%%%%%%%%%%%%%%%%%%%%%%%
     % Plot dynamic time domain solution in 1D
-%             setS15Parameters
+%     setS15Parameters
     setS5Parameters
     npts = 1000;
     R_a = 1.5*R_o(1);
 %             z = linspace(-1.3*R_a,-R_o(1),npts).';
     z = linspace(R_o(1),20,npts).';
     R_i = R_o - t;
-    ESBC = 1;
     vv = [zeros(npts,1), zeros(npts,1), z];
     rho_f = rho_f(1:end-1);
     c_f = c_f(1:end-1);
@@ -122,6 +125,7 @@ else
                      'R_i', R_i, ...
                      'R_o', R_o, ...
                      'P_inc', P_inc, ...
+                     'applyLoad',applyLoad,...
                      'E', E, ...
                      'nu', nu, ...
                      'rho_s', rho_s, ...
@@ -130,6 +134,7 @@ else
     data = e3Dss(vv, options);
 end
 startIdx = 2000;
+startIdx = 1;
 totField = zeros(npts,N/2);
 PincField = zeros(npts,N/2);
 
@@ -165,9 +170,9 @@ for m = m_arr
     legend('p_{tot}', 'p_{inc}')
     drawnow
     pause(0.1)
-    if m == 120
-        pause
-    end
+%     if m == 120
+%         pause
+%     end
 end
 figure(3)
 plot(dt*m_arr,real(totFieldTime(1,:)),dt*m_arr,real(PincFieldTime(1,:)));

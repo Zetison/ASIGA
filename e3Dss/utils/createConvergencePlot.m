@@ -24,7 +24,7 @@ switch type
         yLim = ylim;
         ylim([yLim(1),1e1])
         for i = 1:size(Error,2)
-            printResultsToFile([fileName '_Errors_' num2str(i)], N_arr.', Error(:,i), NaN, 0, 1)
+            printResultsToFile([fileName '_Errors_' num2str(i)], {'x',N_arr.', 'y', Error(:,i)})
         end
             
     case '3D'

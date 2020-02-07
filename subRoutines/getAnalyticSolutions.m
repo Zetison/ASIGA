@@ -25,7 +25,7 @@ switch applyLoad
                          'P_inc', P_inc, ...
                          'rho_f', rho_f, ...
                          'c_f', c_f);
-    case 'radialPulsation'
+    case 'pointPulsation'
         C_n = @(n) cos(n-1);
         switch model
             case 'MS_P'
@@ -86,7 +86,7 @@ switch applyLoad
                          'rho_f', rho_f, ...
                          'c_f', c_f);
         
-    case 'planeWave'
+    case {'planeWave','radialPulsation'}
         d_vec = -[cos(beta_s(1))*cos(alpha_s);
                   cos(beta_s(1))*sin(alpha_s);
                   sin(beta_s(1))*ones(1,length(alpha_s))];
@@ -105,6 +105,7 @@ switch applyLoad
                                  'rho_f', rho_f, ...
                                  'N_max', N_max,...
                                  'c_f', c_f, ...
+                                 'applyLoad', applyLoad, ...
                                  'calc_dpdx', 1,...
                                  'calc_dpdy', 1,...
                                  'calc_dpdz', 1,...
@@ -132,6 +133,7 @@ switch applyLoad
                                  'R_o', R_o, ...
                                  'P_inc', P_inc, ...
                                  'rho_f', rho_f, ...
+                                 'applyLoad', applyLoad, ...
                                  'calc_dpdx', 1,...
                                  'calc_dpdy', 1,...
                                  'calc_dpdz', 1,...
@@ -150,15 +152,22 @@ switch applyLoad
         else
             e3Dss_options = [];
         end
-        if isinf(N_max)
-            p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
-            gp_inc = @(v) 1i*elementProd(p_inc(v),d_vec.')*k_1;
-            dp_inc = @(v,n) 1i*(n*d_vec)*k_1.*p_inc(v);
-            dpdn = @(v,n) zeros(size(v,1),1);
+        if strcmp(applyLoad,'planeWave')
+            if isinf(N_max)
+                p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
+                gp_inc = @(v) 1i*elementProd(p_inc(v),d_vec.')*k_1;
+                dp_inc = @(v,n) 1i*(n*d_vec)*k_1.*p_inc(v);
+                dpdn = @(v,n) zeros(size(v,1),1);
+            else
+                p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
+                gp_inc = @(v) -gAnalytic_(v,e3Dss_options);
+                dp_inc = @(v,n) -n*gAnalytic_(v,e3Dss_options);
+                dpdn = @(v,n) zeros(size(v,1),1);
+            end
         else
-            p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
-            gp_inc = @(v) -gAnalytic_(v,e3Dss_options);
-            dp_inc = @(v,n) -n*gAnalytic_(v,e3Dss_options);
+            p_inc = @(v) P_inc*R_o(1).*exp(-1i*k_1*(norm2(v)-R_o(1)))./norm2(v);
+            gp_inc = @(v)   -p_inc(v).*(1./norm2(v)+1i*k_1).*v./norm2(v);
+            dp_inc = @(v,n) -p_inc(v).*(1./norm2(v)+1i*k_1);
             dpdn = @(v,n) zeros(size(v,1),1);
         end
 end

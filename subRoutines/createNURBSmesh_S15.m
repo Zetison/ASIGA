@@ -57,9 +57,11 @@ if varCol{1}.boundaryMethod
         varCol_fluid_i_inner.dimension = 1;
         varCol_fluid_i_inner.nurbs = fluid_i_inner;
         varCol_fluid_i_inner = findDofsToRemove(generateIGA2DMesh_new(convertNURBS(varCol_fluid_i_inner)));
+        
         varCol_fluid_i_outer.dimension = 1;
         varCol_fluid_i_outer.nurbs = fluid_i_outer;
         varCol_fluid_i_outer = findDofsToRemove(generateIGA2DMesh_new(convertNURBS(varCol_fluid_i_outer)));
+        
         varCol{3}.elemsOuter = (1:varCol_fluid_i_outer.noElems)+varCol_fluid_i_inner.noElems;
         varCol{3}.noDofsInner = varCol_fluid_i_inner.noDofs;
         varCol{3}.noElemsInner = varCol_fluid_i_inner.noElems;
@@ -124,7 +126,7 @@ else
     if varCol{1}.useInnerFluidDomain
         t_ifluid = R_i(1)-R_o(2);
         if varCol{1}.parm(1) == 1
-            fluid_i = getSolidSphereData(R_i(1), t_ifluid, alignWithAxis);
+            fluid_i = getSphericalShellData(R_i(1), t_ifluid, alignWithAxis);
             fluid_i = elevateDegreeInPatches(fluid_i,[0 0 1]);
         else
             fluid_i = getSphericalShellDataPatched(R_i(1), t_ifluid); 

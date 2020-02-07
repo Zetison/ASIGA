@@ -7,8 +7,9 @@ addpath(genpath('NURBSgeometries'))
 addpath otherFunctions
 addpath(genpath('e3Dss'))
 addpath(genpath('postProcessing'))
+addpath(genpath('examples'))
 addpath integration
 addpath subRoutines
-addpath ../export_fig
+addpath(genpath('../export_fig'))
 addpath ../
 set(0,'DefaultLegendAutoUpdate','off')

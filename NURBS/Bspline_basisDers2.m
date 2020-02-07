@@ -18,12 +18,13 @@ noxi = numel(xi);
 N = zeros(noxi,p+1,class(xi));
 N(:,1) = 1;
 saved = ones(noxi,1,class(xi));
+temp = zeros(noxi,1,class(xi));
 
 for j = 2:p+1
     % For k = 1 there is no dependence on N(k-1) of the previous run.
     for k = 1:j
         % Compute N_{i-j+k,j-1} according to the Cox-deBoor formula
-        temp = zeros(noxi,1,class(xi));
+        temp(:) = 0;
         if k ~= j
             temp = (Xi(i+k)-xi)/(Xi(i+k)-Xi(i-j+k+1)).*N(:,k);
         end

@@ -72,7 +72,7 @@ switch type
             etaKnots = linspace(Eta_e(1),Eta_e(2)-eps,noEtaKnots);
             counter = 1;
             Eps = 1e10*eps;
-            Eps2 = 1e13*eps;
+            Eps2 = 1e11*eps;
             nodes_e = zeros(noNodes,3);
             for i = 1:noXiKnots
                 xi = xiKnots(i);
@@ -242,7 +242,9 @@ switch type
             for i = 1:12
                 visElements{12*(e-1)+i} = nodesCount + container{e}.container_e{i}.visElements;
                 nodes(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.nodes;
-                displacement(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.displacement;
+                if d == 3
+                    displacement(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.displacement;
+                end
                 nodesCount = nodesCount + container{e}.container_e{i}.noNodes;
             end
         end

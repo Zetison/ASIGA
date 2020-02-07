@@ -28,7 +28,7 @@ while i < length(Xi)
     controlPtsTemp(:,2) = [P2; w2];
     controlPtsTemp(:,3) = [P3; 1];
     Xi_temp = [0,0,0,1,1,1];
-    nurbs_temp = createNURBSobject(controlPtsTemp,Xi_temp);
+    nurbs_temp = createNURBSobject(controlPtsTemp,{Xi_temp});
     
     nurbs_temp = insertKnotsInNURBS(nurbs_temp,linspace2(0,1,i-i_prev));
     controlPts(:,counter+1:counter+2+i-i_prev) = nurbs_temp.coeffs(:,2:end);

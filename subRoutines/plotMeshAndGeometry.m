@@ -1,86 +1,36 @@
 
 if plot3Dgeometry
-    fluid = varCol{1}.nurbs;
-    close all
     figure('Color','white','name',['3D plot of geometry with mesh ' num2str(M)])
-    for i = 1:numel(fluid)
-        if boundaryMethod
-            switch method
-                case 'IENSG'
-                    c_z = varCol.c_z;
-                    c_xy = varCol.c_xy;
-                    alignWithAxis = varCol.alignWithAxis;
-                    x_0 = varCol.x_0;
-                    ellipsoid = getEllipsoidalData(c_z,c_xy,c_xy,alignWithAxis, x_0);
-                    plotNURBS(ellipsoid,{'resolution',[20 40],'alphaValue',0.6,'color','blue'});
-
-                    hold on
-                    plotNURBS(fluid{i},{'resolution',[40 40],'alphaValue',0.8});
-                    hold off
-                case {'BEM', 'KDT','MFS','RT','BA'}
-                    if strcmp(coreMethod, 'linear_FEM')
-                        resolution = [0,0];
-                    else 
-                        resolution = [10,10];
-                    end
-                    if 0
-                        colorFun = @(v) abs(varCol.analytic(v));
-%                         colorFun = @(v) real(varCol.analytic(v));
-%                         plotNURBS(fluid{i},{'resolution',[10 10],'colorFun',colorFun,'elementBasedSamples',true, ...
-%                                                         'samplingDistance',0.1});
-                        plotNURBS(fluid{i},{'resolution',[10 10], 'elementBasedSamples',false});
-%                         plotNURBS(fluid{i},{'resolution',[10 10], 'elementBasedSamples',false,'alphaValue',0.8,'color','blue'});
-                    else
-%                         plotNURBS(fluid{i},{'resolution',[100 100], 'elementBasedSamples',true});
-%                         plotNURBS(fluid{i},{'resolution',[1000 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-%                         plotNURBS(fluid{i},{'resolution',[400 400], 'elementBasedSamples',true,'samplingDistance',0.1});
-%                         plotNURBS(fluid{i},{'resolution',[0 0], 'elementBasedSamples',true,'samplingDistance',0.1});
-                        plotNURBS(fluid{i},{'resolution',resolution, 'elementBasedSamples',true,'samplingDistance',0.1});
-                    end
-            end
-        else
-            if strcmp(coreMethod, 'linear_FEM')
-                resolution = [0,0,0];
-            else 
-                resolution = [10,10,10];
-%                 resolution = [200,400,0];
-            end
-            if strcmp(coreMethod,'SEM')
-                varColPlot.plotAt = [0, 0;
-                                     0, 0;
-                                     1, 1];
-%                     colorFun = @(x) log10(abs(norm2(x)));
-                plotLagrange(fluid{i},[1000 1000 1000], 1, 1.5*[44 77 32]/255, 0.8, NaN, varColPlot);
-            else
-%                 plotAt = [0, 0;
-%                          0, 0;
-%                          1, 1];
-                plotAt = [1, 1;
-                         1, 1;
-                         1, 1];
-                colorFun = @(x) log10(abs(norm(x)-2)/2);
-                if false
-                    plotNURBS(fluid{i},{'resolution',[100 100 100],'alphaValue',0.8,'colorFun',colorFun,'plotAt',plotAt});
-                    caxis([-17,1])
-                    plotControlPts(fluid{i})
+    if strcmp(method, 'IENSG')
+        c_z = varCol.c_z;
+        c_xy = varCol.c_xy;
+        alignWithAxis = varCol.alignWithAxis;
+        x_0 = varCol.x_0;
+        ellipsoid = getEllipsoidalData(c_z,c_xy,c_xy,alignWithAxis, x_0);
+        plotNURBS(ellipsoid,{'resolution',[20 40],'alphaValue',0.6,'color','blue'});
+    end
+    if strcmp(coreMethod, 'linear_FEM')
+        resolution = [0,0,0];
+    else 
+        resolution = [40,40,40];
+    end
+    for j = 1:numel(varCol)
+        fluid = varCol{j}.nurbs;
+        for i = 1:numel(fluid)
+            if strcmp(fluid{i}.type,'3Dvolume')
+                if strcmp(coreMethod,'SEM')
+                    varColPlot.plotAt = [0, 0;
+                                         0, 0;
+                                         1, 1];
+                    plotLagrange(fluid{i},resolution, 1, 1.5*[44 77 32]/255, 0.8, NaN, varColPlot);
                 else
-                    plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',0.8,'plotAt',plotAt});
-%                     plotNURBS(fluid{i},{'resolution',resolution,'alphaValue',1,'plotAt',plotAt});
+                    plotNURBS(fluid{i},{'displayName',['Domain ' num2str(j) ', patch ' num2str(i)], ...
+                                        'resolution',resolution,'alphaValue',0.8});
                 end
-            end
-%                 plotNURBS(fluid{i},[100 100 0], 1, 1.5*[44 77 32]/255, 1);
-
-            if 0 % test artificial boundary
-%             nurbs = extractOuterSurface(fluid);
-%             x_0 = varCol.x_0;
-%             c_z = 34; % 30
-%             c_xy = c_z/5; % 2.5, 3.75
-%             a = c_z;
-%             b = c_xy;
-%             c = c_xy;
-%             varCol.colorFun = @(v) abs((v(1)-x_0(1))^2/a^2 + (v(2)-x_0(2))^2/b^2 + (v(3)-x_0(3))^2/c^2 - 1);
-%             npts = 100;
-%             plotNURBS(nurbs,[npts npts], 1, 1.5*[44 77 32]/255, 1, NaN, varCol);
+            else
+%                 plotNURBS(fluid{i},{'displayName',['Domain ' num2str(j) ', patch ' num2str(i)], 'resolution',resolution, ...
+%                                                    'elementBasedSamples',true,'samplingDistance',0.1});
+                plotNURBS(fluid{i},{'displayName',['Domain ' num2str(j) ', patch ' num2str(i)], 'resolution',resolution});
             end
         end
     end
@@ -104,10 +54,10 @@ if plot3Dgeometry
     
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
+
 %     camlight
-%     keyboard 
-%     plotControlPts(fluid,'red','red','red','black')
-    figureFullScreen(gcf)
+
+%     figureFullScreen(gcf)
 % 	export_fig(['../../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r200')
 % 	export_fig(['../../graphics/S1/S13D_' coreMethod], '-png', '-transparent', '-r200')
 % 	export_fig('../../graphics/TorusControlPts', '-png', '-transparent', '-r200')
