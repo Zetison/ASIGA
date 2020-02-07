@@ -9,7 +9,7 @@ end
 if strcmp(model(end-1:end),'_P')
     analyticSolutionExist = true;
 end
-if strcmp(applyLoad,'radialPulsation') || strcmp(applyLoad,'SimpsonTorus')
+if strcmp(applyLoad,'pointPulsation') || strcmp(applyLoad,'SimpsonTorus')
     analyticSolutionExist = true;
 end    
 if (calculateSurfaceError || calculateVolumeError) && ~analyticSolutionExist

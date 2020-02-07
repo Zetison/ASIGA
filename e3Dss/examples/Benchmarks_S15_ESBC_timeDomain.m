@@ -7,8 +7,9 @@ addpath ..
 addpath ../utils
 addpath ../models
 
+pathToResults = '../../../../../../hugeFiles/S15_SHBC_radialPulsation';
 % pathToResults = '../../../results/e3Dss/';
-pathToResults = '../results';
+% pathToResults = '../results';
 
 startMatlabPool
 

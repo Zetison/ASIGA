@@ -43,8 +43,8 @@ Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
 dPhi_0dny = @(xmy,r,ny) Phi_0(r)./r.^2.*             sum(xmy.*ny,2);
 dPhi_kdny = @(xmy,r,ny) Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*ny,2);
 
-radialPulsation = strcmp(varCol.applyLoad, 'radialPulsation');
-if radialPulsation
+pointPulsation = strcmp(varCol.applyLoad, 'pointPulsation');
+if pointPulsation
     no_angles = 1;
     p_inc = NaN;
     dp_inc = NaN;
@@ -495,7 +495,7 @@ parfor i = 1:n_cp
                     r1y = norm(x1my);
                     r2y = norm(x2my);
                     Phi_kTemp = Phi_k(r);
-                    if radialPulsation
+                    if pointPulsation
                         FF_temp = FF_temp + Phi_kTemp*dpdn(y,ny)*fact;
                     end
                     if psiType == 2
@@ -585,7 +585,7 @@ parfor i = 1:n_cp
                         r1y = norm(x1my);
                         r2y = norm(x2my);
                         Phi_kTemp = Phi_k(r);
-                        if radialPulsation
+                        if pointPulsation
                             FF_temp = FF_temp + Phi_kTemp*dpdn(y,ny)*fact;
                         end
                         if psiType == 2
@@ -639,7 +639,7 @@ parfor i = 1:n_cp
         end
     end
     A(i,:) = A_row;
-    if radialPulsation
+    if pointPulsation
         if psiType == 1
             FF(i,:) = FF(i,:) + FF_temp + dpdn(x,nx)*(Psi2_integral - dPsi2dny_integral + 2*pi*1i/(k*b)*(1-exp(2*1i*k*a))/(4*pi));
 %             FF(i,:) = FF(i,:) + FF_temp + dpdn(x,nx)*(Psi1_integral - dPsi1dny_integral);

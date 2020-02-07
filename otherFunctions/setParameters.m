@@ -49,6 +49,8 @@ switch model
         setBarrelParameters
     case {'BC','BC_P','BCA','BCA_P'}
         setBCParameters
+    otherwise
+        eval(['set' model 'Parameters'])
 end
 variables = whos;
 for i = 1:length(variables)

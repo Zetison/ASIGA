@@ -360,7 +360,7 @@ if d == 1
         end
     end
     if ~isempty(e3Dss_options)
-        if isOuterDomain && strcmp(varCol.applyLoad, 'radialPulsation')
+        if isOuterDomain && strcmp(varCol.applyLoad, 'pointPulsation')
             data_e3Dss.p = varCol.analytic(nodes);
             dp = varCol.gAnalytic(nodes);
             data_e3Dss.dpdx = dp(:,1);

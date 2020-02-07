@@ -49,7 +49,7 @@ M = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 calculateSurfaceError = 1;
-applyLoad = 'radialPulsation';
+applyLoad = 'pointPulsation';
 BC = 'NBC';
 M = 1:3;
 degree = [2,5];

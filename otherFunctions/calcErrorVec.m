@@ -132,7 +132,7 @@ for i = 1:noDomains
     nodes{i} = reshape(points, size(points,1)*size(points,2),3);
 end
 
-if strcmp(varColCell{1}.applyLoad, 'radialPulsation')
+if strcmp(varColCell{1}.applyLoad, 'pointPulsation')
     data.p = varColCell{1}.analytic(nodes{1});
     dp = varColCell{1}.gAnalytic(nodes{1});
     data.dpdx = dp(:,1);

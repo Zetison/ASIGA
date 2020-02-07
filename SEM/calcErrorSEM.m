@@ -83,7 +83,7 @@ nodes = reshape(nodes,nxi*neta*nzeta*noPatches,3);
 
 u_hs = reshape(u_hs,nxi*neta*nzeta*noPatches,1);
 du_hs = reshape(du_hs,nxi*neta*nzeta*noPatches,3);
-if strcmp(varCol.applyLoad, 'radialPulsation')
+if strcmp(varCol.applyLoad, 'pointPulsation')
     data.p = varCol.analytic(nodes);
     dp = varCol.gAnalytic(nodes);
     data.dpdx = dp(:,1);

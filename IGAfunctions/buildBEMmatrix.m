@@ -62,8 +62,8 @@ dPhi_kdnx = @(xmy,r,nx) -dPhi_kdny(xmy,r,nx);
 d2Phi_0dnxdny = @(xmy,r,nx,ny) Phi_0(r)/r^2*((nx'*ny)           - 3/r^2                *(xmy*nx)*(xmy*ny));
 d2Phi_kdnxdny = @(xmy,r,nx,ny) Phi_k(r)/r^2*((nx'*ny)*(1-1i*k*r)+(k^2+3/r^2*(1i*k*r-1))*(xmy*nx)*(xmy*ny));
 
-radialPulsation = strcmp(varCol.applyLoad, 'radialPulsation');
-if radialPulsation
+pointPulsation = strcmp(varCol.applyLoad, 'pointPulsation');
+if pointPulsation
     no_angles = 1;
     p_inc = NaN;
     dpdn = varCol.dpdn;
@@ -496,7 +496,7 @@ parfor i = 1:n_cp
                     r = norm(xmy);
 
 
-                    if radialPulsation
+                    if pointPulsation
                         if useCBIE
                             FF_temp = FF_temp + Phi_k(r)*dpdn(y,ny)*fact;
                         end
@@ -564,7 +564,7 @@ parfor i = 1:n_cp
                         xmy = x-y;
                         r = norm(xmy);
 
-                        if radialPulsation
+                        if pointPulsation
                             if useCBIE
                                 FF_temp = FF_temp + Phi_k(r)*dpdn(y,ny)*fact;
                             end
@@ -621,7 +621,7 @@ parfor i = 1:n_cp
         end
     end
     A(i,:) = A_row;
-    if radialPulsation
+    if pointPulsation
         FF(i,:) = FF(i,:) + FF_temp;
         if useHBIE
             FF(i,:) = FF(i,:) + alpha*dpdn(x,nx)*(dPhi_0dny_integral + 0.5*(1-sgn) - v_3*ugly_integral);
