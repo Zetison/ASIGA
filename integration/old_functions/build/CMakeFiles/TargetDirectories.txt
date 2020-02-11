@@ -1,1 +1,0 @@
-/home/shomec/j/jonvegar/Dropbox/GitHub/exerciseSet6/exactSol/build/CMakeFiles/exactSol.dir

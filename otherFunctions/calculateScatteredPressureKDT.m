@@ -37,7 +37,7 @@ extraGP = varCol.extraGP;
 % [W2D,Q2D] = gaussianQuadNURBS(20,20);
 p_h = zeros(size(P_far,1),length(k));
 switch formulation
-    case 'MS1'
+    case 'MS2'
         for e_y = 1:noElems
 %         parfor e = 1:noElems
             patch_y = pIndex(e_y); % New
@@ -138,7 +138,7 @@ switch formulation
                 if plotFarField
                     y_d_n = P_far*n_y./norm2(P_far);
                     x_d_y = P_far*y.'./norm2(P_far);
-                    p_h = p_h - 1/(4*pi)*1i*k.*p_h_gp.'.*y_d_n.*exp(-1i*k*x_d_y)* J_1_y * J_2_y * wt_y;  
+                    p_h = p_h + -1/(4*pi)*1i*k.*p_h_gp.'.*y_d_n.*exp(-1i*k*x_d_y)* J_1_y * J_2_y * wt_y;  
                 else
                     xmy = P_far - repmat(y,size(P_far,1),1);
                     r = norm2(xmy);

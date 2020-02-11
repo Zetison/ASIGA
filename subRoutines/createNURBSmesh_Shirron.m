@@ -1,8 +1,4 @@
-function [varCol, fluid, solid, fluid_i] = createNURBSmesh_Shirron(varCol,parms, M, degree)
-
-solid = NaN;
-fluid_i = NaN;
-
+function varCol = createNURBSmesh_Shirron(varCol,parms, M, degree)
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -12,23 +8,23 @@ end
 
 x_0 = [-L/2, 0, 0]; % The origin of the model
 alignWithAxis = 'Xaxis';
-switch varCol.method
+switch varCol{1}.method
     case {'IE','IENSG'}
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
         A_2 = [0 1 0;
                0 0 1;
                1 0 0];
-        varCol.x_0 = x_0;
-        varCol.A_2 = A_2;
-        varCol.alignWithAxis = alignWithAxis;
+        varCol{1}.x_0 = x_0;
+        varCol{1}.A_2 = A_2;
+        varCol{1}.alignWithAxis = alignWithAxis;
 end
 
-if varCol.boundaryMethod
+if varCol{1}.boundaryMethod
     c_z = (L+2*R_o)/2;
     c_xy = R_o;
-    varCol.c_z = c_z;
-    varCol.c_xy = c_xy;
+    varCol{1}.c_z = c_z;
+    varCol{1}.c_xy = c_xy;
 
     Upsilon = sqrt(c_z^2-c_xy^2);
 
@@ -51,9 +47,9 @@ if varCol.boundaryMethod
 
     fluid = extractOuterSurface(solid);
 
-    varCol.patchTop{1} = [ones(4,1),zeros(4,1)];
-    varCol.patchTop{1}(2,2) = NaN;
-    varCol.patchTop{1}(4,2) = NaN;
+    varCol{1}.patchTop{1} = [ones(4,1),zeros(4,1)];
+    varCol{1}.patchTop{1}(2,2) = NaN;
+    varCol{1}.patchTop{1}(4,2) = NaN;
 else
 %     s = 0.25 + 0.05*(L-R_o)/R_o;
 %     c_z = (L+2*R_o)/2 + s*R_o;
@@ -62,7 +58,7 @@ else
     c_xy = 2.1212*R_o; % 2.5, 3.75
 
     Upsilon = sqrt(c_z^2-c_xy^2);
-    varCol.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
+    varCol{1}.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
 
 %     eta1Arr = [0.35, 0.3, 0.26, 0.25, 0.23, 0.22, 0.22, 0.21, 0.20, 0.19];
 %     eta1 = eta1Arr(mult);
@@ -103,7 +99,15 @@ end
 L_gamma = L + 2*R_o;
 
 
-varCol.chimin = chimin;
-varCol.chimax = chimax;
-varCol.L_gamma = L_gamma;
-varCol.Upsilon = Upsilon;
+varCol{1}.nurbs = fluid;
+if varCol{1}.useSolidDomain
+    varCol{2}.nurbs = solid;
+end
+if varCol{1}.useInnerFluidDomain
+    varCol{3}.nurbs = fluid_i;
+end
+
+varCol{1}.chimin = chimin;
+varCol{1}.chimax = chimax;
+varCol{1}.L_gamma = L_gamma;
+varCol{1}.Upsilon = Upsilon;

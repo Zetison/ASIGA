@@ -1,9 +1,9 @@
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 model = 'S5';
 
-parm = 1;
+parm = 2;
 plot2Dgeometry = 0;
-plot3Dgeometry = 0;
+plot3Dgeometry = 1;
 method = {'BEM'};
 formulation = 'GCBIE';
 solveForPtot = true;
@@ -31,7 +31,7 @@ if parm == 2 && degree < 4
 end
 degree = 2;
 loopParameters = {'M','method'};
-% collectIntoTasks
+collectIntoTasks
 
 method = {'BA'};
 formulation = 'SL2E';

@@ -1,7 +1,4 @@
-function [varCol, fluid, solid, fluid_i] = createNURBSmesh_Cube(varCol, parms, M, degree)
-
-solid = NaN;
-fluid_i = NaN;
+function varCol = createNURBSmesh_Cube(varCol, parms, M, degree)
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -9,49 +6,15 @@ for j = 1:numel(names)
     eval([name, ' = parms.(names{j});']);
 end
 
-varCol.x_0 = [0, 0, 0];
-% alignWithAxis = 'Zaxis';
-% switch varCol.method
-%     case {'IE','IENSG','ABC'}
-%         varCol.x_0 = x_0; % The origin of the model
-%         varCol.A_2 = [1 0 0;
-%                       0 1 0;
-%                       0 0 1];
-% end
+varCol{1}.x_0 = [0, 0, 0];
 
-initMeshFactXi = varCol.initMeshFactXi;
-if varCol.boundaryMethod
+initMeshFactXi = varCol{1}.initMeshFactXi;
+if varCol{1}.boundaryMethod
     noNewXiKnots = initMeshFactXi*2^(M-1)-1;
     noNewEtaKnots = initMeshFactXi*2^(M-1)-1;
     
     fluid = getCubeData(a); 
-    varCol.patchTop = getPatchTopology(fluid);
-%     solid = elevateDegreeInPatches(solid,[0 0 3]);
-%     varCol.patchTop = cell(6,1);
-%     varCol.patchTop{1} = [2 0;
-%                           6 0;
-%                           4 0;
-%                           5 0];
-%     varCol.patchTop{2} = [3 0;
-%                           6 3;
-%                           1 0;
-%                           5 1];
-%     varCol.patchTop{3} = [4 0;
-%                           6 2;
-%                           2 0;
-%                           5 2];
-%     varCol.patchTop{4} = [1 0;
-%                           6 1;
-%                           3 0;
-%                           5 3];
-%     varCol.patchTop{5} = [2 3;
-%                           1 0;
-%                           4 1;
-%                           3 2];
-%     varCol.patchTop{6} = [2 1;
-%                           3 2;
-%                           4 3;
-%                           1 0];
+    varCol{1}.patchTop = getPatchTopology(fluid);
     nurbsDegree = fluid{1}.degree(1); % assume all degrees are equal
     
 %     solid = explodeNURBS(solid,'eta');
@@ -62,4 +25,12 @@ if varCol.boundaryMethod
     L_gamma = a;
 end
 
-varCol.L_gamma = L_gamma;
+varCol{1}.nurbs = fluid;
+if varCol{1}.useSolidDomain
+    varCol{2}.nurbs = solid;
+end
+if varCol{1}.useInnerFluidDomain
+    varCol{3}.nurbs = fluid_i;
+end
+
+varCol{1}.L_gamma = L_gamma;

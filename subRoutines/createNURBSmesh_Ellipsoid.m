@@ -189,15 +189,3 @@ else
         end
     end
 end
-varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
-    varCol{2}.nurbs = solid;
-end
-if varCol{1}.useInnerFluidDomain
-    varCol{3}.nurbs = fluid_i;
-end
-
-varCol{1}.chimin = chimin;
-varCol{1}.chimax = chimax;
-varCol{1}.L_gamma = L_gamma;
-varCol{1}.Upsilon = Upsilon;

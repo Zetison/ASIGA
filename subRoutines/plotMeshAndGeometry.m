@@ -2,10 +2,10 @@
 if plot3Dgeometry
     figure('Color','white','name',['3D plot of geometry with mesh ' num2str(M)])
     if strcmp(method, 'IENSG')
-        c_z = varCol.c_z;
-        c_xy = varCol.c_xy;
-        alignWithAxis = varCol.alignWithAxis;
-        x_0 = varCol.x_0;
+        c_z = varCol{1}.c_z;
+        c_xy = varCol{1}.c_xy;
+        alignWithAxis = varCol{1}.alignWithAxis;
+        x_0 = varCol{1}.x_0;
         ellipsoid = getEllipsoidalData(c_z,c_xy,c_xy,alignWithAxis, x_0);
         plotNURBS(ellipsoid,{'resolution',[20 40],'alphaValue',0.6,'color','blue'});
     end

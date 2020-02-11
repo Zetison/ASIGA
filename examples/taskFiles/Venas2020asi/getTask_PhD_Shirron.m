@@ -16,7 +16,7 @@ alpha = (0:0.1:180)*pi/180;
 alpha_s = [180,0]*pi/180;
 alpha_s = 0;
 beta_s = 0;
-
+parm = 1;
 plot2Dgeometry = 0;
 plot3Dgeometry = 1;
 degree = 3;
@@ -29,7 +29,7 @@ loopParameters = {'M','N','formulation','method','f','alpha_s'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
-M = 5;
+M = 1;
 method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
@@ -38,7 +38,7 @@ N = 3;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
-M = 5;
+% M = 5;
 % N = 3;
 method = {'IENSG'};
 N = 3;
@@ -47,7 +47,7 @@ N = 3;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 method = {'BEM'};
-M = 1;
+% M = 1;
 % M = 5;
 N = NaN;
 formulation = {'GBM'};

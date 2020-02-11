@@ -72,7 +72,7 @@ end
 fprintf('\n\nTotal time spent on study "%s": %12f seconds\n', studyName, toc(t_start_study))  
 
 plotFileName = ['plotResults_' studyName];
-if printAndPlotResults && exist(['postProcessing/' plotFileName], 'file')
+if printAndPlotResults && exist(['postProcessing/plot1Dresults/' plotFileName], 'file')
     close all
     eval(plotFileName)
     if isfield(options,'subFolderName') && ~isempty(options.subFolderName)

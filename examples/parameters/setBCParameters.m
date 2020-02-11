@@ -5,7 +5,6 @@ c_f = [1500, 1500];  % Speed of sound in fluid domains
 E = 210e9; % Youngs modulus of elastic material
 nu = 0.3; % Poisson ratio of elastic material
 
-
 t = 0.01;   % Thickness
 
 a = 7.0;

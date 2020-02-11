@@ -2,7 +2,8 @@ function nurbs = getBarrelData(R_o, R_i, eta1, eta2, L)
 
 t = R_o-R_i;
 
-Xi = [0 0 0 1 1 2 2 3 3 4 4 4]/4;
+Xi = [0 0 0 1 1 2 2 3 3 4 4 4]/4; % p = 2
+% Xi = [0 0 1 2 3 4 5 6 7 8 8]/8; % p = 1
 Eta = [0 0 eta1 eta2 1 1];
 Zeta = [0 0 1 1];
 
@@ -90,6 +91,7 @@ controlPts(:,7,4,2) = [  0   0     0      1           ];
 controlPts(:,8,4,2) = [  0   0     0      1/sqrt(2)   ];
 controlPts(:,9,4,2) = [  0   0     0      1           ];
 
+% controlPts(4,:,:,:) = 1;
 
 nurbs = createNURBSobject(controlPts,{Xi, Eta, Zeta});
 nurbs = elevateNURBSdegree(nurbs,[0 1 0]);
