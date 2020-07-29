@@ -22,7 +22,7 @@ calculateFarFieldPattern = 0;
 extraGPBEM = [0,1,2,4,8,16,32];
 extraGP = 0;
 % extraGP = 4;
-plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
+prePlot.plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
 applyLoad = 'SimpsonTorus';
 % beta = 0;
 exteriorProblem = false;
@@ -31,7 +31,7 @@ agpBEM = 1:10;
 % useNeumanProj = [1,0];
 useNeumanProj = 0;
 computeCondNumber = true;
-plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 quadMethodBEM = {'Simpson','New'};
 
 solveForPtot = true;

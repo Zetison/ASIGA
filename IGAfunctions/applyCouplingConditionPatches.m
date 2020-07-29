@@ -2,11 +2,10 @@ function A = applyCouplingConditionPatches(varColInner,varColOuter,shift,shift2,
 % Future work: Vectorize over Gauss points
 
 knotVecs = varColInner.knotVecs;
-elRangeXi = varColInner.elRange{1};
-elRangeEta = varColInner.elRange{2};
+elRange = varColInner.elRange;
+d_p = varColInner.patches{1}.nurbs.d_p;
 
-p_xi = varColInner.degree(1);
-p_eta = varColInner.degree(2);
+degree = varColInner.degree(1:2);
 
 
 weights = varColInner.weights;
@@ -18,27 +17,25 @@ d_outer = varColOuter.dimension;
 [innerNodes,outerNodes,innerXiEtaMesh,innerIndexXiEta,innerNoElemsXiEta,pIndex,innerNodes2] ...
                     = createSurfaceMesh(varColInner,varColOuter);
 
-n_en = (p_xi+1)*(p_eta+1);
+n_en = prod(degree+1);
 Avalues = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
 spIdxRow1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 spIdxCol1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
 
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
+[Q, W] = gaussTensorQuad(degree+1);
 parfor e = 1:innerNoElemsXiEta
-% for e = 1:innerNoElemsXiEta
+% for e = 1:innerNoElemsXiEta    
     patch = pIndex(e); % New
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
-    
-    idXi = innerIndexXiEta(e,1);   % the index matrix is made in generateIGA3DMesh
-    idEta = innerIndexXiEta(e,2);
+    knots = knotVecs{patch}(1:2);
 
-    Xi_e = elRangeXi(idXi,:); % [eta_j,eta_j+1]
-    Eta_e = elRangeEta(idEta,:); % [zeta_k,zeta_k+1]
+    Xi_e = zeros(d_p-1,2);
+    for i = 1:d_p-1
+        Xi_e(i,:) = elRange{i}(innerIndexXiEta(e,i),:);
+    end
 
-    J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^(d_p-1);
 
     innerSctrXiEta = innerNodes(innerXiEtaMesh(e,:));          %  element scatter vector
     innerSctrXiEtadD = zeros(d_inner*length(innerSctrXiEta),1);
@@ -53,32 +50,26 @@ parfor e = 1:innerNoElemsXiEta
 
     pts = controlPts(innerSctrXiEta,:);
     wgts = weights(innerNodes2(innerXiEtaMesh(e,:)));
-    
-    A_e = zeros(d_outer*n_en,d_inner*n_en);
-    
-    for gp = 1:size(W2D,1)
-        pt = Q2D(gp,:);
-        wt = W2D(gp);
-
-        xi  = parent2ParametricSpace(Xi_e, pt(1));
-        eta = parent2ParametricSpace(Eta_e,pt(2));
-
-        [R, dRxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-
-        J = pts'*[dRxi' dRdeta'];
-        crossProd = cross(J(:,1), J(:,2));  % pointing outwards if sphere
         
-        normal = crossProd/norm(crossProd);
-        if d_outer > d_inner
-            A_e = A_e + kron(kron(R,normal'),R').'*norm(crossProd) * J_2 * wt;       
-        else
-            A_e = A_e + kron(kron(R,normal'),R')*norm(crossProd) * J_2 * wt;       
-        end
-    end
+    xi = parent2ParametricSpace(Xi_e, Q);
+    I = findKnotSpans(degree, xi(1,:), knots);
+    R = NURBSbasis(I, xi, degree, knots, wgts);
+    [J_1, crossProd] = getJacobian(R,pts,2);
+    normal = crossProd./repmat(J_1,1,3);
     spIdxRow1(:,e) = copyVector(outerSctrXiEtadD,d_inner*n_en,1);
     spIdxCol1(:,e) = copyVector(innerSctrXiEtadD,d_outer*n_en,2);
+    A_e = zeros(d_outer*n_en,d_inner*n_en);
+    for gp = 1:size(W,1)
+        if d_outer > d_inner
+            A_e = A_e + kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)').'*J_1(gp) * J_2 * W(gp);       
+        else
+            A_e = A_e + kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)')*J_1(gp) * J_2 * W(gp);       
+        end
+    end
+    Avalues(:,e) = reshape(A_e,d_inner*d_outer*n_en^2,1);   
     
-    Avalues(:,e) = reshape(A_e,d_inner*d_outer*n_en^2,1);    
+    spIdxRow1(:,e) = copyVector(outerSctrXiEtadD,d_inner*n_en,1);
+    spIdxCol1(:,e) = copyVector(innerSctrXiEtadD,d_outer*n_en,2);
 end
 
 spIdxRow1 = reshape(spIdxRow1,numel(spIdxRow1),1);

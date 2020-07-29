@@ -1,3 +1,5 @@
+function container = setBarrelParameters()
+
 P_inc = 1; % Amplitude of incident wave
 rho_s = 7850; % Density of solid
 rho_f = [1000, 1.2]; % Density of fluids
@@ -9,3 +11,5 @@ t = 0.1; % The thickness of the barrel
 R_o = 1; % Outer radius of shell
 R_i = R_o - t; % Inner radius of shell
 L = 4*pi/4; % Length of barrel
+
+putVariablesIntoContainer

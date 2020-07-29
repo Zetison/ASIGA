@@ -14,7 +14,7 @@ degree = [1,2,4];
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 
-plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
+prePlot.plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
 applyLoad = 'pointPulsation';
 exteriorProblem = true;
 computeCondNumber = 0;

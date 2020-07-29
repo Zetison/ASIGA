@@ -4,6 +4,8 @@ model = 'S1';  % Spherical shell
 
 % coreMethod = {'IGA', 'XI'};
 coreMethod = {'IGA'};
+varCol = setS1Parameters('double',1);
+varCol{1}.meshFile = 'createNURBSmesh_EL';
 method = {'BEM'};
 if strcmp(method, 'BEM')
     formulation = {'CCBIE', 'CBM', 'CHBIE'};
@@ -42,7 +44,7 @@ coreMethod = {'IGA'};
 method = {'RT'};
 formulation = '';
 M = 3;
-plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 degree = 2;
 calculateSurfaceError = 0;
 computeCondNumber = false;

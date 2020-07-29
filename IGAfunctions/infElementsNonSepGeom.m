@@ -1,12 +1,10 @@
 function [A, newDofsToRemove] = infElementsNonSepGeom(varCol)
 
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
+degree = varCol.degree; % assume degree is equal in all patches
 
 index = varCol.index;
 noElems = varCol.noElems;
-elRangeXi = varCol.elRange{1};
-elRangeEta = varCol.elRange{2};
+elRange = varCol.elRange;
 element = varCol.element;
 element2 = varCol.element2;
 weights = varCol.weights;
@@ -29,11 +27,12 @@ x_0 = varCol.x_0;
 A_2 = varCol.A_2;
 D = varCol.D;
 Dt = varCol.Dt;
+n_en = prod(degree+1);
 
 k = varCol.k;
 Upsilon = varCol.Upsilon;
 
-useApproxRadialIntegrals = 2;
+useApproxRadialIntegrals = 2; % 0 is most accurate, 1 is a spline approximation (not reccomended here as Chebychev is here implemented more robust), 2 is Chebychev (reccomended)
 B1splines = {};
 B2splines = {};
 B1cheb = {};
@@ -65,12 +64,10 @@ elseif useApproxRadialIntegrals == 2
 end
 
 %% Calculate contribution from infinite elements
-n_en = (p_xi+1)*(p_eta+1);
-
 spIdxRow = zeros((N*n_en)^2,noElems);
 spIdxCol = zeros((N*n_en)^2,noElems);
 Avalues = zeros((N*n_en)^2,noElems);
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP);
+[Q, W] = gaussTensorQuad(degree+1+extraGP);
 
 % max_r_a_recorded = -inf;
 % min_r_a_recorded = inf;
@@ -78,44 +75,90 @@ Avalues = zeros((N*n_en)^2,noElems);
 % totArea = 0;
 % for e = 1:noElems
 parfor e = 1:noElems
-    patch = pIndex(e); % New
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
-
-    idXi = index(e,1);
-    idEta = index(e,2);
-
-    Xi_e = elRangeXi(idXi,:);
-    Eta_e = elRangeEta(idEta,:);
-
+    patch = pIndex(e);
+    knots = knotVecs{patch}(1:2);
+    Xi_e = zeros(2,2);
+    for i = 1:2
+        Xi_e(i,:) = elRange{i}(index(e,i),:);
+    end
+    
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
+    
+    xi = parent2ParametricSpace(Xi_e, Q);
+    I = findKnotSpans(degree, xi(1,:), knots);
+    
     sctr = element(e,:);
     pts = controlPts(sctr,:);
-    wgts = weights(element2(e,:)); % New   
-    idXi = index(e,1); 
-    idEta = index(e,2);
+    wgts = weights(element2(e,:)); % New  
+            
+    Rs = NURBSbasis(I, xi, degree, knots, wgts);
+    dXdxi = Rs{2}*pts;
+    dXdeta = Rs{3}*pts;
 
-    J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
+    X = Rs{1}*pts;
+    Xt = (X-x_0)*A_2.';
+
+    [r_a_arr, theta_arr, ~, c1_arr, c2_arr] = evaluateProlateCoords(Xt,Upsilon); 
+    if useApproxRadialIntegrals == 1
+        B1 = zeros(size(W,1),2*N+4);
+        xi_pt = (r_a_arr-chimin)/(chimax-chimin);
+        for i = 1:2*N+4
+            for gp = 1:size(W,1)
+                B1(gp,i) = evaluateNURBS(B1splines{i}{1}, xi_pt(gp));
+            end
+        end
+        B2 = zeros(size(W,1),2*N+3);
+        for i = 1:2*N+3
+            for gp = 1:size(W,1)
+                B2(gp,i) = evaluateNURBS(B2splines{i}{1}, xi_pt(gp));
+            end
+        end
+    elseif useApproxRadialIntegrals == 2
+        B1 = zeros(size(W,1),2*N+4);
+        x_cheb = (2*r_a_arr-chimax-chimin)/(chimax-chimin);
+
+        for i = 1:2*N+4
+            for j = 1:length(B1cheb{i})
+                if j == 1 || j == length(B1cheb{i})
+                    B1(:,i) = B1(:,i) + 0.5*B1cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
+                else
+                    B1(:,i) = B1(:,i) + B1cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
+                end
+            end
+        end
+        B2 = zeros(size(W,1),2*N+3);
+        for i = 1:2*N+3
+            for j = 1:length(B2cheb{i})
+                if j == 1 || j == length(B2cheb{i})
+                    B2(:,i) = B2(:,i) + 0.5*B2cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
+                else
+                    B2(:,i) = B2(:,i) + B2cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
+                end
+            end
+        end      
+    else
+        B1 = zeros(size(W,1),2*N+4);
+        for i = 1:2*N+4
+            B1(:,i) = radialIntegral2(i, r_a_arr, k, Upsilon, formulation, 1);
+        end
+        B2 = zeros(size(W,1),2*N+3);
+        for i = 1:2*N+3
+            B2(:,i) = radialIntegral2(i, r_a_arr, k, Upsilon, formulation, 2);
+        end      
+    end
     
     temp = zeros(n_en,n_en,N,N);
-    for gp = 1:size(W2D,1)
-%         tic
-        pt = Q2D(gp,:);
-        wt = W2D(gp);
-
-        xi  = parent2ParametricSpace(Xi_e, pt(1));
-        eta = parent2ParametricSpace(Eta_e,pt(2));
-        [R, dRdxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
+    for gp = 1:size(W,1)
+        R = Rs{1}(gp,:);
+        r_a = r_a_arr(gp);
+        theta = theta_arr(gp);
+        c1 = c1_arr(gp);
+        c2 = c2_arr(gp);
         
-        J = pts.'*[dRdxi.' dRdeta.'];
+        wt = W(gp);
         
-        X = R*pts;
-        Xt = A_2*(X-x_0).';
-        xt = Xt(1);
-        yt = Xt(2);
-        zt = Xt(3);
-        
-        [r_a, theta, ~, c1, c2] = evaluateProlateCoords(xt,yt,zt,Upsilon);
-        
+        J = [dXdxi(gp,:).',dXdeta(gp,:).'];
+                
         if r_a > chimax || r_a < chimin
             error('chi is not in range [chimin chimax]')
         end
@@ -125,7 +168,7 @@ parfor e = 1:noElems
 %         if r_a > max_r_a_recorded
 %             max_r_a_recorded = r_a;
 %         end
-        DPDX = dPdX(xt,yt,zt,Upsilon,r_a,c1,c2)*A_2;
+        DPDX = dPdX(Xt(gp,:),Upsilon,r_a,c1,c2)*A_2;
         
         J3 = DPDX(2:3,:)*J;
         J_3 = abs(det(J3));
@@ -133,53 +176,10 @@ parfor e = 1:noElems
         
         [dr_adtheta, dr_adphi] = dchidP(DPDX(1,:),J,J3);
         
-        dRdP = J3'\[dRdxi; dRdeta];
+        dRdP = J3'\[Rs{2}(gp,:); Rs{3}(gp,:)];
         
         dRdtheta = dRdP(1,:);
         dRdphi = dRdP(2,:);
-        if useApproxRadialIntegrals == 1
-            B1 = zeros(2*N+4,1);
-            xi_pt = (r_a-chimin)/(chimax-chimin);
-            for i = 1:2*N+4
-                B1(i) = evaluateNURBS(B1splines{i}, xi_pt);
-            end
-            B2 = zeros(2*N+3,1);
-            for i = 1:2*N+3
-                B2(i) = evaluateNURBS(B2splines{i}, xi_pt);
-            end
-        elseif useApproxRadialIntegrals == 2
-            B1 = zeros(2*N+4,1);
-            x_cheb = (2*r_a-chimax-chimin)/(chimax-chimin);
-            
-            for i = 1:2*N+4
-                for j = 1:length(B1cheb{i})
-                    if j == 1 || j == length(B1cheb{i})
-                        B1(i) = B1(i) + 0.5*B1cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
-                    else
-                        B1(i) = B1(i) + B1cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
-                    end
-                end
-            end
-            B2 = zeros(2*N+3,1);
-            for i = 1:2*N+3
-                for j = 1:length(B2cheb{i})
-                    if j == 1 || j == length(B2cheb{i})
-                        B2(i) = B2(i) + 0.5*B2cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
-                    else
-                        B2(i) = B2(i) + B2cheb{i}(j)*chebyshevTilde(j-1,x_cheb);
-                    end
-                end
-            end      
-        else
-            B1 = zeros(2*N+4,1);
-            for i = 1:2*N+4
-                B1(i) = radialIntegral2(i, r_a, k, Upsilon, formulation, 1);
-            end
-            B2 = zeros(2*N+3,1);
-            for i = 1:2*N+3
-                B2(i) = radialIntegral2(i, r_a, k, Upsilon, formulation, 2);
-            end      
-        end
 
         RR = R'*R;
         RtRt = dRdtheta'*dRdtheta;  
@@ -197,56 +197,56 @@ parfor e = 1:noElems
             for mt = 1:N                
                 switch formulation
                     case 'PGU'
-                        temp2 = RR*(-2*varrho2^2*B1(nt+mt) - 1i*varrho2*(nt+mt+2)*B1(nt+mt+1) +((nt+2)*mt + varrho3^2*(1+cos(theta)^2))*B1(nt+mt+2) ...
-                                    +1i*varrho1*varrho3*(nt+mt+2)*B1(nt+mt+3)-varrho1^2*(nt+2)*mt*B1(nt+mt+4) ...
+                        temp2 = RR*(-2*varrho2^2*B1(gp,nt+mt) - 1i*varrho2*(nt+mt+2)*B1(gp,nt+mt+1) +((nt+2)*mt + varrho3^2*(1+cos(theta)^2))*B1(gp,nt+mt+2) ...
+                                    +1i*varrho1*varrho3*(nt+mt+2)*B1(gp,nt+mt+3)-varrho1^2*(nt+2)*mt*B1(gp,nt+mt+4) ...
                                     +(-varrho2^2-1i*varrho2*(nt+mt+2)+(nt+2)*mt) ...
-                                        *1/r_a^2*(dr_adtheta^2*B1(nt+mt+2)+dr_adphi^2/sin(theta)^2*(B2(nt+mt+1)-varrho1^2*cos(theta)^2*B2(nt+mt+3)))) ...
-                                +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR + (nt+2-1i*varrho2)/r_a*dr_adtheta*RRt)*B1(nt+mt+2) ...
+                                        *1/r_a^2*(dr_adtheta^2*B1(gp,nt+mt+2)+dr_adphi^2/sin(theta)^2*(B2(gp,nt+mt+1)-varrho1^2*cos(theta)^2*B2(gp,nt+mt+3)))) ...
+                                +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR + (nt+2-1i*varrho2)/r_a*dr_adtheta*RRt)*B1(gp,nt+mt+2) ...
                                 +(RpRp + (mt-1i*varrho2)/r_a*dr_adphi*RpR + (nt+2-1i*varrho2)/r_a*dr_adphi*RRp) ...
-                                    *1/sin(theta)^2*(B2(nt+mt+1) - varrho1^2*cos(theta)^2*B2(nt+mt+3));
+                                    *1/sin(theta)^2*(B2(gp,nt+mt+1) - varrho1^2*cos(theta)^2*B2(gp,nt+mt+3));
                     case 'PGC'
-                        temp2 = RR*(- 1i*varrho2*(nt-mt+2)*B1(nt+mt+1) + ((nt+2)*mt + varrho3^2*(-1+cos(theta)^2))*B1(nt+mt+2) ...
-                                    +1i*varrho1*varrho3*(nt-mt+2)*B1(nt+mt+3)-varrho1^2*(nt+2)*mt*B1(nt+mt+4) ...
+                        temp2 = RR*(- 1i*varrho2*(nt-mt+2)*B1(gp,nt+mt+1) + ((nt+2)*mt + varrho3^2*(-1+cos(theta)^2))*B1(gp,nt+mt+2) ...
+                                    +1i*varrho1*varrho3*(nt-mt+2)*B1(gp,nt+mt+3)-varrho1^2*(nt+2)*mt*B1(gp,nt+mt+4) ...
                                     +(varrho2^2-1i*varrho2*(nt-mt+2)+(nt+2)*mt) ...
-                                        *1/r_a^2*(dr_adtheta^2*B1(nt+mt+2)+dr_adphi^2/sin(theta)^2*(B2(nt+mt+1)-varrho1^2*cos(theta)^2*B2(nt+mt+3)))) ...
-                                +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR + (nt+2+1i*varrho2)/r_a*dr_adtheta*RRt)*B1(nt+mt+2) ...
+                                        *1/r_a^2*(dr_adtheta^2*B1(gp,nt+mt+2)+dr_adphi^2/sin(theta)^2*(B2(gp,nt+mt+1)-varrho1^2*cos(theta)^2*B2(gp,nt+mt+3)))) ...
+                                +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR + (nt+2+1i*varrho2)/r_a*dr_adtheta*RRt)*B1(gp,nt+mt+2) ...
                                 +(RpRp + (mt-1i*varrho2)/r_a*dr_adphi*RpR + (nt+2+1i*varrho2)/r_a*dr_adphi*RRp) ...
-                                    *1/sin(theta)^2*(B2(nt+mt+1) - varrho1^2*cos(theta)^2*B2(nt+mt+3));
+                                    *1/sin(theta)^2*(B2(gp,nt+mt+1) - varrho1^2*cos(theta)^2*B2(gp,nt+mt+3));
                     case 'BGU'
                         if mt+nt == 2
-                            temp2 = RR*(-2*1i*varrho2*B1(1) +(1 + varrho3^2*(1+cos(theta)^2))*B1(2) ...
-                                        +2*1i*varrho1*varrho3*B1(3)-varrho1^2*B1(4) - 1i*varrho2*exp(2*1i*varrho2) ...
+                            temp2 = RR*(-2*1i*varrho2*B1(gp,1) +(1 + varrho3^2*(1+cos(theta)^2))*B1(gp,2) ...
+                                        +2*1i*varrho1*varrho3*B1(gp,3)-varrho1^2*B1(gp,4) - 1i*varrho2*exp(2*1i*varrho2) ...
                                         +(-varrho2^2-2*1i*varrho2+1) ...
-                                            *1/r_a^2*(dr_adtheta^2*B1(2)+dr_adphi^2/sin(theta)^2*(B2(1)-varrho1^2*cos(theta)^2*B2(3)))) ...
-                                    +(RtRt + (1-1i*varrho2)/r_a*dr_adtheta*RtR + (1-1i*varrho2)/r_a*dr_adtheta*RRt)*B1(2) ...
+                                            *1/r_a^2*(dr_adtheta^2*B1(gp,2)+dr_adphi^2/sin(theta)^2*(B2(gp,1)-varrho1^2*cos(theta)^2*B2(gp,3)))) ...
+                                    +(RtRt + (1-1i*varrho2)/r_a*dr_adtheta*RtR + (1-1i*varrho2)/r_a*dr_adtheta*RRt)*B1(gp,2) ...
                                     +(RpRp + (1-1i*varrho2)/r_a*dr_adphi*RpR + (1-1i*varrho2)/r_a*dr_adphi*RRp) ...
-                                        *1/sin(theta)^2*(B2(1) - varrho1^2*cos(theta)^2*B2(3));
+                                        *1/sin(theta)^2*(B2(gp,1) - varrho1^2*cos(theta)^2*B2(gp,3));
                         else
-                            temp2 = RR*(-2*varrho2^2*B1(nt+mt-2) - 1i*varrho2*(nt+mt)*B1(nt+mt-1) +(nt*mt + varrho3^2*(1+cos(theta)^2))*B1(nt+mt) ...
-                                        +1i*varrho1*varrho3*(nt+mt)*B1(nt+mt+1)-varrho1^2*nt*mt*B1(nt+mt+2) ...
+                            temp2 = RR*(-2*varrho2^2*B1(gp,nt+mt-2) - 1i*varrho2*(nt+mt)*B1(gp,nt+mt-1) +(nt*mt + varrho3^2*(1+cos(theta)^2))*B1(gp,nt+mt) ...
+                                        +1i*varrho1*varrho3*(nt+mt)*B1(gp,nt+mt+1)-varrho1^2*nt*mt*B1(gp,nt+mt+2) ...
                                         +(-varrho2^2-1i*varrho2*(nt+mt)+nt*mt) ...
-                                            *1/r_a^2*(dr_adtheta^2*B1(nt+mt)+dr_adphi^2/sin(theta)^2*(B2(nt+mt-1)-varrho1^2*cos(theta)^2*B2(nt+mt+1)))) ...
-                                    +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR + (nt-1i*varrho2)/r_a*dr_adtheta*RRt)*B1(nt+mt) ...
+                                            *1/r_a^2*(dr_adtheta^2*B1(gp,nt+mt)+dr_adphi^2/sin(theta)^2*(B2(gp,nt+mt-1)-varrho1^2*cos(theta)^2*B2(gp,nt+mt+1)))) ...
+                                    +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR + (nt-1i*varrho2)/r_a*dr_adtheta*RRt)*B1(gp,nt+mt) ...
                                     +(RpRp + (mt-1i*varrho2)/r_a*dr_adphi*RpR + (nt-1i*varrho2)/r_a*dr_adphi*RRp) ...
-                                        *1/sin(theta)^2*(B2(nt+mt-1) - varrho1^2*cos(theta)^2*B2(nt+mt+1));
+                                        *1/sin(theta)^2*(B2(gp,nt+mt-1) - varrho1^2*cos(theta)^2*B2(gp,nt+mt+1));
                         end
                     case 'BGC'
                         if mt+nt == 2
-                            temp2 = RR*((1+varrho3^2*(-1+cos(theta)^2))*B1(2) ...
-                                        -varrho1^2*B1(4) - 1i*varrho2...
+                            temp2 = RR*((1+varrho3^2*(-1+cos(theta)^2))*B1(gp,2) ...
+                                        -varrho1^2*B1(gp,4) - 1i*varrho2...
                                         +(varrho2^2+1) ...
-                                            *1/r_a^2*(dr_adtheta^2*B1(2)+dr_adphi^2/sin(theta)^2*(B2(1)-varrho1^2*cos(theta)^2*B2(3)))) ...
-                                    +(RtRt + (1-1i*varrho2)/r_a*dr_adtheta*RtR+(1+1i*varrho2)/r_a*dr_adtheta*RRt)*B1(2) ...
+                                            *1/r_a^2*(dr_adtheta^2*B1(gp,2)+dr_adphi^2/sin(theta)^2*(B2(gp,1)-varrho1^2*cos(theta)^2*B2(gp,3)))) ...
+                                    +(RtRt + (1-1i*varrho2)/r_a*dr_adtheta*RtR+(1+1i*varrho2)/r_a*dr_adtheta*RRt)*B1(gp,2) ...
                                     +(RpRp + (1-1i*varrho2)/r_a*dr_adphi*RpR+(1+1i*varrho2)/r_a*dr_adphi*RRp) ...
-                                        *1/sin(theta)^2*(B2(1) - varrho1^2*cos(theta)^2*B2(3));
+                                        *1/sin(theta)^2*(B2(gp,1) - varrho1^2*cos(theta)^2*B2(gp,3));
                         else
-                            temp2 = RR*(-1i*varrho2*(nt-mt)*B1(nt+mt-1) + (nt*mt+varrho3^2*(-1+cos(theta)^2))*B1(nt+mt) ...
-                                        +1i*varrho1*varrho3*(nt-mt)*B1(nt+mt+1)-varrho1^2*nt*mt*B1(nt+mt+2) ...
+                            temp2 = RR*(-1i*varrho2*(nt-mt)*B1(gp,nt+mt-1) + (nt*mt+varrho3^2*(-1+cos(theta)^2))*B1(gp,nt+mt) ...
+                                        +1i*varrho1*varrho3*(nt-mt)*B1(gp,nt+mt+1)-varrho1^2*nt*mt*B1(gp,nt+mt+2) ...
                                         +(varrho2^2-1i*varrho2*(nt-mt)+nt*mt) ...
-                                            *1/r_a^2*(dr_adtheta^2*B1(nt+mt)+dr_adphi^2/sin(theta)^2*(B2(nt+mt-1)-varrho1^2*cos(theta)^2*B2(nt+mt+1)))) ...
-                                    +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR+(nt+1i*varrho2)/r_a*dr_adtheta*RRt)*B1(nt+mt) ...
+                                            *1/r_a^2*(dr_adtheta^2*B1(gp,nt+mt)+dr_adphi^2/sin(theta)^2*(B2(gp,nt+mt-1)-varrho1^2*cos(theta)^2*B2(gp,nt+mt+1)))) ...
+                                    +(RtRt + (mt-1i*varrho2)/r_a*dr_adtheta*RtR+(nt+1i*varrho2)/r_a*dr_adtheta*RRt)*B1(gp,nt+mt) ...
                                     +(RpRp + (mt-1i*varrho2)/r_a*dr_adphi*RpR+(nt+1i*varrho2)/r_a*dr_adphi*RRp) ...
-                                        *1/sin(theta)^2*(B2(nt+mt-1) - varrho1^2*cos(theta)^2*B2(nt+mt+1));
+                                        *1/sin(theta)^2*(B2(gp,nt+mt-1) - varrho1^2*cos(theta)^2*B2(gp,nt+mt+1));
                         end
                 end
                 for n = 1:N
@@ -278,7 +278,6 @@ parfor e = 1:noElems
             counter = counter + n_en^2;
         end
     end
-    
     Avalues(:,e) = A_inf_values_temp;
     
     spIdxRow(:,e) = spIdxRow_temp;

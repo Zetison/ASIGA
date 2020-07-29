@@ -2,22 +2,25 @@ scatteringCase = 'MS';
 
 model = 'Barrel';
 method = {'BEM'};
-formulation = 'CCBIE';
+formulation = {'GBM','GCBIE','CBM','CCBIE'};
+BC = 'SHC';
 
-f = 1e3; % Frequency
+f = 1.5e3; % Frequency
+
+parms = setBarrelParameters();
 
 M = 1;
-parm = 1;
+parm = 2;
 degree = 2;
-alpha = (0:0.05:90)*pi/180;
+alpha = (0:0.05:180)*pi/180;
 
-loopParameters = {'M','parm','f','method'};
-plot3Dgeometry = 1;
+loopParameters = {'M','parm','f','method','formulation'};
+prePlot.plot3Dgeometry = false;
 solveForPtot = true;
 collectIntoTasks
 
 
 method = {'KDT'};
 solveForPtot = false;
-formulation = 'MS1';
-collectIntoTasks
+formulation = {'MS1'};
+% collectIntoTasks

@@ -1,11 +1,9 @@
 function F = applyNeumannCondition_CoupledProblemPatches(varColSolid,varColFluid,omega,rho_f,no_angles,shift)
 
 knotVecs = varColSolid.knotVecs;
-elRangeXi = varColSolid.elRange{1};
-elRangeEta = varColSolid.elRange{2};
-
-p_xi = varColSolid.degree(1);
-p_eta = varColSolid.degree(2);
+degree = varColSolid.degree(1:2);
+elRange = varColSolid.elRange;
+d_p = varColSolid.patches{1}.nurbs.d_p;
 
 weights = varColSolid.weights;
 controlPts = varColSolid.controlPts;
@@ -21,7 +19,7 @@ d = varColSolid.dimension;
 [solidNodes,fluidNodes,solidXiEtaMesh,solidIndexXiEta,solidNoElemsXiEta,pIndex,solidNodes2,fluidNodes2]...
     = createSurfaceMesh(varColSolid,varColFluid);
 
-n_en = (p_xi+1)*(p_eta+1);
+n_en = prod(degree+1);
 
 F1values = zeros(d*n_en,solidNoElemsXiEta,no_angles);
 F2values = zeros(n_en,solidNoElemsXiEta,no_angles);
@@ -29,21 +27,19 @@ F2values = zeros(n_en,solidNoElemsXiEta,no_angles);
 indices1 = zeros(d*n_en,solidNoElemsXiEta);
 indices2 = zeros(n_en,solidNoElemsXiEta);
 
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
+[Q, W] = gaussTensorQuad(degree+1);
 % warning('parfor is not being used')
-for e = 1:solidNoElemsXiEta
-% parfor e = 1:solidNoElemsXiEta
+% for e = 1:solidNoElemsXiEta
+parfor e = 1:solidNoElemsXiEta
     patch = pIndex(e); % New
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
-    
-    idXi = solidIndexXiEta(e,1);   % the index matrix is made in generateIGA3DMesh
-    idEta = solidIndexXiEta(e,2);
+    knots = knotVecs{patch}(1:2);
 
-    Xi_e = elRangeXi(idXi,:); % [eta_j,eta_j+1]
-    Eta_e = elRangeEta(idEta,:); % [zeta_k,zeta_k+1]
+    Xi_e = zeros(d_p-1,2);
+    for i = 1:d_p-1
+        Xi_e(i,:) = elRange{i}(solidIndexXiEta(e,i),:);
+    end
 
-    J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^(d_p-1);
 
     solidSctrXiEta = solidNodes(solidXiEtaMesh(e,:));          %  element scatter vector
     solidSctrXiEtadD = zeros(d*length(solidSctrXiEta),1);
@@ -55,26 +51,19 @@ for e = 1:solidNoElemsXiEta
     pts = controlPts(solidSctrXiEta,:);
     wgts = weights(solidNodes2(solidXiEtaMesh(e,:)));
     
+    xi = parent2ParametricSpace(Xi_e, Q);
+    I = findKnotSpans(degree, xi(1,:), knots);
+    R = NURBSbasis(I, xi, degree, knots, wgts);
+    [J_1, crossProd] = getJacobian(R,pts,2);
+    normal = crossProd./repmat(J_1,1,3);
+
+    X = R{1}*pts;
+    
     F1_e = zeros(d*n_en,no_angles);
     F2_e = zeros(n_en,no_angles);
-    for gp = 1:size(W2D,1)
-        pt = Q2D(gp,:);
-        wt = W2D(gp);
-
-        xi  = parent2ParametricSpace(Xi_e, pt(1));
-        eta = parent2ParametricSpace(Eta_e,pt(2));
-
-        [R, dRxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-
-        J = pts'*[dRxi' dRdeta'];
-        crossProd = cross(J(:,1), J(:,2));  % pointing outwards if sphere
-        J_1 = norm(crossProd);
-        n = crossProd/J_1;
-        
-        X = R*pts;
-                
-        F1_e = F1_e + kron(R',n)*p_inc(X).'*J_1 * J_2 * wt;
-        F2_e = F2_e + R'*dp_inc(X,n.').'*J_1 * J_2 * wt;
+    for gp = 1:size(W,1)
+        F1_e = F1_e + kron(R{1}(gp,:)',normal(gp,:).')*p_inc(X(gp,:)).'*J_1(gp) * J_2 * W(gp);
+        F2_e = F2_e + R{1}(gp,:)'*dp_inc(X(gp,:),normal(gp,:)).'*J_1(gp) * J_2 * W(gp);
     end
     
     indices1(:,e) = solidSctrXiEtadD';

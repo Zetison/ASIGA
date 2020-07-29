@@ -1,97 +1,33 @@
-function nurbs = getBarrelData(R_o, R_i, eta1, eta2, L)
+function nurbs = getBarrelData(varargin)
 
-t = R_o-R_i;
-
-Xi = [0 0 0 1 1 2 2 3 3 4 4 4]/4; % p = 2
-% Xi = [0 0 1 2 3 4 5 6 7 8 8]/8; % p = 1
-Eta = [0 0 eta1 eta2 1 1];
-Zeta = [0 0 1 1];
-
-controlPts = zeros(4,9,4,2);
-
-% inner surface
-controlPts(:,1,1,1) = [ -L+t   0     0      1           ];
-controlPts(:,2,1,1) = [ -L+t   0     0      1/sqrt(2)   ];
-controlPts(:,3,1,1) = [ -L+t   0     0      1           ];
-controlPts(:,4,1,1) = [ -L+t   0     0      1/sqrt(2)   ];
-controlPts(:,5,1,1) = [ -L+t   0     0      1           ];
-controlPts(:,6,1,1) = [ -L+t   0     0      1/sqrt(2)   ];
-controlPts(:,7,1,1) = [ -L+t   0     0      1           ];
-controlPts(:,8,1,1) = [ -L+t   0     0      1/sqrt(2)   ];
-controlPts(:,9,1,1) = [ -L+t   0     0      1           ];
-
-controlPts(:,1,2,1) = [ -L+t     R_i   0    	1           ];
-controlPts(:,2,2,1) = [ -L+t     R_i   R_i   	1/sqrt(2)   ];
-controlPts(:,3,2,1) = [	-L+t     0     R_i  	1           ];
-controlPts(:,4,2,1) = [	-L+t    -R_i   R_i  	1/sqrt(2)   ];
-controlPts(:,5,2,1) = [	-L+t    -R_i   0    	1           ];
-controlPts(:,6,2,1) = [	-L+t    -R_i  -R_i   	1/sqrt(2)   ];
-controlPts(:,7,2,1) = [	-L+t     0    -R_i   	1           ];
-controlPts(:,8,2,1) = [	-L+t     R_i  -R_i   	1/sqrt(2)   ];
-controlPts(:,9,2,1) = [	-L+t     R_i   0    	1           ];
-
-controlPts(:,1,3,1) = [  -t     R_i   0    	1           ];
-controlPts(:,2,3,1) = [  -t     R_i   R_i   	1/sqrt(2)   ];
-controlPts(:,3,3,1) = [	 -t     0     R_i  	1           ];
-controlPts(:,4,3,1) = [	 -t    -R_i   R_i  	1/sqrt(2)   ];
-controlPts(:,5,3,1) = [	 -t    -R_i   0    	1           ];
-controlPts(:,6,3,1) = [	 -t    -R_i  -R_i   	1/sqrt(2)   ];
-controlPts(:,7,3,1) = [	 -t     0    -R_i   	1           ];
-controlPts(:,8,3,1) = [	 -t     R_i  -R_i   	1/sqrt(2)   ];
-controlPts(:,9,3,1) = [	 -t     R_i   0    	1           ];
-
-controlPts(:,1,4,1) = [  -t   0     0      1           ];
-controlPts(:,2,4,1) = [  -t   0     0      1/sqrt(2)   ];
-controlPts(:,3,4,1) = [  -t   0     0      1           ];
-controlPts(:,4,4,1) = [  -t   0     0      1/sqrt(2)   ];
-controlPts(:,5,4,1) = [  -t   0     0      1           ];
-controlPts(:,6,4,1) = [  -t   0     0      1/sqrt(2)   ];
-controlPts(:,7,4,1) = [  -t   0     0      1           ];
-controlPts(:,8,4,1) = [  -t   0     0      1/sqrt(2)   ];
-controlPts(:,9,4,1) = [  -t   0     0      1           ];
-
-% outer surface
-controlPts(:,1,1,2) = [ -L   0     0      1           ];
-controlPts(:,2,1,2) = [ -L   0     0      1/sqrt(2)   ];
-controlPts(:,3,1,2) = [ -L   0     0      1           ];
-controlPts(:,4,1,2) = [ -L   0     0      1/sqrt(2)   ];
-controlPts(:,5,1,2) = [ -L   0     0      1           ];
-controlPts(:,6,1,2) = [ -L   0     0      1/sqrt(2)   ];
-controlPts(:,7,1,2) = [ -L   0     0      1           ];
-controlPts(:,8,1,2) = [ -L   0     0      1/sqrt(2)   ];
-controlPts(:,9,1,2) = [ -L   0     0      1           ];
-
-controlPts(:,1,2,2) = [ -L     R_o   0    	1           ];
-controlPts(:,2,2,2) = [ -L     R_o   R_o   	1/sqrt(2)   ];
-controlPts(:,3,2,2) = [	-L     0     R_o  	1           ];
-controlPts(:,4,2,2) = [	-L    -R_o   R_o  	1/sqrt(2)   ];
-controlPts(:,5,2,2) = [	-L    -R_o   0    	1           ];
-controlPts(:,6,2,2) = [	-L    -R_o  -R_o   	1/sqrt(2)   ];
-controlPts(:,7,2,2) = [	-L     0    -R_o   	1           ];
-controlPts(:,8,2,2) = [	-L     R_o  -R_o   	1/sqrt(2)   ];
-controlPts(:,9,2,2) = [	-L     R_o   0    	1           ];
-
-controlPts(:,1,3,2) = [  0     R_o   0    	1           ];
-controlPts(:,2,3,2) = [  0     R_o   R_o   	1/sqrt(2)   ];
-controlPts(:,3,3,2) = [	 0     0     R_o  	1           ];
-controlPts(:,4,3,2) = [	 0    -R_o   R_o  	1/sqrt(2)   ];
-controlPts(:,5,3,2) = [	 0    -R_o   0    	1           ];
-controlPts(:,6,3,2) = [	 0    -R_o  -R_o   	1/sqrt(2)   ];
-controlPts(:,7,3,2) = [	 0     0    -R_o   	1           ];
-controlPts(:,8,3,2) = [	 0     R_o  -R_o   	1/sqrt(2)   ];
-controlPts(:,9,3,2) = [	 0     R_o   0    	1           ];
-
-controlPts(:,1,4,2) = [  0   0     0      1           ];
-controlPts(:,2,4,2) = [  0   0     0      1/sqrt(2)   ];
-controlPts(:,3,4,2) = [  0   0     0      1           ];
-controlPts(:,4,4,2) = [  0   0     0      1/sqrt(2)   ];
-controlPts(:,5,4,2) = [  0   0     0      1           ];
-controlPts(:,6,4,2) = [  0   0     0      1/sqrt(2)   ];
-controlPts(:,7,4,2) = [  0   0     0      1           ];
-controlPts(:,8,4,2) = [  0   0     0      1/sqrt(2)   ];
-controlPts(:,9,4,2) = [  0   0     0      1           ];
-
-% controlPts(4,:,:,:) = 1;
-
-nurbs = createNURBSobject(controlPts,{Xi, Eta, Zeta});
-nurbs = elevateNURBSdegree(nurbs,[0 1 0]);
+options = struct('Xi', [0,0,0,1,1,2,2,3,3,3]/3, ...  % knot vector for azimuthal direction
+                 'R', 1,...
+                 'parm', 1, ...
+                 'L', pi, ...
+                 't', 0.1, ...
+                 'phi', 120*pi/180, ...
+                 's_trans', 0.9);
+if nargin > 0
+    if numel(varargin) > 1
+        newOptions = varargin;
+    else
+        newOptions = varargin{1};
+    end
+    options = updateOptions(options,newOptions);
+end
+parm = options.parm;
+R = options.R;
+L = options.L;
+t = options.t;
+if parm == 2
+    Xi = [0 0 0 1 1 2 2 3 3 4 4 4]/4; % p = 2
+else
+    Xi = options.Xi;
+end
+nurbsDisk = [getDiskData('Xi',Xi,'R',R-t,'parm',parm,'t',t), ...
+             getDiskData('Xi',Xi,'R',[R,R-t],'parm',1,'t',t)];
+nurbsTop = translateNURBS(nurbsDisk,[0,0,L+t]);
+nurbsCyl = getCylinderData('Xi',Xi,'R',[R,R-t],'parm',1,'L',L);
+nurbsCyl = translateNURBS(nurbsCyl,[0,0,t]);
+nurbs = [nurbsDisk,nurbsCyl,nurbsTop];
+nurbs = rotateNURBS(nurbs,'rotAxis','Yaxis');

@@ -1,7 +1,10 @@
 function nurbs = glueNURBS(nurbsCol,dir)
-
+nurbsCol = makeUniformNURBSDegree(nurbsCol);
+nurbsCol = makeUniformNURBSDimension(nurbsCol);
 noPatches = numel(nurbsCol);
 n = zeros(noPatches,1);
+d = nurbsCol{1}.d;
+d_p = nurbsCol{1}.d_p;
 for i = 1:noPatches
     switch dir
         case 'xi'
@@ -12,15 +15,17 @@ for i = 1:noPatches
 end
 switch dir
     case 'xi'
-        m = nurbsCol{1}.number(2);
-        coeffs = zeros(4,sum(n)-noPatches+1,m);
+        m = size(nurbsCol{1}.coeffs,3);
+        coeffs = zeros(d+1,sum(n)-noPatches+1,m);
         p = nurbsCol{1}.degree(1);
         Xi = zeros(1,sum(n)+p+1-noPatches+1);
-        Eta = nurbsCol{1}.knots{2};
+        if d_p > 1
+            Eta = nurbsCol{1}.knots{2};
+        end
         Xi(end-p:end) = 1;
     case 'eta'
         m = nurbsCol{1}.number(1);
-        coeffs = zeros(4,m,sum(n)-noPatches+1);
+        coeffs = zeros(d+1,m,sum(n)-noPatches+1);
         p = nurbsCol{1}.degree(2);
         Xi = nurbsCol{1}.knots{1};
         Eta = zeros(1,sum(n)+p+1-noPatches+1);
@@ -40,4 +45,8 @@ for i = 1:noPatches
     counter  = counter  + n(i) - 1;
     counter2 = counter2 + n(i) - 1;
 end
-nurbs = createNURBSobject(coeffs,{Xi,Eta});
+if d_p == 1
+    nurbs = createNURBSobject(coeffs,Xi);
+else
+    nurbs = createNURBSobject(coeffs,{Xi,Eta});
+end

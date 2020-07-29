@@ -1,31 +1,81 @@
 
-Phi_k = @(r) exp(1i*k_1*r)./(4*pi*r);
-dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k_1*r - 1).*sum(xmy.*ny,2);
-dPhi_kdnx = @(xmy,r,ny) Phi_k(r)./r.^2.*(1i*k_1*r - 1).*sum(xmy.*ny,2);
+k = varCol{1}.k;
+Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
+dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
+dPhi_kdnx = @(xmy,r,ny) Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
 varCol{1}.Phi_k = Phi_k;
 varCol{1}.dPhi_kdny = dPhi_kdny;
 
 switch applyLoad
-    case 'SimpsonTorus'
-        analytic = @(v) prod(sin(k_1*v/sqrt(3)),2);
-        gAnalytic = @(v) k_1/sqrt(3)*[cos(k_1*v(:,1)/sqrt(3)).*sin(k_1*v(:,2)/sqrt(3)).*sin(k_1*v(:,3)/sqrt(3)), ...
-                                    sin(k_1*v(:,1)/sqrt(3)).*cos(k_1*v(:,2)/sqrt(3)).*sin(k_1*v(:,3)/sqrt(3)), ...
-                                    sin(k_1*v(:,1)/sqrt(3)).*sin(k_1*v(:,2)/sqrt(3)).*cos(k_1*v(:,3)/sqrt(3))];
-        dpdn = @(v,n) sum(gAnalytic(v).*n,2);
-        
-        varCol{1}.farField = @(v) NaN;
-        varCol{1}.analytic = analytic;
-        varCol{1}.gAnalytic = gAnalytic;
-        
+    case 'SimpsonTorus'        
         p_inc = @(v) zeros(size(v,1),1);
         gp_inc = @(v) zeros(size(v,1),1);
+        dpdn = @(X,n) analytic({X},varCol,n,'dpdn',1);
         dp_inc = @(v,n) -dpdn(v,n);
-        
-        e3Dss_options = struct('omega', omega, ...
-                         'P_inc', P_inc, ...
-                         'rho_f', rho_f, ...
-                         'c_f', c_f);
+    case 'pointPulsation'        
+        p_inc = @(v) zeros(size(v,1),1);
+        gp_inc = @(v) zeros(size(v,1),1);
+        dpdn = @(X,n) analytic({X},varCol,n,'dpdn',1);
+        dp_inc = @(v,n) -dpdn(v,n);
+        if ~strcmp(BC,'NBC')
+            error('The radial pulsation exact solution is not a solution to coupled problems')
+        end        
+    case {'planeWave','radialPulsation'}
+        d_vec = -[cos(beta_s(1))*cos(alpha_s);
+                  cos(beta_s(1))*sin(alpha_s);
+                  sin(beta_s(1))*ones(1,length(alpha_s))];
+        varCol{1}.d_vec = d_vec;
+        e3Dss_options.BC = BC;
+        e3Dss_options.d_vec = d_vec;
+        e3Dss_options.N_max = N_max;
+        if ~isfield(task,'P_inc')
+            P_inc = 1;
+        end
+        e3Dss_options.P_inc = P_inc;
+        e3Dss_options.omega = omega;
+        e3Dss_options.applyLoad = applyLoad;
+        e3Dss_options.Display = 'none';
+        varCol{1}.e3Dss_options = e3Dss_options;
+        if strcmp(applyLoad,'planeWave')
+            if isinf(N_max)
+                p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k);
+                gp_inc = @(v) 1i*elementProd(p_inc(v),d_vec.')*k;
+                dp_inc = @(v,n) 1i*(n*d_vec)*k.*p_inc(v);
+            else
+                p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k);
+                gp_inc = @(X) -analytic({X},varCol,NaN,'dp',1);
+                dp_inc = @(X,n) -analytic({X},varCol,n,'dpdn',1);
+            end
+        elseif strcmp(applyLoad,'radialPulsation')
+            p_inc = @(v) P_inc*R_o(1).*exp(-1i*k*(norm2(v)-R_o(1)))./norm2(v);
+            gp_inc = @(v)   -p_inc(v).*(1./norm2(v)+1i*k).*v./norm2(v);
+            dp_inc = @(v,n) -p_inc(v).*(1./norm2(v)+1i*k).*sum(v.*n,2)./norm2(v);
+        end
+        dpdn = @(v,n) zeros(size(v,1),1);
+end
+varCol{1}.analyticFunctions = @(X) analytic(X,varCol);
+varCol{1}.p_inc = p_inc;
+varCol{1}.dp_inc = dp_inc;
+varCol{1}.gp_inc = gp_inc;
+varCol{1}.d_vec = d_vec;
+varCol{1}.dpdn = dpdn;
+varCol{1}.p = @(X) analytic({X},varCol,NaN,'p',1);
+varCol{1}.p_0 = @(X) analytic({X},varCol,NaN,'p_0',1);
+
+
+
+function analyticFunctions = analytic(X,layers,n,func,m_func)
+M = numel(X);
+switch layers{1}.applyLoad
+    case 'SimpsonTorus'
+        k = layers{1}.k;
+        layers{1}.p = prod(sin(k*X/sqrt(3)),2);
+        layers{1}.p_0 = NaN;
+        layers{1}.dp = k/sqrt(3)*[cos(k*X(:,1)/sqrt(3)).*sin(k*X(:,2)/sqrt(3)).*sin(k*X(:,3)/sqrt(3)), ...
+                                    sin(k*X(:,1)/sqrt(3)).*cos(k*X(:,2)/sqrt(3)).*sin(k*X(:,3)/sqrt(3)), ...
+                                    sin(k*X(:,1)/sqrt(3)).*sin(k*X(:,2)/sqrt(3)).*cos(k*X(:,3)/sqrt(3))];
     case 'pointPulsation'
+        k = layers{1}.k;
         C_n = @(n) cos(n-1);
         switch model
             case 'MS_P'
@@ -60,125 +110,103 @@ switch applyLoad
                 Xarr = linspace(-1,1,3)*a/4;
                 Yarr = linspace(-1,1,3)*a/4;
                 Zarr = linspace(-1,1,3)*a/4;
-                [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
-                y = [X(:),Y(:), Z(:)];
+                [XX,YY,ZZ] = ndgrid(Xarr,Yarr,Zarr);
+                y = [XX(:),YY(:), ZZ(:)];
             otherwise
                 y = [0,0,0];
         end
-        xms = @(v) [v(:,1)-y(1),v(:,2)-y(2),v(:,3)-y(3)];
-        R = @(v) norm2(xms(v));
-        analytic = @(v) analyticPulsation_(v,C_n,y,k_1);
-        gAnalytic = @(v) gAnalyticPulsation_(v,C_n,y,k_1);
-        dpdn = @(v,n) dAnalyticPulsation_(v,C_n,y,k_1,n);
-        
-        varCol{1}.farField = @(v) fAnalyticPulsation_(v,C_n,y,k_1);
-        varCol{1}.analytic = analytic;
-        varCol{1}.gAnalytic = gAnalytic;
-        
-        p_inc = @(v) zeros(size(v,1),1);
-        gp_inc = @(v) zeros(size(v,1),1);
-        dp_inc = @(v,n) -dpdn(v,n);
-        if ~strcmp(BC,'NBC')
-            error('The radial pulsation exact solution is not a solution to coupled problems')
+        Phi_k = @(r) exp(1i*k(1)*r)./(4*pi*r);
+        p = zeros(size(X{1},1),1);
+        dp = zeros(size(X{1},1),3);
+        for i = 1:size(y,1)
+            xms = @(v) [v(:,1)-y(i,1),v(:,2)-y(i,2),v(:,3)-y(i,3)];
+            R = @(v) norm2(xms(v));
+            p_i = C_n(i)*Phi_k(R(X{1}));
+            p = p + p_i;
+            dp = dp + elementProd(p_i.*(1i*k - 1./R(X{1}))./R(X{1}), xms(X{1}));
         end
-        e3Dss_options = struct('omega', omega, ...
-                         'P_inc', P_inc, ...
-                         'rho_f', rho_f, ...
-                         'c_f', c_f);
+        p_0 = zeros(size(X{1},1),1);
+        for i = 1:size(y,1)
+            p_0 = p_0 + C_n(i)/(4*pi)*exp(-1i*k*dot3(X{1}./repmat(norm2(X{1}),1,3),y(i,:).'));
+        end
+        layers{1}.p = p;
+        layers{1}.p_0 = p_0;
+        layers{1}.dp = dp;
         
     case {'planeWave','radialPulsation'}
-        d_vec = -[cos(beta_s(1))*cos(alpha_s);
-                  cos(beta_s(1))*sin(alpha_s);
-                  sin(beta_s(1))*ones(1,length(alpha_s))];
-        varCol{1}.d_vec = d_vec;
-        if isSphericalShell
-            R_o = parms.R_o;
-            if useSolidDomain
-                e3Dss_options = struct('d_vec', d_vec, ...
-                                 'omega', omega, ...
-                                 'R_i', R_i, ...
-                                 'R_o', R_o, ...
-                                 'P_inc', P_inc, ...
-                                 'E', E, ...
-                                 'nu', nu, ...
-                                 'rho_s', rho_s, ...
-                                 'rho_f', rho_f, ...
-                                 'N_max', N_max,...
-                                 'c_f', c_f, ...
-                                 'applyLoad', applyLoad, ...
-                                 'calc_dpdx', 1,...
-                                 'calc_dpdy', 1,...
-                                 'calc_dpdz', 1,...
-                                 'calc_u_x', 1,...
-                                 'calc_u_y', 1,...
-                                 'calc_u_z', 1,...
-                                 'calc_du_xdx', 1,...
-                                 'calc_du_xdy', 1,...
-                                 'calc_du_xdz', 1,...
-                                 'calc_du_ydx', 1,...
-                                 'calc_du_ydy', 1,...
-                                 'calc_du_ydz', 1,...
-                                 'calc_du_zdx', 1,...
-                                 'calc_du_zdy', 1,...
-                                 'calc_du_zdz', 1,...
-                                 'calc_sigma_xx', 1,...
-                                 'calc_sigma_yy', 1,...
-                                 'calc_sigma_zz', 1,...
-                                 'calc_sigma_yz', 1,...
-                                 'calc_sigma_xz', 1,...
-                                 'calc_sigma_xy', 1);
-            else
-                e3Dss_options = struct('d_vec', d_vec, ...
-                                 'omega', omega, ...
-                                 'R_o', R_o, ...
-                                 'P_inc', P_inc, ...
-                                 'rho_f', rho_f, ...
-                                 'applyLoad', applyLoad, ...
-                                 'calc_dpdx', 1,...
-                                 'calc_dpdy', 1,...
-                                 'calc_dpdz', 1,...
-                                 'N_max', N_max,...
-                                 'c_f', c_f);
-            end
-            varCol{1}.farField = @(v) farField_(v,e3Dss_options);
-            varCol{1}.analytic = @(v) analytic_(v,e3Dss_options);
-            varCol{1}.gAnalytic = @(v) gAnalytic_(v,e3Dss_options);
-            if useSolidDomain
-                varCol{2}.analytic = @(v) analytic_solid_(v,e3Dss_options);
-            end
-            if useInnerFluidDomain
-                varCol{3}.analytic = @(v) analytic_fluid_i_(v,e3Dss_options);
-            end
-        else
-            e3Dss_options = [];
+        layers{1}.calc_p_0       = true;      % Toggle calculation of the far field pattern
+        for m = 1:M
+            layers{m}.X = X{m};
+
+            % Parameters in layer m for options{i}.media = 'fluid'
+            layers{m}.calc_p       	= true;      % Toggle calculation of the scattered pressure
+            layers{m}.calc_dp      	= true(1,3); % Toggle calculation of the three components of the gradient of the pressure
+            layers{m}.calc_p_laplace	= true;      % Toggle calculation of the Laplace operator of the scattered pressure fields
+            layers{m}.calc_errHelm	= true;      % Toggle calculation of the errors for the Helmholtz equation
+
+            % Parameters in layer m for options{i}.media = 'solid' or 'viscoelastic'
+            layers{m}.calc_u       = true(1,3); % Toggle calculation of the three components of the displacement
+            layers{m}.calc_du      = true(3,3); % Toggle calculation of the three cartesian derivatives of the three components of the displacement [du_xdx du_xdy du_xdz; 
+                                                %                                                                                                    du_ydx du_ydy du_ydz; 
+                                                %                                                                                                    du_zdx du_zdy du_zdz]
+            layers{m}.calc_sigma   = true(1,6); % Toggle calculation of the six components of the stress field (cartesian coordinates) [sigma_xx sigma_yy sigma_zz sigma_yz sigma_xz sigma_xy]
         end
-        if strcmp(applyLoad,'planeWave')
-            if isinf(N_max)
-                p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
-                gp_inc = @(v) 1i*elementProd(p_inc(v),d_vec.')*k_1;
-                dp_inc = @(v,n) 1i*(n*d_vec)*k_1.*p_inc(v);
-                dpdn = @(v,n) zeros(size(v,1),1);
-            else
-                p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k_1);
-                gp_inc = @(v) -gAnalytic_(v,e3Dss_options);
-                dp_inc = @(v,n) -n*gAnalytic_(v,e3Dss_options);
-                dpdn = @(v,n) zeros(size(v,1),1);
-            end
-        else
-            p_inc = @(v) P_inc*R_o(1).*exp(-1i*k_1*(norm2(v)-R_o(1)))./norm2(v);
-            gp_inc = @(v)   -p_inc(v).*(1./norm2(v)+1i*k_1).*v./norm2(v);
-            dp_inc = @(v,n) -p_inc(v).*(1./norm2(v)+1i*k_1);
-            dpdn = @(v,n) zeros(size(v,1),1);
+        layers = e3Dss(layers, layers{1}.e3Dss_options);
+        if nargin > 2
+            layers{1}.dp = [layers{m}.dpdx,layers{m}.dpdy,layers{m}.dpdz];
         end
+    case 'Cartesian'
+        k = layers{1}.c_f/layers{m}.e3Dss_options.omega;
+
+
+        Acoeff = [1, 1i+1];
+        Bcoeff = [1-1i, 1i];
+        Ccoeff = [0.5, 1i+1];
+        Dcoeff = [1-1i, 1i];
+
+        Ecoeff = [1-1i, 1i;
+                  1,    1];
+
+        Fcoeff = [1+1i, 1;
+                  1i,    -1];
+        [p,dp] = general3DSolutionHelmholtz(X{m}, k, Acoeff,Bcoeff,Ccoeff,Dcoeff,Ecoeff,Fcoeff);
+        layers{1}.p = p;
+        layers{1}.dp = dp;
 end
-varCol{1}.p_inc = p_inc;
-varCol{1}.dp_inc = dp_inc;
-varCol{1}.gp_inc = gp_inc;
-if strcmp(coreMethod,'XI')
-    varCol{1}.d_vec = d_vec;
+if nargin > 2 && ~any(isnan(n(:)))
+    for m = 1:M
+        layers{m}.dpdn = sum(layers{m}.dp.*n,2);
+    end
 end
-varCol{1}.dpdn = dpdn;
-varCol{1}.e3Dss_options = e3Dss_options;
+if nargin < 3
+    analyticFunctions = layers; 
+else
+    analyticFunctions = layers{m_func}.(func);
+end
+end
+
+
+function [p,dp] = general3DSolutionHelmholtz(X, k, A, B, C, D, E, F)
+% Solution with notation from 
+% http://mathworld.wolfram.com/HelmholtzDifferentialEquationCartesianCoordinates.html
+p = 0;
+dp = zeros(3,1);
+x = X(:,1);
+y = Y(:,1);
+z = Z(:,1);
+[L, M] = size(E);
+
+for l = 1:L
+    for m = 1:M
+        lambda = sqrt(k^2+l^2+m^2);
+        p = p + (A(l)*exp(l*x) + B(l)*exp(-l*x)).*(C(m)*exp(m*y) + D(m)*exp(-m*y)).*(E(l,m)*exp(-1i*lambda*z) + F(l,m)*exp(1i*lambda*z));
+        dp(1) = dp(1) + (A(l)*l*exp(l*x) - B(l)*l*exp(-l*x)).*(C(m)*exp(m*y) + D(m)*exp(-m*y)).*(E(l,m)*exp(-1i*lambda*z) + F(l,m)*exp(1i*lambda*z));
+        dp(2) = dp(2) + (A(l)*exp(l*x) + B(l)*exp(-l*x)).*(C(m)*m*exp(m*y) - D(m)*m*exp(-m*y)).*(E(l,m)*exp(-1i*lambda*z) + F(l,m)*exp(1i*lambda*z));
+        dp(3) = dp(3) + (A(l)*exp(l*x) + B(l)*exp(-l*x)).*(C(m)*exp(m*y) + D(m)*exp(-m*y)).*(E(l,m)*-1i*lambda*exp(-1i*lambda*z) + F(l,m)*1i*lambda*exp(1i*lambda*z));
+    end
+end
+
+end
 
 
 

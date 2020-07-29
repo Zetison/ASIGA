@@ -5,19 +5,29 @@ memoryCheap = 0;
 waringMessageId = 'MATLAB:mir_warning_maybe_uninitialized_temporary';
 warning('off',waringMessageId)
 
-startMatlabPool
+% startMatlabPool
 
 % matlabpool open 2
 % myCluster = parcluster('local')
 % parpool(myCluster,2)
 % delete(myCluster.Jobs)
 Eps = 1e-12;
-plot3Dgeometry = 1;
-plot2Dgeometry = false;
-boundaryMethod = false;
+prePlot.plot3Dgeometry = 1;
+prePlot.plot2Dgeometry = false;
+prePlot.boundaryMethod = false;
+prePlot.setViewAngle = [18,10];
+prePlot.useCamlight = true;
+prePlot.plotControlPolygon = false;
+prePlot.export_fig_name3D = '';
+prePlot.resolution = 20*[1,1,1];
+prePlot.plotAt = false(3,2);
+prePlot.plotAt(3,1:2) = true;
+prePlot.title = '';
+prePlot.export_fig_name3D = '';
+% prePlot.export_fig_name3D = '../../graphics/wineGlassFine';
 plotTimeOscillation = true;
 coreMethod = 'IGA';
-
+method = 'IE';
 E = 50e9; % 50e9–90e9
 nu = 0.3; % 0.18–0.3
 t1 = 0.001;
@@ -33,7 +43,7 @@ runInParallell = 321;
 
 
 
-M = 1; % 5
+M = 4; % 5
 scaling = 1/10;
 degreeElevArr = [1 1 1;
                  2 2 2;
@@ -44,7 +54,7 @@ degreeElevArr = [0 0 0];
 stringShift = 40;
 for degreeCase = 1:size(degreeElevArr,1)
     fprintf('\n\nCalculating data for case %d\n', degreeCase)
-    nurbs = getWineGlassData2();
+    nurbs = getWineGlassData();
     Etas = unique(nurbs{2}.knots{2});
     arcLengths = zeros(numel(Etas)-1,1);
     for i = 1:numel(Etas)-1
@@ -66,8 +76,8 @@ for degreeCase = 1:size(degreeElevArr,1)
     nurbs(1) = insertKnotsInPatches(nurbs(1),0,round(2^(M-1)*pi/2*t2/2/scaling),0);
     nurbs(3) = insertKnotsInPatches(nurbs(3),0,round(2^(M-1)*pi/2*t1/2/scaling),0);
     nurbs{2} = insertKnotsInNURBS(nurbs{2},{[] iEta []});
-    if plot3Dgeometry
-        fluid = nurbs;
+    if prePlot.plot3Dgeometry
+        varCol{1}.nurbs = nurbs;
         plotMeshAndGeometry
         return
     end

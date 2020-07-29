@@ -12,8 +12,8 @@ parm = 1;
 alpha = (0:0.1:180)*pi/180;
 % alpha = (0:10:180)*pi/180;
 
-plot2Dgeometry = 1;
-plot3Dgeometry = 1;
+prePlot.plot2Dgeometry = 1;
+prePlot.plot3Dgeometry = 1;
 degree = 2;
 calculateSurfaceError = 0;
 computeCondNumber = false;

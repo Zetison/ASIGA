@@ -18,7 +18,7 @@ end
 if nargin < 10
     % Plots the surface of a NURBS volume
     % colors = colormap('summer');
-    color = 1.5*[44 77 32]/255; % colors(end,:);
+    color = getColor(1); % colors(end,:);
     mycolor = [33 76 161]/255;
 end
 % color = [33 76 161]/255; %214CA1

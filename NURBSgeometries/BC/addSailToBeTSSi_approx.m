@@ -69,7 +69,7 @@ ss = @(z) (z-c)/h_s;
 
 varCol.colorFun = @(X) log10((abs(abs(X(2))/(ss(X(3))*l_us+(1-ss(X(3)))*l_ls) - f(-(X(1) + 19 - a + ss(X(3))*delta_s)/(ss(X(3))*l_us+(1-ss(X(3)))*l_ls), ss(X(3))*t_o+(1-ss(X(3)))*t_u))/1.2));
 
-plotNURBS(nurbs,[200 0], 1, 1.5*[44 77 32]/255, 1, NaN, varCol);
+plotNURBS(nurbs,[200 0], 1, getColor(1), 1, NaN, varCol);
 controlPts(2,:,:) = -controlPts(2,:,:);
 controlPts2 = transformPts(controlPts,alpha,x_0);
 nurbs = createNURBSobject(controlPts2,{Xi,Eta});
@@ -77,7 +77,7 @@ if nargin == 14
     printCtrlPtsToFile(nurbs.coeffs, [filename, '4.txt'])
 end
 hold on
-plotNURBS(nurbs,[200 0], 1, 1.5*[44 77 32]/255, 1, NaN, varCol);
+plotNURBS(nurbs,[200 0], 1, getColor(1), 1, NaN, varCol);
 
 controlPts(1,:,1) = controlPts(1,:,2);
 controlPts(2,:,1) = 0;
@@ -87,7 +87,7 @@ nurbs = createNURBSobject(controlPts2,{Xi,Eta});
 if nargin == 14
     printCtrlPtsToFile(nurbs.coeffs, [filename, '2.txt'])
 end
-plotNURBS(nurbs,[200 0], 1, 1.5*[44 77 32]/255, 1);
+plotNURBS(nurbs,[200 0], 1, getColor(1), 1);
 controlPts(2,:,:) = -controlPts(2,:,:);
 controlPts2 = transformPts(controlPts,alpha,x_0);
 nurbs = createNURBSobject(controlPts2,{Xi,Eta});
@@ -95,7 +95,7 @@ if nargin == 14
     printCtrlPtsToFile(nurbs.coeffs, [filename, '3.txt'])
 end
 hold on
-plotNURBS(nurbs,[200 0], 1, 1.5*[44 77 32]/255, 1);
+plotNURBS(nurbs,[200 0], 1, getColor(1), 1);
 
 
 function controlPts = transformPts(controlPts,alpha,x_0)

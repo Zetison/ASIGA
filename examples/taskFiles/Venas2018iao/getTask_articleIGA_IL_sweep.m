@@ -1,4 +1,6 @@
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This study correspond to Figure 12-17 in Venas2018iao
+% Venas2018iao is available at https://doi.org/10.1016/j.cma.2018.02.015 (open access version at http://hdl.handle.net/11250/2493754)
 
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
@@ -13,13 +15,13 @@ beta = beta_s;
 parm = 1;
 N = 4; % not sure if this was the original choice in the article
 
-plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
-plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
+prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
+prePlot.plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 1;
 calculateVolumeError = 1;
 calculateSurfaceError = 0;
-runTasksInParallel = 1;
+runTasksInParallel = 0;
 extraGP = -2;
 loopParameters = {'M','degree','coreMethod','BC','f'};
 
@@ -31,10 +33,10 @@ coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
     for BC = {'NNBC','SSBC','SHBC'} %
-        npts = 1500;
+%         npts = 1500;
+        npts = 2;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;
-%             npts = 2;
             specialValues = [0.317054564603519 %
                                0.392367003924396 %
                                0.450625070843336 %
@@ -53,9 +55,9 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                                1.693889192704899 %
                                1.871228417747961 %
                                ];
+            noDomains = 2;
         elseif strcmp(BC{1},'NNBC')
             npts = npts*2;
-%             npts = 2;
             specialValues = [0.250621182794531 %
                            0.320300579445871 %
                            0.370671479527136 %
@@ -75,10 +77,13 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                            1.715087015757087 %
                            1.892808062465205 %
                            ];
+            noDomains = 3;
         else
-%             npts = 2;
             specialValues = [];
+            noDomains = 1;
         end
+        varCol = setIhlenburgParameters(noDomains);
+        varCol{1}.meshFile = 'createNURBSmesh_EL';
 %         specialValues = [];
         k = linspace(0.001, 2, npts);
         c_f = 1524;
@@ -103,7 +108,6 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                 degree = 1;
                 M = 6; % 6
         end
-%         M = 1;
         collectIntoTasks
     end
 end

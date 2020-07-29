@@ -30,7 +30,7 @@ else
 end
 
 %% Find h_max and store results
-if i_k == 1
+if i_f == 1
     h_max_fluid = findMaxElementDiameter(varCol{1}.patches);
     h_max = h_max_fluid;
     if useSolidDomain
@@ -42,7 +42,7 @@ if i_k == 1
         h_max = max([h_max, h_max_fluid_i]);
     end
     varCol{1}.h_max = h_max;
-    varCol{1}.nepw = lambda(1)./h_max;
+    varCol{1}.nepw = varCol{1}.lambda./h_max;
     varCol{1}.dofs = actualNoDofs;
     varCol{1}.surfDofs = getNoSurfDofs(varCol{1});
     if storeSolution

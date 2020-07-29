@@ -352,7 +352,7 @@ coeffs(1:3,:,2) = nurbs_upper.coeffs(1:3,:);
 leftDepthRudder.coeffs = coeffs;
 
 %%%%%
-% figure, plotNURBS(leftDepthRudder,[10 10], 1, 1.5*[44 77 32]/255);
+% figure, plotNURBS(leftDepthRudder,[10 10], 1, getColor(1));
 % plotControlPts(leftDepthRudder)
 % axis equal
 % ax = gca;               % get the current axis

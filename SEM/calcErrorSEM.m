@@ -18,9 +18,9 @@ factors = zeros(nxi*neta*nzeta,noPatches);
 nodes = zeros(nxi*neta*nzeta,noPatches,3);
 u_hs = zeros(nxi*neta*nzeta,1,noPatches);
 du_hs = zeros(nxi*neta*nzeta,noPatches,3);
-[Wxi,Qxi] = gaussianQuadNURBS(nxi); 
-[Weta,Qeta] = gaussianQuadNURBS(neta); 
-[Wzeta,Qzeta] = gaussianQuadNURBS(nzeta); 
+[Qxi, Wxi] = gaussTensorQuad(nxi);
+[Qeta, Weta] = gaussTensorQuad(neta);
+[Qzeta, Wzeta] = gaussTensorQuad(neta);
 
 parfor patch = 1:noPatches
 % for patch = 1:noPatches
@@ -83,18 +83,12 @@ nodes = reshape(nodes,nxi*neta*nzeta*noPatches,3);
 
 u_hs = reshape(u_hs,nxi*neta*nzeta*noPatches,1);
 du_hs = reshape(du_hs,nxi*neta*nzeta*noPatches,3);
-if strcmp(varCol.applyLoad, 'pointPulsation')
-    data.p = varCol.analytic(nodes);
-    dp = varCol.gAnalytic(nodes);
-    data.dpdx = dp(:,1);
-    data.dpdy = dp(:,2);
-    data.dpdz = dp(:,3);
-else
-    data = e3Dss(nodes,options);
-end
-rho_f = options.rho_f;
+
+analyticFunctions = varCol.analyticFunctions({nodes});
+
+rho_f = varCol.rho;
 omega = options.omega;
-c_f = options.c_f;
+c_f = varCol.c_f;
 k = omega./c_f;
 
 H1Error = 0;
@@ -105,9 +99,9 @@ normalizationEnergy = 0;
 normalizationH1 = 0;
 normalizationH1s = 0;
 normalizationL2 = 0;
-m = 1;
-p = data(m).p;
-dp = [data(m).dpdx, data(m).dpdy, data(m).dpdz];
+
+p = analyticFunctions{1}.p;
+dp = [analyticFunctions{1}.dpdx, analyticFunctions{1}.dpdy, analyticFunctions{1}.dpdz];
 p_e = p-u_hs;
 dp_e = dp-du_hs;
 
@@ -121,8 +115,8 @@ H1sError = H1sError + sum(dp_e2.*factors);
 normalizationH1 = normalizationH1 + sum((p2 + dp2).*factors);
 normalizationH1s = normalizationH1s + sum(dp2.*factors);
 
-EnergyError = EnergyError + 1/(rho_f(m)*omega^2)*sum((dp_e2 + k^2*p_e2).*factors);
-normalizationEnergy = normalizationEnergy + 1/(rho_f(m)*omega^2)*sum((dp2 + k^2*p2).*factors);
+EnergyError = EnergyError + 1/(rho_f*omega^2)*sum((dp_e2 + k^2*p_e2).*factors);
+normalizationEnergy = normalizationEnergy + 1/(rho_f*omega^2)*sum((dp2 + k^2*p2).*factors);
 
 L2Error = L2Error + sum(p_e2.*factors);
 normalizationL2 = normalizationL2 + sum(p2.*factors);

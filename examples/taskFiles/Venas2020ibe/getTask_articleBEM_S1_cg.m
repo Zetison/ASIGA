@@ -28,8 +28,8 @@ degree = 5;
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 0;
 calculateSurfaceError = 1;
-plot2Dgeometry = 0;
-plot3Dgeometry = 0;
+prePlot.plot2Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 
 plotResidualError = true;
 solveForPtot = true;

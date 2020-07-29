@@ -6,8 +6,8 @@ coreMethod = 'IGA';
 % alpha_s = 270*pi/180;
 alpha_s = 240*pi/180;
 beta_s = 0*pi/180;        
-plot3Dgeometry = 0;
-plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
+prePlot.plot3Dgeometry = 0;
+prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 
 alpha = (0:0.05:360)*pi/180;
 

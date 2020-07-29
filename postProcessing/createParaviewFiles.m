@@ -1,271 +1,274 @@
-function maxU = createParaviewFiles(varCol, U, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options, rho)
-
-if nargin < 8
-    rho = zeros(size(U,1),1);
-    withDensity = false;
-else
-    withDensity = true;
-    
-end
-maxU = NaN;
-
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
-Eps = 1e4*eps;
-
-index = varCol.index;
-noElems = varCol.noElems;
-elRangeXi = varCol.elRange{1};
-elRangeEta = varCol.elRange{2};
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
-noDofs = varCol.noDofs;
-patches = varCol.patches;
-d = varCol.dimension;
-if isfield(varCol,'omega')
-    omega = varCol.omega;
-else
-    omega = NaN;
-end
-isOuterDomain = varCol.isOuterDomain;
-if isOuterDomain
-    model = varCol.model;
-end
-
-if d == 1
-    if isfield(varCol, 'analytic')
-        analytic = varCol.analytic;
+function maxU = createParaviewFiles(varargin)
+varCol = varargin{1};
+options = struct('U', NaN, ... 
+                 'para_options', 0,...
+                 'rho',NaN);
+if nargin > 1
+    if numel(varargin) > 2
+        newOptions = varargin(2:end);
     else
-        analytic = 0;
+        newOptions = varargin{2};
     end
-    if isfield(varCol, 'gAnalytic')
-        gAnalytic = varCol.gAnalytic;
-    else
-        gAnalytic = 0;
-    end
-    
-    if isOuterDomain && ~strcmp(model,'PS')
-        p_inc = varCol.p_inc;
-        gp_inc = varCol.gp_inc;
-    end
+    options = updateOptions(options,newOptions);
 end
+analyticSolutionExist = varCol{1}.analyticSolutionExist;
+isPointPulsation = strcmp(varCol{1}.applyLoad,'pointPulsation');
+noDomains = numel(varCol);
+nodes = cell(1,noDomains);
+visElements = cell(1,noDomains);
+scalarField = cell(1,noDomains);
+para = cell(1,noDomains);
+displacement = cell(1,noDomains);
+density = cell(1,noDomains);
+strain_h = cell(1,noDomains);
+gScalarField_p = cell(1,noDomains);
 stringShift = 40;
-if d == 3
-    C = varCol.C;
-    Ux = U(1:d:noDofs);
-    Uy = U(2:d:noDofs);
-    Uz = U(3:d:noDofs);
-    U = [Ux, Uy, Uz];
-else
-%     varCol.dofsToRemove = varCol.dofsToRemove_old;
-%     tic
-%     fprintf(['\n%-' num2str(stringShift) 's'], '    Performing least squares ... ')
-%     dU = leastSquares(varCol,U,'gradient');
-%     dU = leastSquares(varCol,U,'scalar');
-%     fprintf('using %12f seconds.', toc)
-    C = 0;
-end
-type = patches{1}.nurbs.type;
-switch type
-    case '3Dsurface'
-        noXiKnots = 2+extraXiPts;
-        noEtaKnots = 2+extraEtaPts;
-        noNodes = noXiKnots*noEtaKnots;   
-        noVisElems  = (noXiKnots-1)*(noEtaKnots-1);
-        container = cell(1,noElems);
-        for e = 1:noElems
-            container{e}.nodes = zeros(noNodes,3);
-            container{e}.noNodes = noNodes;
-            container{e}.noVisElems = noVisElems;
-            container{e}.displacement = zeros(noNodes,3);
-            container{e}.scalarField = zeros(noNodes,3);
-            container{e}.density = zeros(noNodes,1);
-            container{e}.visElements = zeros(noVisElems,8);
-            container{e}.strain = zeros(noNodes,6);
+fprintf(['\n%-' num2str(stringShift) 's'], '    Evaluating solution ... ')
+tic
+for i_v = 1:noDomains
+    para{i_v} = options.para_options;
+    if varCol{i_v}.boundaryMethod
+        celltype = 'VTK_QUAD';
+    else
+        celltype = 'VTK_HEXAHEDRON';
+    end
+    isOuterDomain = i_v == 1;
+    varCol{i_v}.isOuterDomain = isOuterDomain;
+    d = varCol{i_v}.dimension;
+    isSolid = d == 3;
+
+    para{i_v}.celltype = celltype;
+    para{i_v}.plotP_inc = options.para_options.plotP_inc && ~isSolid && ~isPointPulsation && isOuterDomain;
+    para{i_v}.plotScalarField = options.para_options.plotScalarField && ~isSolid && isOuterDomain;
+    para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && ~isPointPulsation; 
+    para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && ~isPointPulsation; 
+    para{i_v}.plotAnalytic = options.para_options.plotAnalytic && analyticSolutionExist; 
+    para{i_v}.computeGrad = options.para_options.computeGrad && ~(varCol{i_v}.boundaryMethod && ~isSolid);
+    para{i_v}.plotError = options.para_options.plotError && (analyticSolutionExist && ~options.para_options.plotTimeOscillation); 
+    para{i_v}.plotErrorGrad = para{i_v}.plotError; 
+    para{i_v}.plotErrorEnergy = para{i_v}.plotError; 
+
+    U = options.U{i_v};
+    rho = options.rho;
+    if isnan(options.rho)
+        rho = zeros(size(U,1),1);
+        withDensity = false;
+    else
+        withDensity = true;
+
+    end
+    maxU = NaN;
+
+    degree = varCol{i_v}.degree;
+    Eps = 1e4*eps;
+
+    extraXiPts = options.para_options.extraXiPts;
+    extraEtaPts = options.para_options.extraEtaPts;
+    extraZetaPts = options.para_options.extraZetaPts;
+
+    index = varCol{i_v}.index;
+    noElems = varCol{i_v}.noElems;
+    elRange = varCol{i_v}.elRange;
+    element = varCol{i_v}.element;
+    element2 = varCol{i_v}.element2;
+    weights = varCol{i_v}.weights;
+    controlPts = varCol{i_v}.controlPts;
+    knotVecs = varCol{i_v}.knotVecs;
+    pIndex = varCol{i_v}.pIndex;
+    noDofs = varCol{i_v}.noDofs;
+    patches = varCol{i_v}.patches;
+    d = varCol{i_v}.dimension;
+    if isfield(varCol{i_v},'omega')
+        omega = varCol{i_v}.omega;
+    else
+        omega = NaN;
+    end
+    isOuterDomain = varCol{i_v}.isOuterDomain;
+
+    if d == 1
+        if isfield(varCol{i_v}, 'analytic')
+            analytic = varCol{i_v}.analytic;
+        else
+            analytic = 0;
         end
-        parfor e = 1:noElems
-            patch = pIndex(e);
-            Xi = knotVecs{patch}{1};
-            Eta = knotVecs{patch}{2};
+        if isfield(varCol{i_v}, 'gAnalytic')
+            gAnalytic = varCol{i_v}.gAnalytic;
+        else
+            gAnalytic = 0;
+        end
 
-            idXi = index(e,1);
-            idEta = index(e,2);
-
-            Xi_e = elRangeXi(idXi,:);
-            Eta_e = elRangeEta(idEta,:);
-
-            sctr = element(e,:);
-            pts = controlPts(sctr,:);
-            wgts = weights(element2(e,:),:); % New
-            Usctr = U(sctr,:);
-            
+        if isOuterDomain && ~strcmp(varCol{i_v}.applyLoad,'pointPulsation')
+            p_inc = varCol{i_v}.p_inc;
+            gp_inc = varCol{i_v}.gp_inc;
+        end
+    end
+    if d == 3
+        C = varCol{i_v}.C;
+        Ux = U(1:d:noDofs);
+        Uy = U(2:d:noDofs);
+        Uz = U(3:d:noDofs);
+        U = [Ux, Uy, Uz];
+    else
+    %     varCol{i_v}.dofsToRemove = varCol{i_v}.dofsToRemove_old;
+    %     tic
+    %     fprintf(['\n%-' num2str(stringShift) 's'], '    Performing least squares ... ')
+    %     dU = leastSquares(varCol{i_v},U,'gradient');
+    %     dU = leastSquares(varCol{i_v},U,'scalar');
+    %     fprintf('using %12f seconds.', toc)
+        C = 0;
+    end
+    n_en = prod(degree+1);
+    d_p = patches{1}.nurbs.d_p;
+    switch d_p
+        case 2
             noXiKnots = 2+extraXiPts;
             noEtaKnots = 2+extraEtaPts;
+            noNodes = noXiKnots*noEtaKnots;   
             noVisElems  = (noXiKnots-1)*(noEtaKnots-1);
-            visElements_e = zeros(noVisElems,4);
-            eVis = 1;
-            for j = 1:noEtaKnots-1
-                for i = 1:noXiKnots-1
-                    visElements_e(eVis,1) = i   +   (j-1)*noXiKnots;
-                    visElements_e(eVis,2) = i+1 +   (j-1)*noXiKnots;
-                    visElements_e(eVis,3) = i+1 +       j*noXiKnots;
-                    visElements_e(eVis,4) = i   +       j*noXiKnots;
-                    eVis = eVis + 1;
-                end
+            container = cell(1,noElems);
+            for e = 1:noElems
+                container{e}.nodes = zeros(noNodes,3);
+                container{e}.noNodes = noNodes;
+                container{e}.noVisElems = noVisElems;
+                container{e}.displacement{i_v} = zeros(noNodes,3);
+                container{e}.scalarField{i_v} = zeros(noNodes,3);
+                container{e}.density{i_v} = zeros(noNodes,1);
+                container{e}.visElements = zeros(noVisElems,8);
+                container{e}.strain = zeros(noNodes,6);
             end
-            noNodes = noXiKnots*noEtaKnots;
-            scalarField_e = zeros(noNodes, 1);    
-            testField_e = zeros(noNodes, 1);            
-            xiKnots = linspace(Xi_e(1)+Eps,Xi_e(2)-Eps,noXiKnots);        
-            etaKnots = linspace(Eta_e(1)+Eps,Eta_e(2)-Eps,noEtaKnots);
-            counter = 1;
-            nodes_e = zeros(noNodes,3);
-            for j = 1:noEtaKnots
-                eta = etaKnots(j);
-                for i = 1:noXiKnots
-                    xi = xiKnots(i);
-                    [u, v] = numericalSolEval_final_surf(xi, eta, p_xi, p_eta, Xi, Eta, wgts, pts, Usctr);
-                    R = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-                    scalarField_e(counter) = u;
-%                     testField_e(counter) = sum(R.^2);
-                    testField_e(counter) = sqrt(sum(wgts.^2)/numel(wgts));
-%                     testField_e(counter) = sum(R);
-                    nodes_e(counter,:) = v;
-                    counter = counter + 1;
+            for e = 1:noElems
+%             parfor e = 1:noElems
+                patch = pIndex(e);
+                knots = knotVecs{patch};
+
+                Xi_e = zeros(d_p,2);
+                for i = 1:d_p
+                    Xi_e(i,:) = elRange{i}(index(e,i),:);
                 end
-            end
-            container{e}.nodes = nodes_e;
-            container{e}.noNodes = noNodes;
-            container{e}.noVisElems = noVisElems;
-            container{e}.scalarField = scalarField_e;
-            container{e}.testField = testField_e;
-            container{e}.visElements = visElements_e;
-        end
-        noNodes = 0;
-        noVisElems = 0;
-        for e = 1:noElems
-            noNodes = noNodes + container{e}.noNodes;
-            noVisElems = noVisElems + container{e}.noVisElems;
-        end
-        visElements = zeros(noVisElems,4);
-        scalarField = zeros(noNodes,1);
-        testField = zeros(noNodes,1);
-        nodes = zeros(noNodes,3);
-        nodesCount = 0;
-        count_vis = 0;
-        for e = 1:noElems
-            visElements(count_vis+1:count_vis+container{e}.noVisElems,:) = nodesCount + container{e}.visElements;
-            nodes(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.nodes;
-            scalarField(nodesCount+1:nodesCount+container{e}.noNodes) = container{e}.scalarField;
-            testField(nodesCount+1:nodesCount+container{e}.noNodes) = container{e}.testField;
-            nodesCount = nodesCount + container{e}.noNodes;
-            count_vis = count_vis + container{e}.noVisElems;
-        end
-    case '3Dvolume'
-        p_zeta = varCol.degree(3); % assume p_eta is equal in all patches
-        elRangeZeta = varCol.elRange{3};
-        n_en = (p_xi+1)*(p_eta+1)*(p_zeta+1);
-        noXiKnots = 2+extraXiPts;
-        noEtaKnots = 2+extraEtaPts;
-        noZetaKnots = 2+extraZetaPts;
-        noNodes = noXiKnots*noEtaKnots*noZetaKnots;   
-        noVisElems  = (noXiKnots-1)*(noEtaKnots-1)*(noZetaKnots-1);
-        container = cell(1,noElems);
-        for e = 1:noElems
-            container{e}.nodes = zeros(noNodes,3);
-            container{e}.noNodes = noNodes;
-            container{e}.noVisElems = noVisElems;
-            container{e}.displacement = zeros(noNodes,3);
-            container{e}.scalarField = zeros(noNodes,1);
-            container{e}.gScalarField_p = zeros(noNodes,3);
-            container{e}.density = zeros(noNodes,1);
-            container{e}.visElements = zeros(noVisElems,8);
-            container{e}.strain = zeros(noNodes,6);
-        end
-%         for e = 1:noElems
-        parfor e = 1:noElems
-            patch = pIndex(e);
-            Xi = knotVecs{patch}{1};
-            Eta = knotVecs{patch}{2};
-            Zeta = knotVecs{patch}{3};
 
-            idXi = index(e,1);
-            idEta = index(e,2);
-            idZeta = index(e,3);
+                sctr = element(e,:);
+                pts = controlPts(sctr,:);
+                wgts = weights(element2(e,:),:); % New
+                Usctr = U(sctr,:);
 
-            Xi_e = elRangeXi(idXi,:);
-            Eta_e = elRangeEta(idEta,:);
-            Zeta_e = elRangeZeta(idZeta,:);
-
-            sctr = element(e,:);
-            pts = controlPts(sctr,:);
-            wgts = weights(element2(e,:),:); % New
-            Usctr = U(sctr,:);
-            
-            visElements_e = zeros(noVisElems,8);
-            eVis = 1;
-            for k = 1:noZetaKnots-1
+                noXiKnots = 2+extraXiPts;
+                noEtaKnots = 2+extraEtaPts;
+                noVisElems  = (noXiKnots-1)*(noEtaKnots-1);
+                visElements_e = zeros(noVisElems,4);
+                eVis = 1;
                 for j = 1:noEtaKnots-1
                     for i = 1:noXiKnots-1
-                        visElements_e(eVis,1) = i   +   (j-1)*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
-                        visElements_e(eVis,2) = i+1 +   (j-1)*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
-                        visElements_e(eVis,3) = i+1 +       j*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
-                        visElements_e(eVis,4) = i   +       j*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
-                        visElements_e(eVis,5) = i   +   (j-1)*noXiKnots +       k*noEtaKnots*noXiKnots;
-                        visElements_e(eVis,6) = i+1 +   (j-1)*noXiKnots +       k*noEtaKnots*noXiKnots;
-                        visElements_e(eVis,7) = i+1 +       j*noXiKnots +       k*noEtaKnots*noXiKnots;
-                        visElements_e(eVis,8) = i   +       j*noXiKnots +       k*noEtaKnots*noXiKnots;
-
+                        visElements_e(eVis,1) = i   +   (j-1)*noXiKnots;
+                        visElements_e(eVis,2) = i+1 +   (j-1)*noXiKnots;
+                        visElements_e(eVis,3) = i+1 +       j*noXiKnots;
+                        visElements_e(eVis,4) = i   +       j*noXiKnots;
                         eVis = eVis + 1;
                     end
                 end
-            end  
-            xiKnots = linspace(Xi_e(1)+Eps,Xi_e(2)-Eps,noXiKnots);        
-            etaKnots = linspace(Eta_e(1)+Eps,Eta_e(2)-Eps,noEtaKnots);
-            zetaKnots = linspace(Zeta_e(1)+Eps,Zeta_e(2)-Eps,noZetaKnots);
-            [xi,eta,zeta] = ndgrid(xiKnots,etaKnots,zetaKnots);
-            xi = xi(:);
-            eta = eta(:);
-            zeta = zeta(:);
-            
-            [R, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
-            dXdxi = dRdxi*pts;
-            dXdeta = dRdeta*pts;
-            dXdzeta = dRdzeta*pts;
-            J_1 = dot(dXdxi,cross(dXdeta,dXdzeta,2),2);
+                noNodes = noXiKnots*noEtaKnots;            
+                xiKnots = linspace(Xi_e(1,1)+Eps,Xi_e(1,2)-Eps,noXiKnots);        
+                etaKnots = linspace(Xi_e(2,1)+Eps,Xi_e(2,2)-Eps,noEtaKnots);   
+                [xi,eta] = ndgrid(xiKnots,etaKnots);
+                xi = xi(:);
+                eta = eta(:);
 
-            a11 = dXdxi(:,1);
-            a21 = dXdxi(:,2);
-            a31 = dXdxi(:,3);
-            a12 = dXdeta(:,1);
-            a22 = dXdeta(:,2);
-            a32 = dXdeta(:,3);
-            a13 = dXdzeta(:,1);
-            a23 = dXdzeta(:,2);
-            a33 = dXdzeta(:,3);
-            Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
-            Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
-            Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
-            dRdx = repmat(Jinv1(:,1),1,n_en).*dRdxi + repmat(Jinv1(:,2),1,n_en).*dRdeta + repmat(Jinv1(:,3),1,n_en).*dRdzeta;
-            dRdy = repmat(Jinv2(:,1),1,n_en).*dRdxi + repmat(Jinv2(:,2),1,n_en).*dRdeta + repmat(Jinv2(:,3),1,n_en).*dRdzeta;
-            dRdz = repmat(Jinv3(:,1),1,n_en).*dRdxi + repmat(Jinv3(:,2),1,n_en).*dRdeta + repmat(Jinv3(:,3),1,n_en).*dRdzeta;
-            
-            container{e}.nodes = R*pts;
-            container{e}.visElements = visElements_e;
-            if withDensity
-                container{e}.density = R*rho(sctr);
+                I = findKnotSpans(degree, [xi(1),eta(1)], knots);
+                R = NURBSbasis(I,[xi, eta], degree, knots, wgts);
+    %             dXdxi = R{2}*pts;
+    %             dXdeta = R{3}*pts;
+
+                nodes_e = R{1}*pts;
+                scalarField_e = R{1}*Usctr;
+
+                container{e}.nodes = nodes_e;
+                container{e}.noNodes = noNodes;
+                container{e}.noVisElems = noVisElems;
+                container{e}.scalarField{i_v} = scalarField_e;
+                container{e}.visElements = visElements_e;
             end
-            indices = abs(J_1) < 100*Eps;
-            if 0 %any(indices)
-                digits(100)
-                [~, dRdxi, dRdeta, dRdzeta] = NURBS3DBasisVec(vpa(xi(indices)), vpa(eta(indices)), vpa(zeta(indices)), p_xi, p_eta, p_zeta, vpa(Xi), vpa(Eta), vpa(Zeta), vpa(wgts));
-                dXdxi = dRdxi*vpa(pts);
-                dXdeta = dRdeta*vpa(pts);
-                dXdzeta = dRdzeta*vpa(pts);
+            noNodes = 0;
+            noVisElems = 0;
+            for e = 1:noElems
+                noNodes = noNodes + container{e}.noNodes;
+                noVisElems = noVisElems + container{e}.noVisElems;
+            end
+            visElements{i_v} = zeros(noVisElems,4);
+            scalarField{i_v} = zeros(noNodes,d);
+            nodes{i_v} = zeros(noNodes,3);
+            nodesCount = 0;
+            count_vis = 0;
+            for e = 1:noElems
+                visElements{i_v}(count_vis+1:count_vis+container{e}.noVisElems,:) = nodesCount + container{e}.visElements;
+                nodes{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.nodes;
+                scalarField{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.scalarField{i_v};
+                displacement{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.displacement{i_v};
+                nodesCount = nodesCount + container{e}.noNodes;
+                count_vis = count_vis + container{e}.noVisElems;
+            end
+        case 3
+            noXiKnots = 2+extraXiPts;
+            noEtaKnots = 2+extraEtaPts;
+            noZetaKnots = 2+extraZetaPts;
+            noNodes = noXiKnots*noEtaKnots*noZetaKnots;   
+            noVisElems  = (noXiKnots-1)*(noEtaKnots-1)*(noZetaKnots-1);
+            container = cell(1,noElems);
+            for e = 1:noElems
+                container{e}.nodes = zeros(noNodes,3);
+                container{e}.noNodes = noNodes;
+                container{e}.noVisElems = noVisElems;
+                container{e}.displacement{i_v} = zeros(noNodes,3);
+                container{e}.scalarField{i_v} = zeros(noNodes,1);
+                container{e}.gScalarField_p{i_v} = zeros(noNodes,3);
+                container{e}.density{i_v} = zeros(noNodes,1);
+                container{e}.visElements = zeros(noVisElems,8);
+                container{e}.strain = zeros(noNodes,6);
+            end
+            for e = 1:noElems
+%             parfor e = 1:noElems
+                patch = pIndex(e);
+                knots = knotVecs{patch};
+
+                Xi_e = zeros(d_p,2);
+                for i = 1:d_p
+                    Xi_e(i,:) = elRange{i}(index(e,i),:);
+                end
+
+                sctr = element(e,:);
+                pts = controlPts(sctr,:);
+                wgts = weights(element2(e,:),:); % New
+                Usctr = U(sctr,:);
+
+                visElements_e = zeros(noVisElems,8);
+                eVis = 1;
+                for k = 1:noZetaKnots-1
+                    for j = 1:noEtaKnots-1
+                        for i = 1:noXiKnots-1
+                            visElements_e(eVis,1) = i   +   (j-1)*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                            visElements_e(eVis,2) = i+1 +   (j-1)*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                            visElements_e(eVis,3) = i+1 +       j*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                            visElements_e(eVis,4) = i   +       j*noXiKnots +   (k-1)*noEtaKnots*noXiKnots;
+                            visElements_e(eVis,5) = i   +   (j-1)*noXiKnots +       k*noEtaKnots*noXiKnots;
+                            visElements_e(eVis,6) = i+1 +   (j-1)*noXiKnots +       k*noEtaKnots*noXiKnots;
+                            visElements_e(eVis,7) = i+1 +       j*noXiKnots +       k*noEtaKnots*noXiKnots;
+                            visElements_e(eVis,8) = i   +       j*noXiKnots +       k*noEtaKnots*noXiKnots;
+
+                            eVis = eVis + 1;
+                        end
+                    end
+                end  
+                xiKnots = linspace(Xi_e(1,1)+Eps,Xi_e(1,2)-Eps,noXiKnots);        
+                etaKnots = linspace(Xi_e(2,1)+Eps,Xi_e(2,2)-Eps,noEtaKnots);    
+                zetaKnots = linspace(Xi_e(3,1)+Eps,Xi_e(3,2)-Eps,noZetaKnots);
+                [xi,eta,zeta] = ndgrid(xiKnots,etaKnots,zetaKnots);
+                xi = xi(:);
+                eta = eta(:);
+                zeta = zeta(:);
+
+                I = findKnotSpans(degree, [xi(1),eta(1),zeta(1)], knots);
+                R = NURBSbasis(I,[xi, eta, zeta], degree, knots, wgts);
+                dXdxi = R{2}*pts;
+                dXdeta = R{3}*pts;
+                dXdzeta = R{4}*pts;
                 J_1 = dot(dXdxi,cross(dXdeta,dXdzeta,2),2);
 
                 a11 = dXdxi(:,1);
@@ -280,194 +283,162 @@ switch type
                 Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
                 Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
                 Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
-                dRdx(indices,:) = repmat(Jinv1(:,1),1,n_en).*dRdxi + repmat(Jinv1(:,2),1,n_en).*dRdeta + repmat(Jinv1(:,3),1,n_en).*dRdzeta;
-                dRdy(indices,:) = repmat(Jinv2(:,1),1,n_en).*dRdxi + repmat(Jinv2(:,2),1,n_en).*dRdeta + repmat(Jinv2(:,3),1,n_en).*dRdzeta;
-                dRdz(indices,:) = repmat(Jinv3(:,1),1,n_en).*dRdxi + repmat(Jinv3(:,2),1,n_en).*dRdeta + repmat(Jinv3(:,3),1,n_en).*dRdzeta;
-            end
-            dudx = dRdx*Usctr;
-            dudy = dRdy*Usctr;
-            dudz = dRdz*Usctr;
-            if d == 3
-                container{e}.strain = calculateStrainVectorVec(dudx, dudy, dudz);
-                container{e}.displacement = R*Usctr;
-            else
-                container{e}.scalarField = R*Usctr;
-                container{e}.gScalarField_p = [dudx,dudy,dudz];
-            end
-        end
-        noNodes = 0;
-        noVisElems = 0;
-        for e = 1:noElems
-            noNodes = noNodes + container{e}.noNodes;
-            noVisElems = noVisElems + container{e}.noVisElems;
-        end
-        visElements = zeros(noVisElems,8);
-        displacement = zeros(noNodes,3);
-        density = zeros(noNodes,1);
-        strain_h = zeros(noNodes,6);
-        nodes = zeros(noNodes,3);
-        gScalarField_p = zeros(noNodes,3);
-        nodesCount = 0;
-        count_vis = 0;
-        for e = 1:noElems
-            visElements(count_vis+1:count_vis+container{e}.noVisElems,:) = nodesCount + container{e}.visElements;
-            nodes(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.nodes;
-            if d == 3
-                displacement(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.displacement;
-                strain_h(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.strain;
-            else
-                scalarField(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.scalarField;
-                gScalarField_p(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.gScalarField_p;
-            end
-            if withDensity
-                density(nodesCount+1:nodesCount+container{e}.noNodes) = container{e}.density;
-            end
-            nodesCount = nodesCount + container{e}.noNodes;
-            count_vis = count_vis + container{e}.noVisElems;
-        end
-end
-nodes(norm2(nodes) < 100*Eps) = 0;
-data.nodes = nodes;
-data.visElements = visElements;
-data.omega = omega;
+                dRdx = repmat(Jinv1(:,1),1,n_en).*R{2} + repmat(Jinv1(:,2),1,n_en).*R{3} + repmat(Jinv1(:,3),1,n_en).*R{4};
+                dRdy = repmat(Jinv2(:,1),1,n_en).*R{2} + repmat(Jinv2(:,2),1,n_en).*R{3} + repmat(Jinv2(:,3),1,n_en).*R{4};
+                dRdz = repmat(Jinv3(:,1),1,n_en).*R{2} + repmat(Jinv3(:,2),1,n_en).*R{3} + repmat(Jinv3(:,3),1,n_en).*R{4};
 
-% tic
-% fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
-if d == 1
-    if isOuterDomain
-        data.P_inc = real(makeDynamic(p_inc(nodes), options, omega)); 
-        if varCol.solveForPtot
-            totField = scalarField;
-            if isOuterDomain && ~strcmp(model,'PS')
-                scalarField = scalarField - p_inc(nodes);
+                container{e}.nodes = R{1}*pts;
+                container{e}.visElements = visElements_e;
+                if withDensity
+                    container{e}.density{i_v} = R{1}*rho(sctr);
+                end
+                dudx = dRdx*Usctr;
+                dudy = dRdy*Usctr;
+                dudz = dRdz*Usctr;
+                if d == 3
+                    container{e}.strain = calculateStrainVectorVec(dudx, dudy, dudz);
+                    container{e}.displacement{i_v} = R{1}*Usctr;
+                else
+                    container{e}.scalarField{i_v} = R{1}*Usctr;
+                    container{e}.gScalarField_p{i_v} = [dudx,dudy,dudz];
+                end
             end
-%             data.errorFunc = errorFunc;
-        else   
-            totField = scalarField + p_inc(nodes);
-        end
-        data.scalarField = real(makeDynamic(scalarField, options, omega)); 
-        if strcmp(type,'3Dvolume')
-            rho_f = varCol.rho_f;
-            displacement = (gScalarField_p+gp_inc(nodes))/(rho_f*omega^2);
-            data.displacement = real(makeDynamic(displacement, options, omega));
-        end
-    else
-        totField = scalarField;
-        if strcmp(type,'3Dvolume')
-            rho_f = varCol.rho_f; 
-            displacement = gScalarField_p/(rho_f*omega^2);  
-            data.displacement = real(makeDynamic(displacement, options, omega));
-        end
+            noNodes = 0;
+            noVisElems = 0;
+            for e = 1:noElems
+                noNodes = noNodes + container{e}.noNodes;
+                noVisElems = noVisElems + container{e}.noVisElems;
+            end
+            visElements{i_v} = zeros(noVisElems,8);
+            displacement{i_v} = zeros(noNodes,3);
+            density{i_v} = zeros(noNodes,1);
+            strain_h{i_v} = zeros(noNodes,6);
+            nodes{i_v} = zeros(noNodes,3);
+            gScalarField_p{i_v} = zeros(noNodes,3);
+            nodesCount = 0;
+            count_vis = 0;
+            for e = 1:noElems
+                visElements{i_v}(count_vis+1:count_vis+container{e}.noVisElems,:) = nodesCount + container{e}.visElements;
+                nodes{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.nodes;
+                if d == 3
+                    displacement{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.displacement{i_v};
+                    strain_h{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.strain;
+                else
+                    scalarField{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.scalarField{i_v};
+                    gScalarField_p{i_v}(nodesCount+1:nodesCount+container{e}.noNodes,:) = container{e}.gScalarField_p{i_v};
+                end
+                if withDensity
+                    density{i_v}(nodesCount+1:nodesCount+container{e}.noNodes) = container{e}.density{i_v};
+                end
+                nodesCount = nodesCount + container{e}.noNodes;
+                count_vis = count_vis + container{e}.noVisElems;
+            end
     end
-    if ~isempty(e3Dss_options)
-        if isOuterDomain && strcmp(varCol.applyLoad, 'pointPulsation')
-            data_e3Dss.p = varCol.analytic(nodes);
-            dp = varCol.gAnalytic(nodes);
-            data_e3Dss.dpdx = dp(:,1);
-            data_e3Dss.dpdy = dp(:,2);
-            data_e3Dss.dpdz = dp(:,3);
-        else
+end
+fprintf('using %12f seconds.', toc)
+if analyticSolutionExist
+    layer = varCol{1}.analyticFunctions(nodes);
+end
+
+fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
+tic
+for i_v = 1:numel(varCol)
+    isOuterDomain = i_v == 1;
+    data.nodes = nodes{i_v};
+    data.visElements = visElements{i_v};
+    data.omega = omega;
+    switch varCol{i_v}.media
+        case 'fluid'
             if isOuterDomain
-                data_e3Dss = e3Dss(nodes,e3Dss_options);
+                if para{i_v}.plotP_inc
+                    data.P_inc = real(makeDynamic(p_inc(nodes{i_v}), para{i_v}, omega)); 
+                end
+                if varCol{i_v}.solveForPtot
+                    totField = scalarField{i_v};
+                    if isOuterDomain && ~isPointPulsation
+                        scalarField{i_v} = scalarField{i_v} - p_inc(nodes{i_v});
+                    end
+        %             data.errorFunc = errorFunc;
+                else   
+                    if isPointPulsation
+                        totField = scalarField{i_v};
+                    else
+                        totField = scalarField{i_v} + p_inc(nodes{i_v});
+                    end
+                end
+                data.scalarField = real(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
+                if d_p == 3
+                    rho_f = varCol{i_v}.rho;
+                    displacement{i_v} = (gScalarField_p{i_v}+gp_inc(nodes{i_v}))/(rho_f*omega^2);
+                end
             else
-                data_e3Dss = e3Dss({[],[],nodes},e3Dss_options);
-                data_e3Dss = data_e3Dss(2);
+                totField = scalarField{i_v};
+                if d_p == 3
+                    rho_f = varCol{i_v}.rho; 
+                    displacement{i_v} = gScalarField_p{i_v}/(rho_f*omega^2);  
+                end
             end
-        end
-        p = data_e3Dss(1).p;
-        data.analytic = real(makeDynamic(p, options, omega)); 
-        p_e = p-scalarField;
-        p2 = abs(p).^2;
-        p_e2 = abs(p_e).^2;
-        data.Error = sqrt(p_e2/max(p2));
-        if strcmp(type, '3Dvolume')
-            dp = [data_e3Dss(1).dpdx, data_e3Dss(1).dpdy, data_e3Dss(1).dpdz];
-            dp_e = dp-gScalarField_p;
+            if analyticSolutionExist
+                p = layer{i_v}.p;
+                data.analytic = real(makeDynamic(p, para{i_v}, omega)); 
+                p_e = p-scalarField{i_v};
+                p2 = abs(p).^2;
+                p_e2 = abs(p_e).^2;
+                data.Error = sqrt(p_e2/max(p2));
+                if d_p == 3
+                    dp = [layer{i_v}.dpdx, layer{i_v}.dpdy, layer{i_v}.dpdz];
+                    dp_e = dp-gScalarField_p{i_v};
 
-            p2 = abs(p).^2;
-            dp2 = sum(abs(dp).^2,2);
-            p_e2 = abs(p_e).^2;
-            dp_e2 = sum(abs(dp_e).^2,2);
-            
-            k = varCol.k;
-            data.Error = sqrt(p_e2/max(p2));
-            data.ErrorGrad = sqrt(dp_e2/max(dp2));
-            data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
-            dp_e = dp-gScalarField_p;
-            dp2 = sum(abs(dp).^2,2);
-            dp_e2 = sum(abs(dp_e).^2,2);
-            k = varCol.k;
-            data.ErrorGrad = sqrt(dp_e2/max(dp2));
-            data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
-        end
+                    p2 = abs(p).^2;
+                    dp2 = sum(abs(dp).^2,2);
+                    p_e2 = abs(p_e).^2;
+                    dp_e2 = sum(abs(dp_e).^2,2);
+
+                    k = varCol{i_v}.k;
+                    data.Error = sqrt(p_e2/max(p2));
+                    data.ErrorGrad = sqrt(dp_e2/max(dp2));
+                    data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
+                end
+            end
+            data.totField = real(makeDynamic(totField, para{i_v}, omega));
+            data.totFieldAbs = abs(makeDynamic(totField, para{i_v}, omega));
+
+        case 'solid'
+            if analyticSolutionExist
+                u = [layer{2}.u_x,layer{2}.u_y,layer{2}.u_z];                
+                u_e = u-displacement{i_v};
+
+                u2 = sum(abs(u).^2,2);
+                u_e2 = sum(abs(u_e).^2,2);
+
+                sigma = [layer{2}.sigma_xx,layer{2}.sigma_yy,layer{2}.sigma_zz,layer{2}.sigma_yz,layer{2}.sigma_xz,layer{2}.sigma_xy];
+                C = varCol{i_v}.C;
+
+                strain_vec = (C\sigma.').';
+
+                strain_e = strain_vec-strain_h{i_v};
+
+                eCe = real(sum((strain_e*C).*conj(strain_e),2)); % the usage of real() is to remove machine epsilon imaginary part
+                uCu = real(sum((strain_vec*C).*conj(strain_vec),2)); % the usage of real() is to remove machine epsilon imaginary part
+
+                rho_s = varCol{i_v}.rho; 
+                data.Error = sqrt(u_e2/max(u2));
+                data.ErrorGrad = sqrt(eCe/max(uCu));
+                data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
+
+                data.analytic = real(makeDynamic(u, para{i_v}, omega)); 
+            end
+            data.stress = real(makeDynamic(strain_h{i_v}*C, para{i_v}, omega));
+            if withDensity
+                data.density = real(makeDynamic(density{i_v}, para{i_v}, omega));
+            end
     end
-%     data.testField = testField;
-%     data.testFun = varCol.testFun(nodes); 
-    data.totField = real(makeDynamic(totField, options, omega));
-    data.totFieldAbs = abs(makeDynamic(totField, options, omega));
-%     data.testFun = abs(norm2(gScalarField2-gScalarField)/max(norm2(gScalarField)));
-%     data.testFun = abs(norm2(scalarField-gScalarField)/max(abs(norm2(scalarField))));
-%     data.testFun = abs((norm2(gScalarField2-gAnalytic_v,0) - k(1)^2*abs(scalarField-analytic_v))/max(norm2(gAnalytic_v,0) - k(1)^2*abs(analytic_v)));
+    fprintf('using %12f seconds.', toc)
+    data.displacement = real(makeDynamic(displacement{i_v}, para{i_v}, omega));
     
-else
-    if ~isempty(e3Dss_options)
-        e3Dss_options.calc_sigma_xx = 1;
-        e3Dss_options.calc_sigma_yy = 1; 
-        e3Dss_options.calc_sigma_zz = 1;
-        e3Dss_options.calc_sigma_yz = 1;
-        e3Dss_options.calc_sigma_xz = 1;
-        e3Dss_options.calc_sigma_xy = 1; 
-        e3Dss_options.calc_u_x = 1; 
-        e3Dss_options.calc_u_y = 1; 
-        e3Dss_options.calc_u_z = 1; 
-        e3Dss_options.calc_du_xdx = 1; 
-        e3Dss_options.calc_du_xdy = 1; 
-        e3Dss_options.calc_du_xdz = 1; 
-        e3Dss_options.calc_du_ydx = 1; 
-        e3Dss_options.calc_du_ydy = 1; 
-        e3Dss_options.calc_du_ydz = 1; 
-        e3Dss_options.calc_du_zdx = 1; 
-        e3Dss_options.calc_du_zdy = 1; 
-        e3Dss_options.calc_du_zdz = 1; 
-        data_e3Dss = e3Dss({[], nodes},e3Dss_options);
-
-        u = [data_e3Dss(1).u_x,data_e3Dss(1).u_y,data_e3Dss(1).u_z];                
-        u_e = u-displacement;
-                
-        u2 = sum(abs(u).^2,2);
-        u_e2 = sum(abs(u_e).^2,2);
-        
-        
-        
-        sigma = [data_e3Dss(1).sigma_xx,data_e3Dss(1).sigma_yy,data_e3Dss(1).sigma_zz,data_e3Dss(1).sigma_yz,data_e3Dss(1).sigma_xz,data_e3Dss(1).sigma_xy];
-        C = varCol.C;
-        
-        strain_vec = (C\sigma.').';
-        
-        strain_e = strain_vec-strain_h;
-        
-        eCe = real(sum((strain_e*C).*conj(strain_e),2)); % the usage of real() is to remove machine epsilon imaginary part
-        uCu = real(sum((strain_vec*C).*conj(strain_vec),2)); % the usage of real() is to remove machine epsilon imaginary part
-        
-        rho_s = varCol.rho_s; 
-        data.Error = sqrt(u_e2/max(u2));
-        data.ErrorGrad = sqrt(eCe/max(uCu));
-        data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
-        
-        data.analytic = real(makeDynamic(u, options, omega)); 
-    end
-    data.stress = real(makeDynamic(strain_h*C, options, omega));
-    data.displacement = real(makeDynamic(displacement, options, omega));
-    if withDensity
-        data.density = real(makeDynamic(density, options, omega));
-    end
+    fprintf(['\n%-' num2str(stringShift) 's'], '    Creating VTK-file ... ')
+    para{i_v}.name = [para{i_v}.name '_' num2str(i_v)];
+    tic
+    makeVTKfile(data, para{i_v});
+    fprintf('using %12f seconds.\n', toc)
 end
-% fprintf('using %12f seconds.', toc)
-% data.displacement = real(makeDynamic(displacement, options, omega));
-% keyboard
-% tic
-% fprintf(['\n%-' num2str(stringShift) 's'], '    Creating VTK-file ... ')
-% keyboard
-
-makeVTKfile(data, options);
-% fprintf('using %12f seconds.', toc)

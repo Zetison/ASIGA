@@ -49,7 +49,7 @@ surf(X,Y,Z,TS,'EdgeColor','none','LineStyle','none')
 
 hold on
 if max(beta_f_arr*180/pi) < 30
-    plotNURBS(nurbs,[100 100 0], 1, 1.5*[44 77 32]/255, 1);
+    plotNURBS(nurbs,[100 100 0], 1, getColor(1), 1);
 end
 view(-40+90, 30)
 colorbar

@@ -54,7 +54,7 @@ loopParameters = {'f','M','method'};
 %% KDT simulation
 method = {'KDT'};
 formulation = '';
-plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 degree = 4;
 calculateSurfaceError = 0;
 computeCondNumber = false;
@@ -80,7 +80,7 @@ collectIntoTasks
 method = {'RT'};
 formulation = '';
 M = 3;
-plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 degree = 2;
 calculateSurfaceError = 0;
 computeCondNumber = false;

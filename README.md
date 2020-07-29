@@ -2,15 +2,16 @@
 The ASIGA (Acoustic Scattering using IsoGeometric Analysis) toolbox provides a framework for simulating acoustic scattering problems using IGA. 
 
 ## Installation
-Get the tollbox from GitHub:
+Get the toolbox from GitHub (the e3Dss repository is needed for exact solutions):
 ```
 git clone "https://github.com/Zetison/ASIGA" 
+git clone "https://github.com/Zetison/e3Dss" 
 ```
 
 ## Run program
-The following will run the input script <scriptName>.m
+The following will run the input script scriptName.m
 ```
-matlab -nodisplay -nodesktop -nosplash -r "cd ASIGA, studyName = '<scriptName>'; main; quit"
+matlab -nodisplay -nodesktop -nosplash -r "cd ASIGA, studyName = 'scriptName'; main; quit"
 ```
 Alternatively, from the MATLAB GUI a file availableStudies.m must be created in the parent folder of the ASIGA folder which should contain the command 
 
@@ -91,53 +92,62 @@ where the latter option is used for simulating manufactured solutions
 In the getDefaultTaskValus.m file the addional parameters are described and set to some default values:
 
 ```Matlab
-scatteringCase = 'BI';  % Bistatic scattering
-model = 'SS';           % Spherical shell
-method = 'IE';          % Method for handling the unbounded domain problem
-BC = 'SHBC';            % Boundary condition
+%% General settings
+scatteringCase = 'BI';      % Bistatic scattering
+applyLoad = 'planeWave';    % Acoustic scattering of plane wave
+model = 'S1';               % Spherical shell of radius 1
+method = 'IE';              % Method for handling the unbounded domain problem
+coreMethod = 'IGA';         % Solution space
+BC = 'SHBC';                % Boundary condition
+loopParameters = {'M'};     % parameter study arr to be investigated
+runTasksInParallel = false; % Run tasks in parallel
+computeCondNumber = false;  % Compute the condition number of the global matrix
+useROM = false;             % Use reduced order modeling
+N_max = inf;                % number of terms in analytic solution for scattering on spherical shell
 
+%% Storage settings
+storeSolution               = false;    % Store the solution vector
+storeFullVarCol             = false;    % Store all variable in the varCol variable collector
+clearGlobalMatrices         = true;     % Clear memory consuming matrices
+
+%% Mesh settings
+M                   = 1;	% Mesh number
+initMeshFactXi      = 1;	% initial number of knots in xi direction
+initMeshFactEta 	= 1;	% initial number of knots in eta direction
+initMeshFactZeta    = 1;	% initial number of knots in zeta direction
+extraGP = 0;                % extra quadrature points
+
+%% Settings for pre plotting (geometry and mesh visualisation)
 plot2Dgeometry              = false;    % Plot cross section of mesh and geometry
 plot3Dgeometry              = false;    % Plot visualization of mesh and geometry in 3D
+
+%% Error computations
 calculateSurfaceError       = false;	% Only if scatteringCase == 'Bi'
 calculateSurfEnrgErr        = false;	% Only if scatteringCase == 'Bi'
 calculateVolumeError        = false;	% Only if scatteringCase == 'Bi'
+
+%% Settings for post plotting 
 plotResultsInParaview       = false;	% Only if scatteringCase == 'Bi'
 plotTimeOscillation         = false;	% Create 30 paraview files in order to visualize a dynamic result
 plotMesh                    = false;	% Create additional Paraview files to visualize IGA mesh
 plotFarField                = true;     % If false, plots the near-field instead
+calculateFarFieldPattern    = true;     % Calculate far field pattern
+alpha_s = NaN;                          % Aspect angle of incident wave
+beta_s  = NaN;                          % Elevation angle of incident wave
+alpha   = (0:0.5:360)*pi/180;           % Aspect angles of observation points
+beta    = 0;                        	% Elevation angle of observation points
+r       = 1;                            % radii for near-field evaluation. Assume by default plotFarField = true
+
+%% Settings for the BEM (boundary element method)
 useNeumanProj               = false;    % In BEM; project Neumann boundary conditions onto solution space
-runTasksInParallel          = false;    % In BEM; project Neumann boundary conditions onto solution space
 solveForPtot                = false;    % In BEM: solve for the total pressure (as opposed to the scattered pressure)
 exteriorProblem             = true;     % In BEM: solve for the exterior problem (as opposed to the interior problem)
 plotResidualError           = false;    % In Galerkin BEM; plot residual error of the BIE
-calculateFarFieldPattern    = true;     % Calculate far field pattern
-computeCondNumber           = false;    % Compute the condition number of the global matrix
-storeSolution               = false;    % Store the solution vector
-storeFullVarCol             = false;    % Store all variable in the varCol variable collector
-clearGlobalMatrices         = true;     % Clear memory consuming matrices
-useROM                      = false;    % Use reduced order modeling
-
-M = 1;                      % Mesh number
-extraGP = 0;                % extra quadrature points
-extraGPBEM = 50;            % extra quadrature points around singularities for BEM formulations
-agpBEM = 1.4;               % parameter for adaptiv Gauss point integration around singularities for BEM formulations
-initMeshFactXi = 1;         % initial number of knots in xi direction
-initMeshFactEta = 1;        % initial number of knots in eta direction
-initMeshFactZeta = 1;       % initial number of knots in zeta direction
-colBEM_C0 = 0;              % In collocation BEM: the scaling factor moving collocation points away from C0-lines
-quadMethodBEM = 'Adaptive2';% In BEM: Quadrature method for handling weakly singular integrals
-colMethod = 'Grev';         % In collocation BEM: Location of collocation points
-applyLoad = 'planeWave';    % Acoustic scattering of plane wave
-coreMethod = 'IGA';         % Solution space
-N_max = inf;                % number of terms in analytic solution for scattering on spherical shell
-
-alpha_s = NaN;              % Aspect angle of incident wave
-beta_s = NaN;               % Elevation angle of incident wave
-alpha = (0:0.5:360)*pi/180; % Aspect angles of observation points
-beta = 0;                   % Elevation angle of observation points
-r = 1;                      % radii for near-field evaluation. Assume by default plotFarField = true
-
-loopParameters = {'M'};     % parameter study arr to be investigated
+extraGPBEM                  = 50;        	% extra quadrature points around singularities for BEM formulations
+agpBEM                      = 1.4;       	% parameter for adaptiv Gauss point integration around singularities for BEM formulations
+quadMethodBEM               = 'Adaptive2';  % In BEM: Quadrature method for handling weakly singular integrals
+colBEM_C0                   = 0;        	% In collocation BEM: the scaling factor moving collocation points away from C0-lines
+colMethod                   = 'Grev';     	% In collocation BEM: Location of collocation points
 ```
 
 ## Performing a study

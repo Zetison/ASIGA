@@ -55,8 +55,8 @@ f = @(x) 5*t*(a0*sqrt(x)-a1*x-a2*x.^2+a3*x.^3-a4*x.^4);
 varCol.colorFun = @(X) log10((abs(abs(X(2))/l_ls - f(-(X(1) + 19 - a)/l_ls)))/1.2);
 
 if nargin == 14
-    plotNURBS(nurbs,[100 10], 1, 1.5*[44 77 32]/255, 1, NaN, varCol);
-    % plotNURBS(nurbs,[500 0], 1, 1.5*[44 77 32]/255, 1);
+    plotNURBS(nurbs,[100 10], 1, getColor(1), 1, NaN, varCol);
+    % plotNURBS(nurbs,[500 0], 1, getColor(1), 1);
 end
 controlPts(2,:,:) = -controlPts(2,:,:);
 controlPts2 = transformPts(controlPts,alpha,x_0);
@@ -67,7 +67,7 @@ if nargin == 14
 end
 if nargin == 14
     hold on
-    plotNURBS(nurbs,[100 10], 1, 1.5*[44 77 32]/255, 1, NaN, varCol);
+    plotNURBS(nurbs,[100 10], 1, getColor(1), 1, NaN, varCol);
 end
 controlPts(1,:,1) = controlPts(1,:,2);
 controlPts(2,:,1) = 0;
@@ -79,7 +79,7 @@ if nargin == 14
     printCtrlPtsToFile(nurbs.coeffs, [filename, '2.txt'])
 end
 if nargin == 14
-    plotNURBS(nurbs,[500 0], 1, 1.5*[44 77 32]/255, 1);
+    plotNURBS(nurbs,[500 0], 1, getColor(1), 1);
 end
 controlPts(2,:,:) = -controlPts(2,:,:);
 controlPts2 = transformPts(controlPts,alpha,x_0);
@@ -90,7 +90,7 @@ if nargin == 14
 end
 if nargin == 14
     hold on
-    plotNURBS(nurbs,[500 0], 1, 1.5*[44 77 32]/255, 1);
+    plotNURBS(nurbs,[500 0], 1, getColor(1), 1);
 end
 % nurbs = leastSquares1D(Xi,p_xi,f)
 

@@ -1,3 +1,5 @@
+function container = setTAPParameters()
+
 % elastic parameters from nickel metal
 P_inc = 1; % Amplitude of incident wave
 rho_s = 8800; % Density of solid
@@ -12,3 +14,5 @@ L = 42.3; % Shirron example 2
 
 % R_o = 5.5/1.0936;
 R_o = 3.09;
+
+putVariablesIntoContainer

@@ -1,21 +1,17 @@
 function [A, newDofsToRemove] = addInfElements3(varCol)
 
-elRangeXi = varCol.elRange{1};
-elRangeEta = varCol.elRange{2};
-patches = varCol.patches;
+elRange = varCol.elRange(1:2);
 knotVecs = varCol.knotVecs;
-noPatches = varCol.noPatches;
 
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
-n_en = (p_xi+1)*(p_eta+1);
+degree = varCol.degree(1:2); % assume degree is equal in all patches
 
-gluedNodes = varCol.gluedNodes;
 N = varCol.N;
 formulation = varCol.formulation;
 A_2 = varCol.A_2;
 x_0 = varCol.x_0;
 noDofs = varCol.noDofs;
+
+d_p = varCol.patches{1}.nurbs.d_p;
 
 weights = varCol.weights;
 controlPts = varCol.controlPts;
@@ -26,67 +22,7 @@ r_a = varCol.r_a;
 
 D = varCol.D;
 Dt = varCol.Dt;
-
-noParams = 2;
-noSurfDofs = 0;
-noElemsPatch = zeros(noPatches,1);
-noEl = zeros(noPatches,noParams);
-for i = 1:noPatches
-    n_xi = patches{i}.nurbs.number(1);
-    n_eta = patches{i}.nurbs.number(2);
-    noSurfDofs = noSurfDofs + n_xi*n_eta;
-    for j = 1:noParams
-        noEl(i,j) = size(patches{i}.elRange{j},1);
-    end
-    noElemsPatch(i) = size(patches{i}.elRange{1},1)*size(patches{i}.elRange{2},1);
-end
-
-zeta1Nodes = zeros(1,noSurfDofs);
-counter = 1;
-shiftIdx = 0;
-for patch = 1:noPatches
-    n_xi = patches{patch}.nurbs.number(1);
-    n_eta = patches{patch}.nurbs.number(2);
-    n_zeta = patches{patch}.nurbs.number(3);
-    for j = 1:n_eta
-        for i = 1:n_xi
-            zeta1Nodes(counter) = shiftIdx + (n_eta*n_xi)*(n_zeta-1) + n_xi*(j-1) + i;
-            counter = counter + 1;
-        end
-    end
-    shiftIdx = shiftIdx + n_zeta*n_eta*n_xi;
-end
-noElems = sum(noElemsPatch);
-pIndex = zeros(noElems,1);
-element = zeros(noElems,n_en);
-index = zeros(noElems,noParams);
-e = 1;
-maxDof = 0;
-jEl = zeros(1,2);
-for i = 1:noPatches
-    Xi = knotVecs{i}{1};
-    Eta = knotVecs{i}{2};
-    n_xi = patches{i}.nurbs.number(1);
-    n_eta = patches{i}.nurbs.number(2);
-    [surfElement, indexXiEta, noElemsXiEta] = generateIGA2DMesh(Xi, Eta, p_xi, p_eta, n_xi, n_eta);
-    index(e:e+noElemsPatch(i)-1,:) = indexXiEta + repmat(jEl,noElemsXiEta,1);    
-    pIndex(e:e+noElemsXiEta-1) = i;
-    element(e:e+noElemsXiEta-1,:) = maxDof + surfElement;
-    jEl = jEl + noEl(i,:);
-    maxDof = maxDof + n_xi*n_eta;
-    e = e + noElemsPatch(i);
-end
-element2 = element;
-% Glue nodes in 2D mesh
-for i = 1:length(gluedNodes)
-    indices = (zeta1Nodes(element(:)) == gluedNodes{i}(1));
-    parentIdx = element(indices);
-    element(indices) = parentIdx;
-    for j = 2:length(gluedNodes{i})
-        indices = (zeta1Nodes(element(:)) == gluedNodes{i}(j));
-        element(indices) = parentIdx;
-    end
-end
+[nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(varCol,1);
 
 
 %% Evaluate analytic integrals in ``radial'' direction. 
@@ -110,79 +46,84 @@ spIdxRow = zeros((N*n_en)^2,noElems);
 spIdxCol = zeros((N*n_en)^2,noElems);
 Avalues = zeros((N*n_en)^2,noElems);
 
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
+[Q, W] = gaussTensorQuad(degree+1);
 % for e = 1:noElems
 parfor e = 1:noElems
-    patch = pIndex(e); % New
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
-    idXi = index(e,1); 
-    idEta = index(e,2);
-
-    Xi_e = elRangeXi(idXi,:);
-    Eta_e = elRangeEta(idEta,:);
-
-    J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
-
+    patch = pIndex(e);
+    knots = knotVecs{patch}(1:2);
+    Xi_e = zeros(d_p-1,2);
+    for i = 1:d_p-1
+        Xi_e(i,:) = elRange{i}(index(e,i),:);
+    end
+    
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^(d_p-1);
+    
+    xi = parent2ParametricSpace(Xi_e, Q);
+    I = findKnotSpans(degree, xi(1,:), knots);
+    
+    
     sctrLocal = element(e,:);
-    sctrGlobal = zeta1Nodes(sctrLocal);
+    sctrGlobal = nodes(sctrLocal);
 
     pts = controlPts(sctrGlobal,:);
-    wgts = weights(zeta1Nodes(element2(e,:)),:); % New
+    wgts = weights(nodes(element2(e,:)),:); % New
     
     A1_IJ = zeros(n_en);
     A2_IJ = zeros(n_en);
     A4_IJ = zeros(n_en);
     A5_IJ = zeros(n_en);
     A3_IJ = zeros(n_en);
-    
-    for gp = 1:size(W2D,1)
-        pt = Q2D(gp,:);
-        wt = W2D(gp);
+            
+    R = NURBSbasis(I, xi, degree, knots, wgts);
+    dXdxi = R{2}*pts;
+    dXdeta = R{3}*pts;
+    a11 = dXdxi(:,1);
+    a21 = dXdxi(:,2);
+    a31 = dXdxi(:,3);
+    a12 = dXdeta(:,1);
+    a22 = dXdeta(:,2);
+    a32 = dXdeta(:,3);
 
-        xi  = parent2ParametricSpace(Xi_e, pt(1));
-        eta = parent2ParametricSpace(Eta_e,pt(2));
+    X = R{1}*pts;
+    Xt = (X-x_0)*A_2.';
+
+    [~, theta_arr, ~, d1, d2] = evaluateProlateCoords(Xt,Upsilon);
         
-        [R, dRdxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-        J = pts'*[dRdxi' dRdeta'];
-        
-        X = R*pts;
-        Xt = A_2*(X-x_0)';
-        xt = Xt(1);
-        yt = Xt(2);
-        zt = Xt(3);
-        
-        [~, theta, ~, d1, d2] = evaluateProlateCoords(xt,yt,zt,Upsilon);
-        
+    for gp = 1:numel(W)
+        theta = theta_arr(gp);
+        RR = R{1}(gp,:)'*R{1}(gp,:);
         if sin(theta) < 10*eps
-            temp = R'*R*(J(1,1)*J(2,2)-J(1,2)*J(2,1))/(r_a^2-Upsilon^2);
-            temp2 = ( (J(1,1)^2+J(2,1)^2)*(dRdeta'*dRdeta) ...
-                     -(J(1,1)*J(1,2)+J(2,1)*J(2,2))*(dRdeta'*dRdxi + dRdxi'*dRdeta) ...
-                     +(J(1,2)^2+J(2,2)^2)*(dRdxi'*dRdxi))/(J(1,1)*J(2,2)-J(1,2)*J(2,1));
+            temp = RR*(a11(gp)*a22(gp)-a12(gp)*a21(gp))/(r_a^2-Upsilon^2);
+            temp2 = ( (a11(gp)^2+a21(gp)^2)*(R{3}(gp,:)'*R{3}(gp,:)) ...
+                     -(a11(gp)*a12(gp)+a21(gp)*a22(gp))*(R{3}(gp,:)'*R{2}(gp,:) + R{2}(gp,:)'*R{3}(gp,:)) ...
+                     +(a12(gp)^2+a22(gp)^2)*(R{2}(gp,:)'*R{2}(gp,:)))/(a11(gp)*a22(gp)-a12(gp)*a21(gp));
         end
         if theta < 10*eps
-            A1_IJ = A1_IJ + temp*J_2*wt; 
-            A2_IJ = A2_IJ + temp2*J_2*wt;   
-            A3_IJ = A3_IJ + temp*J_2*wt; % note that cos(theta)^2 = 1 in this case
+            A1_IJ = A1_IJ + temp*J_2*W(gp); 
+            A2_IJ = A2_IJ + temp2*J_2*W(gp);   
+            A3_IJ = A3_IJ + temp*J_2*W(gp); % note that cos(theta)^2 = 1 in this case
         elseif theta > pi-10*eps
-            A1_IJ = A1_IJ - temp*J_2*wt; 
-            A2_IJ = A2_IJ - temp2*J_2*wt;   
-            A3_IJ = A3_IJ - temp*J_2*wt; % note that cos(theta)^2 = 1 in this case
+            A1_IJ = A1_IJ - temp*J_2*W(gp); 
+            A2_IJ = A2_IJ - temp2*J_2*W(gp);   
+            A3_IJ = A3_IJ - temp*J_2*W(gp); % note that cos(theta)^2 = 1 in this case
         else
-            DPDX = dPdX(xt,yt,zt,Upsilon,r_a,d1,d2)*A_2;
-
-            J3 = DPDX(2:3,:)*J(:,1:2);
+            DPDX = dPdX(Xt(gp,:),Upsilon,r_a,d1(gp),d2(gp))*A_2;
+            J = [a11(gp) a12(gp);
+                 a21(gp) a22(gp);
+                 a31(gp) a32(gp)];
+                 
+            J3 = DPDX(2:3,:)*J;
             J_3 = abs(det(J3));
 
-            dRdP = J3'\[dRdxi; dRdeta];
+            dRdP = J3'\[R{2}(gp,:); R{3}(gp,:)];
             dRdtheta = dRdP(1,:);
             dRdphi = dRdP(2,:);
             
-            A1_IJ = A1_IJ + R'*R*sin(theta)                               *J_3*J_2*wt;  
-            A2_IJ = A2_IJ + dRdtheta'*dRdtheta*sin(theta)                 *J_3*J_2*wt;  
-            A3_IJ = A3_IJ + R'*R*cos(theta)^2*sin(theta)                  *J_3*J_2*wt;  
-            A4_IJ = A4_IJ + dRdphi'*dRdphi/sin(theta)                     *J_3*J_2*wt;  
-            A5_IJ = A5_IJ + dRdphi'*dRdphi*cos(theta)^2/sin(theta)        *J_3*J_2*wt;  
+            A1_IJ = A1_IJ + RR*sin(theta)                          	*J_3*J_2*W(gp);  
+            A2_IJ = A2_IJ + dRdtheta'*dRdtheta*sin(theta)        	*J_3*J_2*W(gp);  
+            A3_IJ = A3_IJ + RR*cos(theta)^2*sin(theta)           	*J_3*J_2*W(gp);  
+            A4_IJ = A4_IJ + dRdphi'*dRdphi/sin(theta)              	*J_3*J_2*W(gp);  
+            A5_IJ = A5_IJ + dRdphi'*dRdphi*cos(theta)^2/sin(theta) 	*J_3*J_2*W(gp);  
         end
     end   
     

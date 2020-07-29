@@ -1,3 +1,5 @@
+function container = setMockShellParameters()
+
 P_inc = 1; % Amplitude of incident wave
 rho_s = 7850; % Density of solid
 rho_f = [1000, 1000]; % Density of fluids
@@ -12,3 +14,5 @@ t = 0.008; % BeTSSi thickness
 L = 10*R_o; % Shirron example 2
 
 % mult = 1;
+
+putVariablesIntoContainer

@@ -23,6 +23,11 @@ end
 dpdn = varCol.dpdn;
 % n_cp = noDofs - length(dofsToRemove);
 
+progressBars = varCol.progressBars;
+if progressBars
+    ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
+end
+
 if false
     p_xi = varCol.degree(1); % assume p_xi is equal in all patches
     p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -93,10 +98,13 @@ if false
     nQuadPts = ceil(sqrt(n_sp/noElems));
     noRedundantPts = nQuadPts^2*noElems - n_sp;
     dofsToRemove = round(linspace2(1,nQuadPts^2*noElems,noRedundantPts));
-    Q2D = [copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,2)];
+    Q = [copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,2)];
     counter2 = 1;
     counter = 1;
     for e = 1:noElems  
+        if progressBars && mod(i,nProgressStepSize) == 0
+            ppm.increment();
+        end
         patch = pIndex(e); % New
         Xi = knotVecs{patch}{1}; % New
         Eta = knotVecs{patch}{2}; % New
@@ -111,8 +119,8 @@ if false
         pts = controlPts(sctr,:);
         wgts = weights(element2(e,:)); % New   
 
-        for gp = 1:size(Q2D,1)
-            pt = Q2D(gp,:);
+        for gp = 1:size(Q,1)
+            pt = Q(gp,:);
             if ~any(dofsToRemove == counter)
                 xi = parent2ParametricSpace(Xi_e, pt(1));
                 eta = parent2ParametricSpace(Eta_e, pt(2));
@@ -132,16 +140,19 @@ if false
     end
 else
     extraGP = varCol.extraGP;
-    p_xi = patches{1}.nurbs.degree(1);
+    degree = patches{1}.nurbs.degree;
     p_eta = patches{1}.nurbs.degree(2);  
-    [Q2D,W2D] = tensorQuad(p_xi+1+extraGP,p_eta+1+extraGP);
-    nQuadPts = size(Q2D,1);
+    [Q, W] = gaussTensorQuad(degree+1+extraGP);
+    nQuadPts = size(Q,1);
     n_vec = zeros(nQuadPts,3,noElems);
     x_vec = zeros(nQuadPts,3,noElems);
     fact = zeros(nQuadPts,noElems);
 %     Q2D = [copyVector(linspace(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace(-1,1,nQuadPts).',nQuadPts,2)];
 %     Q2D = [copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,2)];
     parfor e = 1:noElems  
+        if progressBars && mod(i,nProgressStepSize) == 0
+            ppm.increment();
+        end
         patch = pIndex(e); % New
         nurbs = patches{patch}.nurbs;
 
@@ -153,9 +164,9 @@ else
         
         J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
 
-        xi = parent2ParametricSpace(Xi_e, Q2D(:,1));
-        eta = parent2ParametricSpace(Eta_e, Q2D(:,2));
-        [y, dydxi, dydeta] = evaluateNURBS_2ndDeriv(nurbs, [xi,eta]);
+        xi = parent2ParametricSpace(Xi_e, Q(:,1));
+        eta = parent2ParametricSpace(Eta_e, Q(:,2));
+        [y, dydxi, dydeta] = evaluateNURBS(nurbs, [xi,eta],1);
 
         crossProd = cross(dydxi,dydeta); % normal vector points inwards
         J_1 = norm2(crossProd);
@@ -165,7 +176,7 @@ else
         J_1 = norm2(crossProd);
         n_vec(:,:,e) = crossProd./J_1(:,[1,1,1]);
         x_vec(:,:,e) = y;
-        fact(:,e) = J_1*J_2.*W2D;
+        fact(:,e) = J_1*J_2.*W;
     end
     n_sp = nQuadPts*noElems;
     x_vec = reshape(permute(x_vec,[1,3,2]),n_sp,3);
@@ -369,7 +380,7 @@ else
     x_vec = zeros(nQuadPts,3,noElems);
     n_vec = zeros(nQuadPts,3,noElems);
     fact = zeros(nQuadPts,noElems);
-    [W2D,Q2D] = gaussianQuadNURBS(nQuadPts,nQuadPts);  
+    [W,Q] = gaussianQuadNURBS(nQuadPts,nQuadPts);  
     parfor e = 1:noElems  
         patch = pIndex(e); % New
         nurbs = patches{patch}.nurbs;
@@ -381,15 +392,15 @@ else
         Eta_e = elRangeEta(idEta,:);
         J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
 
-        xi = parent2ParametricSpace(Xi_e, Q2D(:,1));
-        eta = parent2ParametricSpace(Eta_e, Q2D(:,2));
+        xi = parent2ParametricSpace(Xi_e, Q(:,1));
+        eta = parent2ParametricSpace(Eta_e, Q(:,2));
         [y, dydxi, dydeta] = evaluateNURBS_2ndDeriv(nurbs, [xi,eta]);
 
         crossProd = cross(dydxi,dydeta); % normal vector points inwards
         J_1 = norm2(crossProd);
         n_vec(:,:,e) = crossProd./J_1(:,[1,1,1]);
         x_vec(:,:,e) = y;
-        fact(:,e) = J_1*J_2.*W2D;
+        fact(:,e) = J_1*J_2.*W;
     end
     n_qp = nQuadPts^2*noElems;
     x_vec = reshape(permute(x_vec,[1,3,2]),1,n_qp,3);
@@ -419,7 +430,7 @@ end
 % keyboard
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plotNURBS(varCol.nurbs,[40 40], 1, 1.5*[44 77 32]/255, 0.8);
+% plotNURBS(varCol.nurbs,[40 40], 1, getColor(1), 0.8);
 % hold on
 % plot3(x_vec(:,1),x_vec(:,2),x_vec(:,3),'o')issymmetric2
 % plot3(y_s(:,1),y_s(:,2),y_s(:,3),'o','color','blue')

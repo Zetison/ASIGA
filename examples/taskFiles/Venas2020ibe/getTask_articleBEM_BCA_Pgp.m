@@ -3,8 +3,8 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 model = 'BCA_P'; % BeTSSi submarine
 coreMethod = 'IGA';
    
-plot3Dgeometry = 0;
-plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
+prePlot.plot3Dgeometry = 0;
+prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 
 % f = [5e2, 1e3]; %[1e2 5e2 1e3];             % Frequency
 f = 1e2; %[1e2 5e2 1e3];             % Frequency

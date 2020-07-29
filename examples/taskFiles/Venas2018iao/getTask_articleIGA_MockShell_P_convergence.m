@@ -1,3 +1,7 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This study correspond to Figure 21-23 in Venas2018iao
+% Venas2018iao is available at https://doi.org/10.1016/j.cma.2018.02.015 (open access version at http://hdl.handle.net/11250/2493754)
+
 
 model = 'MS_P'; % Mock shell model after Ihlenburg
 
@@ -30,8 +34,8 @@ c_f = 1500;
 
 f = k*c_f/(2*pi);             % Frequency
 
-plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
-plot3Dgeometry = 0;  % Plot cross section of mesh and geometry
+prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
+prePlot.plot3Dgeometry = 0;  % Plot cross section of mesh and geometry
 loopParameters = {'M', 'N', 'formulation','IEbasis'};
 % loopParameters = {'M'};
 collectIntoTasks

@@ -38,7 +38,7 @@ beta = 30*pi/180;
 applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
 degree = 4;
 M = 4;
-plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 calculateSurfaceError = 1;
 
 runTasksInParallel = 1;

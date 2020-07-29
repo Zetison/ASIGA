@@ -48,6 +48,7 @@ for i = 1:noPatches
     knotVecs{i} = patches{i}.nurbs.knots;
 end
 d = varCol.dimension;
+% Eps = 1e10*eps;
 Eps = 1e7*eps;
 % Eps = 1e5*eps;
 % [~, I, IC] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)));

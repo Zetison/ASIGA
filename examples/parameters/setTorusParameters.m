@@ -1,3 +1,5 @@
+function container = setTorusParameters()
+
 P_inc = 1; % Amplitude of incident wave
 rho_s = 7850; % Density of solid
 rho_f = [1000,1000]; % Density of fluids
@@ -8,3 +10,5 @@ t = 0.1;
 
 r_o = 2; % Major radius of torus
 r_i = 1; % Minor radius of torus
+
+putVariablesIntoContainer

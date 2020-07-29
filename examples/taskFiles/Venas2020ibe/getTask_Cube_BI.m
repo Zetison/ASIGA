@@ -28,7 +28,7 @@ beta_s = 30*pi/180;
 extraGPBEM = 32;
 % extraGP = 2;
 extraGP = 0;
-plot3Dgeometry = 1;  % Plot visualization of mesh and geometry in 3D
+prePlot.plot3Dgeometry = 1;  % Plot visualization of mesh and geometry in 3D
 if strcmp(BC,'SHBC')
     applyLoad = 'planeWave';
 else

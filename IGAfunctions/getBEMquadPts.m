@@ -2,22 +2,21 @@ function [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, pD
                 = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                 x,nx,xi_x_tArr,eta_x_tArr,adjacentElements,constants,psiType,useRegul,...
-                p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
+                degree,pIndex,knotVecs,index,elRange,element,element2,controlPts,weights,...
                 patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM,pD)
-if nargin < 42
+if nargin < 40
     pD.plotGP = false;
 end
 
 alpha = 1i/k;
 patch_y = pIndex(e_y); % New
-Xi_y = knotVecs{patch_y}{1}; % New
-Eta_y = knotVecs{patch_y}{2}; % New
+knots = knotVecs{patch_y}; % New
 
 idXi = index(e_y,1);
 idEta = index(e_y,2);
 
-Xi_e_y = elRangeXi(idXi,:);
-Eta_e_y = elRangeEta(idEta,:);
+Xi_e_y = elRange{1}(idXi,:);
+Eta_e_y = elRange{2}(idEta,:);
 
 sctr_y = element(e_y,:);
 pts_y = controlPts(sctr_y,:);
@@ -115,7 +114,7 @@ if collocationPointIsInElement % use polar integration
                     xi2 = parent2ParametricSpace(Xi_e_y, xi_t2);
                     eta2 = parent2ParametricSpace(Eta_e_y, eta_t2);
                     if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
-                        yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2]);
+                        yy = evaluateNURBS(pD.nurbs{patch_y}, [xi2,eta2]);
                         pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                     end
                 end
@@ -143,7 +142,7 @@ if collocationPointIsInElement % use polar integration
             thetas_m(thetas_m < -1) = -1;
             thetas_m(thetas_m > 1) = 1;
             thetas_m = acos(thetas_m);
-            p_max = max(p_xi,p_eta);
+            p_max = max(degree);
             
             no_gpSource = 2*(p_max+1);
             n_div = ceil(sqrt(numel(W2D_2)/4)*thetas_m/(pi/2)/no_gpSource);
@@ -237,7 +236,7 @@ if collocationPointIsInElement % use polar integration
                             end
                             if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) ...
                                     || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
-                                yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2]);
+                                yy = evaluateNURBS(pD.nurbs{patch_y}, [xi2,eta2]);
                                 pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                             end
                         end
@@ -250,7 +249,7 @@ if collocationPointIsInElement % use polar integration
                         xi2 = xi_x + rho2.*(xi_v(i)-xi_x+(xi_v(i+1)-xi_v(i))*theta2);
                         eta2 = eta_x + rho2.*(eta_v(i)-eta_x+(eta_v(i+1)-eta_v(i))*theta2);
                         if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
-                            yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2]);
+                            yy = evaluateNURBS(pD.nurbs{patch_y}, [xi2,eta2]);
                             pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                         end
                     end
@@ -277,7 +276,7 @@ if collocationPointIsInElement % use polar integration
             thetas_m(thetas_m < -1) = -1;
             thetas_m(thetas_m > 1) = 1;
             thetas_m = acos(thetas_m);
-            p_max = max(p_xi,p_eta);
+            p_max = max(degree(1),degree(2));
 %             no_gpSource = p_max+1+50;
             no_gpSource = 2*(p_max+1);
             n_div = ceil(sqrt(numel(W2D_2)/4)*thetas_m/(pi/2)/no_gpSource);
@@ -302,7 +301,7 @@ if collocationPointIsInElement % use polar integration
         %     n_qp_r = round((p_max + 1)*n_div_r);
         %     n_div = round(n_div);
         %     n_div_r = round(n_div_r);
-        %     n_qp = n_qp_xi*n_qp_eta;
+        %     n_qp = n_qdegree(1)*n_qdegree(2);
 
             thetas = cell(4,1);
             etas_east = linspace(eps-1,1-eps,n_div(1)+1);
@@ -447,7 +446,7 @@ if collocationPointIsInElement % use polar integration
                                 keyboard
                             end
                             if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
-                                yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2]);
+                                yy = evaluateNURBS(pD.nurbs{patch_y}, [xi2,eta2]);
                                 pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                             end
                         end
@@ -473,7 +472,7 @@ if collocationPointIsInElement % use polar integration
                         xi2 = parent2ParametricSpace(Xi_e_y, xi_t2);
                         eta2 = parent2ParametricSpace(Eta_e_y, eta_t2);
                         if ~(all(abs(xi2-Xi_e_y(1)) < Eps) || all(abs(xi2-Xi_e_y(2)) < Eps) || all(abs(eta2-Eta_e_y(1)) < Eps) || all(abs(eta2-Eta_e_y(2)) < Eps))
-                            yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2]);
+                            yy = evaluateNURBS(pD.nurbs{patch_y}, [xi2,eta2]);
                             pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                         end
                     end
@@ -488,7 +487,12 @@ if collocationPointIsInElement % use polar integration
     if noGp == 0
         error('noGp must should be non-zero')
     end
-    [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi_y(1:noGp), eta_y(1:noGp), p_xi, p_eta, Xi_y, Eta_y, wgts_y);
+    xi = [xi_y(1:noGp), eta_y(1:noGp)];
+    I = findKnotSpans(degree, xi(1,:), knots);
+    R = NURBSbasis(I, xi, degree, knots, wgts_y);
+    R_y = R{1};
+    dR_ydxi = R{2};
+    dR_ydeta = R{3};
 
     J1 = dR_ydxi*pts_y;
     J2 = dR_ydeta*pts_y;
@@ -530,13 +534,13 @@ else
                 for i_xi = 2:n_div
                     xi2 = Xi_e_y_arr(i_xi);
                     eta2 = linspace(Eta_e_y(1)+Eps,Eta_e_y(2)-Eps,100).';
-                    yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2(ones(100,1)),eta2]);
+                    yy = evaluateNURBS(pD.nurbs{patch_y}, [xi2(ones(100,1)),eta2]);
                     pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                 end
                 for i_eta = 2:n_div
                     eta2 = Eta_e_y_arr(i_eta);
                     xi2 = linspace(Xi_e_y(1)+Eps,Xi_e_y(2)-Eps,100).';
-                    yy = evaluateNURBS_2ndDeriv(pD.patches{patch_y}.nurbs, [xi2,eta2(ones(100,1))]);
+                    yy = evaluateNURBS(pD.nurbs{patch_y}, [xi2,eta2(ones(100,1))]);
                     pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
                 end
             end
@@ -566,7 +570,12 @@ else
     end
     noGp = size(xi_y,1);
 
-    [R_y, dR_ydxi, dR_ydeta] = NURBS2DBasisVec(xi_y, eta_y, p_xi, p_eta, Xi_y, Eta_y, wgts_y);
+    xi = [xi_y, eta_y];
+    I = findKnotSpans(degree, xi(1,:), knots);
+    R = NURBSbasis(I, xi, degree, knots, wgts_y);
+    R_y = R{1};
+    dR_ydxi = R{2};
+    dR_ydeta = R{3};
 
     J1 = dR_ydxi*pts_y;
     J2 = dR_ydeta*pts_y;
@@ -672,17 +681,20 @@ else
 end
 
 function adaptiveQuad(recursionLevel)
-
+maxRecursionLevel = 20;
+if recursionLevel > maxRecursionLevel
+    warning('BEM:recursion',['Reached recursion level > ' num2str(maxRecursionLevel) ', inacurate integration may have occured (probably due to singular geometric points)'])
+end
 l = norm(x-x_5);
 n_div = agpBEM*h/l + 1;
-if n_div < 2 % || recursionLevel > 200
-    n_qp_xi = round((p_xi + 1)*n_div);
-    n_qp_eta = round((p_eta + 1)*n_div);
-    n_qp = n_qp_xi*n_qp_eta;
-    Q_xi = repmat(Q{n_qp_xi},n_qp_eta,1);
-    Q_eta = repmat(Q{n_qp_eta}.',n_qp_xi,1);
+if n_div < 2 || recursionLevel > maxRecursionLevel
+    n_qdegree(1) = min(round((degree(1) + 1)*n_div),numel(Q));
+    n_qdegree(2) = min(round((degree(2) + 1)*n_div),numel(Q));
+    n_qp = n_qdegree(1)*n_qdegree(2);
+    Q_xi = repmat(Q{n_qdegree(1)},n_qdegree(2),1);
+    Q_eta = repmat(Q{n_qdegree(2)}.',n_qdegree(1),1);
     Q_eta = Q_eta(:);
-    W2D_1_temp = W{n_qp_xi}*W{n_qp_eta}.';
+    W2D_1_temp = W{n_qdegree(1)}*W{n_qdegree(2)}.';
     W2D_1_temp = W2D_1_temp(:);
 
     xi_y(noGp+1:noGp+n_qp) = parent2ParametricSpace(Xi_eSub, Q_xi);
@@ -695,13 +707,13 @@ if n_div < 2 % || recursionLevel > 200
         xi2 = Xi_eSub(1);
         if abs(Xi_e_y(1) - xi2) > Eps
             eta2 = linspace(Eta_eSub(1)+Eps,Eta_eSub(2)-Eps,100).';
-            yy = evaluateNURBS_2ndDeriv(nurbs, [xi2(ones(100,1)),eta2]);
+            yy = evaluateNURBS(nurbs, [xi2(ones(100,1)),eta2]);
             pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
         end
         eta2 = Eta_eSub(1);
         if abs(Eta_e_y(1) - eta2) > Eps
             xi2 = linspace(Xi_eSub(1)+Eps,Xi_eSub(2)-Eps,100).';
-            yy = evaluateNURBS_2ndDeriv(nurbs, [xi2,eta2(ones(100,1))]);
+            yy = evaluateNURBS(nurbs, [xi2,eta2(ones(100,1))]);
             pD.h(end+1) = plot3(yy(:,1),yy(:,2),yy(:,3),pD.lineStyle,'color',pD.lineColor);
         end
     end
@@ -715,7 +727,7 @@ else
            mean(Xi_eSubArr(1:2)), mean(Eta_eSubArr(2:3));
            mean(Xi_eSubArr(2:3)), mean(Eta_eSubArr(2:3));
            XI(:),ETA(:)];
-    y_temp = evaluateNURBS_2ndDeriv(nurbs, pts);
+    y_temp = evaluateNURBS(nurbs, pts);
     cntr = 1;
     for jj = 1:2
         for ii = 1:2

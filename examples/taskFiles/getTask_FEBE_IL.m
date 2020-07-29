@@ -2,8 +2,8 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 model = 'IL';
 
 parm = 1;
-plot2Dgeometry = 0;
-plot3Dgeometry = 0;
+prePlot.plot2Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 if 1
     method = {'BEM'};
     formulation = 'GCBIE';
@@ -73,8 +73,8 @@ collectIntoTasks
 %     calculateFarFieldPattern = 0;
 %     calculateVolumeError = 1;
 %     calculateSurfaceError = 1;
-%     plot2Dgeometry = 0;
-%     plot3Dgeometry = 0;
+%     prePlot.plot2Dgeometry = 0;
+%     prePlot.plot3Dgeometry = 0;
 %     loopParameters = {'M','degree','method','coreMethod','formulation','BC'};
 % 
 %     N = 6;

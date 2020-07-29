@@ -9,7 +9,7 @@ for i = 1:numel(fluid)
                          0, 0;
                          1, 1];
     varColPlot.colorFun = @(x) log10(abs(norm2(x)));
-    plotLagrange(fluid{i},[100 100 1000], 1, 1.5*[44 77 32]/255, 1, temp(:,:,:,i), varColPlot);
+    plotLagrange(fluid{i},[100 100 1000], 1, getColor(1), 1, temp(:,:,:,i), varColPlot);
 end
 
 axis equal

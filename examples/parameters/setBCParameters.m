@@ -1,3 +1,5 @@
+function container = setBCParameters()
+
 P_inc = 1; % Amplitude of incident wave
 rho_s = 7850; % Density of solid
 rho_f = [1000, 1000]; % Density of fluids
@@ -52,3 +54,5 @@ b_ud = 0.22;
 h_d = b-s;
 delta_d = 0.25;
 x_d = -4;
+
+putVariablesIntoContainer

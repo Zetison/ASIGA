@@ -17,7 +17,7 @@ alpha = alpha_s;
 beta = beta_s;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
-plot3Dgeometry        = 0; 
+prePlot.plot3Dgeometry        = 0; 
 extraGPBEM = 0;
 extraGP = 0;
 

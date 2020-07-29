@@ -13,8 +13,8 @@ alpha = (0:0.1:180)*pi/180;
 % alpha = (0:180)*pi/180;
 beta = 0;   
 
-plot2Dgeometry = 0;
-plot3Dgeometry = 0;
+prePlot.plot2Dgeometry = 0;
+prePlot.plot3Dgeometry = 0;
 
 %% Plot result in paraview
 if 0

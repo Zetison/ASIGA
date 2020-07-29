@@ -228,10 +228,10 @@ nurbs.coeffs(3,4,5:14) = -nurbs.coeffs(3,7,5:14);
 % 
 % close all
 % varCol.colorFun = @(v,xi,eta) log10(uTest_BC(v,xi,eta,nurbs_temp.knots{1},nurbs_temp.knots{2},a,b,L,g2,g3,alpha,[2,numel(unique(Eta)),numel(unique(Eta))]));
-% plotNURBS(nurbs_temp,[100 100], 1, 1.5*[44 77 32]/255, 1, NaN, varCol);
-% % plotNURBS(nurbs_temp,[100 100], 1, 1.5*[44 77 32]/255, 1);
+% plotNURBS(nurbs_temp,[100 100], 1, getColor(1), 1, NaN, varCol);
+% % plotNURBS(nurbs_temp,[100 100], 1, getColor(1), 1);
 % hold on
-% % plotNURBS(nurbs_inter,[100 100], 1, 1.5*[44 77 32]/255, 1);
+% % plotNURBS(nurbs_inter,[100 100], 1, getColor(1), 1);
 % axis equal
 % view(243,14)
 % % view(180,90)
@@ -259,7 +259,7 @@ nurbs.coeffs(3,4,5:14) = -nurbs.coeffs(3,7,5:14);
 % %     coeffs(1:3,i,2) = (coeffs(1:3,i,1)+coeffs(1:3,i,3))/2;
 % end
 % nurbsCone.coeffs = coeffs;
-% plotNURBS(nurbsCone,[100 100], 1, 1.5*[44 77 32]/255, 1, NaN, varCol);
+% plotNURBS(nurbsCone,[100 100], 1, getColor(1), 1, NaN, varCol);
 % w1 = nurbs_temp.coeffs(1:3,1,3)-nurbs_temp.coeffs(1:3,1,1);
 % w2 = nurbs_temp.coeffs(1:3,end,3)-nurbs_temp.coeffs(1:3,end,1);
 % nurbsCone2 = getConeData(abs(-b+h+x2), abs(-b+h+x2) + g4*tan(alpha), g4, 0, acos(dot(w1,w2)/norm(w1)/norm(w2)), -(L+g2+g3));

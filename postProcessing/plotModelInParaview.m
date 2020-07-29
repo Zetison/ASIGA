@@ -1,4 +1,8 @@
-function plotModelInParaview(nurbs, extraXiPts, extraEtaPts, extraZetaPts, options, plotMesh, appendName)
+function plotModelInParaview(nurbs, options, plotMesh, appendName)
+depricated('Use createParaviewFiles() instead')
+extraXiPts = options.extraXiPts;
+extraEtaPts = options.extraEtaPts;
+extraZetaPts = options.extraZetaPts;
 
 options = struct('name',[options.name, appendName]);
 

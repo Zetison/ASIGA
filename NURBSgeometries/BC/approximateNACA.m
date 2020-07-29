@@ -63,7 +63,7 @@ coeffs2(1,1:9,2) = -dx;
 coeffs2(2,9:end,2) = b_ls/2/l_ls;
 nurbs3 = createNURBSobject(coeffs2*l_ls,{nurbs2.knots,[0,0,1,1]});
 % figure(42)
-% plotNURBS(nurbs3,[100 2], 1, 1.5*[44 77 32]/255);
+% plotNURBS(nurbs3,[100 2], 1, getColor(1));
 % hold on
 % axis equal
 % plotControlPts(nurbs3)
@@ -128,7 +128,7 @@ end
 coeffs2(2,N(2):end,2) = b_ls/2/l_ls;
 nurbs3 = createNURBSobject(coeffs2*l_ls,{nurbsAppr2.knots,[0,0,1,1]});
 figure(43)
-plotNURBS(nurbs3,[100 2], 1, 1.5*[44 77 32]/255);
+plotNURBS(nurbs3,[100 2], 1, getColor(1));
 % plotControlPts(nurbs3)
 hold on
 axis equal

@@ -15,7 +15,7 @@ if ~runTasksInParallel
     fprintf(['\n%-' num2str(stringShift) 's'], 'Extracting CAD data ... ')
     tic
 end
-varCol = createNURBSmesh(varCol, parms, model, M, degree);
+varCol = createNURBSmesh(varCol, model, M, degree);
 if ~runTasksInParallel
     fprintf('using %12f seconds.', toc)
 end
@@ -27,7 +27,7 @@ collectVariables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot geometry
 % keyboard
-if plot3Dgeometry || plot2Dgeometry
+if prePlot.plot3Dgeometry || prePlot.plot2Dgeometry
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
     plotMeshAndGeometry
@@ -41,11 +41,7 @@ if ~runTasksInParallel
     fprintf(['\n%-' num2str(stringShift) 's'], 'Generating IGA mesh ... ')
 end
 for i = 1:numel(varCol)
-    if varCol{1}.boundaryMethod && mod(i,2)
-        varCol{i} = generateIGA2DMesh_new(varCol{i});
-    else
-        varCol{i} = generateIGA3DMesh_new(varCol{i});
-    end
+    varCol{i} = generateIGAmesh(varCol{i});
 end
 % if ~boundaryMethod && M(i_M) < 2
 %     ratio = calcSA_Vratio(varCol{1});
@@ -69,31 +65,41 @@ if ~runTasksInParallel
     fprintf('\nTotal number of elements = %d', totNoElems)
 end
 varCol{1}.totNoElems = totNoElems;
-if plot3Dgeometry || plot2Dgeometry
+if (prePlot.plot3Dgeometry || prePlot.plot2Dgeometry) && prePlot.abortAfterPlotting
     return
 end
 %% Build stiffness matrix
 t_start = tic;
 if strcmp(scatteringCase,'Sweep')
-    U_sweep = cell(1,numel(k));
+    U_sweep = cell(1,numel(f));
 end
 
 if strcmp(method,'RT') || strcmp(method,'KDT')
-    k_1 = k(1,:);
-    varCol{1}.k = k_1;
-    omega = k_1*varCol{1}.c_f(1);
+    omega = 2*pi*f;
     varCol{1}.omega = omega;
-    varCol{1}.f = omega/(2*pi);
+    varCol{1}.k = omega/varCol{1}.c_f;
+    varCol{1}.lambda = 2*pi./varCol{1}.k;
+    varCol{1}.f = f;
     getAnalyticSolutions
 else
-    for i_k = 1:size(k,2)
+    for i_f = 1:numel(f)
+        f_i = f(i_f);
+        omega = 2*pi*f_i;
+        for m = 1:numel(varCol)
+            varCol{m}.omega = omega;
+            switch varCol{m}.media
+                case 'fluid'
+                    varCol{m}.f = f_i;
+                    varCol{m}.k = omega/varCol{m}.c_f;
+                    varCol{m}.lambda = 2*pi/varCol{m}.k;
+                case 'solid'
+                    varCol{m}.k = NaN;
+            end
+        end
         t_freq = tic;
-        k_1 = k(1,i_k);
-        varCol{1}.k = k_1;
-        omega = k_1*varCol{1}.c_f(1);
-        varCol{1}.omega = omega;
-        varCol{1}.f = omega/(2*pi);
         getAnalyticSolutions
+        k = varCol{1}.k;
+        rho = varCol{1}.rho;
         switch method
             case {'IE','ABC'}
                 tic  
@@ -106,17 +112,17 @@ else
 
                 if strcmp(varCol{1}.coreMethod,'SEM')
                     [A_fluid_o, FF, varCol{1}.dofsToRemove] = buildSEMMatrices(varCol{1});
-                    FF = 1/(rho_f(1)*omega^2)*FF;        
+                    FF = 1/(rho(1)*omega^2)*FF;        
                     noDofs_tot = size(A_fluid_o,1);
                 else
         %             [A_K, A_M] = buildGlobalMatrices(varCol{1}, options);
-                    [A_K, A_M] = buildGlobalMatricesVec(varCol{1}, options);
-                    A_fluid_o = A_K - k_1^2*A_M;
+                    [A_K, A_M] = buildMatrices(varCol{1}, options);
+                    A_fluid_o = A_K - k^2*A_M;
                 end
                 if clearGlobalMatrices && ~useROM
                     clear A_K A_M
                 end
-                nnzA_fluid_o = nnz(A_fluid_o);
+%                 nnzA_fluid_o = nnz(A_fluid_o);
                 varCol{1}.timeBuildSystem = toc;
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
@@ -175,16 +181,16 @@ else
                 end
                 dofsToRemove = varCol{1}.dofsToRemove;
                 if strcmp(varCol{1}.coreMethod,'SEM')
-                    A_fluid_o = 1/(rho_f(1)*omega^2)*A_fluid_o; 
+                    A_fluid_o = 1/(rho(1)*omega^2)*A_fluid_o; 
                 else
                     if useROM
-                        A_K = 1/(rho_f(1)*omega^2)*A_K; 
-                        A_M = 1/(rho_f(1)*omega^2)*A_M; 
-                        A_gamma_a = 1/(rho_f(1)*omega^2)*A_gamma_a; 
-                        A2_gamma_a = 1/(rho_f(1)*omega^2)*A2_gamma_a; 
-                        A3_gamma_a = 1/(rho_f(1)*omega^2)*A3_gamma_a; 
+                        A_K = 1/(rho(1)*omega^2)*A_K; 
+                        A_M = 1/(rho(1)*omega^2)*A_M; 
+                        A_gamma_a = 1/(rho(1)*omega^2)*A_gamma_a; 
+                        A2_gamma_a = 1/(rho(1)*omega^2)*A2_gamma_a; 
+                        A3_gamma_a = 1/(rho(1)*omega^2)*A3_gamma_a; 
                     else
-                        A_fluid_o = 1/(rho_f(1)*omega^2)*(A_fluid_o + A_gamma_a); 
+                        A_fluid_o = 1/(rho(1)*omega^2)*(A_fluid_o + A_gamma_a); 
                     end
                 end
 
@@ -197,9 +203,9 @@ else
                     options = {'operator','linearElasticity',...
                                'fieldDimension', 3,...
                                'buildMassMatrix', 1};
-                    [A_K, A_M] = buildGlobalMatricesVec(varCol{2}, options);
+                    [A_K, A_M] = buildMatrices(varCol{2}, options);
 
-                    A_solid = A_K-rho_s*omega^2*A_M;
+                    A_solid = A_K-varCol{2}.rho*omega^2*A_M;
                     if clearGlobalMatrices
                         clear A_K A_M
                     end
@@ -221,10 +227,9 @@ else
                     options = {'operator','Laplace',...
                                'fieldDimension', 1,...
                                'buildMassMatrix', 1};
-                    [A_K, A_M] = buildGlobalMatricesVec(varCol{3}, options);
+                    [A_K, A_M] = buildMatrices(varCol{3}, options);
 
-                    k_2 = k(2,i_k);
-                    A_fluid_i = 1/(rho_f(2)*omega^2)*(A_K - k_2^2*A_M);
+                    A_fluid_i = 1/(varCol{3}.rho*omega^2)*(A_K - varCol{3}.k^2*A_M);
                     if clearGlobalMatrices
                         clear A_K A_M
                     end
@@ -301,16 +306,16 @@ else
                 if ~useSolidDomain
                     if ~strcmp(varCol{1}.coreMethod,'SEM')
                         if useROM
-                            FF = 1/(rho_f(1)*omega^2)*applyHWBC_ROM(varCol{1},noVecs);
+                            FF = 1/(rho(1)*omega^2)*applyHWBC_ROM(varCol{1},noVecs);
                         else
-                            FF = 1/(rho_f(1)*omega^2)*applyHWBC(varCol{1},length(alpha_s));  
+                            FF = 1/(rho(1)*omega^2)*applyHWBC(varCol{1},length(alpha_s));  
                         end
                     end
                 else
                     varCol{2}.p_inc = p_inc;
                     varCol{2}.dp_inc = dp_inc;
 %                     FF = applyNeumannCondition_CoupledProblem(varCol{2},omega,rho_f(1),length(alpha_s), shift);
-                    FF = applyNeumannCondition_CoupledProblemPatches(varCol{2},varCol{1},omega,rho_f(1),length(alpha_s), shift);
+                    FF = applyNeumannCondition_CoupledProblemPatches(varCol{2},varCol{1},omega,rho(1),length(alpha_s), shift);
                 end 
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
@@ -324,13 +329,13 @@ else
                     P1 = speye(size(A));
                     if useInnerFluidDomain
                         P1(1:varCol{3}.noDofs, 1:varCol{3}.noDofs) = ...
-                            sqrt(omega^2*rho_f(2))*speye(varCol{3}.noDofs);
+                            sqrt(omega^2*varCol{3}.rho)*speye(varCol{3}.noDofs);
                     end
 
                     P1(shift+1:shift+varCol{2}.noDofs, shift+1:shift+varCol{2}.noDofs) = ...
-                        1/sqrt(max([omega^2*rho_s, C(1,1)]))*speye(varCol{2}.noDofs);
+                        1/sqrt(max([omega^2*varCol{2}.rho, varCol{2}.C(1,1)]))*speye(varCol{2}.noDofs);
                     P1(shift+1+varCol{2}.noDofs:end, shift+1+varCol{2}.noDofs:end) = ...
-                        sqrt(omega^2*rho_f(1))*speye(varCol{1}.noDofs_new);
+                        sqrt(omega^2*rho(1))*speye(varCol{1}.noDofs_new);
 
                     A = P1*A*P1;
                     FF = P1*FF;
@@ -395,9 +400,9 @@ else
                 dofsToRemove = varCol{1}.dofsToRemove;  
                 switch formulation(1)
                     case 'G' % Galerkin
-                        [A_fluid_o, FF_fluid_o, varCol{1}, C_mat] = buildBEMmatrix_galerkinVec(varCol{1},useSolidDomain);  
+                        [A_fluid_o, FF_fluid_o, varCol{1}, C_mat] = buildGBEMmatrix(varCol{1},useSolidDomain);  
                     case 'C' % Collocation
-                        [A_fluid_o, FF_fluid_o, varCol{1}] = buildBEMmatrixVec(varCol{1});  
+                        [A_fluid_o, FF_fluid_o, varCol{1}] = buildCBEMmatrix(varCol{1});  
                 end
                 noDofs_tot = varCol{1}.noDofs;
                 if ~runTasksInParallel
@@ -406,7 +411,7 @@ else
                 if strcmp(formulation(end),'C')
                     tic
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
-                    [A_CHIEF, FF_CHIEF, varCol{1}] = buildCHIEFmatrixVec(varCol{1});
+                    [A_CHIEF, FF_CHIEF, varCol{1}] = buildCHIEFmatrix(varCol{1});
                     A_fluid_o = [A_fluid_o; A_CHIEF];
                     FF_fluid_o = [FF_fluid_o; FF_CHIEF];
                     if ~runTasksInParallel
@@ -423,9 +428,9 @@ else
                     options = {'operator','linearElasticity',...
                                'fieldDimension', 3,...
                                'buildMassMatrix', 1};
-                    [A_K, A_M] = buildGlobalMatricesVec(varCol{2}, options);
+                    [A_K, A_M] = buildMatrices(varCol{2}, options);
 
-                    A_solid = A_K-rho_s*omega^2*A_M;
+                    A_solid = A_K-varCol{2}.rho*omega^2*A_M;
                     if clearGlobalMatrices
                         clear A_K A_M
                     end
@@ -445,7 +450,7 @@ else
 
                     switch formulation(1)
                         case 'G' % Galerkin
-                            [A_fluid_i, FF_fluid_i, varCol{3}, C_mat2_outer] = buildBEMmatrix_galerkinVec(varCol{3},useSolidDomain);  
+                            [A_fluid_i, FF_fluid_i, varCol{3}, C_mat2_outer] = buildGBEMmatrix(varCol{3},useSolidDomain);  
                         case 'C' % Collocation
                             error('Not implemented')
                     end
@@ -466,7 +471,7 @@ else
                     varCol{2}.noDofs_tot = noDofs_tot;
                     A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
                     A(varCol{2}.noDofs+1:end,(1:3*varCol{1}.noDofs)+varCol{2}.noDofs-3*varCol{1}.noDofs) ...
-                                = -rho_f(1)*omega^2*C_mat;  
+                                = -rho(1)*omega^2*C_mat;  
                     A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
                     shift = 0;
                     FF((varCol{2}.noDofs+1):noDofs_tot,:) = FF_fluid_o;
@@ -477,11 +482,11 @@ else
                     varCol{2}.noDofs_tot = noDofs_tot;
                     varCol{3}.noDofs_tot = noDofs_tot;
                     A(1:varCol{3}.noDofs,1:varCol{3}.noDofs) = A_fluid_i; 
-                    A(noDofsInner+1:shift,shift+1:shift+3*(shift-noDofsInner)) = -rho_f(2)*omega^2*C_mat2_outer; 
+                    A(noDofsInner+1:shift,shift+1:shift+3*(shift-noDofsInner)) = -varCol{3}.rho*omega^2*C_mat2_outer; 
                     A((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs),...
                       (varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = A_solid;
                     A(varCol{2}.noDofs+1+shift:end,(1:3*varCol{1}.noDofs)+varCol{2}.noDofs-3*varCol{1}.noDofs+shift) ...
-                        = -rho_f(1)*omega^2*C_mat; 
+                        = -rho(1)*omega^2*C_mat; 
                     A((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot,...
                       (varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o;
                     FF((shift+varCol{2}.noDofs+1):noDofs_tot,:) = FF_fluid_o;
@@ -520,23 +525,6 @@ else
                     varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
                 end  
                 
-                % Apply Neumann conditions
-                tic
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
-                end
-%                 if useSolidDomain
-%                     varCol{2}.p_inc = p_inc;
-%                     varCol{2}.dp_inc = dp_inc;
-%                     FF = FF + applyNeumannCondition_CoupledProblem(varCol{2},omega,rho_f(1),length(alpha_s), shift);
-%                 end 
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
-                end
-                varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-%                 figure(1)
-%                 spy(A)
-
                 %% Modify system of equations
                 % Remove the rows and columns of the global matrix corresponding to
                 % removed degrees of freedom
@@ -548,7 +536,7 @@ else
 %                     end
 
                     P1(shift+1:shift+varCol{2}.noDofs, ...
-                       shift+1:shift+varCol{2}.noDofs) = 1/max([omega^2*rho_s, C(1,1)])*speye(varCol{2}.noDofs);
+                       shift+1:shift+varCol{2}.noDofs) = 1/max([omega^2*varCol{2}.rho, C(1,1)])*speye(varCol{2}.noDofs);
 
 %                     A = P1*A;
 %                     FF = P1*FF;
@@ -571,22 +559,22 @@ else
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
                 end
-                [A_fluid_o, FF_fluid_o, varCol{1}] = bestApproximationVec(varCol{1});
+                [A_fluid_o, FF_fluid_o, varCol{1}] = buildBAmatrix(varCol{1});
                 noDofs_tot = varCol{1}.noDofs;
                 dofsToRemove = varCol{1}.dofsToRemove;
                 varCol{1}.timeBuildSystem = toc;
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', varCol{1}.timeBuildSystem)
                 end
-
                 if useSolidDomain 
+                    error('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
                     tic
                     % Solid matrix
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
                     end
                     varCol{2}.formulation = 'VL2E';
-                    [A_solid, FF_solid, varCol{2}] = bestApproximationVec(varCol{2});
+                    [A_solid, FF_solid, varCol{2}] = buildBAmatrix(varCol{2});
                     A_solid = kron(A_solid,eye(3));
                     FF_solid = FF_solid.';
                     FF_solid = FF_solid(:);
@@ -604,7 +592,7 @@ else
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building inner fluid matrix ... ')
                     end
-                    [A_fluid_i, FF_fluid_i, varCol{3}] = bestApproximationVec(varCol{3});
+                    [A_fluid_i, FF_fluid_i, varCol{3}] = buildBAmatrix(varCol{3});
 
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
@@ -613,7 +601,6 @@ else
                     dofsToRemove = [varCol{3}.dofsToRemove (varCol{2}.dofsToRemove+varCol{3}.noDofs) (varCol{1}.dofsToRemove+varCol{3}.noDofs+varCol{2}.noDofs)];
                     varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
                 end
-
 
                 % Collect all matrices
                 A = sparse(noDofs_tot,noDofs_tot);
@@ -707,15 +694,15 @@ else
                 end
                 if strcmp(BC,'SHBC')
                     if useROM && ~strcmp(method,'BA')
-                        A_M = rho_f(1)*omega^2*A_M;
-                        A_K = rho_f(1)*omega^2*A_K;
-                        A_gamma_a = rho_f(1)*omega^2*A_gamma_a;
-                        A2_gamma_a = rho_f(1)*omega^2*A2_gamma_a;
-                        A3_gamma_a = rho_f(1)*omega^2*A3_gamma_a;
-                        FF = rho_f(1)*omega^2*FF;
+                        A_M = rho(1)*omega^2*A_M;
+                        A_K = rho(1)*omega^2*A_K;
+                        A_gamma_a = rho(1)*omega^2*A_gamma_a;
+                        A2_gamma_a = rho(1)*omega^2*A2_gamma_a;
+                        A3_gamma_a = rho(1)*omega^2*A3_gamma_a;
+                        FF = rho(1)*omega^2*FF;
                     else
-                        A = rho_f(1)*omega^2*A;
-                        FF = rho_f(1)*omega^2*FF;
+                        A = rho(1)*omega^2*A;
+                        FF = rho(1)*omega^2*FF;
                     end
                 end
                 if ~strcmp(solver,'LU')
@@ -887,8 +874,8 @@ else
                 end
         end
         if useROM && strcmp(scatteringCase,'Sweep')
-            U_sweep{i_k} = Uc{1}(1:varCol{1}.noDofs,:);
-            U_sweep2{i_k} = Uc{1};
+            U_sweep{i_f} = Uc{1}(1:varCol{1}.noDofs,:);
+            U_sweep2{i_f} = Uc{1};
             if strcmp(BC,'SSBC') || strcmp(BC,'NNBC')
                 error('not implemented due to noDofs')
             end
@@ -916,14 +903,10 @@ if calculateFarFieldPattern && ~useROM
     v = getFarFieldPoints(task.alpha,task.beta,task.r);
 
     switch method
-        case {'IE','ABC'}
-            p = calculateScatteredPressure(varCol{1}, Uc{1}, v, plotFarField);
-        case 'IENSG'
-            p = calculateScatteredPressureNonSepGeom(varCol{1}, Uc{1}, v, plotFarField);
-        case 'BA'
-            p = calculateScatteredPressureBA(varCol{1}, Uc{1}, v, 0, plotFarField);
-        case 'BEM'
-            p = calculateScatteredPressureBEM(varCol{1}, Uc{1}, v, 0, plotFarField);
+        case {'IE','ABC','IENSG','BA','BEM'}
+            p_h = calculateScatteredPressure(varCol{1}, Uc{1}, v, 0, plotFarField);
+        case 'MFS'
+            p_h = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, plotFarField);
         case 'KDT'
             switch coreMethod
                 case 'linear_FEM'
@@ -967,7 +950,7 @@ if calculateFarFieldPattern && ~useROM
                     varCol{1}.nepw = lambda(1)./varCol{1}.h_max;
                     varCol{1}.noElems = size(tri,1);
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                     trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', 1.5*[44 77 32]/255)
+%                     trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', getColor(1))
 %                     view(106,26) % sphere and cube
 %                     axis off
 %                     axis equal
@@ -981,21 +964,19 @@ if calculateFarFieldPattern && ~useROM
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     
                     
-                    p = kirchApprTri(tri,P,v,varCol{1});
+                    p_h = kirchApprTri(tri,P,v,varCol{1});
                 case 'IGA'
                     varCol{1}.h_max = findMaxElementDiameter(varCol{1}.patches);
-                    varCol{1}.nepw = lambda(1)./varCol{1}.h_max;
+                    varCol{1}.nepw = varCol{1}.lambda./varCol{1}.h_max;
                     varCol{1}.dofs = varCol{1}.noDofs;
 %                     p = calculateScatteredPressureBA(varCol{1}, Uc{1}, v, 0, plotFarField);
-                    p = calculateScatteredPressureKDT(varCol{1}, v, plotFarField);
+                    p_h = calculateScatteredPressureKDT(varCol{1}, v, plotFarField);
             end
-        case 'MFS'
-            p = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, plotFarField);
         case 'RT'
             switch scatteringCase
                 case 'MS'
                     d_vec = varCol{1}.d_vec;
-                    p = zeros(size(d_vec,2),1);
+                    p_h = zeros(size(d_vec,2),1);
 %                     for i = 1:size(d_vec,2) %874%
                     plotFarField = task.plotFarField;
                     parfor i = 1:size(d_vec,2)
@@ -1008,34 +989,34 @@ if calculateFarFieldPattern && ~useROM
                         varColTemp2 = traceRays(varColTemp2);    
                         fprintf('\nTracing rays in %12f seconds.', toc)
                         tic        
-                        p(i) = calculateScatteredPressureRT(varColTemp2, v(i,:), plotFarField);
+                        p_h(i) = calculateScatteredPressureRT(varColTemp2, v(i,:), plotFarField);
                         fprintf('\nFar field in %12f seconds.', toc)
                     end
                 otherwise
                     varCol{1} = createRays(varCol{1});
                     varCol{1} = traceRays(varCol{1});            
-                    p = calculateScatteredPressureRT(varCol{1}, v, plotFarField);
+                    p_h = calculateScatteredPressureRT(varCol{1}, v, plotFarField);
             end
     end
     if ~runTasksInParallel
         fprintf('using %12f seconds.', toc)
     end
-    task.results.p = p;
-    task.results.abs_p = abs(p);
-    task.results.TS = 20*log10(abs(p/P_inc));
+    task.results.p = p_h;
+    task.results.abs_p = abs(p_h);
+    task.results.TS = 20*log10(abs(p_h/P_inc));
     if analyticSolutionExist
         if plotFarField
-            p_ref = varCol{1}.farField(v);
+            p_ref = varCol{1}.p_0(v);
 %             p_ref = exactKDT(varCol{1}.k,varCol{1}.P_inc,parms.R_o);
         else
-            p_ref = varCol{1}.analytic(v);
+            p_ref = varCol{1}.p(v);
         end
         task.results.p_ref = p_ref;
         task.results.abs_p_ref = abs(p_ref);
         task.results.TS_ref = 20*log10(abs(p_ref/P_inc));
 
-        task.results.error_pAbs = 100*abs(abs(p_ref)-abs(p))./abs(p_ref);
-        task.results.error_p = 100*abs(p_ref-p)./abs(p_ref);
+        task.results.error_pAbs = 100*abs(abs(p_ref)-abs(p_h))./abs(p_ref);
+        task.results.error_p = 100*abs(p_ref-p_h)./abs(p_ref);
     end
 end
 
@@ -1056,9 +1037,6 @@ end
 if ~useROM && ~strcmp(method,'RT')
     switch scatteringCase
         case {'BI', 'Sweep','Ray'}    
-    %         keyboard
-            plotError = analyticSolutionExist && ~plotTimeOscillation; 
-
             tic
             if plotResidualError && analyticSolutionExist && strcmp(formulation,'GCBIE')
 %                 close all
@@ -1106,7 +1084,7 @@ if ~useROM && ~strcmp(method,'RT')
     %             hold off
     %             savefig([resultsFolderName '/' saveName '_surfPlot_mesh' num2str(M) '_formulation_' formulation '_degree' num2str(max(fluid.degree)) '.fig'])
             end
-            if plotResultsInParaview
+            if para.plotResultsInParaview
                 tic
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Post-processing ... ')
@@ -1116,238 +1094,33 @@ if ~useROM && ~strcmp(method,'RT')
                     mkdir(resultsFolderNameParaview);
                 end          
                 vtfFileName = [resultsFolderNameParaview '/' saveName];
+                if isempty(para.name)
+                    para.name = vtfFileName;
+                end
 
-    %             noUniqueXiKnots = length(unique(varCol{1}.nurbs.knots{1}));
-    %             noUniqueEtaKnots = length(unique(varCol{1}.nurbs.knots{2}));
 
-                fact = 40;
-
-    %             extraXiPts = floor(fact/(varCol{1}.L_gamma/h_max)/2^(M-1)); % .. per element
-    %             extraEtaPts = extraXiPts; % .. per element
-    %             extraZetaPts = extraXiPts; % .. per element
-
-                extraXiPts = round(20/2^(M-1)); % .. per element
-                extraEtaPts = round(20/2^(M-1)); % .. per element
-                extraZetaPts = round(1/2^(M-1)); % .. per element
-%                 extraXiPts = 0; % .. per element
-%                 extraEtaPts = 0; % .. per element
-%                 extraZetaPts = 0; % .. per element
+                para.plotArtificialBoundary = para.plotArtificialBoundary && (strcmp(method,'IE') || strcmp(method,'ABC') || strcmp(method,'PML'));
+                para.extraXiPts = eval(para.extraXiPts);
+                para.extraEtaPts = eval(para.extraEtaPts);
+                para.extraZetaPts = eval(para.extraZetaPts);
                 testFun = @(v) -analytic(v) - P_inc(v);
                 varCol{1}.testFun = testFun;
                 if strcmp(method, 'KDT')
                     Uc{1} = zeros(varCol{1}.noDofs,1);
                 end
         
-                for i = 1:numel(varCol)
-                    if varCol{i}.boundaryMethod
-                        celltype = 'VTK_QUAD';
-                    else
-                        celltype = 'VTK_HEXAHEDRON';
-                    end
-                    isOuterDomain = i == 1;
-                    varCol{i}.isOuterDomain = isOuterDomain;
-                    d = varCol{i}.dimension;
-                    isSolid = d == 3;
-                    computeGrad = ~(boundaryMethod && ~isSolid);
-                    options = struct('name',[vtfFileName '_' num2str(i)], 'celltype', celltype, ...
-                        'plotTimeOscillation', plotTimeOscillation, 'plotScalarField',isOuterDomain, ...
-                        'plotDisplacementVectors', computeGrad, 'plotError', plotError, 'plotErrorEnergy', plotError && computeGrad,...
-                        'plotErrorGrad', plotError && computeGrad, 'plotTestFun', 0', 'plotP_inc', isOuterDomain, 'plotTotField', ~isSolid, ...
-                        'plotTotFieldAbs', ~isSolid, 'plotAnalytic', analyticSolutionExist);
-                    if strcmp(varCol{1}.applyLoad,'pointPulsation')
-                        options.plotP_inc = false;
-                        options.plotTotField = false;
-                        options.plotTotFieldAbs = false;
-                    end
+                createParaviewFiles(varCol, 'U', Uc, 'para_options', para, 'e3Dss_options', e3Dss_options);
 
-                    createParaviewFiles(varCol{i}, Uc{i}, extraXiPts, extraEtaPts, extraZetaPts, options, e3Dss_options);
-                
-                    if plotMesh
-                        createVTKmeshFiles(varCol{i}, Uc{i}, extraXiPts, extraEtaPts, extraZetaPts, options)
-                    end
-                    % plot artificial boundary
-%                     plotModelInParaview(extractOuterSurface(varCol{1}.nurbs), extraXiPts, extraEtaPts, extraZetaPts, options, 0, 'artificialBoundary')
-%                     if strcmp(BC,'SHBC')
-%                         plotModelInParaview(extractInnerSurface(varCol{1}.nurbs), extraXiPts, extraEtaPts, extraZetaPts, options, 1, 'scatterer')
-%                     end
+                if para.plotMesh
+                    createVTKmeshFiles(varCol, 'U', Uc, 'para_options', para)
                 end
-%                 if boundaryMethod
-%                     if strcmp(method,'KDT')
-%                         xb = [-5,5];
-%                         yb = [-5,5];
-%                         zb = [1,1];
-%                         xb = xb + 1.5;
-%                         yb = yb + 1.5;
-%                         delta = 0.1/9;
-%                         plotTriangulationKDT(varCol{1},delta,xb,yb,zb,options,'_exterior')
-%                     else
-%                         options = struct('name',vtfFileName, 'celltype', 'VTK_QUAD', 'plotTimeOscillation', plotTimeOscillation, ...
-%                                         'plotScalarField',1, 'plotError', plotError, 'plotP_inc', 1, 'plotTotField', 1, ...
-%                                         'plotTotFieldAbs', 1, ...
-%                                         'plotErrorFunc', 0, 'plotTestFun', 0, 'plotTestField', 0, 'plotAnalytic', analyticSolutionExist);
-% 
-% 
-%                         switch model
-%                             case 'BCA'
-%                                 delta = 0.5;
-%                                 delta = 1;
-%                                 xb = [-65,20]+pi*1e-6;
-%                                 yb = [-15,15]+pi*1e-6;
-%                                 zb = [-10,10]+pi*1e-6;
-%                                 cutPlanes = [2, 0; % xz-plane
-%                                              3, 0; % xy-plane
-%                                              1, -5; % x = -5
-%                                              1, -18; % x = -18
-%                                              1, -53]; % x = -53
-%                                 min_d_Xon = 1; % minimal distance from scatterer to points in X_exterior
-%                                 extraPts = 5; % extra knots in mesh for plotting on scatterer
-%                             otherwise
-%                                 delta = 0.5;
-%                                 xb = [-10,10]+pi*1e-6;
-%                                 yb = xb;
-%                                 zb = xb;
-%                                 cutPlanes = [3, 0]; % xy-plane
-%                                 min_d_Xon = 0.1; % minimal distance from scatterer to points in X_exterior
-%                                 extraPts = 20; % extra knots in mesh for plotting on scatterer
-%                         end
-%                         plotTriangulation(varCol{1},Uc{1},delta,xb,yb,zb, options, '_exterior',cutPlanes,min_d_Xon,extraPts)
-% 
-% 
-%                         if boundaryMethod
-%                             fluid2 = fluid;
-%                             varCol2 = varCol{1};
-%                             Uc2{1} = Uc{1};
-%                         else
-%                             [fluid2, varCol2] = extractOuterSurface(fluid, varCol{1});
-%                             Uc2{1} = Uc{1}(end-task.N*varCol2.noCtrlPts+1:end);
-%                             varCol2.varColFull = varCol{1};
-%                             varCol2.U_full = Uc{1};
-%                         end
-%                         if 0
-%                             R = 50;
-%                             stringShift = 40;
-%                             fprintf(['\n%-' num2str(stringShift) 's'], '    Compute solution on sphere ... ')
-%                             plotOnSphere(varCol2, Uc2{1}, options, delta, R, zb, '_spherePlot')
-%                             fprintf('using %12f seconds.', toc)
-%                         end
+                % plot artificial boundary
+%                 if para.plotArtificialBoundary
+%                     plotModelInParaview(subNURBS(varCol{1}.nurbs,'at',[0,0;0,0;0,1]), para, 0, 'artificialBoundary')
+%                     if strcmp(BC,'SHBC')
+%                         createParaviewFiles(subNURBS(varCol{1}.nurbs,'at',[0,0;0,0;1,0]), para, 1, 'scatterer')
 %                     end
 %                 end
-
-    %             theta = linspace(0,pi/3,2);
-
-    %             setBCParameters
-    %             offset = pi;
-    %             Lx = a+offset - (-L-g2-g3-offset);
-    %             x = linspace(-L-g2-g3-offset,a+offset, ceil(Lx/delta)+1);
-    %             Ly = b+offset - (-b-offset);
-    %             y = linspace(-b-offset,b+offset, ceil(Ly/delta)+1);
-    %             Lz = c+ht+offset - (-b-offset);
-    %             z = linspace(-b-offset,c+ht+offset, ceil(Lz/delta)+1);
-
-
-
-
-
-    %             if strcmp(model,'BC') || strcmp(model,'BC_P') || strcmp(model,'MS') || strcmp(model,'MS_P') || strcmp(model,'S1') || strcmp(model,'S1_P')
-    %                 if boundaryMethod
-    %                     fluid2 = fluid;
-    %                     varCol2 = varCol{1};
-    %                     Uc{1}2 = Uc{1};
-    %                 else
-    %                     [fluid2, varCol2] = extractOuterSurface(fluid, varCol{1});
-    %                     Uc{1}2 = Uc{1}(end-task.N*varCol2.noCtrlPts+1:end);
-    %                     varCol2.varColFull = varCol{1};
-    %                     varCol2.U_full = Uc{1};
-    %                 end
-    %                 if strcmp(model,'BC') || strcmp(model,'BC_P')
-    %                     fun = @(xi) objFun2(fluid2,xi,0.8);
-    %                     options2 = optimset('TolX', 1e-13);
-    %                     xi = fminsearchbnd(fun,0.07,0,0.5,options2);
-    %                     xb = [-65,20];
-    %                     yb = [-15,15];
-    %                     zb = [-10,10];
-    %                     xi_arr = [xi, 1-xi];
-    %                     delta = 0.11;
-    % %                     delta = 1;
-    %                 elseif strcmp(model,'MS') || strcmp(model,'MS_P')
-    %                     xi_arr = [0, 0.5];
-    %                     xb = [-4*R_o-parms.L,4*R_o];
-    %                     yb = 3*[-R_o,R_o];
-    %                     zb = 3*[-R_o,R_o];
-    %                     delta = 0.03;
-    %                 elseif strcmp(model,'S1') || strcmp(model,'S1_P')
-    %                     xi_arr = [0.25, 0.75];
-    %                     xb = [-2*R_o,2*R_o];
-    %                     yb = 2*[-R_o,R_o];
-    %                     zb = 2*[-R_o,R_o];
-    %                     delta = 0.3;
-    %                 end
-    %                 tic
-    %                 plotCrossSection(varCol2, Uc{1}2, options, [0, 0.8], 1, delta, 1, yb, zb, boundaryMethod, '_crossection1')
-    %                 toc
-    %                 tic
-    %                 plotCrossSection(varCol2, Uc{1}2, options, [0, 0.7], 1, delta, 1, yb, zb, boundaryMethod, '_crossection2')
-    %                 toc
-    %                 tic
-    %                 options.plotErrorGradient = false;
-    %                 options.plotErrorGrad = false;
-    %                 options.plotErrorEnergy = false;
-    %                 plotCrossSection(varCol2, Uc{1}2, options, xi_arr, 2, delta, xb, yb, 1, boundaryMethod, '_crossection3')
-    %                 toc
-    %                 tic
-    %                 plotCrossSection(varCol2, Uc{1}2, options, [0, 0.5], 2, delta, xb, 1, zb, boundaryMethod,'_crossection4')
-    %                 toc
-    %                 tic
-    % %                 
-    % %                 
-    %             end
-
-    %             if useSolidDomain 
-    %                 vtfFileName = [resultsFolderNameParaview '/' saveName '_solid'];
-    % 
-    %                 noUniqueXiKnots = length(unique(varCol{2}.nurbs.knots{1}));
-    %                 noUniqueEtaKnots = length(unique(varCol{2}.nurbs.knots{2}));
-    %                 noUniqueZetaKnots = length(unique(varCol{2}.nurbs.knots{3}));
-    %                 
-    %                 extraZetaPts = 1; % .. per element
-    % %                 extraXiPts = 0; % .. per element
-    % %                 extraEtaPts = 0; % .. per element
-    % %                 extraZetaPts = 0; % .. per element
-    %                 options = struct('name',vtfFileName, 'celltype', 'VTK_HEXAHEDRON', 'plotTimeOscillation', plotTimeOscillation, ...
-    %                                 'plotErrorGrad', 1, 'plotDisplacementVectors',1, 'plotErrorEnergy', 1, ...                   
-    %                 'plotSphericalStress_rr',1, 'plotError', 1,'plotVonMisesStress',1, ...
-    %                  'plotStressXX',1,...
-    %                  'plotStressYY',1,...
-    %                  'plotStressZZ',1,...
-    %                  'plotStressYZ',1,...
-    %                  'plotStressXZ',1,...
-    %                  'plotStressXY',1); 
-    % 
-    %                 varCol{2}.isOuterDomain = false;
-    %                 createParaviewFiles(varCol{2}, Uc{2}, extraXiPts, extraEtaPts, extraZetaPts, options, plotMesh, e3Dss_options);
-    %             end
-    % 
-    %             if useInnerFluidDomain 
-    %                 vtfFileName = [resultsFolderNameParaview '/' saveName '_inner'];
-    % 
-    %                 noUniqueXiKnots = length(unique(varCol{3}.nurbs.knots{1}));
-    %                 noUniqueEtaKnots = length(unique(varCol{3}.nurbs.knots{2}));
-    %                 noUniqueZetaKnots = length(unique(varCol{3}.nurbs.knots{3}));
-    %                 
-    %                 extraZetaPts = floor(fact/(R_i(1)*2/h_max)/2^(M-1)); % .. per element
-    % %                 extraZetaPts = floor(fact/(2*pi*b)/(noUniqueZetaKnots-1)); % .. per element
-    % %                 extraXiPts = 0; % .. per element
-    % %                 extraEtaPts = 0; % .. per element
-    % %                 extraZetaPts = 0; % .. per element
-    %                 options = struct('name',vtfFileName, 'celltype', 'VTK_HEXAHEDRON', 'plotTimeOscillation', plotTimeOscillation, ...
-    %                         'plotTotField', 1, 'plotErrorGrad', 1, 'plotDisplacementVectors', 1, 'plotErrorEnergy', 1, ...
-    %                         'plotGradientVectors', 0, 'plotError', 1, 'plotTotFieldAbs', ~plotTimeOscillation);
-    % 
-    %                 gP_inc = @(v) zeros(length(v),3);
-    % 
-    %                 varCol{3}.isOuterDomain = false;
-    %                 createParaviewFiles(varCol{3}, Uc{3}, extraXiPts, extraEtaPts, extraZetaPts, options, plotMesh, e3Dss_options);
-    %             end
             end
     end
 end

@@ -11,7 +11,7 @@ degree = 2:5;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 
-plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
+prePlot.plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
 applyLoad = 'SimpsonTorus';
 exteriorProblem = false;
 useNeumanProj = 0;
