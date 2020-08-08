@@ -1,6 +1,6 @@
 function nurbs = getModel5Data(R, eta1, eta2, L, l, alignWithAxis)
 
-error('Depricated use getModelBeTSSiM5Data')
+error('Depricated use getBeTSSiM5Data')
 
 
 Xi = [0 0 0 1 1 2 2 3 3 4 4 4]/4;

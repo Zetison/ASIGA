@@ -99,7 +99,7 @@ else
     varCol{1}.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
     varCol{1}.Upsilon = Upsilon;
     
-    if varCol{1}.useSolidDomain
+    if numel(varCol) > 1
         solid = getEllipsoidalData({'R', R_o(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t(1)});
         solid = makeUniformNURBSDegree(solid);
         
@@ -110,7 +110,7 @@ else
         solid = insertKnotsInPatches(solid,noNewXiKnots,noNewEtaKnots,noNewZetaKnotsSolid);
     end
 
-    if varCol{1}.useInnerFluidDomain
+    if numel(varCol) > 2
         t_ifluid = R_i(1)-R_o(2);
         solid = getEllipsoidalData({'R', R_i(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_ifluid});
         solid = makeUniformNURBSDegree(solid);
@@ -123,10 +123,10 @@ else
     end
 end
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
+if numel(varCol) > 1
     varCol{2}.nurbs = solid;
 end
-if varCol{1}.useInnerFluidDomain
+if numel(varCol) > 2
     varCol{3}.nurbs = fluid_i;
 end
 

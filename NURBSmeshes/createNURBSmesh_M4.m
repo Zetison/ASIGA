@@ -26,11 +26,8 @@ if varCol{1}.boundaryMethod
     varCol{1}.patchTop = getPatchTopology(fluid);
 end
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
+if numel(varCol) > 1
     varCol{2}.nurbs = solid;
-end
-if varCol{1}.useInnerFluidDomain
-    varCol{3}.nurbs = fluid_i;
 end
 
 varCol{1}.L_gamma = L_gamma;

@@ -8,9 +8,11 @@ options = struct('xname',           'alpha',  ...
                  'lineStyle',        '*-', ... 
                  'xScale',          1, ...
                  'yScale',          1, ... 
+                 'xlim',            NaN, ...
+                 'ylim',            NaN, ...
                  'xLoopName',       NaN, ...
                  'legendEntries',   {{}}, ...
-                 'subFolderName',   NaN, ...
+                 'subFolderName',   '', ...
                  'fileDataHeaderX', [], ...
                  'noXLoopPrms',     0);
 if nargin > 1
@@ -34,12 +36,12 @@ for i = 1:length(loopParametersArr)
 end
 % sizes = fliplr(sizes);
 noTasks = prod(sizes);
-if isnan(options.subFolderName)
-    subFolderName = study.subFolderName;
+if isempty(options.subFolderName)
+    subFolderName = study.resultsFolder;
 else
     subFolderName = options.subFolderName;
 end
-if ischar(subFolderName) && ~exist(subFolderName, 'dir')
+if ~exist(subFolderName, 'dir')
     mkdir(subFolderName);
 end
 analyticSolutionExist = study.tasks(1).task.varCol{1}.analyticSolutionExist;
@@ -165,7 +167,7 @@ switch options.noXLoopPrms
                 y_ref_temp = y_ref(indices);
             end
 
-            [legendName, saveName] = constructStrings(legendEntries,i,idxMap(i),study,model,fieldnames);
+            [legendName, saveName] = constructStrings(legendEntries,i,idxMap(i),study,model,noParms,loopParameters);
             for j = otherInd
                 temp2 = loopParameters{j};
                 temp = study.tasks(idxMap(i)).task.(loopParameters{j});
@@ -304,7 +306,21 @@ if plotResults
     for i = 1:noGraphs
         h.Children(i).Color = col(i,:);
     end
-    savefig([subFolderName '/_' model '_' yname 'VS' xname])
+    if ~isnan(options.xlim)
+        if strcmp(options.axisType,'polar')  
+            thetalim(options.xlim)
+        else
+            xlim(options.xlim)
+        end
+    end
+    if ~isnan(options.ylim)
+        if strcmp(options.axisType,'polar')  
+            rlim(options.ylim)
+        else
+            ylim(options.ylim)
+        end
+    end
+    savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
 end
 
 function [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters)

@@ -4,8 +4,8 @@ if nargin < 3
 end
 isEqual = nurbs1.d_p == nurbs2.d_p && ...
           nurbs1.d == nurbs1.d && ...
-          all(nurbs1.degree == nurbs2.degree) && ...
-          all(nurbs1.number == nurbs2.number);
+          all(sort(nurbs1.number) == sort(nurbs2.number)) && ...
+          all(sort(nurbs1.degree) == sort(nurbs2.degree));
 if ~isEqual
     return
 end
@@ -22,11 +22,24 @@ if ~purelyGeometric
     end
 end
 if purelyGeometric
+    flips = cell(2^d_p,1);
+    flips{1} = [];
+    flips{2} = 1;
+    flips{3} = 2;
+    flips{4} = [1,2];
+    flips{5} = 3;
+    flips{6} = [1,3];
+    flips{7} = [2,3];
+    flips{8} = [1,2,3];
     indices = perms(1:d_p)+1;
     for i = 1:size(indices,1)
-        for j = 2:d_p+2
-            temp = abs(nurbs1.coeffs - permute(flip(nurbs2.coeffs,j),[1,indices(i,:)])) < Eps;
-            isEqual = all(temp(:));
+        for j = 1:2^d_p
+            coeffs2 = nurbs2.coeffs;
+            for jj = 1:numel(flips{j})
+                coeffs2 = flip(coeffs2,flips{j}(jj)+1);
+            end
+            temp = permute(coeffs2,[1,indices(i,:)]);
+            isEqual = all(abs(nurbs1.coeffs(:) - temp(:)) < Eps);
             if isEqual
                 return
             end

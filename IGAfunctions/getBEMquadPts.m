@@ -23,7 +23,6 @@ pts_y = controlPts(sctr_y,:);
 wgts_y = weights(element2(e_y,:)); % New    
 
 [collocationPointIsInElement,idx] = ismember(e_y,adjacentElements);
-
 if collocationPointIsInElement % use polar integration
     switch quadMethodBEM
         case 'Simpson'
@@ -485,7 +484,7 @@ if collocationPointIsInElement % use polar integration
             W2D_2_1 = repmat(W2D_2_temp,noSubElements,1);
     end
     if noGp == 0
-        error('noGp must should be non-zero')
+        error('noGp must be non-zero')
     end
     xi = [xi_y(1:noGp), eta_y(1:noGp)];
     I = findKnotSpans(degree, xi(1,:), knots);
@@ -681,7 +680,7 @@ else
 end
 
 function adaptiveQuad(recursionLevel)
-maxRecursionLevel = 20;
+maxRecursionLevel = 10;
 if recursionLevel > maxRecursionLevel
     warning('BEM:recursion',['Reached recursion level > ' num2str(maxRecursionLevel) ', inacurate integration may have occured (probably due to singular geometric points)'])
 end

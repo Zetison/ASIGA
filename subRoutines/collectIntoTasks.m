@@ -42,6 +42,10 @@ end
 
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);
 studies(counter).postPlot = postPlot;
+if isempty(subFolderName)
+    subFolderName = model;
+end
+studies(counter).subFolderName = subFolderName;
 
 counter = counter + 1;
 

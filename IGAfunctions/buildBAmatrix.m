@@ -46,15 +46,16 @@ n_values   = zeros(size(W,1),noElems,3);
 J_1_values   = zeros(size(W,1),noElems,1); 
 
 progressBars = varCol.progressBars;
+nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
+    ppm = ParforProgMon('Building BA matrix: ', noElems, nProgressStepSize);
 end
 
 
 %% Find nodes at which to evaluate the exact solution
 % for e = 1:noElems
 parfor e = 1:noElems
-	if progressBars && mod(i,nProgressStepSize) == 0
+	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
     patch = pIndex(e);

@@ -1,4 +1,8 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This study is based on Figure A.3 in Venas2019asi
+% Venas2019asi is available at http://hdl.handle.net/11250/2640443
+
+scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'M1';
 
@@ -8,17 +12,15 @@ formulation = {'CCBIE'};
 
 varCol = setM1Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M1';
-f = 1e3;             % Frequency
+f = [1e2,1e3];             % Frequency
 
 M = 3;
 degree = 2;
 beta = 0;
 alpha = (0:0.05:360)*pi/180;
 
-alpha_s = [240, 300]*pi/180;
-beta_s = 0;
-
 loopParameters = {'M','parm','f','method','formulation','alpha_s'};
+prePlot.abortAfterPlotting  = true;                % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 1;
@@ -35,11 +37,10 @@ postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
-postPlot(1).axisType        = 'plot';
+postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
 postPlot(1).legendEntries 	= {'method','parm','f','formulation','M','alpha_s'};
-postPlot(1).subFolderName 	= '../results/M1';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
@@ -48,7 +49,7 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 % collectIntoTasks
 
 
-M = 2;
+M = 1;
 method = {'KDT'};
 solveForPtot = false;
 formulation = {'MS1'};
@@ -57,14 +58,14 @@ collectIntoTasks
 
 function addCommands_(i_study)
 if i_study == 1
-    T = readtable('../plotData/refSolutions/M1_HWBC_BI_0_1.txt','FileType','text', 'HeaderLines',7);
-    x = T.Var1;
-    y240 = T.Var2;
-    y300 = T.Var3;
-    plot(x,y240,'DisplayName','Reference solution f = 1000Hz, at $$\alpha_s = 240^\circ$$')
-    hold on
-    plot(x,y300,'DisplayName','Reference solution f = 1000Hz, at $$\alpha_s = 300^\circ$$')
-    legend('off');
-    legend('show','Interpreter','latex');
+    for f = [1e2, 1e3]
+        T = readtable(['miscellaneous/refSolutions/M1_BEM_IGA_GBM_M6_NNaN_f' num2str(f) '_TSVSalpha.txt'], ...
+                        'FileType','text', 'HeaderLines',1,'CommentStyle','%');
+        x = T.Var1;
+        y = T.Var2;
+        polarplot(x*pi/180,y,'DisplayName',['Reference solution f = ' num2str(f) 'Hz'])
+        legend('off');
+        legend('show','Interpreter','latex');
+    end
 end
 end

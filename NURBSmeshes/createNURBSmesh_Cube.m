@@ -19,11 +19,5 @@ if varCol{1}.boundaryMethod
 end
 
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
-    varCol{2}.nurbs = solid;
-end
-if varCol{1}.useInnerFluidDomain
-    varCol{3}.nurbs = fluid_i;
-end
 
 varCol{1}.L_gamma = L_gamma;

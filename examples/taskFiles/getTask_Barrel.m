@@ -1,26 +1,55 @@
-scatteringCase = 'MS';
+scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'Barrel';
+BC = 'SHBC';
 method = {'BEM'};
-formulation = {'GBM','GCBIE','CBM','CCBIE'};
-BC = 'SHC';
+formulation = {'CBM','CCBIE'};
+formulation = {'CCBIE'};
 
-f = 1.5e3; % Frequency
+varCol = setBarrelParameters(1);
+varCol{1}.meshFile = 'createNURBSmesh_Barrel';
+f = 1.5e3;             % Frequency
 
-parms = setBarrelParameters();
-
-M = 1;
-parm = 2;
+M = 5;
 degree = 2;
-alpha = (0:0.05:180)*pi/180;
+beta = 0;
+parm = 2;
+alpha = (0:0.5:360)*pi/180;
+
+quadMethodBEM = 'Simpson';
 
 loopParameters = {'M','parm','f','method','formulation'};
-prePlot.plot3Dgeometry = false;
+
+prePlot.plot3Dgeometry = 1;
+prePlot.resolution = [20,20,0];
+prePlot.elementBasedSamples = 0;
+prePlot.axis = 'on';
+prePlot.plotParmDir = 0;
+prePlot.plotNormalVectors = 0;
+prePlot.plotControlPolygon = 0;
+prePlot.abortAfterPlotting = true;
+% prePlot = rmfield(prePlot,'color');
 solveForPtot = true;
-collectIntoTasks
+
+postPlot(1).xname       	= 'alpha';
+postPlot(1).yname        	= 'TS';
+postPlot(1).plotResults  	= true;
+postPlot(1).printResults 	= true;
+postPlot(1).axisType        = 'plot';
+postPlot(1).lineStyle   	= '-';
+postPlot(1).xLoopName     	= 'M';
+postPlot(1).legendEntries 	= {'method','parm','formulation','M'};
+postPlot(1).fileDataHeaderX	= [];
+postPlot(1).noXLoopPrms   	= 0;
+postPlot(1).xScale          = 180/pi;
+
+% collectIntoTasks
 
 
 method = {'KDT'};
 solveForPtot = false;
 formulation = {'MS1'};
-% collectIntoTasks
+
+collectIntoTasks
+
+

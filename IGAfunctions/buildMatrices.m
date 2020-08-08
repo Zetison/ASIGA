@@ -68,15 +68,16 @@ extraGP = varCol.extraGP;
 [Q, W] = gaussTensorQuad(degree+1+extraGP);
 
 progressBars = varCol.progressBars;
+nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
+    ppm = ParforProgMon('Building mass/stiffness matrix: ', noElems, nProgressStepSize);
 end
 
 %% Build global matrices
 % keyboard
 % for e = 1:noElems
 parfor e = 1:noElems
-	if progressBars && mod(i,nProgressStepSize) == 0
+	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
     patch = pIndex(e);

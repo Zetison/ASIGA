@@ -42,11 +42,16 @@ if prePlot.plot3Dgeometry
         camlight
         material dull
     end
-    if ~isempty(prePlot.export_fig_name3D)
-        figureFullScreen(gcf)
-        export_fig(prePlot.export_fig_name3D, '-png', '-transparent', '-r200')
+    figName = prePlot.export_fig_name3D;
+    if isempty(figName)
+        figName = saveName;
     end
-%     equalWeights = checkNURBSweightsCompatibility(nurbs);
+    figName = [resultsFolder '/' figName '_3D'];
+    if exist('../export_fig', 'dir')
+        export_fig(figName, '-png', '-transparent', '-r200')
+    end
+    savefig([figName, '.fig'])
+%     equalWeights = checkNURBSweightsCompatibility(nurbs)
 end   
 if prePlot.plot2Dgeometry
     figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(M)])
@@ -75,14 +80,10 @@ if prePlot.plot2Dgeometry
         ylabel(prePlot.ylabel)
         zlabel(prePlot.zlabel)
     end
-    set(gca, 'Color', 'none');
+%     set(gca, 'Color', 'none');
     set(gca, 'Color', 'white');
     set(gcf,'color','w');
     drawnow
-    if ~isempty(prePlot.export_fig_name2D)
-        figureFullScreen(gcf)
-        export_fig(['../../graphics/S1/SEM_p' num2str(degreeElev+4)], '-png', '-transparent', '-r200')
-    end
             
     if ~isempty(prePlot.title)
         title(prePlot.title)
@@ -90,10 +91,15 @@ if prePlot.plot2Dgeometry
     
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
-    if ~isempty(prePlot.export_fig_name2D)
-        figureFullScreen(gcf)
-        export_fig(prePlot.export_fig_name2D, '-png', '-transparent', '-r200')
+    figName = prePlot.export_fig_name2D;
+    if isempty(figName)
+        figName = saveName;
     end
+    figName = [resultsFolder '/' figName '_2D'];
+    if exist('../export_fig', 'dir')
+        export_fig(figName, '-png', '-transparent', '-r200')
+    end
+    savefig([figName, '.fig'])
 end
 
 

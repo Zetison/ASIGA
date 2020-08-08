@@ -18,7 +18,7 @@ varCol = setPHParameters(1);
 c_f = varCol{1}.c_f;   % Speed of sound in outer fluid
 f = 2e2; %[2e2 1e3 4e3];             % Frequency
 
-M = 3:4;
+M = 3;
 
 % alpha = (0:0.05:360)*pi/180;
 alpha = (0:1:360)*pi/180;
@@ -44,33 +44,32 @@ postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
 postPlot(1).legendEntries 	= {'method','formulation','M'};
-postPlot(1).subFolderName 	= '../results/PH';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
 method = {'KDT'};
 formulation = 'MS1';
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 method = {'BEM'};
 % formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
-formulation = {'CCBIE','GCBIE'};
+formulation = {'CCBIE'};
 colBEM_C0 = 0;
 solveForPtot = true;
-collectIntoTasks
+% collectIntoTasks
 
 
 function addCommands_(i_study)
 if i_study == 1
-    T = readtable('../plotData/refSolutions/PH_HWBC_MS_AS_E0_F1.txt','FileType','text', 'HeaderLines',12);
+    T = readtable('miscellaneous/refSolutions/PH_HWBC_MS_AS_E0_F1.txt','FileType','text', 'HeaderLines',12);
     x = T.Var1;
     y = T.Var2;
     plot(x,y,'DisplayName','Reference solution')

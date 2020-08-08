@@ -23,9 +23,10 @@ end
 dpdn = varCol.dpdn;
 % n_cp = noDofs - length(dofsToRemove);
 
+nProgressStepSize = ceil(noElems/1000);
 progressBars = varCol.progressBars;
 if progressBars
-    ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
+    ppm = ParforProgMon('Building MFS matrix: ', noElems, nProgressStepSize);
 end
 
 if false
@@ -102,7 +103,7 @@ if false
     counter2 = 1;
     counter = 1;
     for e = 1:noElems  
-        if progressBars && mod(i,nProgressStepSize) == 0
+        if progressBars && mod(e,nProgressStepSize) == 0
             ppm.increment();
         end
         patch = pIndex(e); % New
@@ -150,7 +151,7 @@ else
 %     Q2D = [copyVector(linspace(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace(-1,1,nQuadPts).',nQuadPts,2)];
 %     Q2D = [copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,2)];
     parfor e = 1:noElems  
-        if progressBars && mod(i,nProgressStepSize) == 0
+        if progressBars && mod(e,nProgressStepSize) == 0
             ppm.increment();
         end
         patch = pIndex(e); % New

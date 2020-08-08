@@ -1,92 +1,101 @@
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This study is based on Figure B.14 in Venas2019asi
+% Venas2019asi is available at http://hdl.handle.net/11250/2640443
 
 scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'M3'; % BeTSSi model 5A
-
-method = {'IENSG','IE'};
+model = 'M3';
+BC = 'SHBC';
 method = {'IENSG'};
-method = {'IE'};
 formulation = 'BGU';
 
-f = 1e3; %[1e2 5e2 1e3];             % Frequency
-omega = 2*pi*f;
-k = omega/1500;
+varCol = setM3Parameters(1);
+varCol{1}.meshFile = 'createNURBSmesh_M3';
+f = 1e3;             % Frequency
+
+M = 5:6;
+degree = 2;
+% degree = 5; % use and odd degree > 4 if parm = 2 and method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
 parm = 1;
-M = 3;
-degree = 2;
-N = [3,5];
-N = 3;
-loopParameters = {'degree','M','N','method'};
-alpha = (0:0.1:180)*pi/180;
-% alpha = (87:0.1:91)*pi/180;
-% alpha = sort([alpha, pi/2-atan((5-3)/41), 3*pi/2+atan((5-3)/41)]);
-alpha = sort([alpha, pi/2-atan((5-3)/41)]);
-% alpha = 88*pi/180;
+beta = 0;
+alpha = (0:0.2:360)*pi/180;
 
-prePlot.plot3Dgeometry = 1;
-
-prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
-% collectIntoTasks
-
-method = {'KDT'};
-M = 5;
-degree = 2;
-loopParameters = {'degree','M','method'};
-% collectIntoTasks
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% MFS simulation
-method = {'MFS'};
-formulation = 'SS'; % PS = point solution, SS = spherical solution
-M = 1:3;
-parm = linspace(0.1,0.4,8);
-parm = 0.5/sqrt(k);
-calculateSurfaceError = 0;
-computeCondNumber = false;
-loopParameters = {'parm','M','N','method'};
-
-N = 10;
-% collectIntoTasks
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% RT simulation
-method = {'RT'};
-% coreMethod = 'hp_FEM';
-formulation = '';
-M = 1;
+loopParameters = {'M','parm','f','method','formulation'};
+prePlot.abortAfterPlotting  = true;                % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
-calculateSurfaceError = 0;
-computeCondNumber = false;
-plotFarField = 1;
-applyLoad = 'planeWave';
-parm = 6:8;
-r = 10;
+prePlot.resolution = [20,20,0];
+prePlot.elementBasedSamples = 0;
+prePlot.axis = 'on';
+prePlot.plotParmDir = 0;
+prePlot.plotNormalVectors = 1;
+prePlot.plotControlPolygon = 0;
+% prePlot = rmfield(prePlot,'color');
+solveForPtot = false;
 
-loopParameters = {'parm','M','method'};
+para.plotResultsInParaview = false;
+
+postPlot(1).xname       	= 'alpha';
+postPlot(1).yname        	= 'TS';
+postPlot(1).plotResults  	= true;
+postPlot(1).printResults 	= true;
+postPlot(1).axisType        = 'polar';
+postPlot(1).lineStyle   	= '-';
+postPlot(1).xLoopName     	= 'M';
+postPlot(1).legendEntries 	= {'method','parm','f','formulation','M'};
+postPlot(1).fileDataHeaderX	= [];
+postPlot(1).noXLoopPrms   	= 0;
+postPlot(1).xScale          = 180/pi;
+postPlot(1).xlim            = [0,180];
+postPlot(1).ylim            = [-60,40];
+postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
+
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
 method = {'KDT'};
-M = 5:7;
-prePlot.plot3Dgeometry = 0;
-parm = 1;
-M = 1;
-% collectIntoTasks
+formulation = {'MS1'};
+
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-f = 1e2;
 solveForPtot = true;
-prePlot.plot3Dgeometry = 1;
 method = {'BEM'};
 formulation = {'CCBIE','CBM'};
-% formulation = {'GBM'};
+formulation = {'CCBIE'};
 BC = 'SHBC';
-parm = 2;
-M = 5:7;
-M = 1:2;
 loopParameters = {'formulation','M','method','f'};
-collectIntoTasks
+% collectIntoTasks
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% RT simulation
+method = {'RT'};
+solveForPtot = false;
+formulation = '';
+calculateSurfaceError = 0;
+computeCondNumber = false;
+plotFarField = 1;
+M = 2;
+applyLoad = 'planeWave';
+N = 4:6;
+r = 10;
+
+loopParameters = {'parm','M','method','N'};
+% collectIntoTasks
+
+
+function addCommands_(i_study)
+if i_study == 1
+    T = readtable('miscellaneous/refSolutions/M3_BEM_IGA_CBM_M7_f1000_N10_TSVSalpha.txt', ...
+                    'FileType','text', 'HeaderLines',1,'CommentStyle','%');
+    x = T.Var1;
+    y = T.Var2;
+    polarplot(x*pi/180,y,'DisplayName','Reference solution f = 1000Hz')
+    legend('off');
+    legend('show','Interpreter','latex');
+end
+end
+
+

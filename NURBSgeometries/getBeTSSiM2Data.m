@@ -99,6 +99,7 @@ nurbs(34) = rotateNURBS(nurbs(33),'rotAxis',[1,0,0],'theta',pi/2);
 
 nurbs = rotateNURBS(nurbs,'rotAxis',[1,0,0],'theta',options.theta2);
 nurbs = makeUniformNURBSDegree(nurbs);
+nurbs = explodeNURBS(nurbs);
 
 
 

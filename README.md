@@ -2,10 +2,11 @@
 The ASIGA (Acoustic Scattering using IsoGeometric Analysis) toolbox provides a framework for simulating acoustic scattering problems using IGA. 
 
 ## Installation
-Get the toolbox from GitHub (the e3Dss repository is needed for exact solutions):
+Get the toolbox from GitHub (the e3Dss repository is needed for exact solutions and export_fig are needed for beautiful graphics for publications):
 ```
-git clone "https://github.com/Zetison/ASIGA" 
-git clone "https://github.com/Zetison/e3Dss" 
+git clone https://github.com/altmany/export_fig
+git clone https://github.com/Zetison/e3Dss 
+git clone https://github.com/Zetison/ASIGA
 ```
 
 ## Run program

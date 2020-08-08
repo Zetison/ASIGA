@@ -193,7 +193,7 @@ n_en = prod(degree+1);
 plot_GP = 0;
 % nurbs = varCol.nurbs;
 % pD = plotBEMGeometry(nurbs,plot_GP,100,1);
-% pD = plotBEMGeometry(nurbs,plot_GP,10,0);
+% pD = plotBEMGeometry(varCol.nurbs,plot_GP,10,0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % A = complex(zeros(1000, noDofs));
@@ -210,7 +210,7 @@ if progressBars
     ppm = ParforProgMon('Building BEM matrix: ', n_cp, nProgressStepSize);
 end
 
-% for i = 14
+% for i = 247
 % for i = 1:n_cp
 parfor i = 1:n_cp
 	if progressBars && mod(i,nProgressStepSize) == 0

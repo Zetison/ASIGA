@@ -49,7 +49,6 @@ postPlot(1).axisType    	= 'loglog';
 postPlot(1).lineStyle   	= '*-';
 postPlot(1).xLoopName     	= 'M';
 postPlot(1).legendEntries 	= {'method','formulation','M'};
-postPlot(1).subFolderName 	= '../results/articleIGA_Simpson';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).addCommands   	= [];
@@ -95,11 +94,11 @@ collectIntoTasks
 
 function addCommands_(i_study)
 if i_study == 1
-    error_simpson = importdata('../results/Simpson/imageData/Fig17_M1.csv');
+    error_simpson = importdata('miscellaneous/refSolutions/Fig17_M1.csv');
     loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=1');
-    error_simpson = importdata('../results/Simpson/imageData/Fig17_M2.csv');
+    error_simpson = importdata('miscellaneous/refSolutions/Fig17_M2.csv');
     loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=2');
-    error_simpson = importdata('../results/Simpson/imageData/Fig17_M3.csv');
+    error_simpson = importdata('miscellaneous/refSolutions/Fig17_M3.csv');
     loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=3');
     legend('off');
     legend('show');

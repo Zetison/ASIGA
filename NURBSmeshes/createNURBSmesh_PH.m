@@ -81,10 +81,10 @@ end
 L_gamma = L + R_1 + R_2;
 
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
+if numel(varCol) > 1
     varCol{2}.nurbs = solid;
 end
-if varCol{1}.useInnerFluidDomain
+if numel(varCol) > 2
     varCol{3}.nurbs = fluid_i;
 end
 

@@ -119,15 +119,15 @@ switch varCol.model
         x_n = o + mins*d_inc;
         n_vec = zeros(size(o));
         indices = I == 1;
-        n_vec(indices,:) = normr(x_n(indices,:));
+        n_vec(indices,:) = x_n(indices,:)./repmat(norm2(x_n(indices,:)),1,3);
         indices = I == 2;
         xtemp = x_n(indices,:);
         xtemp(:,1) = xtemp(:,1) + L;
-        n_vec(indices,:) = normr(xtemp);
+        n_vec(indices,:) = xtemp./repmat(norm2(xtemp),1,3);
         indices = I == 3;
         theta = atan2(x_n(:,2),x_n(:,3));
         n_vectemp = [ones(N,1),sin(theta)/sqrt(mu),cos(theta)/sqrt(mu)];
-        n_vec(indices,:) = normr(n_vectemp(indices,:));
+        n_vec(indices,:) = n_vectemp(indices,:)./repmat(norm2(n_vectemp(indices,:)),1,3);
 
         dn = dot(d_INC,n_vec,2);
         d = d_INC-2*dn(:,[1,1,1]).*n_vec; % reflected ray

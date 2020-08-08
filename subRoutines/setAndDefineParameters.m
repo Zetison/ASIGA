@@ -21,17 +21,7 @@ for m = 1:numel(varCol)
 end
 
 varCol{1}.isSphericalShell = isSphericalShell;
-switch BC
-    case 'SSBC'
-        useSolidDomain = true;
-        useInnerFluidDomain = false;
-    case 'NNBC'
-        useSolidDomain = true;
-        useInnerFluidDomain = true;
-    otherwise
-        useSolidDomain = false;
-        useInnerFluidDomain = false;        
-end
+
 switch method
     case {'IE','ABC'}
         boundaryMethod = false;
@@ -63,6 +53,4 @@ switch scatteringCase
         beta_s = beta;
 end
 
-varCol{1}.useSolidDomain = useSolidDomain;
-varCol{1}.useInnerFluidDomain = useInnerFluidDomain;
 varCol{1}.coreMethod = coreMethod;

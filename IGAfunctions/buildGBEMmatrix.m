@@ -127,13 +127,14 @@ totNoQP = 0;
 totNoQPnonPolar = 0;
 
 progressBars = varCol.progressBars;
+nProgressStepSize = ceil(noElems/1000);
 if progressBars
     ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
 end
 
 parfor e_x = 1:noElems
 % for e_x = 1:noElems
-	if progressBars && mod(i,nProgressStepSize) == 0
+	if progressBars && mod(e_x,nProgressStepSize) == 0
         ppm.increment();
 	end
     patch_x = pIndex(e_x); % New

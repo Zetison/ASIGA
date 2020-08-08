@@ -10,49 +10,30 @@ switch varCol{1}.method
         varCol{1}.alignWithAxis = alignWithAxis;
 end
 
+R = varCol{1}.R;
+t = varCol{1}.t;
+R_i = varCol{1}.R;
+L = varCol{1}.L;
 if varCol{1}.boundaryMethod
-    eta2 = 0.765;
-    eta1 = 0.235;
-
-    c_z = 0.99*L/2; % 30
-    c_xy = 0.99*R_o; % 12
+    c_z = L/2; % 30
+    c_xy = R; % 12
     Upsilon = sqrt(c_z^2 - c_xy^2);
     chimin = 9.8;
     chimax = 11.2;
+
+    solid = getBarrelData('R', R, 't', t, 'parm', varCol{1}.parm, 'L', L);
+    solid = makeUniformNURBSDegree(solid,degree);
+    fluid = getFreeNURBS(solid);
+    Imap{1} = [R*pi/2, (R-t)*pi/2, R*1.272651397870586, R*1.155553578414605];
+    fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+    nurbsCol = collectConnectedNURBS(fluid);
+    fluid = nurbsCol{1};
+    fluid_i = nurbsCol{2};
     
-    if varCol{1}.parm(1) == 1
-        solid = getBarrelData(R_o,R_i,eta1,eta2,L);
-
-        noNewXiKnots = 2^M-1;  
-        noNewZetaKnots = 2^M-1;
-        i_M1 = 2^M-1;
-        i_M2 = 2^(M+1)-1;
-        i_M3 = 2^M-1;
-
-
-        solid = elevateNURBSdegree(solid,[1 1 1]*(degree-2));
-
-        solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, noNewXiKnots) ...
-                                          [insertUniform2([0 eta1], i_M1); ...
-                                           insertUniform2([eta1 eta2], i_M2);
-                                           insertUniform2([eta2 1], i_M3)] ...
-                                          insertUniform2(solid.knots{3}, noNewZetaKnots)});
-
-
-
-        fluid = extractOuterSurface(solid);
-    else
-        fluid = getBarrelData2(R_o,R_i,L);
-        noNewXiKnots = 2^(M-1)-1; % 8*i_mesh
-        noNewEtaKnots = noNewXiKnots;
-        fluid = elevateDegreeInPatches(fluid,[1 1]*(degree-2));
-        fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots);
-    end
     varCol{1}.patchTop = getPatchTopology(fluid);
-    L_gamma = L;
     varCol_dummy.dimension = 1;
     varCol_dummy.nurbs = fluid;
-    varCol_dummy = findDofsToRemove(generateIGA2DMesh_new(convertNURBS(varCol_dummy)));
+    varCol_dummy = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_dummy)));
     
     varCol{1}.elemsOuter = 1:varCol_dummy.noElems;
     varCol{1}.noDofsInner = 0;
@@ -65,8 +46,8 @@ else
     c_z = 15; % 30
     c_xy = c_z/2.8; % 12
     L1 = c_z/19;
-    fluid = getBarrelData(R_o,R_i,eta1,eta2,L);
-    intermediateLayer = getBarrelData(L1+R_o,R_i,eta1,eta2,L+2*L1);
+    fluid = getBarrelData(R,R_i,eta1,eta2,L);
+    intermediateLayer = getBarrelData(L1+R,R_i,eta1,eta2,L+2*L1);
 
     Upsilon = sqrt(c_z^2-c_xy^2);
     [R_a, ~, ~] = evaluateProlateCoords(c_xy,0,0,Upsilon);
@@ -96,7 +77,7 @@ else
     totArcLengthIntermediate2 = findArcLength(R_a,Upsilon,theta_eta3,theta_eta2);
     
     noNewXiKnots = ceil(0.55*c_xy*pi/2*M);  
-    noNewZetaKnots = ceil(0.6364*(c_z-L/2-R_o)*M);
+    noNewZetaKnots = ceil(0.6364*(c_z-L/2-R)*M);
     i_M1 = ceil(0.55*totArcLength1*M);
     i_M2_1 = ceil(0.55*totArcLengthIntermediate1*M);
     i_M2_2 = ceil(0.55*totArcLengthIntermediate2*M);
@@ -117,14 +98,14 @@ else
     end
 end
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
+if numel(varCol) > 1
     varCol{2}.nurbs = solid;
 end
-if varCol{1}.useInnerFluidDomain
+if numel(varCol) > 2
     varCol{3}.nurbs = fluid_i;
 end
 
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
-varCol{1}.L_gamma = L_gamma;
+varCol{1}.L_gamma = L;
 varCol{1}.Upsilon = Upsilon;

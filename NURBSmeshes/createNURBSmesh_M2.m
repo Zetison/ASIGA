@@ -1,33 +1,18 @@
 function varCol = createNURBSmesh_M2(varCol, M, degree)
 
-x_0 = [0, 0, 0];
-switch varCol{1}.method
-    case {'IE','IENSG','ABC'}
-        varCol{1}.x_0 = x_0; % The origin of the model
-        varCol{1}.A_2 = [1 0 0;
-                      0 1 0;
-                      0 0 1];
-        varCol{1}.alignWithAxis = alignWithAxis;
-end
-
 R = varCol{1}.R;
 t = varCol{1}.t;
 L = varCol{1}.L;
 theta1 = varCol{1}.theta1;
 theta2 = varCol{1}.theta2;
 if varCol{1}.boundaryMethod
-    fluid = getBeTSSiM2Data('R', R, 't', t, 'parm', varCol{1}.parm, 'theta1', theta1, 'theta2', theta2);
+    fluid = getBeTSSiM2Data('R', R, 'L', L, 't', t, 'parm', varCol{1}.parm, 'theta1', theta1, 'theta2', theta2);
     fluid = makeUniformNURBSDegree(fluid,degree);
-    fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2));
+    Imap{1} = [0.010000018518611 0.000023554074421   0.000033333395062   0.007066209240776   0.009976464444190 0.009999962962798];
+    Imap{2} = [4.681336475976538 2.985867581518450   2.989983333287038   t/2*pi/2 0.015641296477826 0.011052467370932];
+    fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
     varCol{1}.patchTop = getPatchTopology(fluid);
 end
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
-    varCol{2}.nurbs = solid;
-end
-if varCol{1}.useInnerFluidDomain
-    varCol{3}.nurbs = fluid_i;
-end
-
 varCol{1}.L_gamma = L + 2*R;
 

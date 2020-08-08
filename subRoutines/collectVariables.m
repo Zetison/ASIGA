@@ -44,7 +44,6 @@ for i = 1:numel(varCol)
             varCol{i}.colBEM_C0 = colBEM_C0;
             varCol{i}.colMethod = colMethod;
             varCol{i}.solveForPtot = solveForPtot;
-            varCol{i}.useSolidDomain = useSolidDomain;
         case 'solid'
             varCol{i}.dimension = 3;   
             varCol{i}.extraGP = extraGP;

@@ -2,18 +2,19 @@
 % This script sets the default task values for each study
 
 %% General settings
-scatteringCase = 'BI';      % Bistatic scattering
-applyLoad = 'planeWave';    % Acoustic scattering of plane wave
-model = 'S1';               % Spherical shell of radius 1
-method = 'IE';              % Method for handling the unbounded domain problem
-coreMethod = 'IGA';         % Solution space
-BC = 'SHBC';                % Boundary condition
-formulation = 'BGU';        % Formulation
-loopParameters = {'M'};     % parameter study arr to be investigated
-runTasksInParallel = false; % Run tasks in parallel
-computeCondNumber = false;  % Compute the condition number of the global matrix
-N_max = inf;                % number of terms in analytic solution for scattering on spherical shell
-progressBars = true;
+scatteringCase    = 'BI';         % Bistatic scattering
+applyLoad          = 'planeWave'; % Acoustic scattering of plane wave
+model              = 'S1';        % Spherical shell of radius 1
+method             = 'IE';        % Method for handling the unbounded domain problem
+coreMethod         = 'IGA';       % Solution space
+BC                 = 'SHBC';      % Boundary condition
+formulation        = 'BGU';       % Formulation
+loopParameters     = {'M'};       % parameter study arr to be investigated
+runTasksInParallel = false;       % Run tasks in parallel
+computeCondNumber  = false;       % Compute the condition number of the global matrix
+N_max              = inf;         % number of terms in analytic solution for scattering on spherical shell
+progressBars       = true;        % Show progress bars for building system matrices
+subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
 
 %% Storage settings
 storeSolution               = false;    % Store the solution vector
@@ -25,14 +26,14 @@ M                   = 1;	% Mesh number
 initMeshFactXi      = 1;	% initial number of knots in xi direction
 initMeshFactEta 	= 1;	% initial number of knots in eta direction
 initMeshFactZeta    = 1;	% initial number of knots in zeta direction
-extraGP = 0;                % extra quadrature points
-parm = 1;
+extraGP             = 0;    % extra quadrature points
+parm                = 1;    % Toggle different parameterizations of a geometric model
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plot2Dgeometry      = false;                % Plot cross section of mesh and geometry
 prePlot.plot3Dgeometry      = false;                % Plot visualization of mesh and geometry in 3D
 prePlot.storeFig            = false;                % Store pre plotted figure
-prePlot.abortAfterPlotting  = true;                 % Abort simulation after pre plotting
+prePlot.abortAfterPlotting  = false;                % Abort simulation after pre plotting
 prePlot.view                = getView;              % Set view angle [azimuth,elevation]
 prePlot.export_fig_name2D   = '';                   % Name of exported figure using export_fig for 2D plots
 prePlot.export_fig_name3D   = '';                   % Name of exported figure using export_fig for 3D plots
@@ -84,7 +85,7 @@ postPlot(1).xScale       	= 1;
 postPlot(1).yScale       	= 1;
 postPlot(1).xLoopName     	= NaN;
 postPlot(1).legendEntries 	= {};
-postPlot(1).subFolderName 	= NaN;
+postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).addCommands   	= [];

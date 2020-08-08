@@ -1,6 +1,7 @@
 function [adjacentElements,xi_x_tArr,eta_x_tArr] = getAdjacentElements(e_x,xi_x,eta_x,Xi_e_x,Eta_e_x,eNeighbour,Eps)
-
-adjacentElements = NaN(1,8); % assume a maximum of 8 extraordinary vertex
+% find adjecent elements around the colocation point x in element e_x
+% (located at (xi_x,eta_x) in the parameter space)
+adjacentElements = NaN(1,8);
 adjacentElements(1) = e_x;
 xi_x_tArr = NaN(1,8);
 eta_x_tArr = NaN(1,8);
@@ -93,7 +94,7 @@ elseif pointIsInWest && pointIsInSouth % bottom left corner (xi_x_t = -1, eta_x_
     e_prev = e_x;
     e_next = eNeighbour(e_x,3,1); % element to the west
     if isnan(e_next)
-        e_next = eNeighbour(e_x,1,1); % element to the north
+        e_next = eNeighbour(e_x,2,1); % element to the north
         counter3 = counter3 - 1;
     end
     while e_next ~= e_x % go counter clockwise around vertex to end up back at e_x
@@ -124,7 +125,7 @@ elseif pointIsInEast && pointIsInSouth % bottom right corner (xi_x_t = 1, eta_x_
     e_prev = e_x;
     e_next = eNeighbour(e_x,4,1); % element to the south
     if isnan(e_next)
-        e_next = eNeighbour(e_x,1,1); % element to the west
+        e_next = eNeighbour(e_x,3,1); % element to the west
         counter3 = counter3 - 1;
     end
     while e_next ~= e_x % go counter clockwise around vertex to end up back at e_x

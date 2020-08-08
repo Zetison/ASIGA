@@ -1,49 +1,24 @@
 function varCol = createNURBSmesh_M5(varCol, M, degree)
 
-x_0 = [0, 0, 0];
-switch varCol{1}.method
-    case {'IE','IENSG','ABC'}
-        varCol{1}.x_0 = x_0; % The origin of the model
-        varCol{1}.A_2 = [1 0 0;
-                      0 1 0;
-                      0 0 1];
-        varCol{1}.alignWithAxis = alignWithAxis;
-end
+R = varCol{1}.R;
+l = varCol{1}.l;
+L = varCol{1}.L;
+if varCol{1}.boundaryMethod    
+    fluid = getBeTSSiM5Data('R', R, 'type', varCol{1}.type, 'L', L, 'l', l, 'parm', varCol{1}.parm);
 
-
-if varCol{1}.boundaryMethod
-    principalLengthXiDir = R_o;
-    principalLengthEtaDir = R_o;
-
-    L_gamma = R_o;
-    eta2 = (R_o+L)/(L+2*R_o);
-    eta1 = R_o/(L+2*R_o);
-    switch varCol{1}.model
-        case 'M5A'
-            fluid = getModel5Data(R_o, eta1, eta2, L, l, 'Xaxis');
-        case 'M5B'
-            fluid = getModel5Data(R_o, eta1, eta2, L, l, 'Zaxis');
-    end
-
-    fluid = elevateDegreeInPatches(fluid,[1 1]*(degree-2));
-    newKnots = {[] linspace2(eta1,eta2,round(L/R_o))};
-    fluid{1} = insertKnotsInNURBS(fluid{1},newKnots);
-    fluid{2} = insertKnotsInNURBS(fluid{2},newKnots);
+    fluid = makeUniformNURBSDegree(fluid,degree);
+    fluid = refineNURBSevenly(fluid,2.2*10/3);
+    fluid = insertKnotsInNURBS(fluid,(2^(M-1)-1)*[1,1]);
     
-    noNewXiKnots = 2^(M-1)-1; % 8*i_mesh
-    noNewEtaKnots = noNewXiKnots;
-    fluid = insertKnotsInPatches(fluid,noNewXiKnots,noNewEtaKnots);
     varCol{1}.patchTop = getPatchTopology(fluid);
+    varCol_dummy.dimension = 1;
+    varCol_dummy.nurbs = fluid;
+    varCol_dummy = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_dummy)));
+    
+    varCol{1}.elemsOuter = 1:varCol_dummy.noElems;
+    varCol{1}.noDofsInner = 0;
+    varCol{1}.noElemsInner = 0;
 end
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
-    varCol{2}.nurbs = solid;
-end
-if varCol{1}.useInnerFluidDomain
-    varCol{3}.nurbs = fluid_i;
-end
 
-varCol{1}.chimin = chimin;
-varCol{1}.chimax = chimax;
-varCol{1}.L_gamma = L_gamma;
-varCol{1}.Upsilon = Upsilon;
+varCol{1}.L_gamma = L;

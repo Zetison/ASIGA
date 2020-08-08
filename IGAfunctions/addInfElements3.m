@@ -47,8 +47,18 @@ spIdxCol = zeros((N*n_en)^2,noElems);
 Avalues = zeros((N*n_en)^2,noElems);
 
 [Q, W] = gaussTensorQuad(degree+1);
+
+progressBars = varCol.progressBars;
+nProgressStepSize = ceil(noElems/1000);
+if progressBars
+    ppm = ParforProgMon('Building infinite element matrix: ', noElems, nProgressStepSize);
+end
+
 % for e = 1:noElems
 parfor e = 1:noElems
+	if progressBars && mod(e,nProgressStepSize) == 0
+        ppm.increment();
+	end
     patch = pIndex(e);
     knots = knotVecs{patch}(1:2);
     Xi_e = zeros(d_p-1,2);

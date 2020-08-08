@@ -1,3 +1,11 @@
+% This sub routine calculates eNeighbour which maps every element e to the
+% set of neighboring elements eNeighbour(e,:,1) and the corresponding
+% number the neighboring elements are twisted (in order to have alligned
+% parametrizations). The indices in the 2nd dimension of eNeighbour are
+% respectively (east,north,west,south). That is, the order is
+% counterclockwise.
+% For each patch eMap maps (i_xi,i_eta) -> e (the global element index)
+% 
 patchTop = varCol.patchTop;
 counter = 1;
 for patch = 1:numel(patches)

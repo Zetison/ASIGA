@@ -1,4 +1,4 @@
-function task = main_sub(task,loopParameters,runTasksInParallel,subFolderName)
+function task = main_sub(task,loopParameters,runTasksInParallel,resultsFolder)
 
 stringShift = 40;
 extractTaskData
@@ -32,7 +32,6 @@ if prePlot.plot3Dgeometry || prePlot.plot2Dgeometry
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
     plotMeshAndGeometry
     fprintf('using %12f seconds.', toc)
-    return
 end
 
 %% Build connectivity
@@ -979,18 +978,28 @@ if calculateFarFieldPattern && ~useROM
                     p_h = zeros(size(d_vec,2),1);
 %                     for i = 1:size(d_vec,2) %874%
                     plotFarField = task.plotFarField;
-                    parfor i = 1:size(d_vec,2)
+                    noIncDir = size(d_vec,2);
+                    progressBars = varCol{1}.progressBars;
+                    nProgressStepSize = ceil(noIncDir/1000);
+                    if progressBars
+                        ppm = ParforProgMon('Tracing rays: ', noIncDir, nProgressStepSize);
+                    end
+%                     for i = 1:noIncDir
+                    parfor i = 1:noIncDir
+                        if progressBars && mod(i,nProgressStepSize) == 0
+                            ppm.increment();
+                        end
                         varColTemp2 = varCol{1};
                         varColTemp2.d_vec = d_vec(:,i);
-                        tic
+%                         tic
                         varColTemp2 = createRays(varColTemp2);
-                        fprintf('\nCreating rays in %12f seconds.', toc)
-                        tic
+%                         fprintf('\nCreating rays in %12f seconds.', toc)
+%                         tic
                         varColTemp2 = traceRays(varColTemp2);    
-                        fprintf('\nTracing rays in %12f seconds.', toc)
-                        tic        
+%                         fprintf('\nTracing rays in %12f seconds.', toc)
+%                         tic        
                         p_h(i) = calculateScatteredPressureRT(varColTemp2, v(i,:), plotFarField);
-                        fprintf('\nFar field in %12f seconds.', toc)
+%                         fprintf('\nFar field in %12f seconds.', toc)
                     end
                 otherwise
                     varCol{1} = createRays(varCol{1});
@@ -1051,7 +1060,7 @@ if ~useROM && ~strcmp(method,'RT')
 %                 caxis([-7,0])
 %                 camlight
                 colorbar off
-                savefig([subFolderName '/' saveName])
+                savefig([resultsFolder '/' saveName])
     %             n_xi = fluid.number(1);
     %             n_eta = fluid.number(2);
     %             [cg_xi, grev_xi] = CauchyGalerkin(fluid.degree(1), n_xi, fluid.knots{1});
@@ -1089,7 +1098,7 @@ if ~useROM && ~strcmp(method,'RT')
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Post-processing ... ')
                 end
-                resultsFolderNameParaview = [subFolderName '/paraviewResults'];
+                resultsFolderNameParaview = [resultsFolder '/paraviewResults'];
                 if ~exist(resultsFolderNameParaview, 'dir')
                     mkdir(resultsFolderNameParaview);
                 end          

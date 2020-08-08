@@ -15,7 +15,7 @@ for i = 1:noPatches
     patchTop{i} = NaN(4,2);
     for dir_i = 0:3
         pts_i = patchData{i}.edgeNodes{dir_i+1};
-        if size(uniquetol(pts_i(1:3,:).',Eps,'ByRows',true),1) == 1 % singular point
+        if size(uniquetol(pts_i(1:3,:).',Eps,'ByRows',true, 'DataScale',max(norm2(pts_i(1:3,:).'))),1) == 1 % singular point
             continue
         end
         foundSide = false;
@@ -44,11 +44,11 @@ for i = 1:noPatches
                 if all(diff(:) < Eps) && ~(i == j && dir_i == dir_j)
                     patchTop{i}(dir_i+1,:) = [j, twist];
                     foundSide = true;
-                    continue
+                    break
                 end
             end
             if foundSide
-                continue
+                break
             end
         end
     end

@@ -48,7 +48,7 @@ if varCol{1}.boundaryMethod
     options.at = [0 0; 0 0; 0 1];
     fluid = subNURBS(solid,options);
     varCol{1}.patchTop = getPatchTopology(fluid);
-    if varCol{1}.useInnerFluidDomain
+    if numel(varCol) > 2
         fluid_i = extractSurface(solid, 'zeta', 'inner');
         varCol{3}.patchTop = getPatchTopology(fluid_i);
 
@@ -100,7 +100,7 @@ else
     Upsilon = sqrt(c_z^2-c_xy^2);
     varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
 
-    if varCol{1}.useSolidDomain
+    if numel(varCol) > 1
         solid = getEllipsoidData('C', R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t);
         solid = makeUniformNURBSDegree(solid,degree);
         if explodeNURBSpatches
@@ -112,7 +112,7 @@ else
         solid = insertKnotsInNURBS(solid,[noNewXiKnots,noNewEtaKnots,noNewZetaKnotsSolid]);
     end
 
-    if varCol{1}.useInnerFluidDomain
+    if numel(varCol) > 2
         fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i);
         fluid_i = makeUniformNURBSDegree(fluid_i);
         if explodeNURBSpatches
@@ -128,10 +128,10 @@ if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
 varCol{1}.nurbs = fluid;
-if varCol{1}.useSolidDomain
+if numel(varCol) > 1
     varCol{2}.nurbs = solid;
 end
-if varCol{1}.useInnerFluidDomain
+if numel(varCol) > 2
     varCol{3}.nurbs = fluid_i;
 end
 

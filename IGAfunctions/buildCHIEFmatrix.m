@@ -158,9 +158,10 @@ pD = plotBEMGeometry(patches,plot_GP,10,0,0.8);
 %     end
 % end
 
+nProgressStepSize = ceil(n_cp/1000);
 progressBars = varCol.progressBars;
 if progressBars
-    ppm = ParforProgMon('Building BEM matrix: ', n_cp, nProgressStepSize);
+    ppm = ParforProgMon('Building CHIEF matrix: ', n_cp, nProgressStepSize);
 end
 totNoQP = 0;
 % for i = 1:n_cp

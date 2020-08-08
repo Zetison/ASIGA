@@ -119,6 +119,9 @@ for i_v = 1:noDomains
     end
     n_en = prod(degree+1);
     d_p = patches{1}.nurbs.d_p;
+    if options.para_options.plotDisplacementVectors && strcmp(varCol{1}.BC,'SHBC') && varCol{1}.boundaryMethod
+        warning('Displacement (gradient of pressure) may not be plotted for SHBC and isBoundaryMethod')
+    end
     switch d_p
         case 2
             noXiKnots = 2+extraXiPts;

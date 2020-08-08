@@ -42,7 +42,7 @@ for i_v = 1:numel(varCol)
         Uz = U(3:d:noDofs);
         U = [Ux, Uy, Uz];
     end
-    if strcmp(varCol{i_v}.media,'fluid')
+    if strcmp(varCol{i_v}.media,'fluid') && para.plotDisplacementVectors
         warning('displacement (based on grad(p)) is not yet implemented for fluids meshes')
         plotDisplacementVectors = false;
     else
