@@ -11,7 +11,7 @@ varCol{1}.meshFile = 'createNURBSmesh_EL';
 % varCol{3}.R_i = 0;
 f = 1e3;             % Frequency
 
-M = 5;
+M = 1;
 parm = 2;
 degree = 4;
 alpha_s = 240*pi/180;
@@ -22,6 +22,7 @@ beta = 30*pi/180;
 loopParameters = {'M','parm','f','method','formulation'};
 calculateSurfaceError       = 1;	% Only if scatteringCase == 'Bi'
 calculateVolumeError        = 0;	% Only if scatteringCase == 'Bi'
+progressBars                = false;        % Show progress bars for building system matrices
 
 prePlot.plot3Dgeometry = 0;
 prePlot.resolution = [20,20,0];

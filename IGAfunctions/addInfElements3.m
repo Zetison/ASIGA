@@ -52,6 +52,8 @@ progressBars = varCol.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
     ppm = ParforProgMon('Building infinite element matrix: ', noElems, nProgressStepSize);
+else
+    ppm = NaN;
 end
 
 % for e = 1:noElems

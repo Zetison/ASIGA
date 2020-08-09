@@ -27,6 +27,8 @@ nProgressStepSize = ceil(noElems/1000);
 progressBars = varCol.progressBars;
 if progressBars
     ppm = ParforProgMon('Building MFS matrix: ', noElems, nProgressStepSize);
+else
+    ppm = NaN;
 end
 
 if false

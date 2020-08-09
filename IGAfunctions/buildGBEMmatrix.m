@@ -130,6 +130,8 @@ progressBars = varCol.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
     ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
+else
+    ppm = NaN;
 end
 
 parfor e_x = 1:noElems

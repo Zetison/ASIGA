@@ -71,6 +71,8 @@ progressBars = varCol.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
     ppm = ParforProgMon('Building mass/stiffness matrix: ', noElems, nProgressStepSize);
+else
+    ppm = NaN;
 end
 
 %% Build global matrices

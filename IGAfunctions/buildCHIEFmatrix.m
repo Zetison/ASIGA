@@ -162,6 +162,8 @@ nProgressStepSize = ceil(n_cp/1000);
 progressBars = varCol.progressBars;
 if progressBars
     ppm = ParforProgMon('Building CHIEF matrix: ', n_cp, nProgressStepSize);
+else
+    ppm = NaN;
 end
 totNoQP = 0;
 % for i = 1:n_cp
