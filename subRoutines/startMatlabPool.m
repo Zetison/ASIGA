@@ -9,9 +9,6 @@ if verLessThan('matlab', '8.3 (R2014a)')
 else
     if ~exist('noCoresToUse','var')
         noCoresToUse = feature('numCores');
-        if noCoresToUse > 10
-            noCoresToUse = round(noCoresToUse/2);
-        end
     end
     poolobj = gcp('nocreate');
     if isempty(poolobj)
