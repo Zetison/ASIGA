@@ -1,26 +1,26 @@
 function p_h = calculateScatteredPressure(varCol, U, P_far, useExtraQuadPts, computeFarField)
 
-degree = varCol.degree; % assume p_xi is equal in all patches
+degree = varCol{1}.degree; % assume p_xi is equal in all patches
 
-noDofs = varCol.noDofs;
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
-BC = varCol.BC;
-k = varCol.k;
-method = varCol.method;
+noDofs = varCol{1}.noDofs;
+index = varCol{1}.index;
+noElems = varCol{1}.noElems;
+elRange = varCol{1}.elRange;
+element = varCol{1}.element;
+element2 = varCol{1}.element2;
+weights = varCol{1}.weights;
+controlPts = varCol{1}.controlPts;
+knotVecs = varCol{1}.knotVecs;
+pIndex = varCol{1}.pIndex;
+BC = varCol{1}.BC;
+k = varCol{1}.k;
+method = varCol{1}.method;
 if strcmp(method,'IENSG')
-    A_2 = varCol.A_2;
-    x_0 = varCol.x_0;
-    Upsilon = varCol.Upsilon;
-    D = varCol.D;
-    N = varCol.N;
+    A_2 = varCol{1}.A_2;
+    x_0 = varCol{1}.x_0;
+    Upsilon = varCol{1}.Upsilon;
+    D = varCol{1}.D;
+    N = varCol{1}.N;
 else
     A_2 = NaN;
     x_0 = NaN;
@@ -29,10 +29,10 @@ else
     N = NaN;
 end
 
-dp_inc = varCol.dp_inc;
+dp_inc = varCol{1}.dp_inc;
 
-Phi_k = varCol.Phi_k;
-d_p = varCol.patches{1}.nurbs.d_p;
+Phi_k = varCol{1}.Phi_k;
+d_p = varCol{1}.patches{1}.nurbs.d_p;
 
 if d_p == 3
     surfaceElements = [];
@@ -46,22 +46,22 @@ if d_p == 3
 else
     surfaceElements = 1:noElems;
 end
-solveForPtot = varCol.solveForPtot;
-SHBC = strcmp(varCol.BC, 'SHBC');
-if SHBC
+solveForPtot = varCol{1}.solveForPtot;
+exteriorSHBC = strcmp(BC, 'SHBC') && numel(varCol) == 1;
+if exteriorSHBC
     if solveForPtot
         homNeumanCond = true;
         dpdn = @(x,n) 0;
     else
         homNeumanCond = false;
-        dpdn = @(x,n) -varCol.dp_inc(x,n);
+        dpdn = @(x,n) -varCol{1}.dp_inc(x,n);
     end
 else
     homNeumanCond = false;
-    dpdn = varCol.dpdn;
+    dpdn = varCol{1}.dpdn;
 end
 
-extraGP = varCol.extraGP;
+extraGP = varCol{1}.extraGP;
 if useExtraQuadPts
     noGpXi = degree(1)+1+5;
     noGpEta = degree(2)+1+5;
@@ -119,7 +119,7 @@ parfor i = 1:length(surfaceElements)
         p_h_gp = R{1}*U_sctr;
     end
 
-    if strcmp(BC, 'SHBC')
+    if exteriorSHBC
         dp_h_gp = -dp_inc(Y,normals); 
     else
         if d_p == 2

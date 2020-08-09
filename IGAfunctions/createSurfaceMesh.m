@@ -14,6 +14,7 @@ solidIndexXiEta = [];
 solidNoElemsXiEta = 0;
 solidXiEtaMesh = [];
 noCtrlPtsSurf = 0;
+outerBoundary = true;
 for patch = 1:noPatches
     n_xi = patches{patch}.nurbs.number(1);
     n_eta = patches{patch}.nurbs.number(2);
@@ -35,7 +36,15 @@ for patch = 1:noPatches
     solidNodes = [solidNodes, solidNodes_loc+sum(noCtrlPtsPatchSolid(1:patch-1))];
     fluidNodes = [fluidNodes, fluidNodes_loc+sum(noCtrlPtsPatchFluid(1:patch-1))];
 
-    [solidXiEtaMesh_loc, solidIndexXiEta_loc, solidNoElemsXiEta_loc] = generateIGA2DMesh(Xi, Eta, p_xi, p_eta, n_xi, n_eta);
+    nurbs = patches{patch}.nurbs;
+    varCol_dummy.dimension = 1;
+    varCol_dummy.nurbs = subNURBS({nurbs},'at',[0,0;0,0;1-outerBoundary,outerBoundary]);
+    varCol_dummy = generateIGAmesh(convertNURBS(varCol_dummy));
+    solidNoElemsXiEta_loc = varCol_dummy.patches{1}.noElems;
+    solidIndexXiEta_loc = varCol_dummy.patches{1}.index;   
+    solidXiEtaMesh_loc = varCol_dummy.patches{1}.element;
+    
+    
     solidNoElemsXiEta = solidNoElemsXiEta + solidNoElemsXiEta_loc;
     solidXiEtaMesh = [solidXiEtaMesh; solidXiEtaMesh_loc+noCtrlPtsSurf];
     solidIndexXiEta = [solidIndexXiEta; solidIndexXiEta_loc];

@@ -60,7 +60,6 @@ for i_v = 1:noDomains
     maxU = NaN;
 
     degree = varCol{i_v}.degree;
-    Eps = 1e4*eps;
 
     extraXiPts = options.para_options.extraXiPts;
     extraEtaPts = options.para_options.extraEtaPts;
@@ -139,8 +138,8 @@ for i_v = 1:noDomains
                 container{e}.visElements = zeros(noVisElems,8);
                 container{e}.strain = zeros(noNodes,6);
             end
-            for e = 1:noElems
-%             parfor e = 1:noElems
+%             for e = 1:noElems
+            parfor e = 1:noElems
                 patch = pIndex(e);
                 knots = knotVecs{patch};
 
@@ -169,8 +168,8 @@ for i_v = 1:noDomains
                     end
                 end
                 noNodes = noXiKnots*noEtaKnots;            
-                xiKnots = linspace(Xi_e(1,1)+Eps,Xi_e(1,2)-Eps,noXiKnots);        
-                etaKnots = linspace(Xi_e(2,1)+Eps,Xi_e(2,2)-Eps,noEtaKnots);   
+                xiKnots = linspace(Xi_e(1,1),Xi_e(1,2)-eps,noXiKnots);        
+                etaKnots = linspace(Xi_e(2,1),Xi_e(2,2)-eps,noEtaKnots);   
                 [xi,eta] = ndgrid(xiKnots,etaKnots);
                 xi = xi(:);
                 eta = eta(:);
@@ -259,9 +258,9 @@ for i_v = 1:noDomains
                         end
                     end
                 end  
-                xiKnots = linspace(Xi_e(1,1)+Eps,Xi_e(1,2)-Eps,noXiKnots);        
-                etaKnots = linspace(Xi_e(2,1)+Eps,Xi_e(2,2)-Eps,noEtaKnots);    
-                zetaKnots = linspace(Xi_e(3,1)+Eps,Xi_e(3,2)-Eps,noZetaKnots);
+                xiKnots = linspace(Xi_e(1,1),Xi_e(1,2)-eps,noXiKnots);        
+                etaKnots = linspace(Xi_e(2,1),Xi_e(2,2)-eps,noEtaKnots);    
+                zetaKnots = linspace(Xi_e(3,1),Xi_e(3,2)-eps,noZetaKnots);
                 [xi,eta,zeta] = ndgrid(xiKnots,etaKnots,zetaKnots);
                 xi = xi(:);
                 eta = eta(:);
@@ -343,9 +342,9 @@ if analyticSolutionExist
     layer = varCol{1}.analyticFunctions(nodes);
 end
 
-fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
-tic
 for i_v = 1:numel(varCol)
+    fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
+    tic
     isOuterDomain = i_v == 1;
     data.nodes = nodes{i_v};
     data.visElements = visElements{i_v};
@@ -443,5 +442,5 @@ for i_v = 1:numel(varCol)
     para{i_v}.name = [para{i_v}.name '_' num2str(i_v)];
     tic
     makeVTKfile(data, para{i_v});
-    fprintf('using %12f seconds.\n', toc)
+    fprintf('using %12f seconds.', toc)
 end

@@ -8,19 +8,22 @@ formulation = {'BGU'};
 varCol = setS15Parameters();
 varCol = varCol(1:3);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
+% varCol{3}.R_i = 0;
 f = 1e3;             % Frequency
 
-M = 1;
+M = 5;
 parm = 2;
 degree = 4;
-alpha_s = 0;
-beta_s = 0;
-alpha = (0:0.5:360)*pi/180;
-beta = 0;
+alpha_s = 240*pi/180;
+beta_s = 30*pi/180;
+alpha = (0:0.1:360)*pi/180;
+beta = 30*pi/180;
 
 loopParameters = {'M','parm','f','method','formulation'};
-prePlot.plot2Dgeometry = 1;
-prePlot.plot3Dgeometry = 1;
+calculateSurfaceError       = 1;	% Only if scatteringCase == 'Bi'
+calculateVolumeError        = 0;	% Only if scatteringCase == 'Bi'
+
+prePlot.plot3Dgeometry = 0;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'on';
@@ -31,7 +34,8 @@ prePlot.plotControlPolygon = 0;
 solveForPtot = false;
 prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
 
-para.plotResultsInParaview = true;
+para.plotResultsInParaview = 0;
+para.plotDisplacementVectors = false;
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';

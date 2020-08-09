@@ -75,31 +75,30 @@ for i_v = 1:numel(varCol)
                 xiKnots = linspace(Xi_e(1,1),Xi_e(1,2)-eps,noXiKnots);        
                 etaKnots = linspace(Xi_e(2,1),Xi_e(2,2)-eps,noEtaKnots);
                 counter = 1;
-                Eps = 1e-10;
                 nodes_e = zeros(noNodes,3);
                 I = findKnotSpans(degree, [xiKnots(1),etaKnots(1)], knots);
 
                 for i = 1:noXiKnots
                     xi = xiKnots(i);
-                    R = NURBSbasis(I,[min(max(xi-Eps,xiKnots(1)+Eps),xiKnots(end)-Eps), etaKnots(1)+10*eps], degree, knots, wgts);
+                    R = NURBSbasis(I,[min(max(xi,xiKnots(1)),xiKnots(end)), etaKnots(1)], degree, knots, wgts);
                     nodes_e(counter,:) = R{1}*pts;
                     counter = counter + 1;
                 end
                 for j = 2:noEtaKnots
                     eta = etaKnots(j);
-                    R = NURBSbasis(I,[xiKnots(end)-Eps, eta-Eps], degree, knots, wgts);
+                    R = NURBSbasis(I,[xiKnots(end), eta], degree, knots, wgts);
                     nodes_e(counter,:) = R{1}*pts;
                     counter = counter + 1;
                 end
                 for i = (noXiKnots-1):-1:1
                     xi = xiKnots(i);
-                    R = NURBSbasis(I,[xi+Eps, etaKnots(end)-Eps], degree, knots, wgts);
+                    R = NURBSbasis(I,[xi, etaKnots(end)], degree, knots, wgts);
                     nodes_e(counter,:) = R{1}*pts;
                     counter = counter + 1;
                 end
                 for j = (noEtaKnots-1):-1:1
                     eta = etaKnots(j);
-                    R = NURBSbasis(I,[xiKnots(1)+Eps, eta+Eps], degree, knots, wgts);
+                    R = NURBSbasis(I,[xiKnots(1), eta], degree, knots, wgts);
                     nodes_e(counter,:) = R{1}*pts;
                     counter = counter + 1;
                 end
@@ -151,9 +150,9 @@ for i_v = 1:numel(varCol)
                 noEtaKnots = 2+extraEtaPts;
                 noZetaKnots = 2+extraZetaPts;
 
-                xi = linspace(Xi_e(1,1)+Eps,Xi_e(1,2)-Eps,noXiKnots).';        
-                eta = linspace(Xi_e(2,1)+Eps,Xi_e(2,2)-Eps,noEtaKnots).';
-                zeta = linspace(Xi_e(3,1)+Eps,Xi_e(3,2)-Eps,noZetaKnots).';
+                xi = linspace(Xi_e(1,1),Xi_e(1,2)-eps,noXiKnots).';        
+                eta = linspace(Xi_e(2,1),Xi_e(2,2)-eps,noEtaKnots).';
+                zeta = linspace(Xi_e(3,1),Xi_e(3,2)-eps,noZetaKnots).';
                 I = findKnotSpans(degree, [xi(1),eta(1),zeta(1)], knots);
                 container_e = cell(12,1);
                 counter = 1;

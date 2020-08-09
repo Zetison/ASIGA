@@ -23,7 +23,7 @@ yname = options.yname;
 plotResults = options.plotResults;
 printResults = options.printResults;
 legendEntries = options.legendEntries;
-if ~plotResults || ~printResults
+if ~plotResults && ~printResults
     return
 end
 loopParametersArr = study.loopParametersArr;

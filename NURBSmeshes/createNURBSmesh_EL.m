@@ -113,8 +113,8 @@ else
     end
 
     if numel(varCol) > 2
-        fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i);
-        fluid_i = makeUniformNURBSDegree(fluid_i);
+        fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i);
+        fluid_i = makeUniformNURBSDegree(fluid_i,degree);
         if explodeNURBSpatches
             fluid_i = explodeNURBS(fluid_i,'eta');
             fluid_i = explodeNURBS(fluid_i,'xi');

@@ -193,7 +193,7 @@ else
                     end
                 end
 
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     tic
                     % Solid matrices
                     if ~runTasksInParallel
@@ -217,7 +217,7 @@ else
                     end
                 end
 
-                if useInnerFluidDomain
+                if numel(varCol) > 2
                     tic        
                     % Inner fluid   
                     if ~runTasksInParallel
@@ -243,10 +243,10 @@ else
 
                 % Collect all matrices
                 A = sparse(noDofs_tot,noDofs_tot);
-                if ~useSolidDomain
+                if ~numel(varCol) > 1
                     varCol{1}.noDofs_tot = noDofs_tot;
                     A = A_fluid_o;   
-                elseif useSolidDomain && ~useInnerFluidDomain
+                elseif numel(varCol) > 1 && ~numel(varCol) > 2
                     varCol{2}.noDofs_tot = noDofs_tot;
                     A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
                     A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
@@ -260,7 +260,7 @@ else
                 end
 
                 % Apply coupling conditions    
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     tic
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
@@ -276,7 +276,7 @@ else
                     varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
                 end
 
-                if useInnerFluidDomain 
+                if numel(varCol) > 2 
                     tic
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building second coupling matrix ... ')
@@ -302,7 +302,7 @@ else
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
                 end
-                if ~useSolidDomain
+                if ~numel(varCol) > 1
                     if ~strcmp(varCol{1}.coreMethod,'SEM')
                         if useROM
                             FF = 1/(rho(1)*omega^2)*applyHWBC_ROM(varCol{1},noVecs);
@@ -324,9 +324,9 @@ else
                 %% Modify system of equations
                 % Remove the rows and columns of the global matrix corresponding to
                 % removed degrees of freedom
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     P1 = speye(size(A));
-                    if useInnerFluidDomain
+                    if numel(varCol) > 2
                         P1(1:varCol{3}.noDofs, 1:varCol{3}.noDofs) = ...
                             sqrt(omega^2*varCol{3}.rho)*speye(varCol{3}.noDofs);
                     end
@@ -399,7 +399,7 @@ else
                 dofsToRemove = varCol{1}.dofsToRemove;  
                 switch formulation(1)
                     case 'G' % Galerkin
-                        [A_fluid_o, FF_fluid_o, varCol{1}, C_mat] = buildGBEMmatrix(varCol{1},useSolidDomain);  
+                        [A_fluid_o, FF_fluid_o, varCol{1}, C_mat] = buildGBEMmatrix(varCol{1},numel(varCol) > 1);  
                     case 'C' % Collocation
                         [A_fluid_o, FF_fluid_o, varCol{1}] = buildCBEMmatrix(varCol{1});  
                 end
@@ -418,7 +418,7 @@ else
                     end
                 end
                 varCol{1}.timeBuildSystem = toc(t_start);
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     tic
                     % Solid matrices
                     if ~runTasksInParallel
@@ -441,7 +441,7 @@ else
                         fprintf('using %12f seconds.', toc)
                     end
                 end
-                if useInnerFluidDomain
+                if numel(varCol) > 2
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building inner fluid matrix ... ')
                     end
@@ -449,7 +449,7 @@ else
 
                     switch formulation(1)
                         case 'G' % Galerkin
-                            [A_fluid_i, FF_fluid_i, varCol{3}, C_mat2_outer] = buildGBEMmatrix(varCol{3},useSolidDomain);  
+                            [A_fluid_i, FF_fluid_i, varCol{3}, C_mat2_outer] = buildGBEMmatrix(varCol{3},numel(varCol) > 1);  
                         case 'C' % Collocation
                             error('Not implemented')
                     end
@@ -461,11 +461,11 @@ else
                 % Collect all matrices
                 A = sparse(noDofs_tot,noDofs_tot);
                 FF = zeros(noDofs_tot,numel(varCol{1}.alpha_s));
-                if ~useSolidDomain
+                if ~numel(varCol) > 1
                     varCol{1}.noDofs_tot = noDofs_tot;
                     A = A_fluid_o;   
                     FF = FF_fluid_o;
-                elseif useSolidDomain && ~useInnerFluidDomain
+                elseif numel(varCol) > 1 && ~numel(varCol) > 2
                     varCol{1}.noDofs_tot = noDofs_tot;
                     varCol{2}.noDofs_tot = noDofs_tot;
                     A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
@@ -491,7 +491,7 @@ else
                     FF((shift+varCol{2}.noDofs+1):noDofs_tot,:) = FF_fluid_o;
                 end
                 % Apply coupling conditions    
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     tic
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
@@ -507,7 +507,7 @@ else
                     varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
                 end
 
-                if useInnerFluidDomain 
+                if numel(varCol) > 2 
                     tic
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building second coupling matrix ... ')
@@ -527,9 +527,9 @@ else
                 %% Modify system of equations
                 % Remove the rows and columns of the global matrix corresponding to
                 % removed degrees of freedom
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     P1 = speye(size(A));
-%                     if useInnerFluidDomain
+%                     if numel(varCol) > 2
 %                         P1(1:varCol{3}.noDofs, 1:varCol{3}.noDofs) = ...
 %                             sqrt(omega^2*rho_f(2))*speye(varCol{3}.noDofs);
 %                     end
@@ -565,7 +565,7 @@ else
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', varCol{1}.timeBuildSystem)
                 end
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     error('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
                     tic
                     % Solid matrix
@@ -585,7 +585,7 @@ else
                     end
                 end
 
-                if useInnerFluidDomain
+                if numel(varCol) > 2
                     tic        
                     % Inner fluid   
                     if ~runTasksInParallel
@@ -604,11 +604,11 @@ else
                 % Collect all matrices
                 A = sparse(noDofs_tot,noDofs_tot);
                 FF = zeros(noDofs_tot,1);
-                if ~useSolidDomain
+                if ~numel(varCol) > 1
                     varCol{1}.noDofs_tot = noDofs_tot;
                     A = A_fluid_o;   
                     FF = FF_fluid_o;
-                elseif useSolidDomain && ~useInnerFluidDomain
+                elseif numel(varCol) > 1 && ~numel(varCol) > 2
                     varCol{2}.noDofs_tot = noDofs_tot;
                     A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
                     A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
@@ -631,7 +631,7 @@ else
                 %% Modify system of equations
                 % Remove the rows and columns of the global matrix corresponding to
                 % removed degrees of freedom
-                if useSolidDomain 
+                if numel(varCol) > 1 
                     P1 = speye(size(A));
 
                     P1(dofsToRemove,:) = [];  
@@ -850,7 +850,7 @@ else
                 % max(abs(UU-UU2)./abs(UU2))
                 % return
 
-                if useSolidDomain && ~strcmp(method,'BA')
+                if numel(varCol) > 1 && ~strcmp(method,'BA')
                     UU = P1*UU;
                 end
 
@@ -903,7 +903,7 @@ if calculateFarFieldPattern && ~useROM
 
     switch method
         case {'IE','ABC','IENSG','BA','BEM'}
-            p_h = calculateScatteredPressure(varCol{1}, Uc{1}, v, 0, plotFarField);
+            p_h = calculateScatteredPressure(varCol, Uc{1}, v, 0, plotFarField);
         case 'MFS'
             p_h = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, plotFarField);
         case 'KDT'
@@ -1030,11 +1030,11 @@ if calculateFarFieldPattern && ~useROM
 end
 
 % task.results.Uc{1} = Uc{1};
-% if useSolidDomain
+% if numel(varCol) > 1
 %     task.results.varCol{2} = varCol{2};
 % %     task.results.Uc{2} = Uc{2};
 % end
-% if useInnerFluidDomain
+% if numel(varCol) > 2
 %     task.results.varCol{3} = varCol{3};
 % %     task.results.Uc{3} = Uc{3};
 % end

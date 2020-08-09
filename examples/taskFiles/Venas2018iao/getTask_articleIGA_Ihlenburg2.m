@@ -8,14 +8,25 @@ formulation = 'BGU';
 method = 'IE';
 parm = 1;
 coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
-% coreMethods = {'linear_FEM'}; % [5, 4, 2, 1, 3]
-postPlot(1).plotResults = false;
-postPlot(1).printResults = false;
-postPlot(1).addCommands  = @(study,i_study,studies) addCommands_(i_study,studies);
-M_0 = 1; % 4
+coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+BCs = {'SHBC','SSBC','NNBC'};
+BCs = {'NNBC'};
+postPlot(1).xname       	= 'alpha';
+postPlot(1).yname        	= 'TS';
+postPlot(1).plotResults  	= true;
+postPlot(1).printResults 	= 0;
+postPlot(1).axisType        = 'plot';
+postPlot(1).lineStyle   	= '-';
+postPlot(1).xLoopName     	= 'M';
+postPlot(1).legendEntries 	= {'method','parm','f','formulation','M'};
+postPlot(1).fileDataHeaderX	= [];
+postPlot(1).noXLoopPrms   	= 0;
+postPlot(1).xScale          = 180/pi;
+% postPlot(1).addCommands  = @(study,i_study,studies) addCommands_(i_study,studies);
+M_0 = 4; % 4
 for ii = 1:length(coreMethods) %{'IGA'}
     coreMethod = coreMethods(ii);
-    for BC = {'SHBC','SSBC','NNBC'} %
+    for BC = BCs
         switch BC{1}
             case 'SHBC'
                 noDomains = 1;
@@ -49,8 +60,6 @@ for ii = 1:length(coreMethods) %{'IGA'}
         varCol{1}.meshFile = 'createNURBSmesh_EL';
         alpha_s = pi;
         beta_s = 0;
-        alpha = alpha_s;
-        beta = beta_s;
         plotResultsInParaview = 0;
         calculateFarFieldPattern = 1;
         calculateVolumeError = 1;
@@ -62,6 +71,7 @@ for ii = 1:length(coreMethods) %{'IGA'}
 end
 
 function addCommands_(i_study,studies)
+% close all
 if i_study == 1
     for j = 1:3
         tasks = studies(9+j).tasks;
