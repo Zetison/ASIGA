@@ -13,7 +13,7 @@ loopParameters     = {'M'};       % parameter study arr to be investigated
 runTasksInParallel = false;       % Run tasks in parallel
 computeCondNumber  = false;       % Compute the condition number of the global matrix
 N_max              = inf;         % number of terms in analytic solution for scattering on spherical shell
-progressBars       = true;        % Show progress bars for building system matrices
+progressBars       = false;        % Show progress bars for building system matrices
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
 
 %% Storage settings
