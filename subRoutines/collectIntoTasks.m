@@ -15,6 +15,9 @@ end
 if (isnan(alpha_s(1)) || isnan(beta_s(1))) && strcmp(scatteringCase,'BI')
     error('Incident direction is not set: alpha_s = NaN and/or beta_s = NaN')
 end
+if solveForPtot && ~(strcmp(method,'BEM') || strcmp(method,'BA'))
+    error('solveForPtot should can only be used with method = BEM or method = BA')
+end
 loopParametersArr = cell(length(loopParameters),1);
 
 taskNames = fieldnames(task);

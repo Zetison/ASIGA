@@ -243,20 +243,21 @@ else
 
                 % Collect all matrices
                 A = sparse(noDofs_tot,noDofs_tot);
-                if ~numel(varCol) > 1
-                    varCol{1}.noDofs_tot = noDofs_tot;
-                    A = A_fluid_o;   
-                elseif numel(varCol) > 1 && ~numel(varCol) > 2
-                    varCol{2}.noDofs_tot = noDofs_tot;
-                    A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
-                    A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
-                    shift = 0;
-                else 
-                    varCol{2}.noDofs_tot = noDofs_tot;
-                    A(1:varCol{3}.noDofs,1:varCol{3}.noDofs) = A_fluid_i; 
-                    A((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs),(varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = A_solid;
-                    A((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot,(varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o;
-                    shift = varCol{3}.noDofs;
+                switch numel(varCol)
+                    case 1
+                        varCol{1}.noDofs_tot = noDofs_tot;
+                        A = A_fluid_o;   
+                    case 2
+                        varCol{2}.noDofs_tot = noDofs_tot;
+                        A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
+                        A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
+                        shift = 0;
+                    case 3
+                        varCol{2}.noDofs_tot = noDofs_tot;
+                        A(1:varCol{3}.noDofs,1:varCol{3}.noDofs) = A_fluid_i; 
+                        A((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs),(varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = A_solid;
+                        A((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot,(varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o;
+                        shift = varCol{3}.noDofs;
                 end
 
                 % Apply coupling conditions    
@@ -302,7 +303,7 @@ else
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
                 end
-                if ~numel(varCol) > 1
+                if numel(varCol) == 1
                     if ~strcmp(varCol{1}.coreMethod,'SEM')
                         if useROM
                             FF = 1/(rho(1)*omega^2)*applyHWBC_ROM(varCol{1},noVecs);
@@ -461,34 +462,35 @@ else
                 % Collect all matrices
                 A = sparse(noDofs_tot,noDofs_tot);
                 FF = zeros(noDofs_tot,numel(varCol{1}.alpha_s));
-                if ~numel(varCol) > 1
-                    varCol{1}.noDofs_tot = noDofs_tot;
-                    A = A_fluid_o;   
-                    FF = FF_fluid_o;
-                elseif numel(varCol) > 1 && ~numel(varCol) > 2
-                    varCol{1}.noDofs_tot = noDofs_tot;
-                    varCol{2}.noDofs_tot = noDofs_tot;
-                    A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
-                    A(varCol{2}.noDofs+1:end,(1:3*varCol{1}.noDofs)+varCol{2}.noDofs-3*varCol{1}.noDofs) ...
-                                = -rho(1)*omega^2*C_mat;  
-                    A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
-                    shift = 0;
-                    FF((varCol{2}.noDofs+1):noDofs_tot,:) = FF_fluid_o;
-                else 
-                    shift = varCol{3}.noDofs;
-                    noDofsInner = varCol{3}.noDofsInner;
-                    varCol{1}.noDofs_tot = noDofs_tot;
-                    varCol{2}.noDofs_tot = noDofs_tot;
-                    varCol{3}.noDofs_tot = noDofs_tot;
-                    A(1:varCol{3}.noDofs,1:varCol{3}.noDofs) = A_fluid_i; 
-                    A(noDofsInner+1:shift,shift+1:shift+3*(shift-noDofsInner)) = -varCol{3}.rho*omega^2*C_mat2_outer; 
-                    A((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs),...
-                      (varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = A_solid;
-                    A(varCol{2}.noDofs+1+shift:end,(1:3*varCol{1}.noDofs)+varCol{2}.noDofs-3*varCol{1}.noDofs+shift) ...
-                        = -rho(1)*omega^2*C_mat; 
-                    A((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot,...
-                      (varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o;
-                    FF((shift+varCol{2}.noDofs+1):noDofs_tot,:) = FF_fluid_o;
+                switch numel(varCol)
+                    case 1
+                        varCol{1}.noDofs_tot = noDofs_tot;
+                        A = A_fluid_o;   
+                        FF = FF_fluid_o;
+                    case 2
+                        varCol{1}.noDofs_tot = noDofs_tot;
+                        varCol{2}.noDofs_tot = noDofs_tot;
+                        A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
+                        A(varCol{2}.noDofs+1:end,(1:3*varCol{1}.noDofs)+varCol{2}.noDofs-3*varCol{1}.noDofs) ...
+                                    = -rho(1)*omega^2*C_mat;  
+                        A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
+                        shift = 0;
+                        FF((varCol{2}.noDofs+1):noDofs_tot,:) = FF_fluid_o;
+                    case 3
+                        shift = varCol{3}.noDofs;
+                        noDofsInner = varCol{3}.noDofsInner;
+                        varCol{1}.noDofs_tot = noDofs_tot;
+                        varCol{2}.noDofs_tot = noDofs_tot;
+                        varCol{3}.noDofs_tot = noDofs_tot;
+                        A(1:varCol{3}.noDofs,1:varCol{3}.noDofs) = A_fluid_i; 
+                        A(noDofsInner+1:shift,shift+1:shift+3*(shift-noDofsInner)) = -varCol{3}.rho*omega^2*C_mat2_outer; 
+                        A((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs),...
+                          (varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = A_solid;
+                        A(varCol{2}.noDofs+1+shift:end,(1:3*varCol{1}.noDofs)+varCol{2}.noDofs-3*varCol{1}.noDofs+shift) ...
+                            = -rho(1)*omega^2*C_mat; 
+                        A((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot,...
+                          (varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o;
+                        FF((shift+varCol{2}.noDofs+1):noDofs_tot,:) = FF_fluid_o;
                 end
                 % Apply coupling conditions    
                 if numel(varCol) > 1 
@@ -535,7 +537,7 @@ else
 %                     end
 
                     P1(shift+1:shift+varCol{2}.noDofs, ...
-                       shift+1:shift+varCol{2}.noDofs) = 1/max([omega^2*varCol{2}.rho, C(1,1)])*speye(varCol{2}.noDofs);
+                       shift+1:shift+varCol{2}.noDofs) = 1/max([omega^2*varCol{2}.rho, varCol{2}.C(1,1)])*speye(varCol{2}.noDofs);
 
 %                     A = P1*A;
 %                     FF = P1*FF;
@@ -544,7 +546,8 @@ else
                     P1(dofsToRemove,:) = [];  
                     P1(:,dofsToRemove) = [];
                 end
-                
+%                 close all
+%                 spy2(A)
                 A(:,dofsToRemove) = [];
                 if strcmp(formulation(1),'G')
                     A(dofsToRemove,:) = [];
@@ -604,29 +607,28 @@ else
                 % Collect all matrices
                 A = sparse(noDofs_tot,noDofs_tot);
                 FF = zeros(noDofs_tot,1);
-                if ~numel(varCol) > 1
-                    varCol{1}.noDofs_tot = noDofs_tot;
-                    A = A_fluid_o;   
-                    FF = FF_fluid_o;
-                elseif numel(varCol) > 1 && ~numel(varCol) > 2
-                    varCol{2}.noDofs_tot = noDofs_tot;
-                    A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
-                    A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
-                    shift = 0;
-                    FF(1:varCol{2}.noDofs) = FF_solid;
-                    FF((varCol{2}.noDofs+1):noDofs_tot) = FF_fluid_o;
-                else 
-                    varCol{2}.noDofs_tot = noDofs_tot;
-                    A(1:varCol{3}.noDofs,1:varCol{3}.noDofs) = A_fluid_i; 
-                    A((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs),(varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = A_solid;
-                    A((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot,(varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o;
-                    shift = varCol{3}.noDofs;
-                    FF(1:varCol{3}.noDofs) = FF_fluid_i;
-                    FF((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = FF_solid;
-                    FF((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = FF_fluid_o;
+                switch numel(varCol)
+                    case 1
+                        varCol{1}.noDofs_tot = noDofs_tot;
+                        A = A_fluid_o;   
+                        FF = FF_fluid_o;
+                    case 2
+                        varCol{2}.noDofs_tot = noDofs_tot;
+                        A(1:varCol{2}.noDofs,1:varCol{2}.noDofs) = A_solid;  
+                        A((varCol{2}.noDofs+1):noDofs_tot,(varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o; 
+                        shift = 0;
+                        FF(1:varCol{2}.noDofs) = FF_solid;
+                        FF((varCol{2}.noDofs+1):noDofs_tot) = FF_fluid_o;
+                    case 3
+                        varCol{2}.noDofs_tot = noDofs_tot;
+                        A(1:varCol{3}.noDofs,1:varCol{3}.noDofs) = A_fluid_i; 
+                        A((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs),(varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = A_solid;
+                        A((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot,(varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = A_fluid_o;
+                        shift = varCol{3}.noDofs;
+                        FF(1:varCol{3}.noDofs) = FF_fluid_i;
+                        FF((varCol{3}.noDofs+1):(varCol{3}.noDofs+varCol{2}.noDofs)) = FF_solid;
+                        FF((varCol{3}.noDofs+varCol{2}.noDofs+1):noDofs_tot) = FF_fluid_o;
                 end
-
-
 
                 %% Modify system of equations
                 % Remove the rows and columns of the global matrix corresponding to
@@ -903,7 +905,7 @@ if calculateFarFieldPattern && ~useROM
 
     switch method
         case {'IE','ABC','IENSG','BA','BEM'}
-            p_h = calculateScatteredPressure(varCol, Uc{1}, v, 0, plotFarField);
+            p_h = calculateScatteredPressure(varCol, Uc, v, 0, plotFarField);
         case 'MFS'
             p_h = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, plotFarField);
         case 'KDT'

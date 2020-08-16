@@ -16,7 +16,7 @@ noDofs = varColSolid.noDofs;
 noDofs_tot = varColSolid.noDofs_tot;
 d = varColSolid.dimension;
 
-[solidNodes,fluidNodes,solidXiEtaMesh,solidIndexXiEta,solidNoElemsXiEta,pIndex,solidNodes2,fluidNodes2]...
+[solidNodes,fluidNodes,solidXiEtaMesh,solidIndexXiEta,solidNoElemsXiEta,pIndex,solidNodes2]...
     = createSurfaceMesh(varColSolid,varColFluid);
 
 n_en = prod(degree+1);

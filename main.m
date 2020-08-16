@@ -36,7 +36,7 @@ for i_study = 1:numel(studies)
             fprintf('\nStudy %s: Completed task %d/%d in study %d/%d\n\n', studyName{1}, i_task, noTasks, i_study,length(studies)) 
         end
         studies(i_study).tasks = tasks;
-        save(resultsFolder, 'studies', '-v7.3')
+        save([resultsFolder '/studies'], 'studies', '-v7.3')
     else
         for i_task = 1:noTasks
             tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel,resultsFolder);
@@ -49,7 +49,7 @@ for i_study = 1:numel(studies)
             end
             studies(i_study).tasks(i_task,1).task = tasks(i_task,1).task;
             fprintf('\nStudy %s: Completed task %d/%d in study %d/%d\n\n', studyName{1}, i_task, noTasks, i_study,length(studies)) 
-            save(resultsFolder, 'studies', '-v7.3')
+            save([resultsFolder '/studies'], 'studies', '-v7.3')
         end
         if task.useROM
             studies(i_study).loopParameters{end+1} = 'noVecs';
@@ -58,15 +58,15 @@ for i_study = 1:numel(studies)
             studies(i_study).loopParametersArr{end+1} = basisROMcell;
             studies(i_study).tasks = tasks(:);
         end
-        save(resultsFolder, 'studies', '-v7.3')
         studies(i_study).resultsFolder = resultsFolder;
+        save([resultsFolder '/studies'], 'studies', '-v7.3')
     end
 end
 fprintf('\n\nTotal time spent on study "%s": %12f seconds\n', studyName{1}, toc(t_start_study))  
 
 %% Perform post plotting
-close all
 for i_study = 1:numel(studies)  
+    close all
     study = studies(i_study);
     for i = 1:numel(study.postPlot)
         figure(i)

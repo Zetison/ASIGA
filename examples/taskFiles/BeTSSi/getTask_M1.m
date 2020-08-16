@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This study is based on Figure A.3 in Venas2019asi
+% This study is based on Figure A.2 and Figure A.3 in Venas2019asi
 % Venas2019asi is available at http://hdl.handle.net/11250/2640443
 
 scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
@@ -13,22 +13,21 @@ formulation = {'CCBIE'};
 varCol = setM1Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M1';
 f = [1e2,1e3];             % Frequency
+% f = 1e2;             % Frequency
 
-M = 3;
+M = 3:4;
 degree = 2;
 beta = 0;
-alpha = (0:0.05:360)*pi/180;
+alpha = (0:0.5:360)*pi/180;
 
 loopParameters = {'M','parm','f','method','formulation','alpha_s'};
-prePlot.abortAfterPlotting  = true;                % Abort simulation after pre plotting
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
-prePlot.elementBasedSamples = 1;
+prePlot.elementBasedSamples = 0;
 prePlot.axis = 'on';
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-% prePlot = rmfield(prePlot,'color');
 solveForPtot = true;
 
 para.plotResultsInParaview = false;
@@ -46,19 +45,22 @@ postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-% collectIntoTasks
+collectIntoTasks
 
-
-M = 1;
-method = {'KDT'};
 solveForPtot = false;
+method = {'IENSG'};
+formulation = {'BGU'};
+N = 3;
+collectIntoTasks
+
+method = {'KDT'};
 formulation = {'MS1'};
 
 collectIntoTasks
 
 function addCommands_(i_study)
 if i_study == 1
-    for f = [1e2, 1e3]
+    for f = 1e2 %[1e2, 1e3]
         T = readtable(['miscellaneous/refSolutions/M1_BEM_IGA_GBM_M6_NNaN_f' num2str(f) '_TSVSalpha.txt'], ...
                         'FileType','text', 'HeaderLines',1,'CommentStyle','%');
         x = T.Var1;

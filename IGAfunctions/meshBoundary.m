@@ -1,9 +1,10 @@
 function [nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(varCol,outerBoundary)
+
 gluedNodes = varCol.gluedNodes;
 
 degree = varCol.degree(1:2);
 patches = varCol.patches;
-knotVecs = varCol.knotVecs;
+
 noPatches = varCol.noPatches;
 
 p_xi = degree(1); % assume p_xi is equal in all patches
@@ -53,6 +54,8 @@ maxDof = 0;
 jEl = zeros(1,2);
 for i = 1:noPatches
     nurbs = patches{i}.nurbs;
+    n_xi = nurbs.number(1);
+    n_eta = nurbs.number(2);
     varCol_dummy.dimension = 1;
     varCol_dummy.nurbs = subNURBS({nurbs},'at',[0,0;0,0;1-outerBoundary,outerBoundary]);
     varCol_dummy = generateIGAmesh(convertNURBS(varCol_dummy));
@@ -68,15 +71,14 @@ element2 = element;
 % Glue nodes in 2D mesh
 for i = 1:length(gluedNodes)
     indices = (nodes(element(:)) == gluedNodes{i}(1));
-    parentIdx = element(indices);
-    element(indices) = parentIdx;
-    for j = 2:length(gluedNodes{i})
-        indices = (nodes(element(:)) == gluedNodes{i}(j));
-        element(indices) = parentIdx;
+    if any(indices)
+        parentIdx = element(indices);
+        for j = 2:length(gluedNodes{i})
+            indices = (nodes(element(:)) == gluedNodes{i}(j));
+            element(indices) = parentIdx(1);
+        end
     end
 end
-
-
 
 
 

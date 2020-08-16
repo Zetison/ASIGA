@@ -6,14 +6,14 @@ method = {'IE'};
 formulation = {'BGU'};
 
 varCol = setS15Parameters();
-varCol = varCol(1:3);
+varCol = varCol(1:2);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
 % varCol{3}.R_i = 0;
-f = 1e3;             % Frequency
+f = 1e2;             % Frequency
 
-M = 1;
-parm = 2;
-degree = 4;
+M = 4;
+parm = 1;
+degree = 2;
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
 alpha = (0:0.1:360)*pi/180;
@@ -57,4 +57,4 @@ solveForPtot = true;
 formulation = {'GBM','CCBIE'};
 formulation = {'GCBIE'};
 
-% collectIntoTasks
+collectIntoTasks

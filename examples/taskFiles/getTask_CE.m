@@ -7,7 +7,6 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 model = 'CE';
 
 method = {'BEM'};
-formulation = {'CBM','CCBIE'};
 formulation = {'CCBIE'};
 
 varCol{1} = struct('media', 'fluid', ...
@@ -17,7 +16,7 @@ varCol{1} = struct('media', 'fluid', ...
 varCol{1}.meshFile = 'createNURBSmesh_CE';
 f = 62.8*varCol{1}.c_f/(2*pi);             % Frequency
 
-M = 5;
+M = 5:6;
 parm = 2;
 degree = 4;
 beta = 0;
@@ -26,18 +25,15 @@ beta_s = 0;
 alpha_s = pi/4;
 
 quadMethodBEM = 'Simpson';
+solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};
-prePlot.plot3Dgeometry = 0;
-prePlot.plot2Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 1;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-prePlot.abortAfterPlotting = 0;
-% prePlot = rmfield(prePlot,'color');
-solveForPtot = true;
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
@@ -51,7 +47,7 @@ postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 
-% collectIntoTasks
+collectIntoTasks
 
 M = 6;
 para.plotResultsInParaview = 1;
@@ -63,4 +59,4 @@ method = {'KDT'};
 solveForPtot = false;
 formulation = {'MS1'};
 
-% collectIntoTasks
+collectIntoTasks

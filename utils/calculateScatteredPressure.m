@@ -1,7 +1,22 @@
-function p_h = calculateScatteredPressure(varCol, U, P_far, useExtraQuadPts, computeFarField)
+function p_h = calculateScatteredPressure(varCol, Uc, P_far, useExtraQuadPts, computeFarField)
 
+d_p = varCol{1}.patches{1}.nurbs.d_p;
+d = varCol{1}.patches{1}.nurbs.d;
+U = Uc{1};
+if numel(varCol) > 1 && d_p == 2
+    [~, ~, elementSolid] = meshBoundary(varCol{2},1);
+    noDofs = varCol{2}.noDofs;
+    Ux = Uc{2}(1:d:noDofs,:);
+    Uy = Uc{2}(2:d:noDofs,:);
+    Uz = Uc{2}(3:d:noDofs,:);
+else
+    elementSolid = NaN;
+    Ux = NaN;
+    Uy = NaN;
+    Uz = NaN;
+end
+rho = varCol{1}.rho;
 degree = varCol{1}.degree; % assume p_xi is equal in all patches
-
 noDofs = varCol{1}.noDofs;
 index = varCol{1}.index;
 noElems = varCol{1}.noElems;
@@ -14,6 +29,7 @@ knotVecs = varCol{1}.knotVecs;
 pIndex = varCol{1}.pIndex;
 BC = varCol{1}.BC;
 k = varCol{1}.k;
+omega = varCol{1}.omega;
 method = varCol{1}.method;
 if strcmp(method,'IENSG')
     A_2 = varCol{1}.A_2;
@@ -32,8 +48,6 @@ end
 dp_inc = varCol{1}.dp_inc;
 
 Phi_k = varCol{1}.Phi_k;
-d_p = varCol{1}.patches{1}.nurbs.d_p;
-
 if d_p == 3
     surfaceElements = [];
     for e = 1:noElems
@@ -123,15 +137,21 @@ parfor i = 1:length(surfaceElements)
         dp_h_gp = -dp_inc(Y,normals); 
     else
         if d_p == 2
-            error('Not implemented')
-        end
-        dXdxi = R{2}*pts;
-        dXdeta = R{3}*pts;
-        dXdzeta = R{4}*pts;
-        dp_h_gp = zeros(size(p_h_gp));
-        for gp = 1:size(W,1)
-            J = [dXdxi(gp,:).' dXdeta(gp,:).' dXdzeta(gp,:).'];
-            dp_h_gp(gp,:) = (J'\[R{2}(gp,:); R{3}(gp,:); R{4}(gp,:)]*U_sctr).'*normals(gp,:).';
+            dp_h_gp = rho*omega^2*( normals(:,1).*(R{1}*Ux(elementSolid(e,:),:)) ...
+                                   +normals(:,2).*(R{1}*Uy(elementSolid(e,:),:)) ...
+                                   +normals(:,3).*(R{1}*Uz(elementSolid(e,:),:)));
+            if ~solveForPtot
+                dp_h_gp = dp_h_gp - dp_inc(Y,normals);
+            end
+        else
+            dp_h_gp = zeros(size(p_h_gp));
+            for gp = 1:size(W,1)
+                dXdxi = R{2}*pts;
+                dXdeta = R{3}*pts;
+                dXdzeta = R{4}*pts;
+                J = [dXdxi(gp,:).' dXdeta(gp,:).' dXdzeta(gp,:).'];
+                dp_h_gp(gp,:) = (J'\[R{2}(gp,:); R{3}(gp,:); R{4}(gp,:)]*U_sctr).'*normals(gp,:).';
+            end
         end
     end
 

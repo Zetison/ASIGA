@@ -5,10 +5,13 @@
 % studyName = 'M3'; %getTask_M3
 % studyName = 'M4'; %getTask_M4
 % studyName = 'M5'; %getTask_M5
+% studyName = 'M31'; %getTask_M31
 % studyName = 'PH'; %getTask_PH
 % studyName = 'Barrel'; %getTask_Barrel
-studyName = 'S15'; %getTask_S15   % to be tested
-% studyName = 'CE'; %getTask_CE   % Cat's eye
+% studyName = 'S15'; %getTask_S15
+% studyName = 'CE'; %getTask_CE
+studyName = {'articleIGA_Simpson', 'M1', 'M2', 'M3', 'M4', 'M5', 'M31', 'PH', 'Barrel', 'S15', 'CE'};
+% studyName = {'articleIGA_Simpson', 'CE'};
 
 %% Venas2020ibe
 % studyName = 'articleBEM_S1_quadVis'; %getTask_articleBEM_S1_quadVis

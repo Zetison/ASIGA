@@ -120,12 +120,10 @@ for i_v = 1:numel(varCol)
                 nodesCount = nodesCount + container{e}.noNodes;
             end
 
-            options = struct('name',[para.name '_' num2str(i_v) '_mesh'], 'celltype', 'VTK_POLY_LINE');
-
             data.nodes = nodes;
             data.visElements = visElements;
 
-            makeVTKfile(data, options);
+            makeVTKfile(data, 'name', [para.name '_' num2str(i_v) '_mesh'], 'celltype', 'VTK_POLY_LINE');
         case 3
             container = cell(1,noElems);
 %             for e = 1:noElems
@@ -211,14 +209,12 @@ for i_v = 1:numel(varCol)
                     nodesCount = nodesCount + container{e}.container_e{i}.noNodes;
                 end
             end
-
-            para = struct('name',[para.name '_' num2str(i_v) '_mesh'], 'celltype', 'VTK_POLY_LINE', ...
-                'plotDisplacementVectors', plotDisplacementVectors,'plotTimeOscillation', para.plotTimeOscillation);
-
+            
             data.nodes = nodes;
             data.displacement = real(makeDynamic(displacement, para, omega));
             data.visElements = visElements;
 
-            makeVTKfile(data, para);
+            makeVTKfile(data, 'name',[para.name '_' num2str(i_v) '_mesh'], 'celltype', 'VTK_POLY_LINE', ...
+                'plotDisplacementVectors', plotDisplacementVectors,'plotTimeOscillation', para.plotTimeOscillation);
     end
 end

@@ -18,7 +18,7 @@ varCol = setPHParameters(1);
 c_f = varCol{1}.c_f;   % Speed of sound in outer fluid
 f = 2e2; %[2e2 1e3 4e3];             % Frequency
 
-M = 3;
+M = 3:4;
 
 % alpha = (0:0.05:360)*pi/180;
 alpha = (0:1:360)*pi/180;
@@ -62,9 +62,8 @@ collectIntoTasks
 method = {'BEM'};
 % formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 formulation = {'CCBIE'};
-colBEM_C0 = 0;
 solveForPtot = true;
-% collectIntoTasks
+collectIntoTasks
 
 
 function addCommands_(i_study)

@@ -26,9 +26,7 @@ M = 3;
 alpha_s = pi;
 beta_s = 0;  
 alpha = (0:0.5:360)*pi/180;
-prePlot.plot2Dgeometry = 0;
-prePlot.plot3Dgeometry = 0;
-prePlot.plotControlPolygon = false;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
 
 plotFarField = false; 

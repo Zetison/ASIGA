@@ -3,32 +3,26 @@ scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 model = 'M2';
 
 method = {'BEM'};
-formulation = {'CBM','CCBIE'};
 formulation = {'CCBIE'};
 
 varCol = setM2Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M2';
 f = 1e3;             % Frequency
 
-M = 3:4;
+M = 5:6;
 degree = 2;
 beta = 0;
-alpha = (0:0.5:360)*pi/180;
-
-pctRunOnAll warning('off', 'BEM:recursion')
+alpha = (0:0.1:360)*pi/180;
+solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'on';
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-% prePlot = rmfield(prePlot,'color');
-solveForPtot = true;
-para.plotResultsInParaview = true;
-prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
@@ -43,10 +37,9 @@ postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-% collectIntoTasks
+collectIntoTasks
 
 
-M = 4;
 method = {'KDT'};
 solveForPtot = false;
 formulation = {'MS1'};

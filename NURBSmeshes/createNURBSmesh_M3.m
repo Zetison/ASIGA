@@ -81,11 +81,9 @@ end
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
-L_gamma = L + R1 + R2;
-
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
-varCol{1}.L_gamma = L_gamma;
+varCol{1}.L_gamma = L + R1 + R2;
 varCol{1}.Upsilon = Upsilon;
 
 varCol{1}.nurbs = fluid;

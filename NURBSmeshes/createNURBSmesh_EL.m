@@ -49,15 +49,38 @@ if varCol{1}.boundaryMethod
     fluid = subNURBS(solid,options);
     varCol{1}.patchTop = getPatchTopology(fluid);
     if numel(varCol) > 2
-        fluid_i = extractSurface(solid, 'zeta', 'inner');
-        varCol{3}.patchTop = getPatchTopology(fluid_i);
+        if varCol{3}.R_i > 0
+            fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i);
+            fluid_i_inner = flipNURBSparametrization(subNURBS(fluid_i,'at',[0,0;0,0;1,0]),1);
+            fluid_i_outer = subNURBS(solid,'at',[0,0;0,0;1,0]);
+            fluid_i = [fluid_i_inner,fluid_i_outer];
+            
+            varCol{3}.patchTop = getPatchTopology(fluid_i);
 
-        varCol_fluid_i.dimension = 1;
-        varCol_fluid_i.nurbs = fluid_i;
-        varCol_fluid_i = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_fluid_i)));
-        varCol{3}.elemsOuter = 1:varCol_fluid_i.noElems;
-        varCol{3}.noDofsInner = 0;
-        varCol{3}.noElemsInner = 0;
+            varCol_fluid_i_inner.dimension = 1;
+            varCol_fluid_i_inner.nurbs = fluid_i_inner;
+            varCol_fluid_i_inner = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_fluid_i_inner)));
+
+            varCol_fluid_i_outer.dimension = 1;
+            varCol_fluid_i_outer.nurbs = fluid_i_outer;
+            varCol_fluid_i_outer = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_fluid_i_outer)));
+
+            varCol{3}.elemsOuter = (1:varCol_fluid_i_outer.noElems)+varCol_fluid_i_inner.noElems;
+            varCol{3}.noDofsInner = varCol_fluid_i_inner.noDofs;
+            varCol{3}.noElemsInner = varCol_fluid_i_inner.noElems;
+        else
+            fluid_i = subNURBS(solid,'at',[0,0;0,0;1,0]);
+            fluid_i = makeUniformNURBSDegree(fluid_i,degree);
+            fluid_i = insertKnotsInNURBS(fluid_i,[noNewXiKnots,noNewEtaKnots]);
+            varCol{3}.patchTop = getPatchTopology(fluid_i);
+
+            varCol_fluid_i.dimension = 1;
+            varCol_fluid_i.nurbs = fluid_i;
+            varCol_fluid_i = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_fluid_i)));
+            varCol{3}.elemsOuter = 1:varCol_fluid_i.noElems;
+            varCol{3}.noDofsInner = 0;
+            varCol{3}.noElemsInner = 0;
+        end
     end
     varCol_dummy.dimension = 1;
     varCol_dummy.nurbs = fluid;

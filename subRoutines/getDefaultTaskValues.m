@@ -39,7 +39,7 @@ prePlot.export_fig_name2D   = '';                   % Name of exported figure us
 prePlot.export_fig_name3D   = '';                   % Name of exported figure using export_fig for 3D plots
 prePlot.useCamlight         = true;                 % Toggle camlight on
 
-prePlot.plotControlPolygon  = true;                 % Plot the control polygon for the NURBS mesh
+prePlot.plotControlPolygon  = false;                 % Plot the control polygon for the NURBS mesh
 prePlot.plotNormalVectors   = false;                % Plot the normal vectors for the NURBS mesh
 prePlot.resolution       	= [20,20,20];           % Number of evaluation points in the visualization for each element for each parametric direction
 prePlot.color               = getColor(1); 	% Color for the NURBS surfaces

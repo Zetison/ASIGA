@@ -110,6 +110,13 @@ n_en = prod(degree+1);
 [Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP,extraGPBEM,quadMethodBEM);
 [Q2D,W2D] = gaussTensorQuad(degree+1+extraGP);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+plot_GP = 0;
+% nurbs = varCol.nurbs;
+% pD = plotBEMGeometry(nurbs,plot_GP,100,1);
+% pD = plotBEMGeometry(varCol.nurbs,plot_GP,10,0);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 idxRow = zeros(n_en, noElems);
 idxRow2 = zeros(n_en, noElems);
 idxRow3 = zeros(n_en, noElemsInner);
@@ -136,9 +143,13 @@ end
 
 parfor e_x = 1:noElems
 % for e_x = 1:noElems
+% for e_x = 1
 	if progressBars && mod(e_x,nProgressStepSize) == 0
         ppm.increment();
 	end
+    if ~plot_GP % to avoid Matlab bug
+        pD.plotGP = false;
+    end
     patch_x = pIndex(e_x); % New
     knots_x = knotVecs{patch_x}; % New
 
@@ -202,13 +213,16 @@ parfor e_x = 1:noElems
         idxCol2 = zeros(d*n_en, noElems-noElemsInner);
         idxCol3 = zeros(d*n_en, noElemsInner);
     
+        if plot_GP
+            pD = plotGP(pD,x,'blue');
+        end
         for e_y = 1:noElems   
-            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, ~,~,R_y,r,fact_y,ny] ...
+            [BIE, integrals, FF_temp, sctr_y, noGp, collocationPointIsInElement, pD,~,R_y,r,fact_y,ny] ...
                     = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                     useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                     x,nx,pt_x(1),pt_x(2),e_x,constants,psiType,useRegul,...
                     degree,pIndex,knotVecs,index,elRange,element,element2,controlPts,weights,...
-                    patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
+                    patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM,pD);
             idxCol(:,e_y) = sctr_y;
             for i = 1:d
                 if ismember(e_y,elemsOuter)

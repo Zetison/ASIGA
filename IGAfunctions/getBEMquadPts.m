@@ -680,7 +680,7 @@ else
 end
 
 function adaptiveQuad(recursionLevel)
-maxRecursionLevel = 10;
+maxRecursionLevel = 20;
 if recursionLevel > maxRecursionLevel
     warning('BEM:recursion',['Reached recursion level > ' num2str(maxRecursionLevel) ', inacurate integration may have occured (probably due to singular geometric points)'])
 end

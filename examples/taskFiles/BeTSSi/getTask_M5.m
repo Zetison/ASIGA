@@ -21,18 +21,17 @@ alpha = (0:0.5:360)*pi/180;
 alpha_s = 60*pi/180;
 beta_s = 0*pi/180;
 quadMethodBEM = 'Simpson';
+solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};
 
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-prePlot.abortAfterPlotting = true;
-% prePlot = rmfield(prePlot,'color');
-solveForPtot = true;
+
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
@@ -47,7 +46,7 @@ postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-% collectIntoTasks
+collectIntoTasks
 
 
 method = {'KDT'};

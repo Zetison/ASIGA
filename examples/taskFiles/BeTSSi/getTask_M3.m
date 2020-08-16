@@ -18,18 +18,15 @@ degree = 2;
 % degree = 5; % use and odd degree > 4 if parm = 2 and method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
 parm = 1;
 beta = 0;
-alpha = (0:0.2:360)*pi/180;
+alpha = (0:0.1:360)*pi/180;
 
 loopParameters = {'M','parm','f','method','formulation'};
-prePlot.abortAfterPlotting  = true;                % Abort simulation after pre plotting
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
-prePlot.axis = 'on';
 prePlot.plotParmDir = 0;
-prePlot.plotNormalVectors = 1;
+prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-% prePlot = rmfield(prePlot,'color');
 solveForPtot = false;
 
 para.plotResultsInParaview = false;
@@ -49,11 +46,12 @@ postPlot(1).xlim            = [0,180];
 postPlot(1).ylim            = [-60,40];
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
 method = {'KDT'};
+M = 5;
 formulation = {'MS1'};
 
 collectIntoTasks
@@ -66,7 +64,7 @@ formulation = {'CCBIE','CBM'};
 formulation = {'CCBIE'};
 BC = 'SHBC';
 loopParameters = {'formulation','M','method','f'};
-% collectIntoTasks
+collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,7 +81,7 @@ N = 4:6;
 r = 10;
 
 loopParameters = {'parm','M','method','N'};
-% collectIntoTasks
+collectIntoTasks
 
 
 function addCommands_(i_study)

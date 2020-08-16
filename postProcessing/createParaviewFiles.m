@@ -360,7 +360,6 @@ for i_v = 1:numel(varCol)
                     if isOuterDomain && ~isPointPulsation
                         scalarField{i_v} = scalarField{i_v} - p_inc(nodes{i_v});
                     end
-        %             data.errorFunc = errorFunc;
                 else   
                     if isPointPulsation
                         totField = scalarField{i_v};

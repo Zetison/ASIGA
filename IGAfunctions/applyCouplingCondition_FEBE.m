@@ -1,12 +1,10 @@
 function A = applyCouplingCondition_FEBE(varCol)
 
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
+degree = varCol.degree(1:2);
+elRange = varCol.elRange;
 
 index = varCol.index;
 noElems = varCol.noElems;
-elRangeXi = varCol.elRange{1};
-elRangeEta = varCol.elRange{2};
 element = varCol.element;
 element2 = varCol.element2;
 weights = varCol.weights;
@@ -17,29 +15,23 @@ noDofs = varCol.noCtrlPts;
 
 d = 3;
 
-n_en = (p_xi+1)*(p_eta+1);
+n_en = prod(degree+1);
 A1values = zeros(d*n_en^2,noElems);
 
 spIdxRow1 = zeros(d*n_en^2,noElems);
 spIdxCol1 = zeros(d*n_en^2,noElems);
 
-
-[W2D,Q2D] = gaussianQuadNURBS(p_xi+1,p_eta+1); 
-Qxi = Q2D(:,1);
-Qeta = Q2D(:,2);
+[Q, W] = gaussTensorQuad(degree+1);
 % for e = 1:noElems
 parfor e = 1:noElems
     patch = pIndex(e); % New
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
+    knots = knotVecs{patch}(1:2);
+    Xi_e = zeros(2,2);
+    for i = 1:2
+        Xi_e(i,:) = elRange{i}(index(e,i),:);
+    end
 
-    idXi = index(e,1);
-    idEta = index(e,2);
-
-    Xi_e = elRangeXi(idXi,:);
-    Eta_e = elRangeEta(idEta,:);
-
-    J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
 
     sctr = element(e,:);
     sctr_k_e = zeros(1,d*n_en);
@@ -48,19 +40,16 @@ parfor e = 1:noElems
     end
     pts = controlPts(sctr,:);
     wgts = weights(element2(e,:),:); % New
-
-    xi   = parent2ParametricSpace(Xi_e,  Qxi);
-    eta  = parent2ParametricSpace(Eta_e, Qeta);
-    [R, dRdxi, dRdeta] = NURBS2DBasisVec(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-    J1 = dRdxi*pts;
-    J2 = dRdeta*pts;
-    crossProd = cross(J1,J2,2);
-    J_1 = norm2(crossProd);
+    
+    xi = parent2ParametricSpace(Xi_e, Q);
+    I = findKnotSpans(degree, xi(1,:), knots);
+    R = NURBSbasis(I, xi, degree, knots, wgts);
+    [J_1, crossProd] = getJacobian(R,pts,2);
     normal = crossProd./J_1;
 
     A1_e = zeros(n_en,d*n_en);
-    for i = 1:numel(W2D)
-        A1_e = A1_e + R(i,:)'*kron(R(i,:),normal(i,:))*norm(crossProd(i,:)) * J_2 * W2D(i); 
+    for i = 1:numel(W)
+        A1_e = A1_e + R{1}(i,:)'*kron(R{1}(i,:),normal(i,:))*norm(crossProd(i,:)) * J_2 * W(i); 
     end
     
     spIdxRow1(:,e) = copyVector(sctr,d*n_en,1);
