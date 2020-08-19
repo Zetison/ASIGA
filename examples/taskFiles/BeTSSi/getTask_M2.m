@@ -7,9 +7,9 @@ formulation = {'CCBIE'};
 
 varCol = setM2Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M2';
-f = 1e3;             % Frequency
+f = [1e2,1e3];             % Frequency
 
-M = 5:6;
+M = 4:5;
 degree = 2;
 beta = 0;
 alpha = (0:0.1:360)*pi/180;
@@ -45,17 +45,17 @@ solveForPtot = false;
 formulation = {'MS1'};
 
 collectIntoTasks
-
-function addCommands_(i_study)
-if i_study == 1
-    T = readtable('../../OneDrive/work/matlab/plotData/refSolutions/M2_HWBC_MS_AS_E0_F1.txt','FileType','text', 'HeaderLines',7);
-    x = T.Var1;
-    y = T.Var2;
-    plot(x,y,'DisplayName','Reference solution f = 1000Hz')
-    legend('off');
-    legend('show');
-    hold on
-end
-end
-
-
+% 
+% function addCommands_(i_study)
+% if i_study == 1
+%     T = readtable('../../OneDrive/work/matlab/plotData/refSolutions/M2_HWBC_MS_AS_E0_F1.txt','FileType','text', 'HeaderLines',7);
+%     x = T.Var1;
+%     y = T.Var2;
+%     plot(x,y,'DisplayName','Reference solution f = 1000Hz')
+%     legend('off');
+%     legend('show');
+%     hold on
+% end
+% end
+% 
+% 
