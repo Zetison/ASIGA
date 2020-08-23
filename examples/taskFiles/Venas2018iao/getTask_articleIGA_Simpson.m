@@ -13,6 +13,7 @@ formulation = {'PGU','PGC','BGU','BGC'};
 coreMethod = 'IGA';
 computeCondNumber = 0;
 runTasksInParallel = 0;
+progressBars = false;        % Show progress bars for building system matrices
 
 varCol = setSSParameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_EL';

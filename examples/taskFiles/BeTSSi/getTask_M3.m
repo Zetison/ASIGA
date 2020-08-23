@@ -13,7 +13,7 @@ varCol = setM3Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M3';
 f = 1e3;             % Frequency
 
-M = 5:6;
+M = 5;
 degree = 2;
 % degree = 5; % use and odd degree > 4 if parm = 2 and method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
 parm = 1;

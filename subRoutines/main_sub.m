@@ -985,6 +985,8 @@ if calculateFarFieldPattern && ~useROM
                     nProgressStepSize = ceil(noIncDir/1000);
                     if progressBars
                         ppm = ParforProgMon('Tracing rays: ', noIncDir, nProgressStepSize);
+                    else
+                        ppm = NaN;
                     end
 %                     for i = 1:noIncDir
                     parfor i = 1:noIncDir

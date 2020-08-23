@@ -1,5 +1,5 @@
 
-% studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
+studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'M1'; %getTask_M1
 % studyName = 'M2'; %getTask_M2
 % studyName = 'M3'; %getTask_M3
@@ -10,7 +10,7 @@
 % studyName = 'Barrel'; %getTask_Barrel
 % studyName = 'S15'; %getTask_S15
 % studyName = 'CE'; %getTask_CE
-studyName = {'articleIGA_Simpson', 'M1', 'M2', 'M3', 'M4', 'M5', 'M31', 'PH', 'Barrel', 'S15', 'CE'};
+% studyName = {'articleIGA_Simpson', 'M1', 'M2', 'M3', 'M4', 'M5', 'M31', 'PH', 'Barrel', 'S15', 'CE'};
 % studyName = {'articleIGA_Simpson', 'CE'};
 
 %% Venas2020ibe

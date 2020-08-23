@@ -48,7 +48,7 @@ J_1_values   = zeros(size(W,1),noElems,1);
 progressBars = varCol.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building BA matrix: ', noElems, nProgressStepSize);
+    ppm = ParforProgMon('Building BA matrix (1/2): ', noElems, nProgressStepSize);
 else
     ppm = NaN;
 end
@@ -99,9 +99,17 @@ spIdxCol = zeros(sizeMe,noElems);
 Mvalues = zeros(sizeMe,noElems); 
 Fvalues   = zeros(n_en,noElems,no_funcs); 
 F_indices = zeros(n_en,noElems); 
+if progressBars
+    ppm = ParforProgMon('Building BA matrix (2/2): ', noElems, nProgressStepSize);
+else
+    ppm = NaN;
+end
 
 % for e = 1:noElems
 parfor e = 1:noElems
+	if progressBars && mod(e,nProgressStepSize) == 0
+        ppm.increment();
+	end
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(d_p,2);
