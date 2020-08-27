@@ -1,3 +1,9 @@
+function studies = getTask_M31()
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
+
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'M31';

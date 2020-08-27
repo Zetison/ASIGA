@@ -1,3 +1,9 @@
+function studies = getTask_Barrel()
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
+
 scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'Barrel';

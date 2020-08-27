@@ -1,3 +1,9 @@
+function studies = getTask_M2()
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
+
 scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'M2';

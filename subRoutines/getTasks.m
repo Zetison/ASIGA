@@ -1,10 +1,8 @@
-function studies = getTasks(studyName)
+function studiesCol = getTasks(studyName)
 
-studies = cell(0,1);
+studiesCol = cell(1,numel(studyName));
 
-counter = 1;
-for i = 1:numel(studyName)
-    getDefaultTaskValues
-    eval(['getTask_' studyName{i}])
+for i_coll = 1:numel(studyName)
+    eval(['studiesCol{i_coll} = getTask_' studyName{i_coll}])
 end
 

@@ -1,6 +1,10 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function studies = getTask_PH()
 % This study is based on Schneider2003asb Figure 3
 % Schneider2003asb is available at https://www.researchgate.net/publication/27256874
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
 
 %% IE simulation
 scatteringCase = 'MS';
@@ -75,5 +79,4 @@ if i_study == 1
     legend('off');
     legend('show');
     hold on
-end
 end

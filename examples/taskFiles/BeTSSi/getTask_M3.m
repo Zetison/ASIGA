@@ -1,6 +1,10 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function studies = getTask_M3()
 % This study is based on Figure B.14 in Venas2019asi
 % Venas2019asi is available at http://hdl.handle.net/11250/2640443
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
 
 scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
@@ -93,7 +97,6 @@ if i_study == 1
     polarplot(x*pi/180,y,'DisplayName','Reference solution f = 1000Hz')
     legend('off');
     legend('show','Interpreter','latex');
-end
 end
 
 

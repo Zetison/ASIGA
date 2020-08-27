@@ -1,5 +1,5 @@
 variables = whos;
-protectedVariables = {'variables','i','j','counter','studies','loopParameters'};
+protectedVariables = {'variables','i','j','counter','studyName','studies','studiesCol','loopParameters'};
 for i = 1:length(variables)
     if ~any(ismember(variables(i).name,protectedVariables))
         task.(variables(i).name) = eval(variables(i).name);

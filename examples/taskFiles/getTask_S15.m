@@ -1,3 +1,9 @@
+function studies = getTask_S15()
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
+
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'S15';
@@ -24,7 +30,7 @@ calculateSurfaceError       = 1;	% Only if scatteringCase == 'Bi'
 calculateVolumeError        = 0;	% Only if scatteringCase == 'Bi'
 progressBars                = false;        % Show progress bars for building system matrices
 
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'on';
@@ -33,7 +39,7 @@ prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 % prePlot = rmfield(prePlot,'color');
 solveForPtot = false;
-prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
+prePlot.abortAfterPlotting  = 0;                % Abort simulation after pre plotting
 
 para.plotResultsInParaview = 0;
 para.plotDisplacementVectors = false;

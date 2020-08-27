@@ -10,6 +10,7 @@ end
 if strcmp(applyLoad,'pointPulsation') || strcmp(applyLoad,'SimpsonTorus') || strcmp(applyLoad,'radialPulsation')
     analyticSolutionExist = true;
 end    
+varCol{1}.analyticSolutionExist = analyticSolutionExist;
 if (calculateSurfaceError || calculateVolumeError) && ~analyticSolutionExist
     error('The errors cannot be computed without an analytic solution')
 end

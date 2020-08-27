@@ -1,6 +1,10 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function studies = getTask_CE()
 % This study is based on Makarov1998ais and correspond to Figure 6 and 7 in Venas2018iao
 % Makarov1998ais is available at https://doi.org/10.1121/1.421238
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
 
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
@@ -30,7 +34,7 @@ solveForPtot = true;
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
-prePlot.elementBasedSamples = 1;
+prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;

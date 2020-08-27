@@ -1,7 +1,11 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function studies = getTask_articleIGA_Simpson()
 % This study is based on Simpson2014aib and correspond to Figure 6 in Venas2018iao
 % Simpson2014aib is available at https://doi.org/10.1016/j.cma.2013.10.026
 % Venas2018iao   is available at https://doi.org/10.1016/j.cma.2018.02.015 (open access version at http://hdl.handle.net/11250/2493754)
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
 
 %% IE simulation
 scatteringCase = 'BI';
@@ -90,7 +94,6 @@ colBEM_C0 = 0;
 solveForPtot = true;
 collectIntoTasks
 
-
 function addCommands_(i_study)
 if i_study == 1
     error_simpson = importdata('miscellaneous/refSolutions/Fig17_M1.csv');
@@ -101,5 +104,4 @@ if i_study == 1
     loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=3');
     legend('off');
     legend('show');
-end
 end

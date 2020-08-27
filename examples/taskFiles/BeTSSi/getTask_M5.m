@@ -1,3 +1,9 @@
+function studies = getTask_M5()
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
+
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 % model = {'M5A', 'M5B'}; % BeTSSi model 5A and BeTSSi model 5B
@@ -66,5 +72,4 @@ if i_study == 1
     legend('off');
     legend('show');
     hold on
-end
 end

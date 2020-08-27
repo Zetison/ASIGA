@@ -1,6 +1,10 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function studies = getTask_M1()
 % This study is based on Figure A.2 and Figure A.3 in Venas2019asi
 % Venas2019asi is available at http://hdl.handle.net/11250/2640443
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
 
 scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
@@ -69,5 +73,4 @@ if i_study == 1
         legend('off');
         legend('show','Interpreter','latex');
     end
-end
 end
