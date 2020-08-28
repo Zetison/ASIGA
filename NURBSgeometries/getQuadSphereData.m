@@ -39,5 +39,5 @@ switch options.parm
         temp2 = insertKnotsInNURBS(temp2,{[], 0.5*ones(1,4), []});
         temp2 = explodeNURBS(temp2);
         nurbs(4) = temp2(2);
-        nurbs = scaleNURBSweights(nurbs,nurbs{4}.coeffs(4,end,1));
+        nurbs = scaleNURBSweights(nurbs,nurbs{4}.coeffs(end,end,1));
 end

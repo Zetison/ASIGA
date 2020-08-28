@@ -1,4 +1,4 @@
-function equalWeights = checkNURBSweightsCompatibility(nurbs)
+function equalWeights = checkNURBSweightsCompatibility(nurbs, plotUnEqualWeights)
 
 
 varCol.dimension = 1;
@@ -21,7 +21,9 @@ for i = 1:numel(varCol.gluedNodes)
         end
     end
 end
-plot3(controlPts(indices,1),controlPts(indices,2),controlPts(indices,3),'o','color','black','MarkerFaceColor', 'blue', 'markersize',10, ...
-                            'MarkerEdgeColor', 'black');
-hold on
+if plotUnEqualWeights
+    plot3(controlPts(indices,1),controlPts(indices,2),controlPts(indices,3),'o','color','black','MarkerFaceColor', 'blue', 'markersize',10, ...
+                                'MarkerEdgeColor', 'black');
+    hold on
+end
     

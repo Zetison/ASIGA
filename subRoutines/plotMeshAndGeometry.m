@@ -51,8 +51,14 @@ if prePlot.plot3Dgeometry
         export_fig(figName, '-png', '-transparent', '-r200')
     end
     savefig([figName, '.fig'])
-%     equalWeights = checkNURBSweightsCompatibility(nurbs)
 end   
+for j = 1:numel(varCol)
+    nurbs = varCol{j}.nurbs;
+    equalWeights = checkNURBSweightsCompatibility(nurbs,prePlot.plot3Dgeometry);
+    if ~equalWeights
+        warning('NURBS:weights','Some weights in the geometry are not equal. For geometries containing singularities this might be ok (this warning may then be supressed using the key NURBS:weights).')
+    end
+end
 if prePlot.plot2Dgeometry
     figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(M)])
     for j = 1:numel(varCol)

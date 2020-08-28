@@ -28,6 +28,7 @@ switch options.parm
         nurbs = nurbs([1,6]);
         nurbs = [flipNURBSparametrization(mirrorNURBS(nurbs(1),'y'),2),nurbs];
         nurbs = rotateNURBS(nurbs,'theta',pi/4);
+        nurbs = scaleNURBSweights(nurbs,nurbs{1}.coeffs(end,end,1));
 end
 
 alignWithAxis = options.alignWithAxis;

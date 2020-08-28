@@ -26,5 +26,5 @@ switch options.parm
         nurbs = [explodeNURBS(nurbs(1),2), nurbs(2), explodeNURBS(nurbs(3),2), explodeNURBS(nurbs(5),1)];
         nurbs = nurbs([2,3,4,6]);
         nurbs = rotateNURBS(nurbs,'theta',-pi/4-pi/2);
-        nurbs = scaleNURBSweights(nurbs,nurbs{1}.coeffs(4,end,1));
+        nurbs = scaleNURBSweights(nurbs,nurbs{1}.coeffs(end,end,1));
 end
