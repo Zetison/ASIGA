@@ -16,6 +16,7 @@ varCol{1}.meshFile = 'createNURBSmesh_M31';
 f = 1e2;             % Frequency
 
 M = 3:4;
+% M = 1;
 degree = 4;
 alpha = (0:0.5:360)*pi/180;
 beta = 0;
@@ -25,13 +26,14 @@ solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};
 
-prePlot.plot3Dgeometry = 0;
-prePlot.resolution = [20,20,0];
+prePlot.plot3Dgeometry = 1;
+prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'on';
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
+prePlot.abortAfterPlotting  = 0;                % Abort simulation after pre plotting
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';

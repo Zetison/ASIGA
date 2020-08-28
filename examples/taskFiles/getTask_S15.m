@@ -18,7 +18,8 @@ varCol{1}.meshFile = 'createNURBSmesh_EL';
 f = 1e2;             % Frequency
 
 M = 4;
-parm = 1;
+M = 1;
+parm = 2;
 degree = 2;
 alpha_s = 240*pi/180;
 beta_s = 30*pi/180;
@@ -39,7 +40,7 @@ prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 % prePlot = rmfield(prePlot,'color');
 solveForPtot = false;
-prePlot.abortAfterPlotting  = 0;                % Abort simulation after pre plotting
+prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
 
 para.plotResultsInParaview = 0;
 para.plotDisplacementVectors = false;
@@ -56,7 +57,7 @@ postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 
-collectIntoTasks
+% collectIntoTasks
 
 method = {'BEM'};
 solveForPtot = true;

@@ -19,10 +19,10 @@ varCol{1}.meshFile = 'createNURBSmesh_M4';
 % f = 3e3;             % Frequency
 f = 1e3;             % Frequency
 
-M = 3:4;
 M = 4:5;
+% M = 1;
 parm = [2,1];
-parm = 2;
+parm = 1;
 degree = 2;
 beta = 30*pi/180;
 alpha = (0:0.05:360)*pi/180;
@@ -30,8 +30,10 @@ solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [10,10,10];
+prePlot.view = [120,20];
+prePlot.resolution = [100,100,100];
 prePlot.plotNormalVectors = 0;
+prePlot.abortAfterPlotting = 0;                % Abort simulation after pre plotting
 
 
 para.plotResultsInParaview = false;

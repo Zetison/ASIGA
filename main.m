@@ -17,8 +17,8 @@ end
 studiesCol = getTasks(studyName);
 
 %% Perform studies
-t_start_study = tic;
 for i_col = 1:numel(studiesCol)
+    t_start_study = tic;
     studies = studiesCol{i_col};
     for i_study = 1:numel(studies)    
         loopParameters = studies(i_study).loopParameters;
@@ -63,7 +63,6 @@ for i_col = 1:numel(studiesCol)
         end 
         save([resultsFolder '/studies'], 'studies')
     end
-    fprintf('\n\nTotal time spent on study "%s": %12f seconds\n', studyName{1}, toc(t_start_study)) 
     close all
     for i_study = 1:numel(studies)  
         study = studies(i_study);
@@ -76,5 +75,6 @@ for i_col = 1:numel(studiesCol)
             end
         end
     end 
+    fprintf('\n\nTotal time spent on case "%s": %12f seconds\n', studyName{i_col}, toc(t_start_study)) 
 end
 

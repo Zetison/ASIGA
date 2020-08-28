@@ -23,15 +23,16 @@ c_f = varCol{1}.c_f;   % Speed of sound in outer fluid
 f = 2e2; %[2e2 1e3 4e3];             % Frequency
 
 M = 3:4;
+% M = 1;
 
 % alpha = (0:0.05:360)*pi/180;
 alpha = (0:1:360)*pi/180;
 
-prePlot.plot2Dgeometry = 0;
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.plotControlPolygon = false;
 prePlot.plotNormalVectors = false;
 prePlot.resolution = [20,20,0];
+prePlot.abortAfterPlotting = false;                % Abort simulation after pre plotting
 
 degree = 2;
 

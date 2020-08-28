@@ -19,8 +19,8 @@ varCol{1}.meshFile = 'createNURBSmesh_M1';
 f = [1e2,1e3];             % Frequency
 % f = 1e2;             % Frequency
 
-M = 4:5;
-% M = 1;
+M = 3:4;
+M = 1;
 degree = 2;
 beta = 0;
 alpha = (0:0.5:360)*pi/180;
@@ -31,11 +31,11 @@ prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
-prePlot.view = [198,10];
+prePlot.view = [;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-prePlot.abortAfterPlotting = 0;                % Abort simulation after pre plotting
+prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 
 para.plotResultsInParaview = false;
 

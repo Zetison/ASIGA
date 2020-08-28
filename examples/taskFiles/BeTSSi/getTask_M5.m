@@ -22,7 +22,7 @@ subFolderName = 'M5';
 M = 1;
 degree = 2;
 beta = 0;
-parm = 2;
+parm = 1;
 alpha = (0:0.5:360)*pi/180;
 alpha_s = 60*pi/180;
 beta_s = 0*pi/180;
@@ -32,11 +32,13 @@ solveForPtot = true;
 loopParameters = {'M','parm','f','method','formulation'};
 
 prePlot.plot3Dgeometry = 1;
+prePlot.view = [7,30];
 prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
+prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 
 
 postPlot(1).xname       	= 'alpha';

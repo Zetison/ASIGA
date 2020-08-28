@@ -21,6 +21,7 @@ varCol{1}.meshFile = 'createNURBSmesh_CE';
 f = 62.8*varCol{1}.c_f/(2*pi);             % Frequency
 
 M = 5:6;
+% M = 1;
 parm = 2;
 degree = 4;
 beta = 0;
@@ -33,11 +34,13 @@ solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [20,20,0];
+prePlot.resolution = [100,100,0];
+prePlot.view = [135,30];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
+prePlot.abortAfterPlotting = false;                % Abort simulation after pre plotting
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
@@ -53,14 +56,19 @@ postPlot(1).xScale          = 180/pi;
 
 collectIntoTasks
 
-M = 6;
-para.plotResultsInParaview = 1;
-para.plotDisplacementVectors = false;
-
-collectIntoTasks
-
 method = {'KDT'};
 solveForPtot = false;
 formulation = {'MS1'};
+
+collectIntoTasks
+
+method = {'BEM'};
+solveForPtot = true;
+formulation = {'CCBIE'};
+M = 6;
+para.plotResultsInParaview = 1;
+para.plotDisplacementVectors = false;
+para.extraXiPts              = 'round(40/2^(M-1))';  % Extra visualization points in the xi-direction per element
+para.extraEtaPts             = 'round(40/2^(M-1))';  % Extra visualization points in the eta-direction per element
 
 collectIntoTasks

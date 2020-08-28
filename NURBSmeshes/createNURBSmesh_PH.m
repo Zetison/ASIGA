@@ -31,14 +31,7 @@ if varCol{1}.boundaryMethod
 
     solid = getBeTSSiPHData('R1', R_1, 'R2', R_2, 't', t, 'gd', L,'Xi', Xi);
     solid = makeUniformNURBSDegree(solid,degree);
-
-    nn = max(2^(M-1)-1,0);
-
-    if M > 0
-        solid(1) = insertKnotsInNURBS(solid(1),{[] linspace2(1/3, 2/3, 8) []});
-    end
-
-    solid = insertKnotsInNURBS(solid,[nn+1,nn,0]);
+    solid = refineNURBSevenly(solid,(2^(M-1)-1)/(R_1*2*pi/3));
 
     fluid = subNURBS(solid,'at',[0 0; 0 0; 0 1]);
     varCol{1}.patchTop = getPatchTopology(fluid);
