@@ -17,7 +17,7 @@ varCol = setM3Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M3';
 f = 1e3;             % Frequency
 
-M = 5;
+M = 4:5;
 % M = 1;
 degree = 2;
 % degree = 5; % use and odd degree > 4 if parm = 2 and method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
@@ -27,7 +27,7 @@ alpha = (0:0.1:360)*pi/180;
 
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [100,100,0];
+% prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
@@ -52,7 +52,7 @@ postPlot(1).xlim            = [0,180];
 postPlot(1).ylim            = [-60,40];
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
@@ -67,6 +67,7 @@ solveForPtot = true;
 method = {'BEM'};
 formulation = {'CCBIE','CBM'};
 formulation = {'CCBIE'};
+formulation = {'CCBIE','GBM'};
 BC = 'SHBC';
 loopParameters = {'formulation','M','method','f'};
 collectIntoTasks

@@ -13,6 +13,7 @@ model = 'M1';
 method = {'BEM'};
 formulation = {'CBM','CCBIE'};
 formulation = {'CCBIE'};
+formulation = {'CCBIE','GBM'};
 
 varCol = setM1Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M1';
@@ -28,7 +29,7 @@ solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation','alpha_s'};
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [20,20,0];
+% prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
 prePlot.view = [198,10];

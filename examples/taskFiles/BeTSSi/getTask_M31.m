@@ -27,7 +27,7 @@ solveForPtot = true;
 loopParameters = {'M','parm','f','method','formulation'};
 
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [100,100,0];
+% prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'on';
 prePlot.plotParmDir = 0;

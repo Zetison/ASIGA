@@ -9,8 +9,8 @@
 % studyName = 'PH'; %getTask_PH
 % studyName = 'Barrel'; %getTask_Barrel
 % studyName = 'S15'; %getTask_S15
-studyName = 'CE'; %getTask_CE
-% studyName = {'articleIGA_Simpson', 'PH', 'S15', 'Barrel', 'CE', 'M4', 'M5', 'M1', 'M2', 'M3', 'M31'};
+% studyName = 'CE'; %getTask_CE
+studyName = {'articleIGA_Simpson', 'PH', 'S15', 'Barrel', 'CE', 'M4', 'M5', 'M1', 'M2', 'M3', 'M31'};
 % studyName = {'articleIGA_Simpson', 'PH'};
 
 %% Venas2020ibe

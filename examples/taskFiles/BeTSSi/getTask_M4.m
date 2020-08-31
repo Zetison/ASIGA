@@ -13,6 +13,7 @@ model = 'M4';
 method = {'BEM'};
 formulation = {'CBM','CCBIE'};
 formulation = {'CCBIE'};
+formulation = {'CCBIE','GBM'};
 
 varCol = setM4Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M4';
@@ -22,7 +23,7 @@ f = 1e3;             % Frequency
 M = 4:5;
 % M = 1;
 parm = [2,1];
-parm = 1;
+parm = 2;
 degree = 2;
 beta = 30*pi/180;
 alpha = (0:0.05:360)*pi/180;
@@ -31,7 +32,7 @@ solveForPtot = true;
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
 prePlot.view = [120,20];
-prePlot.resolution = [100,100,100];
+% prePlot.resolution = [20,20,20];
 prePlot.plotNormalVectors = 0;
 prePlot.abortAfterPlotting = 0;                % Abort simulation after pre plotting
 

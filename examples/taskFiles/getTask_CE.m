@@ -11,6 +11,7 @@ scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scatterin
 model = 'CE';
 method = {'BEM'};
 formulation = {'CCBIE'};
+formulation = {'CCBIE','GBM'};
 
 varCol{1} = struct('media', 'fluid', ...
                    'R', 1, ...
@@ -19,8 +20,8 @@ varCol{1} = struct('media', 'fluid', ...
 varCol{1}.meshFile = 'createNURBSmesh_CE';
 f = 62.8*varCol{1}.c_f/(2*pi);             % Frequency
 
-M = 5:6;
-% M = 2;
+M = 6:7;
+% M = 6;
 parm = 2;
 degree = 4;
 beta = 0;
@@ -33,7 +34,7 @@ solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [20,20,0];
+% prePlot.resolution = [20,20,0];
 prePlot.view = [135,30];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
@@ -63,8 +64,8 @@ collectIntoTasks
 
 method = {'BEM'};
 solveForPtot = true;
-formulation = {'CCBIE'};
-M = 6;
+formulation = {'GBM'};
+M = 7;
 para.plotResultsInParaview = 1;
 para.plotDisplacementVectors = false;
 para.extraXiPts              = 'round(40/2^(M-1))';  % Extra visualization points in the xi-direction per element

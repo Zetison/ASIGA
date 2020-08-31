@@ -18,7 +18,7 @@ varCol{1}.meshFile = 'createNURBSmesh_EL';
 f = 1e2;             % Frequency
 
 M = 4;
-M = 1;
+% M = 1;
 parm = 2;
 degree = 2;
 alpha_s = 240*pi/180;
@@ -32,7 +32,7 @@ calculateVolumeError        = 0;	% Only if scatteringCase == 'Bi'
 progressBars                = false;        % Show progress bars for building system matrices
 
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [20,20,0];
+% prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'on';
 prePlot.plotParmDir = 0;
@@ -40,7 +40,7 @@ prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 % prePlot = rmfield(prePlot,'color');
 solveForPtot = false;
-prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
+prePlot.abortAfterPlotting  = 0;                % Abort simulation after pre plotting
 
 para.plotResultsInParaview = 0;
 para.plotDisplacementVectors = false;

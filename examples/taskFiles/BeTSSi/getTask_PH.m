@@ -31,7 +31,7 @@ alpha = (0:1:360)*pi/180;
 prePlot.plot3Dgeometry = 1;
 prePlot.plotControlPolygon = false;
 prePlot.plotNormalVectors = false;
-prePlot.resolution = [20,20,0];
+% prePlot.resolution = [20,20,0];
 prePlot.abortAfterPlotting = false;                % Abort simulation after pre plotting
 
 degree = 2;
@@ -67,6 +67,7 @@ collectIntoTasks
 method = {'BEM'};
 % formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 formulation = {'CCBIE'};
+formulation = {'CCBIE','GBM'};
 solveForPtot = true;
 collectIntoTasks
 

@@ -32,7 +32,7 @@ alpha_s = pi;
 beta_s = 0;  
 alpha = (0:0.5:360)*pi/180;
 prePlot.plot3Dgeometry = 1;
-prePlot.resolution = [20,20,0];
+% prePlot.resolution = [20,20,0];
 
 plotFarField = false; 
 r = 5; % radii for near-field evaluation
@@ -90,6 +90,7 @@ method = {'BEM'};
 M = 1:3;
 % formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 formulation = {'CCBIE'};
+formulation = {'CCBIE','GBM'};
 colBEM_C0 = 0;
 solveForPtot = true;
 collectIntoTasks
