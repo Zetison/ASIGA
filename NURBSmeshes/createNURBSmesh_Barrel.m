@@ -21,14 +21,22 @@ if varCol{1}.boundaryMethod
     chimin = 9.8;
     chimax = 11.2;
 
-    solid = getBarrelData('R', R, 't', t, 'parm', varCol{1}.parm, 'L', L);
-    solid = makeUniformNURBSDegree(solid,degree);
-    fluid = getFreeNURBS(solid);
-    Imap{1} = [R*pi/2, (R-t)*pi/2, R*1.272651397870586, R*1.155553578414605];
-    fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
-    nurbsCol = collectConnectedNURBS(fluid);
-    fluid = nurbsCol{1};
-    fluid_i = nurbsCol{2};
+    if numel(varCol) == 1
+        fluid = getBarrelData('R', R, 't', t, 'parm', varCol{1}.parm, 'L', L, 'd_p', 2);
+        fluid = makeUniformNURBSDegree(fluid,degree);
+        
+        Imap{1} = [R*pi/2, R*1.414057108745095];
+        fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+    else
+        solid = getBarrelData('R', R, 't', t, 'parm', varCol{1}.parm, 'L', L);
+        solid = makeUniformNURBSDegree(solid,degree);
+        fluid = getFreeNURBS(solid);
+        Imap{1} = [R*pi/2, (R-t)*pi/2, R*1.272651397870586, R*1.155553578414605];
+        fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+        nurbsCol = collectConnectedNURBS(fluid);
+        fluid = nurbsCol{1};
+        fluid_i = nurbsCol{2};
+    end
     
     varCol{1}.patchTop = getPatchTopology(fluid);
     varCol_dummy.dimension = 1;

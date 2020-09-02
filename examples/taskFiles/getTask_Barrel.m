@@ -17,15 +17,16 @@ varCol{1}.meshFile = 'createNURBSmesh_Barrel';
 f = 1.5e3;             % Frequency
 
 M = 5:6;
-% M = 5;
+M = 5;
 degree = 2;
 beta = 0;
-parm = 1;
+parm = 2;
 alpha = (0:0.5:360)*pi/180;
 
 quadMethodBEM = 'Simpson';
 solveForPtot = true;
 
+warning('off','NURBS:weights')
 loopParameters = {'M','parm','f','method','formulation'};
 
 prePlot.plot3Dgeometry = 1;
@@ -35,7 +36,7 @@ prePlot.axis = 'off';
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-prePlot.abortAfterPlotting = 0;                % Abort simulation after pre plotting
+prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';

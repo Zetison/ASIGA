@@ -12,6 +12,13 @@ if varCol{1}.boundaryMethod
     Imap{2} = [4.681336475976538 2.985867581518450   2.989983333287038   t/2*pi/2 0.015641296477826 0.011052467370932];
     fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
     varCol{1}.patchTop = getPatchTopology(fluid);
+    varCol_dummy.dimension = 1;
+    varCol_dummy.nurbs = fluid;
+    varCol_dummy = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_dummy)));
+    
+    varCol{1}.elemsOuter = 1:varCol_dummy.noElems;
+    varCol{1}.noDofsInner = 0;
+    varCol{1}.noElemsInner = 0;
 end
 varCol{1}.nurbs = fluid;
 varCol{1}.L_gamma = L + 2*R;

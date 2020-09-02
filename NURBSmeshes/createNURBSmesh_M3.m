@@ -39,6 +39,13 @@ if varCol{1}.boundaryMethod
         fluid_i = subNURBS(solid, 'at', [0,0;0,0;1,0]);
         varCol{3}.patchTop = getPatchTopology(fluid_i);
     end
+    varCol_dummy.dimension = 1;
+    varCol_dummy.nurbs = fluid;
+    varCol_dummy = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_dummy)));
+    
+    varCol{1}.elemsOuter = 1:varCol_dummy.noElems;
+    varCol{1}.noDofsInner = 0;
+    varCol{1}.noElemsInner = 0;
 else
     error('The mesh is not fully implemented')
     R_max = max(R1,R2);

@@ -26,6 +26,7 @@ beta_s = 30*pi/180;
 alpha = (0:0.1:360)*pi/180;
 beta = 30*pi/180;
 
+warning('off','NURBS:weights')
 loopParameters = {'M','parm','f','method','formulation'};
 calculateSurfaceError       = 1;	% Only if scatteringCase == 'Bi'
 calculateVolumeError        = 0;	% Only if scatteringCase == 'Bi'

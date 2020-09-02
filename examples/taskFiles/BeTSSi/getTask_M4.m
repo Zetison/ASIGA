@@ -20,7 +20,7 @@ varCol{1}.meshFile = 'createNURBSmesh_M4';
 % f = 3e3;             % Frequency
 f = 1e3;             % Frequency
 
-M = 4:5;
+M = 5:6;
 % M = 1;
 parm = [2,1];
 parm = 2;
@@ -29,6 +29,7 @@ beta = 30*pi/180;
 alpha = (0:0.05:360)*pi/180;
 solveForPtot = true;
 
+warning('off','NURBS:weights')
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
 prePlot.view = [120,20];

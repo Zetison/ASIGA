@@ -24,6 +24,7 @@ alpha_s = 240*pi/180;
 beta_s = 0;
 solveForPtot = true;
 
+warning('off','NURBS:weights')
 loopParameters = {'M','parm','f','method','formulation'};
 
 prePlot.plot3Dgeometry = 1;

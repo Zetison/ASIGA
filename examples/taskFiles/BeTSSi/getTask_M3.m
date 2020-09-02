@@ -25,6 +25,7 @@ parm = 1;
 beta = 0;
 alpha = (0:0.1:360)*pi/180;
 
+warning('off','NURBS:weights')
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;
 % prePlot.resolution = [20,20,0];

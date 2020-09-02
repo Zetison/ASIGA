@@ -20,7 +20,7 @@ f = 1e3;             % Frequency
 subFolderName = 'M5';
 
 M = 4:5;
-% M = 1:2;
+% M = 1;
 degree = 2;
 beta = 0;
 parm = 1;
