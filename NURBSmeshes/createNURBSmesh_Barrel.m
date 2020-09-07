@@ -21,7 +21,7 @@ if varCol{1}.boundaryMethod
     chimin = 9.8;
     chimax = 11.2;
 
-    if numel(varCol) == 1
+    if 0 %numel(varCol) == 1
         fluid = getBarrelData('R', R, 't', t, 'parm', varCol{1}.parm, 'L', L, 'd_p', 2);
         fluid = makeUniformNURBSDegree(fluid,degree);
         

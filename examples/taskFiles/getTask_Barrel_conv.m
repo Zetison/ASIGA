@@ -1,34 +1,38 @@
-function studies = getTask_Barrel()
+function studies = getTask_Barrel_conv()
 
 counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'Barrel';
-BC = 'SHBC';
+BC = 'NBC';
 method = {'BEM'};
 formulation = {'CCBIE'};
-formulation = {'CCBIE','GBM'};
+method = {'BA'};
+formulation = {'SL2E'};
+% formulation = {'CCBIE','GBM'};
 
+applyLoad          = 'pointPulsation'; % Acoustic scattering of plane wave
 varCol = setBarrelParameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_Barrel';
-f = 1.5e3;             % Frequency
+f = 1.5e2;             % Frequency
 
 M = 5:6;
-% M = 5;
+M = 5;
 degree = 2;
-beta = 0;
 parm = 2;
 alpha = (0:0.5:360)*pi/180;
+beta = 0;
 
-solveForPtot = true;
+solveForPtot = false;
+calculateSurfaceError       = 1;	% Only if scatteringCase == 'Bi'
 
 warning('off','NURBS:weights')
 loopParameters = {'M','parm','f','method','formulation'};
 
-prePlot.plot3Dgeometry = 1;
+prePlot.plot3Dgeometry = 0;
 % prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
@@ -48,13 +52,6 @@ postPlot(1).legendEntries 	= {'method','parm','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
-
-collectIntoTasks
-
-
-method = {'KDT'};
-solveForPtot = false;
-formulation = {'MS1'};
 
 collectIntoTasks
 

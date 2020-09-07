@@ -29,7 +29,6 @@ alpha = (0:0.05:360)*pi/180;
 beta_s = 0;
 alpha_s = pi/4;
 progressBars = false;        % Show progress bars for building system matrices
-quadMethodBEM = 'Adaptive2';
 solveForPtot = true;
 
 loopParameters = {'M','parm','f','method','formulation'};

@@ -5,6 +5,9 @@ dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
 dPhi_kdnx = @(xmy,r,ny) Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
 varCol{1}.Phi_k = Phi_k;
 varCol{1}.dPhi_kdny = dPhi_kdny;
+if ~isfield(task,'P_inc')
+    P_inc = 1;
+end
 
 switch applyLoad
     case 'SimpsonTorus'        
@@ -28,9 +31,6 @@ switch applyLoad
         e3Dss_options.BC = BC;
         e3Dss_options.d_vec = d_vec;
         e3Dss_options.N_max = N_max;
-        if ~isfield(task,'P_inc')
-            P_inc = 1;
-        end
         e3Dss_options.P_inc = P_inc;
         e3Dss_options.omega = omega;
         e3Dss_options.applyLoad = applyLoad;
@@ -52,12 +52,12 @@ switch applyLoad
             dp_inc = @(v,n) -p_inc(v).*(1./norm2(v)+1i*k).*sum(v.*n,2)./norm2(v);
         end
         dpdn = @(v,n) zeros(size(v,1),1);
+        varCol{1}.d_vec = d_vec;
 end
 varCol{1}.analyticFunctions = @(X) analytic(X,varCol);
 varCol{1}.p_inc = p_inc;
 varCol{1}.dp_inc = dp_inc;
 varCol{1}.gp_inc = gp_inc;
-varCol{1}.d_vec = d_vec;
 varCol{1}.dpdn = dpdn;
 varCol{1}.p = @(X) analytic({X},varCol,NaN,'p',1);
 varCol{1}.p_0 = @(X) analytic({X},varCol,NaN,'p_0',1);
@@ -77,7 +77,7 @@ switch layers{1}.applyLoad
     case 'pointPulsation'
         k = layers{1}.k;
         C_n = @(n) cos(n-1);
-        switch model
+        switch layers{1}.model
             case 'MS_P'
                 R_o = parms.R_o;
                 y = R_o(end)*[1,1,1]/4;

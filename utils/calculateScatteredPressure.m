@@ -61,7 +61,7 @@ else
     surfaceElements = 1:noElems;
 end
 solveForPtot = varCol{1}.solveForPtot;
-exteriorSHBC = strcmp(BC, 'SHBC') && numel(varCol) == 1;
+exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(varCol) == 1;
 if exteriorSHBC
     if solveForPtot
         homNeumanCond = true;
@@ -87,8 +87,8 @@ end
 
 p_h = zeros(size(P_far,1),1);
 
-% for i = 1:length(surfaceElements) %
-parfor i = 1:length(surfaceElements)
+for i = 1:length(surfaceElements) %
+% parfor i = 1:length(surfaceElements)
     if d_p == 3
         e = surfaceElements(i);
     else

@@ -27,7 +27,6 @@ parm = 1;
 alpha = (0:0.5:360)*pi/180;
 alpha_s = 60*pi/180;
 beta_s = 0*pi/180;
-quadMethodBEM = 'Simpson';
 solveForPtot = true;
 
 warning('off','NURBS:weights')

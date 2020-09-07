@@ -2,8 +2,8 @@
 % This script sets the default task values for each study
 
 %% General settings
-scatteringCase    = 'BI';         % Bistatic scattering
-applyLoad          = 'planeWave'; % Acoustic scattering of plane wave
+scatteringCase     = 'BI';        % Bistatic scattering
+applyLoad          = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 model              = 'S1';        % Spherical shell of radius 1
 method             = 'IE';        % Method for handling the unbounded domain problem
 coreMethod         = 'IGA';       % Solution space
@@ -13,13 +13,13 @@ loopParameters     = {'M'};       % parameter study arr to be investigated
 runTasksInParallel = false;       % Run tasks in parallel
 computeCondNumber  = false;       % Compute the condition number of the global matrix
 N_max              = inf;         % number of terms in analytic solution for scattering on spherical shell
-progressBars       = false;        % Show progress bars for building system matrices
+progressBars       = false;       % Show progress bars for building system matrices
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
 
 %% Storage settings
-storeSolution               = false;    % Store the solution vector
-storeFullVarCol             = false;    % Store all variable in the varCol variable collector
-clearGlobalMatrices         = true;     % Clear memory consuming matrices
+storeSolution       = false;    % Store the solution vector
+storeFullVarCol     = false;    % Store all variable in the varCol variable collector
+clearGlobalMatrices = true;     % Clear memory consuming matrices
 
 %% Mesh settings
 M                   = 1;	% Mesh number
@@ -30,34 +30,34 @@ extraGP             = 0;    % extra quadrature points
 parm                = 1;    % Toggle different parameterizations of a geometric model
 
 %% Settings for pre plotting (geometry and mesh visualisation)
-prePlot.plot2Dgeometry      = false;                % Plot cross section of mesh and geometry
-prePlot.plot3Dgeometry      = false;                % Plot visualization of mesh and geometry in 3D
-prePlot.storeFig            = false;                % Store pre plotted figure
-prePlot.abortAfterPlotting  = false;                % Abort simulation after pre plotting
-prePlot.view                = getView;              % Set view angle [azimuth,elevation]
-prePlot.export_fig_name2D   = '';                   % Name of exported figure using export_fig for 2D plots
-prePlot.export_fig_name3D   = '';                   % Name of exported figure using export_fig for 3D plots
-prePlot.useCamlight         = true;                 % Toggle camlight on
+prePlot.plot2Dgeometry      = false;       % Plot cross section of mesh and geometry
+prePlot.plot3Dgeometry      = false;       % Plot visualization of mesh and geometry in 3D
+prePlot.storeFig            = false;       % Store pre plotted figure
+prePlot.abortAfterPlotting  = false;       % Abort simulation after pre plotting
+prePlot.view                = getView;     % Set view angle [azimuth,elevation]
+prePlot.export_fig_name2D   = '';          % Name of exported figure using export_fig for 2D plots
+prePlot.export_fig_name3D   = '';          % Name of exported figure using export_fig for 3D plots
+prePlot.useCamlight         = true;        % Toggle camlight on
 
-prePlot.plotControlPolygon  = false;                 % Plot the control polygon for the NURBS mesh
-prePlot.plotNormalVectors   = false;                % Plot the normal vectors for the NURBS mesh
-prePlot.resolution       	= [20,20,20];           % Number of evaluation points in the visualization for each element for each parametric direction
-prePlot.color               = getColor(1); 	% Color for the NURBS surfaces
-prePlot.plotAt              = true(3,2);            % For solids: toggle which surfaces to visualize
-prePlot.alphaValue          = 1;                    % Transparency value of NURBS surfaces
-prePlot.colorFun            = NaN;                  % Color the NURBS surfaces by the values of a colorFun function \R^d -> \R
-prePlot.lineColor           = 'black';           	% Mesh line color
-prePlot.colorControlPolygon = 'red';                % Control polygon line color
-prePlot.markerEdgeColor     = 'black';              % Control polygon edge marker color
-prePlot.markerColor         = 'black';              % Control polygon marker color
-prePlot.LineWidth           = 0.5;                  % Width of lines
-prePlot.elementBasedSamples = false;                % If true, sampling is based on distance rather than elements
-prePlot.samplingDistance  	= NaN;                  % Set sampling distance if elementBasedSamples = true
-prePlot.title               = '';                   % Set figure title
-prePlot.axis                = 'off';                % Set axis() property
-prePlot.xlabel              = 'x';                  % Set x-axis label
-prePlot.ylabel              = 'y';                  % Set y-axis label
-prePlot.zlabel              = 'z';                  % Set z-axis label
+prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh
+prePlot.plotNormalVectors   = false;       % Plot the normal vectors for the NURBS mesh
+prePlot.resolution       	  = [20,20,20];  % Number of evaluation points in the visualization for each element for each parametric direction
+prePlot.color               = getColor(1); % Color for the NURBS surfaces
+prePlot.plotAt              = true(3,2);   % For solids: toggle which surfaces to visualize
+prePlot.alphaValue          = 1;           % Transparency value of NURBS surfaces
+prePlot.colorFun            = NaN;         % Color the NURBS surfaces by the values of a colorFun function \R^d -> \R
+prePlot.lineColor           = 'black';     % Mesh line color
+prePlot.colorControlPolygon = 'red';       % Control polygon line color
+prePlot.markerEdgeColor     = 'black';     % Control polygon edge marker color
+prePlot.markerColor         = 'black';     % Control polygon marker color
+prePlot.LineWidth           = 0.5;         % Width of lines
+prePlot.elementBasedSamples = false;       % If true, sampling is based on distance rather than elements
+prePlot.samplingDistance  	= NaN;         % Set sampling distance if elementBasedSamples = true
+prePlot.title               = '';          % Set figure title
+prePlot.axis                = 'off';       % Set axis() property
+prePlot.xlabel              = 'x';         % Set x-axis label
+prePlot.ylabel              = 'y';         % Set y-axis label
+prePlot.zlabel              = 'z';         % Set z-axis label
 
 %% Error computations
 calculateSurfaceError       = false;	% Only if scatteringCase == 'Bi'
