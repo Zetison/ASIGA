@@ -4,12 +4,12 @@ if strcmp(coreMethod, 'linear_FEM')
 end
 if prePlot.plot3Dgeometry
     figure('Color','white','name',['3D plot of geometry with mesh ' num2str(M)])
-    if strcmp(method, 'IENSG')
+    if strcmp(method, 'IENSG') && prePlot.plotArtificialBndry
         c_z = varCol{1}.c_z;
-        c_xy = varCol{1}.c_xy;
+        c_x = varCol{1}.c_x;
         alignWithAxis = varCol{1}.alignWithAxis;
         x_0 = varCol{1}.x_0;
-        ellipsoid = getEllipsoidData('C',[c_z,c_xy,c_xy],'alignWithAxis', alignWithAxis, 'x_0', x_0);
+        ellipsoid = getEllipsoidData('C',[c_x,c_x,c_z],'alignWithAxis', alignWithAxis, 'x_0', x_0);
         alphaValue = 0.6;
         if prePlot.alphaValue == 1
             prePlot.alphaValue = 0.8;
@@ -62,12 +62,18 @@ end
 if prePlot.plot2Dgeometry
     figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(M)])
     for j = 1:numel(varCol)
-        nurbs = subNURBS(varCol{j}.nurbs,'at',[1 0; 0 0; 0 0]);
         switch model
-            case 'PH'
-                prePlot.setViewAngle = [0,90];
+            case {'M3','MS'}
+                nurbs2D = varCol{j}.nurbs(1:4:end);
             otherwise
-                prePlot.setViewAngle = [0,0];
+                nurbs2D = varCol{j}.nurbs;
+        end
+        nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
+        switch model
+            case {'PH', 'M3', 'MS'}
+                prePlot.view = [0,90];
+            otherwise
+                prePlot.view = [0,0];
                 switch varCol{j}.media
                     case 'fluid'
                         prePlot.color = [173, 216, 230]/255;

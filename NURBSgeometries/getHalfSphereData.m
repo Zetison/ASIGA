@@ -3,6 +3,7 @@ function nurbs = getHalfSphereData(varargin)
 options = struct('R', 1, ...
                  'x_0',[0, 0, 0],...
                  'parm', 1, ...
+                 'Xi', [0,0,0,1,1,2,2,3,3,4,4,4]/4, ...
                  't', 0, ...
                  'prec', 'double');
              
@@ -20,7 +21,7 @@ switch options.parm
     case 1
         nurbs = getEllipsoidData(options);
         nurbs = explodeNURBS(nurbs);
-        nurbs = nurbs([2,4,6,8]);
+        nurbs = nurbs(2:2:end);
     case 2
         nurbs = cell(1,5);
         temp = getEllipsoidData(options);

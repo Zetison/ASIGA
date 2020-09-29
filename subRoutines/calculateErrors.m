@@ -55,9 +55,9 @@ else
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating error ... ')
         end
         if strcmp(varCol{1}.coreMethod,'SEM')
-            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol{1}, Uc{1}(1:varCol{1}.noDofs), e3Dss_options);
+            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(varCol{1}, Uc{1}(1:varCol{1}.noDofs));
         else
-            [L2Error, H1Error, H1sError, energyError] = calcErrorVec(varCol, Uc, e3Dss_options);
+            [L2Error, H1Error, H1sError, energyError] = calcErrorVec(varCol, Uc);
         end
         if ~runTasksInParallel
             fprintf('using %12f seconds.', toc)

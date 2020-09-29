@@ -41,18 +41,19 @@ for i_col = 1:numel(studiesCol)
         else
             for i_task = 1:noTasks
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel,resultsFolder);
-                task = tasks(i_task).task;
-                if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry) && task.prePlot.abortAfterPlotting
+                if (tasks(i_task).task.prePlot.plot3Dgeometry || tasks(i_task).task.prePlot.plot2Dgeometry) && tasks(i_task).task.prePlot.abortAfterPlotting
                     return
                 end
-                if task.useROM
-                    computeROMsolution
+                if tasks(i_task).task.useROM
+                    basisROMcell = studies(i_study).basisROMcell;
+                    k_ROM = studies(i_study).k_ROM;
+                    noVecsArr = studies(i_study).noVecsArr;
+                    tasks = computeROMsolution(tasks,i_task,basisROMcell,k_ROM,noVecsArr);
                 end
-                studies(i_study).tasks(i_task,1).task = tasks(i_task,1).task;
                 fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studies)) 
-                save([resultsFolder '/studies'], 'studies')
             end
-            if task.useROM
+            studies(i_study).tasks = tasks;
+            if tasks(i_task).task.useROM
                 studies(i_study).loopParameters{end+1} = 'noVecs';
                 studies(i_study).loopParametersArr{end+1} = noVecsArr;
                 studies(i_study).loopParameters{end+1} = 'basisROM';

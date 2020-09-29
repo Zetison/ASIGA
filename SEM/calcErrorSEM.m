@@ -1,4 +1,4 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(varCol, UU, options)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(varCol, UU)
 
 %% Preallocation and initiallizations
 patches = varCol.patches;
@@ -87,7 +87,7 @@ du_hs = reshape(du_hs,nxi*neta*nzeta*noPatches,3);
 analyticFunctions = varCol.analyticFunctions({nodes});
 
 rho_f = varCol.rho;
-omega = options.omega;
+omega = varCol.omega;
 c_f = varCol.c_f;
 k = omega./c_f;
 

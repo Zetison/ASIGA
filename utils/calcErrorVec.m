@@ -1,4 +1,4 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(varColCell, U_cell, options)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(varColCell, U_cell)
 
 noDomains = length(varColCell);
 nodes = cell(noDomains,1);
@@ -121,7 +121,7 @@ end
 
 layer = varColCell{1}.analyticFunctions(nodes);
 
-omega = options.omega;
+omega = varColCell{1}.omega;
 
 H1Error = 0;
 H1sError = 0;

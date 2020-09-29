@@ -20,7 +20,6 @@ end
 if strcmp(method,'IENSG') || strcmp(method,'IE')
     varCol{1}.N = task.N;
     varCol{1}.IEbasis = task.IEbasis;
-    varCol{1} = generateCoeffMatrix(varCol{1});
 end
 if strcmp(method,'ABC')
     varCol{1}.N = task.N;

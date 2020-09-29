@@ -8,7 +8,7 @@ ii = reshape(repmat(1:P,n_D,1),n_D*P,1);
 nn = reshape(repmat(1:n_D,P,1).',n_D*P,1);
 parfor counter = 1:P*n_D
 % for counter = 1:P*n_D
-    mp.Digits(400);
+%     mp.Digits(400);
     i = ii(counter);
     n = nn(counter);
     A = [x, zeros(P,n_D,class(x))];

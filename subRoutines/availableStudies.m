@@ -13,7 +13,10 @@
 % studyName = {'articleIGA_Simpson', 'PH', 'S15', 'Barrel', 'CE', 'M4', 'M5', 'M1', 'M2', 'M3', 'M31'};
 % studyName = {'articleIGA_Simpson', 'PH'};
 
-studyName = 'Barrel_conv'; %getTask_Barrel_conv
+% studyName = 'Barrel_conv'; %getTask_Barrel_conv
+% studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
+% studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
+studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 
 %% Venas2020ibe
 % studyName = 'articleBEM_S1_quadVis'; %getTask_articleBEM_S1_quadVis
@@ -90,7 +93,6 @@ studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'S_MS'; %getTask_S_MS
 % studyName = 'S5'; %getTask_S5
 % studyName = 'testIE'; %getTask_testIE
-% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'articleSBEM_S1'; %getTask_articleSBEM_S1
 % studyName = 'BC_P_paraview'; %getTask_BC_P_paraview
 % studyName = 'BC_P'; %getTask_BC_P

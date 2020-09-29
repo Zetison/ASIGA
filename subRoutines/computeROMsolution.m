@@ -1,11 +1,13 @@
-
+function tasks = computeROMsolution(tasks,i_task,basisROMcell,k_ROM,noVecsArr)
 % basisROM = 'Taylor';
 % basisROM = 'Pade';
 % basisROM = 'Lagrange';
 % basisROM = 'Splines';
 % basisROM = 'Fourier';
 % basisROM = 'Bernstein';
-k_P = task.varCol{1}.k;
+runTasksInParallel = false;
+task = tasks(i_task).task;
+k_P = task.k;
 
 P = numel(k_P);
 k_start = k_P(1);
@@ -27,14 +29,8 @@ task.varCol{1} = rmfield(task.varCol{1},'A_M');
 task.varCol{1} = rmfield(task.varCol{1},'A_gamma_a');
 task.varCol{1} = rmfield(task.varCol{1},'A2_gamma_a');
 task.varCol{1} = rmfield(task.varCol{1},'A3_gamma_a');
-
 stringShift = 40;
-runTasksInParallelOld = runTasksInParallel;
-basisROMcell = studies(study_i).basisROMcell;
-k_ROM = studies(study_i).k_ROM;
-noVecsArr = studies(study_i).noVecsArr;
 varCol = task.varCol;
-e3Dss_options = varCol{1}.e3Dss_options;
 % noVec = size(U_P{1},2);
 for i_b = 1:numel(basisROMcell)
     basisROM = basisROMcell{i_b};
@@ -71,9 +67,10 @@ for i_b = 1:numel(basisROMcell)
                 A2_gamma_am = V'*A2_gamma_a*V;
                 A3_gamma_am = V'*A3_gamma_a*V;
             case 'Hermite'
-                mp.Digits(400);
-                Y = getInterpolatingHermite(mp(k_P.'),mp(k_ROM),noVecs);
-                Y = double(Y);
+%                 mp.Digits(400);
+%                 Y = getInterpolatingHermite(mp(k_P.'),mp(k_ROM),noVecs);
+%                 Y = double(Y);
+                Y = getInterpolatingHermite(k_P.',k_ROM,noVecs);
             case 'Pade'
                 p = cell(P,1);
                 q = cell(P,1);
@@ -152,7 +149,8 @@ for i_b = 1:numel(basisROMcell)
         %         a = double(invV*mp(b(:,1)));
         %         a = double(invV*mp(b));
                 tic
-                a = double(V\mp(b));
+%                 a = double(V\mp(b));
+                a = double(V\b);
                 toc
         %         a = double(invV)*b;
 
@@ -273,11 +271,11 @@ for i_b = 1:numel(basisROMcell)
                     FF = V'*FF;  
                     freeDofs = setdiff(1:noDofs2,dofsToRemove);
                     
-                    for i_k = 1:numel(k_ROM)
-                        k = k_ROM(i_k);
+                    for i_f = 1:numel(k_ROM)
+                        k = k_ROM(i_f);
                         Am = A_Km - k^2*A_Mm + k^2*A_gamma_am + k*A2_gamma_am + A3_gamma_am;
-                        U_fluid_oArr(freeDofs,i_k) = V*(Am\FF(:,i_k));
-                        U_fluid_oArr(:,i_k) = addSolutionToRemovedNodes_new(U_fluid_oArr(:,i_k), varCol{1});
+                        U_fluid_oArr(freeDofs,i_f) = V*(Am\FF(:,i_f));
+                        U_fluid_oArr(:,i_f) = addSolutionToRemovedNodes_new(U_fluid_oArr(:,i_f), varCol{1});
                     end
                     U_fluid_oArr(noDofs+1:end,:) = [];
                 case 'Hermite'
@@ -303,17 +301,15 @@ for i_b = 1:numel(basisROMcell)
             end
             fprintf('using %12f seconds.', toc(t_startROM))
             surfaceErrorArr = zeros(size(k_ROM));
-            runTasksInParallel = 0; % to avoid printing elapsed time
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
             t_startROM = tic;
-            for i_k = 1:numel(k_ROM)
-                k = k_ROM(i_k);
+            for i_f = 1:numel(k_ROM)
+                k = k_ROM(i_f);
                 varCol{1}.k = k;
                 omega = varCol{1}.c_f*k;
                 varCol{1}.f = omega/(2*pi);
-                Uc{1} = U_fluid_oArr(:,i_k);
-                e3Dss_options.omega = omega;
-                varCol{1}.analytic = @(x)analytic_(x,e3Dss_options);
+                Uc{1} = U_fluid_oArr(:,i_f);
+                getAnalyticSolutions
                 calculateErrors
             end
             fprintf('using %12f seconds.', toc(t_startROM))
@@ -360,7 +356,6 @@ for i_b = 1:numel(basisROMcell)
 %     legend show
     % savefig('ROM')
 end
-runTasksInParallel = runTasksInParallelOld;
 
 function [y,x] = insertNaN(x,y,a)
 inter = (a(2:end)+a(1:end-1))/2;
@@ -368,7 +363,5 @@ for i = 1:numel(a)-1
     [x,I] = sort([x, inter(i)]);
     y = [y, NaN];
     y = y(I);
-end
-
 end
 

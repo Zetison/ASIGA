@@ -79,6 +79,7 @@ if strcmp(method,'RT') || strcmp(method,'KDT')
     varCol{1}.k = omega/varCol{1}.c_f;
     varCol{1}.lambda = 2*pi./varCol{1}.k;
     varCol{1}.f = f;
+    k = varCol{1}.k;
     getAnalyticSolutions
 else
     for i_f = 1:numel(f)
@@ -96,8 +97,8 @@ else
             end
         end
         t_freq = tic;
-        getAnalyticSolutions
         k = varCol{1}.k;
+        getAnalyticSolutions
         rho = varCol{1}.rho;
         switch method
             case {'IE','ABC'}
@@ -135,9 +136,10 @@ else
                     end
                     if useROM
 %                         [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM(varCol{1});
-                        [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM2(varCol{1});
+%                         [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM2(varCol{1});
+                        [A3_gamma_a, newDofsToRemove, A2_gamma_a, A_gamma_a] = buildIEmatrix(varCol{1});
                     else
-                        [A_gamma_a, newDofsToRemove] = addInfElements3(varCol{1});
+                        [A_gamma_a, newDofsToRemove] = buildIEmatrix(varCol{1});
                     end
 
             %         [A_inf, newDofsToRemove] = addInfElements4(varCol{1}, k(1), Upsilon); 
@@ -349,8 +351,10 @@ else
                     A_K(:,dofsToRemove) = [];
                     A_M(dofsToRemove,:) = [];  
                     A_M(:,dofsToRemove) = [];
-                    A_gamma_a(dofsToRemove,:) = [];  
-                    A_gamma_a(:,dofsToRemove) = [];
+                    if ~isempty(A_gamma_a)
+                        A_gamma_a(dofsToRemove,:) = [];  
+                        A_gamma_a(:,dofsToRemove) = [];
+                    end
                     A2_gamma_a(dofsToRemove,:) = [];  
                     A2_gamma_a(:,dofsToRemove) = [];
                     A3_gamma_a(dofsToRemove,:) = [];  
@@ -366,7 +370,14 @@ else
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
                 end
-                [A, dofsToRemove] = infElementsNonSepGeom(varCol{1});  
+                chimax = varCol{1}.chimax;
+                chimin = varCol{1}.chimin;
+                if abs(chimax - chimin)/abs(chimax) < 100*eps
+                    varCol{1}.r_a = mean([chimax,chimin]);
+                    [A, dofsToRemove] = buildIEmatrix(varCol{1});
+                else
+                    [A, dofsToRemove] = infElementsNonSepGeom(varCol{1});  
+                end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
@@ -762,9 +773,9 @@ else
 %                                     A = A_K - k_1^2*A_M + A_gamma_a;
 %                                     A2 = - 2*k_1*A_M + A2_gamma_a;
 %                                     A3 = - 2*A_M + A3_gamma_a;
-                                    A = A_K - k_1^2*A_M + k_1^2*A_gamma_a + k_1*A2_gamma_a + A3_gamma_a;
-                                    A2 = - 2*k_1*A_M + 2*k_1*A_gamma_a + A2_gamma_a;
-                                    A3 = - 2*A_M + 2*A_gamma_a;
+                                    A = A_K - k^2*A_M + k^2*A_gamma_a + k*A2_gamma_a + A3_gamma_a;
+                                    A2 = -2*k*A_M + 2*k*A_gamma_a + A2_gamma_a;
+                                    A3 = -2*A_M + 2*A_gamma_a;
                                     if task.useDGP
                                         varCol{1}.A_K = A_K;
                                         varCol{1}.A_M = A_M;

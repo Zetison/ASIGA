@@ -1,4 +1,4 @@
-function varCol = generateCoeffMatrix(varCol)
+function [D,Dt] = generateCoeffMatrix(varCol)
 
 N = varCol.N;
 switch varCol.IEbasis
@@ -68,5 +68,3 @@ switch varCol.IEbasis
         D = E/B;
         Dt = E/Bt;      
 end
-varCol.D = D;
-varCol.Dt = Dt;

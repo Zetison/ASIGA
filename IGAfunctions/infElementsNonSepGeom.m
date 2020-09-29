@@ -25,8 +25,7 @@ chimin = varCol.chimin;
 chimax = varCol.chimax;
 x_0 = varCol.x_0;
 A_2 = varCol.A_2;
-D = varCol.D;
-Dt = varCol.Dt;
+[D,Dt] = generateCoeffMatrix(varCol);
 n_en = prod(degree+1);
 
 k = varCol.k;

@@ -9,11 +9,11 @@ switch varCol{1}.method
               1 0 0];
         varCol{1}.alignWithAxis = alignWithAxis;
 end
-
+Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 R = varCol{1}.R;
 t = varCol{1}.t;
-R_i = varCol{1}.R;
 L = varCol{1}.L;
+parm = varCol{1}.parm;
 if varCol{1}.boundaryMethod
     c_z = L/2; % 30
     c_xy = R; % 12
@@ -21,18 +21,28 @@ if varCol{1}.boundaryMethod
     chimin = 9.8;
     chimax = 11.2;
 
-    if 0 %numel(varCol) == 1
-        fluid = getBarrelData('R', R, 't', t, 'parm', varCol{1}.parm, 'L', L, 'd_p', 2);
+    if numel(varCol) == 1
+        fluid = getBarrelData('R', R, 't', t, 'parm', parm, 'L', L, 'd_p', 2, 'Xi', Xi);
         fluid = makeUniformNURBSDegree(fluid,degree);
         
-        Imap{1} = [R*pi/2, R*1.414057108745095];
-        fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+        if parm == 1
+            Imap{1} = [];
+            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap);
+        else
+            Imap{1} = [R*pi/2, R*1.414057108745095];
+            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+        end
     else
-        solid = getBarrelData('R', R, 't', t, 'parm', varCol{1}.parm, 'L', L);
+        solid = getBarrelData('R', R, 't', t, 'parm', parm, 'L', L, 'Xi', Xi);
         solid = makeUniformNURBSDegree(solid,degree);
         fluid = getFreeNURBS(solid);
-        Imap{1} = [R*pi/2, (R-t)*pi/2, R*1.272651397870586, R*1.155553578414605];
-        fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+        if parm == 1
+            Imap{1} = [R*2*pi/3, (R-t)*2*pi/3, R*1.272651397870586, R*1.155553578414605];
+            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap);
+        else
+            Imap{1} = [R*pi/2, (R-t)*pi/2, R*1.272651397870586, R*1.155553578414605];
+            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+        end
         nurbsCol = collectConnectedNURBS(fluid);
         fluid = nurbsCol{1};
         fluid_i = nurbsCol{2};
@@ -47,6 +57,7 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
+    error('This is not implemented')
 
     eta2 = 0.765;
     eta1 = 0.235;
@@ -101,9 +112,6 @@ else
                                       insertUniform2(fluid.knots{3}, noNewZetaKnots).^stretchingFact});
 
 
-    if ~strcmp(BC, 'SHBC')
-        error('This is not implemented')
-    end
 end
 varCol{1}.nurbs = fluid;
 if numel(varCol) > 1

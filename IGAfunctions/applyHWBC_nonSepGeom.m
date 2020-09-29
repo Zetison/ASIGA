@@ -13,8 +13,6 @@ pIndex = varCol.pIndex;
 dp_inc = varCol.dp_inc;
 extraGP = varCol.extraGP;
 noDofs_tot = varCol.noDofs_tot;
-noDofs = varCol.noDofs;
-D = varCol.D;
 N = varCol.N;
 F = zeros(noDofs_tot,length(alpha_s_arr));        % external force vector
 
@@ -48,16 +46,19 @@ parfor e = 1:noElems
     indices(:,e) = sctr';    
     Fvalues(:,e,:) = R{1}'*(deriv.*J_1 * J_2 .* W);
 end
-% If IEbasisfuns satisfy Kronecker delta property on surface, we can do the
-% following
-% for alpha_s_Nr = 1:length(alpha_s_arr)
-%     F(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),indices,noDofs_tot);
-% end
+if strcmp(varCol.IEbasis,'Standard')
+    noDofs = varCol.noDofs;
+    D = generateCoeffMatrix(varCol);
 
-for alpha_s_Nr = 1:length(alpha_s_arr)
-    for i = 1:N       
-        if sum(D(i,:)) ~= 0
-            F(:,alpha_s_Nr) = F(:,alpha_s_Nr) + vectorAssembly(sum(D(i,:))*Fvalues(:,:,alpha_s_Nr),indices+(i-1)*noDofs,noDofs_tot);
+    for alpha_s_Nr = 1:length(alpha_s_arr)
+        for i = 1:N       
+            if sum(D(i,:)) ~= 0
+                F(:,alpha_s_Nr) = F(:,alpha_s_Nr) + vectorAssembly(sum(D(i,:))*Fvalues(:,:,alpha_s_Nr),indices+(i-1)*noDofs,noDofs_tot);
+            end
         end
+    end
+else
+    for alpha_s_Nr = 1:length(alpha_s_arr)
+        F(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),indices,noDofs_tot);
     end
 end

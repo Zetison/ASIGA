@@ -10,39 +10,41 @@ switch varCol{1}.method
                          0 0 1];
         varCol{1}.alignWithAxis = alignWithAxis;
 end
-
-R_i = varCol{1}.R_i;
-if numel(varCol) == 1
-    t = R_i;
+if isfield(varCol{1},'c_z')
+    c_x = varCol{1}.c_x;
+    if ~isfield(varCol,'c_y')
+        c_y = c_x;
+    else
+        c_y = varCol{1}.c_y;
+    end
+    c_z = varCol{1}.c_z;
+    Upsilon = sqrt(c_z^2-c_x^2);
 else
-    t = varCol{1}.R_i - varCol{2}.R_i;
+    c_x = varCol{1}.R_i;
+    c_y = varCol{1}.R_i;
+    c_z = varCol{1}.R_i;
+    Upsilon = sqrt(c_z^2-c_x^2);
+end
+chimin = c_z*(1-10*eps);
+chimax = c_z*(1+10*eps);
+if numel(varCol) == 1
+    t = eps;
+else
+    t = c_z - varCol{2}.R_i;
 end
 parm = varCol{1}.parm(1);
-initMeshFactXi = varCol{1}.initMeshFactXi;
-initMeshFactZeta = varCol{1}.initMeshFactZeta;
 if varCol{1}.boundaryMethod
-    c_z = R_i; % 30
-    c_xy = R_i; % 2.5, 3.75
-    % c_z = c_xy;
-    if 1
-        Upsilon = sqrt(c_z^2-c_xy^2);
-        chimin = 0.99999999*c_z;
-        chimax = 1.00000001*c_z;
-    else
-        Upsilon = 0;
-        chimin = 0.99999999*c_xy;
-        chimax = 1.00000001*c_z;
-    end
-
-    f_arc = @(s) sqrt(c_xy^2*sin(s).^2+c_z^2*cos(s).^2);
-    noNewXiKnots = initMeshFactXi*2^(M-1)-1;
-    noNewEtaKnots = round(integral(f_arc,0,pi/2)/(c_xy*pi/2)*(initMeshFactXi*2^(M-1)-1));
-    noNewZetaKnots = max(initMeshFactZeta*2^(M-1)/8-1,0);
-    solid = getEllipsoidData('C', [c_xy,c_xy,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t);
+    solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t);
     solid = makeUniformNURBSDegree(solid,degree);
 %     solid = explodeNURBS(solid,'eta');
 %     solid = explodeNURBS(solid,'xi');
-    solid = insertKnotsInNURBS(solid,[noNewXiKnots,noNewEtaKnots,noNewZetaKnots]);
+    if parm == 1
+        refLength = c_z*pi/2;
+    else
+        theta_m = asec(sqrt(3));
+        refLength = c_z*(pi-2*theta_m);
+    end
+    solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0);
     L_gamma = 2*c_z;
     
     options.at = [0 0; 0 0; 0 1];
@@ -53,6 +55,8 @@ if varCol{1}.boundaryMethod
             fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i);
             fluid_i_inner = flipNURBSparametrization(subNURBS(fluid_i,'at',[0,0;0,0;1,0]),1);
             fluid_i_outer = subNURBS(solid,'at',[0,0;0,0;1,0]);
+            fluid_i_inner = refineNURBSevenly(fluid_i_inner,(2^(M-1)-1)/(c_z*pi/2),{},0);
+            fluid_i_outer = refineNURBSevenly(fluid_i_outer,(2^(M-1)-1)/(c_z*pi/2),{},0);
             fluid_i = [fluid_i_inner,fluid_i_outer];
             
             varCol{3}.patchTop = getPatchTopology(fluid_i);
@@ -71,7 +75,7 @@ if varCol{1}.boundaryMethod
         else
             fluid_i = subNURBS(solid,'at',[0,0;0,0;1,0]);
             fluid_i = makeUniformNURBSDegree(fluid_i,degree);
-            fluid_i = insertKnotsInNURBS(fluid_i,[noNewXiKnots,noNewEtaKnots]);
+            fluid_i = refineNURBSevenly(fluid_i,(2^(M-1)-1)/(c_z*pi/2),{},0);
             varCol{3}.patchTop = getPatchTopology(fluid_i);
 
             varCol_fluid_i.dimension = 1;
@@ -90,37 +94,36 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
-    c_z_g = R_i; % 30
-    c_xy_g = R_i; % 2.5, 3.75
+    c_z_g = c_z; % 30
+    Upsilon = sqrt(c_z^2-c_x^2);
     if isnan(varCol{1}.r_a)
-        t_fluid = R_i(1)*2*pi/(32-pi);
+        t_fluid = c_z_g*2*pi/(32-pi);
 %         t_fluid = 10*R_o(1)*2*pi/(32-pi);
         c_z = c_z_g+t_fluid;
-        c_xy = c_xy_g+t_fluid;
     else
         c_z = varCol{1}.r_a;
-        c_xy = c_z;
         t_fluid = c_z-c_z_g;
     end
-    noNewXiKnots = initMeshFactXi*2^(M-1)-1;
-    noNewEtaKnots = noNewXiKnots;
-    noNewZetaKnots = max(initMeshFactZeta*2^(M-1)/8-1,0);
-%     noNewZetaKnots = max(2^(M-2),1);
+    c_x = sqrt(c_z^2-Upsilon^2);
+    c_y = c_x;
     L_gamma = 2*c_z_g;
-    chimin = 0.99999999*c_z;
-    chimax = 1.00000001*c_z;
 
 
-    fluid = getEllipsoidData('C', [c_xy,c_xy,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid);
+    fluid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid);
     fluid = makeUniformNURBSDegree(fluid,degree);
     explodeNURBSpatches = 0;
     if explodeNURBSpatches
         fluid = explodeNURBS(fluid,'eta');
         fluid = explodeNURBS(fluid,'xi');
     end
-    fluid = insertKnotsInNURBS(fluid,[noNewXiKnots,noNewEtaKnots,noNewZetaKnots]);
+    if parm == 1
+        refLength = c_z*pi/2;
+    else
+        theta_m = asec(sqrt(3));
+        refLength = c_z*(pi-2*theta_m);
+    end
+    fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
     
-    Upsilon = sqrt(c_z^2-c_xy^2);
     varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
 
     if numel(varCol) > 1
@@ -130,9 +133,7 @@ else
             solid = explodeNURBS(solid,'eta');
             solid = explodeNURBS(solid,'xi');
         end
-%         noNewZetaKnotsSolid = max(2^(M-1)/2-1,0);
-        noNewZetaKnotsSolid = max(round(t/t_fluid*noNewZetaKnots),0);
-        solid = insertKnotsInNURBS(solid,[noNewXiKnots,noNewEtaKnots,noNewZetaKnotsSolid]);
+        solid = refineNURBSevenly(solid,(2^(M-1)-1)/(R_i*pi/2),{},0);
     end
 
     if numel(varCol) > 2
@@ -142,9 +143,7 @@ else
             fluid_i = explodeNURBS(fluid_i,'eta');
             fluid_i = explodeNURBS(fluid_i,'xi');
         end
-        noNewZetaKnotsInner = max(2^(M-1)/2-1,0);
-%         noNewZetaKnotsInner = max(round(varCol{2}.R_i/t_fluid),0);
-        fluid_i = insertKnotsInNURBS(fluid_i,[noNewXiKnots,noNewEtaKnots,noNewZetaKnotsInner]);
+        fluid_i = refineNURBSevenly(fluid_i,(2^(M-1)-1)/(varCol{2}.R_i*pi/2),{},0);
     end
 end
 if parm == 2 && degree < 4

@@ -11,8 +11,6 @@ A_2 = varCol.A_2;
 x_0 = varCol.x_0;
 noDofs = varCol.noDofs;
 
-d_p = varCol.patches{1}.nurbs.d_p;
-
 weights = varCol.weights;
 controlPts = varCol.controlPts;
 
@@ -20,9 +18,24 @@ k = varCol.k(1);
 Upsilon = varCol.Upsilon;
 r_a = varCol.r_a;
 
-D = varCol.D;
-Dt = varCol.Dt;
-[nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(varCol,1);
+[D,Dt] = generateCoeffMatrix(varCol);
+if strcmp(varCol.method,'IENSG')
+    noElems = varCol.noElems;
+    element = varCol.element;
+    element2 = varCol.element2;
+    index = varCol.index;
+    pIndex = varCol.pIndex;
+    n_en = prod(degree+1);
+    noSurfDofs = noDofs;
+    noDofs = 0;
+    nodes = 1:noSurfDofs;
+    noDofs_new = noSurfDofs*N;
+    shift = 1;
+else
+    [nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(varCol,1);
+    noDofs_new = noDofs + noSurfDofs*(N-1);
+    shift = 0;
+end
 
 
 %% Evaluate analytic integrals in ``radial'' direction. 
@@ -63,12 +76,12 @@ parfor e = 1:noElems
 	end
     patch = pIndex(e);
     knots = knotVecs{patch}(1:2);
-    Xi_e = zeros(d_p-1,2);
-    for i = 1:d_p-1
+    Xi_e = zeros(2,2);
+    for i = 1:2
         Xi_e(i,:) = elRange{i}(index(e,i),:);
     end
     
-    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^(d_p-1);
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
     
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
@@ -147,48 +160,50 @@ parfor e = 1:noElems
             temp = zeros(n_en);
             for nt = 1:N
                 for mt = 1:N
-                    switch formulation
-                        case 'PGU'
-                            temp2  = A1_IJ*(-2*varrho2^2*B1(nt+mt) - 1i*varrho2*(nt+mt+2)*B1(nt+mt+1) + ((nt+2)*mt + varrho3^2)*B1(nt+mt+2) ...
-                                          +1i*varrho1*varrho3*(nt+mt+2)*B1(nt+mt+3) - varrho1^2*(nt+2)*mt*B1(nt+mt+4)) ...
-                                   + A2_IJ*B1(nt+mt+2) + varrho3^2*A3_IJ*B1(nt+mt+2) ...
-                                   + A4_IJ*B2(nt+mt+1) - varrho1^2*A5_IJ*B2(nt+mt+3);
-                        case 'PGC'
-                            temp2  = A1_IJ*(- 1i*varrho2*(nt-mt+2)*B1(nt+mt+1) + ((nt+2)*mt - varrho3^2)*B1(nt+mt+2) ...
-                                          +1i*varrho1*varrho3*(nt-mt+2)*B1(nt+mt+3) - varrho1^2*(nt+2)*mt*B1(nt+mt+4)) ...
-                                   + A2_IJ*B1(nt+mt+2) + varrho3^2*A3_IJ*B1(nt+mt+2) ...
-                                   + A4_IJ*B2(nt+mt+1) - varrho1^2*A5_IJ*B2(nt+mt+3);
-                        case 'BGU'
-                            if mt+nt == 2
-                                temp2  = A1_IJ*(- 2*1i*varrho2*B1(1) + (1 + varrho3^2)*B1(2) ...
-                                              +2*1i*varrho1*varrho3*B1(3) - varrho1^2*B1(4) - 1i*varrho2*exp(2*1i*varrho2)) ...
-                                       + A2_IJ*B1(2) + varrho3^2*A3_IJ*B1(2) ...
-                                       + A4_IJ*B2(1) - varrho1^2*A5_IJ*B2(3);
-                            else
-                                temp2  = A1_IJ*(-2*varrho2^2*B1(nt+mt-2) - 1i*varrho2*(nt+mt)*B1(nt+mt-1) + (nt*mt + varrho3^2)*B1(nt+mt) ...
-                                              +1i*varrho1*varrho3*(nt+mt)*B1(nt+mt+1) - varrho1^2*nt*mt*B1(nt+mt+2)) ...
-                                       + A2_IJ*B1(nt+mt) + varrho3^2*A3_IJ*B1(nt+mt) ...
-                                       + A4_IJ*B2(nt+mt-1) - varrho1^2*A5_IJ*B2(nt+mt+1);
-                            end
-                        case 'BGC'
-                            if mt+nt == 2
-                                temp2  = A1_IJ*((1 - varrho3^2)*B1(2) ...
-                                              - varrho1^2*B1(4) - 1i*varrho2) ...
-                                       + A2_IJ*B1(2) + varrho3^2*A3_IJ*B1(2) ...
-                                       + A4_IJ*B2(1) - varrho1^2*A5_IJ*B2(3);
-                            else
-                                temp2  = A1_IJ*(-1i*varrho2*(nt-mt)*B1(nt+mt-1) + (nt*mt - varrho3^2)*B1(nt+mt) ...
-                                              +1i*varrho1*varrho3*(nt-mt)*B1(nt+mt+1) - varrho1^2*nt*mt*B1(nt+mt+2)) ...
-                                       + A2_IJ*B1(nt+mt) + varrho3^2*A3_IJ*B1(nt+mt) ...
-                                       + A4_IJ*B2(nt+mt-1) - varrho1^2*A5_IJ*B2(nt+mt+1);
-                            end
-                    end
-                    
-                    switch formulation
-                        case {'PGU', 'BGU'}
-                            temp = temp + Dt(n,nt)*D(m,mt)*r_a*temp2*exp(-2*1i*varrho2);
-                        case {'PGC', 'BGC'}
-                            temp = temp + Dt(n,nt)*D(m,mt)*r_a*temp2;
+                    if Dt(n,nt)*D(m,mt) ~= 0
+                        switch formulation
+                            case 'PGU'
+                                temp2  = A1_IJ*(-2*varrho2^2*B1(nt+mt) - 1i*varrho2*(nt+mt+2)*B1(nt+mt+1) + ((nt+2)*mt + varrho3^2)*B1(nt+mt+2) ...
+                                              +1i*varrho1*varrho3*(nt+mt+2)*B1(nt+mt+3) - varrho1^2*(nt+2)*mt*B1(nt+mt+4)) ...
+                                       + A2_IJ*B1(nt+mt+2) + varrho3^2*A3_IJ*B1(nt+mt+2) ...
+                                       + A4_IJ*B2(nt+mt+1) - varrho1^2*A5_IJ*B2(nt+mt+3);
+                            case 'PGC'
+                                temp2  = A1_IJ*(- 1i*varrho2*(nt-mt+2)*B1(nt+mt+1) + ((nt+2)*mt - varrho3^2)*B1(nt+mt+2) ...
+                                              +1i*varrho1*varrho3*(nt-mt+2)*B1(nt+mt+3) - varrho1^2*(nt+2)*mt*B1(nt+mt+4)) ...
+                                       + A2_IJ*B1(nt+mt+2) + varrho3^2*A3_IJ*B1(nt+mt+2) ...
+                                       + A4_IJ*B2(nt+mt+1) - varrho1^2*A5_IJ*B2(nt+mt+3);
+                            case 'BGU'
+                                if mt+nt == 2
+                                    temp2  = A1_IJ*(- 2*1i*varrho2*B1(1) + (1 + varrho3^2)*B1(2) ...
+                                                  +2*1i*varrho1*varrho3*B1(3) - varrho1^2*B1(4) - 1i*varrho2*exp(2*1i*varrho2)) ...
+                                           + A2_IJ*B1(2) + varrho3^2*A3_IJ*B1(2) ...
+                                           + A4_IJ*B2(1) - varrho1^2*A5_IJ*B2(3);
+                                else
+                                    temp2  = A1_IJ*(-2*varrho2^2*B1(nt+mt-2) - 1i*varrho2*(nt+mt)*B1(nt+mt-1) + (nt*mt + varrho3^2)*B1(nt+mt) ...
+                                                  +1i*varrho1*varrho3*(nt+mt)*B1(nt+mt+1) - varrho1^2*nt*mt*B1(nt+mt+2)) ...
+                                           + A2_IJ*B1(nt+mt) + varrho3^2*A3_IJ*B1(nt+mt) ...
+                                           + A4_IJ*B2(nt+mt-1) - varrho1^2*A5_IJ*B2(nt+mt+1);
+                                end
+                            case 'BGC'
+                                if mt+nt == 2
+                                    temp2  = A1_IJ*((1 - varrho3^2)*B1(2) ...
+                                                  - varrho1^2*B1(4) - 1i*varrho2) ...
+                                           + A2_IJ*B1(2) + varrho3^2*A3_IJ*B1(2) ...
+                                           + A4_IJ*B2(1) - varrho1^2*A5_IJ*B2(3);
+                                else
+                                    temp2  = A1_IJ*(-1i*varrho2*(nt-mt)*B1(nt+mt-1) + (nt*mt - varrho3^2)*B1(nt+mt) ...
+                                                  +1i*varrho1*varrho3*(nt-mt)*B1(nt+mt+1) - varrho1^2*nt*mt*B1(nt+mt+2)) ...
+                                           + A2_IJ*B1(nt+mt) + varrho3^2*A3_IJ*B1(nt+mt) ...
+                                           + A4_IJ*B2(nt+mt-1) - varrho1^2*A5_IJ*B2(nt+mt+1);
+                                end
+                        end
+
+                        switch formulation
+                            case {'PGU', 'BGU'}
+                                temp = temp + Dt(n,nt)*D(m,mt)*r_a*temp2*exp(-2*1i*varrho2);
+                            case {'PGC', 'BGC'}
+                                temp = temp + Dt(n,nt)*D(m,mt)*r_a*temp2;
+                        end
                     end
                 end
             end
@@ -197,13 +212,13 @@ parfor e = 1:noElems
             if n == 1
                 IEsctr = sctrGlobal;
             else
-                IEsctr = noDofs+sctrLocal+noSurfDofs*(n-2);
+                IEsctr = noDofs+sctrLocal+noSurfDofs*(n-2+shift);
             end
             spIdxRow_temp(indices) = copyVector(IEsctr,n_en,1);
             if m == 1
                 IEsctr = sctrGlobal;
             else
-                IEsctr = noDofs+sctrLocal+noSurfDofs*(m-2);
+                IEsctr = noDofs+sctrLocal+noSurfDofs*(m-2+shift);
             end
             spIdxCol_temp(indices) = copyVector(IEsctr,n_en,2);
         end
@@ -213,7 +228,6 @@ parfor e = 1:noElems
     spIdxCol(:,e) = spIdxCol_temp;
 end
 
-noDofs_new = noDofs + noSurfDofs*(N-1);
 
 spIdxRow = reshape(spIdxRow,numel(spIdxRow),1);
 spIdxCol = reshape(spIdxCol,numel(spIdxCol),1);

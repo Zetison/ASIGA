@@ -19,10 +19,10 @@ varCol = setBarrelParameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_Barrel';
 f = 1.5e2;             % Frequency
 
-M = 5:6;
-M = 5;
+M = 1:6;
+% M = 4;
 degree = 2;
-parm = 2;
+parm = 1:2;
 alpha = (0:0.5:360)*pi/180;
 beta = 0;
 
@@ -41,17 +41,17 @@ prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 prePlot.abortAfterPlotting = 0;                % Abort simulation after pre plotting
 
-postPlot(1).xname       	= 'alpha';
-postPlot(1).yname        	= 'TS';
+postPlot(1).xname       	= 'dofs';
+postPlot(1).yname        	= 'surfaceError';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
-postPlot(1).axisType        = 'plot';
-postPlot(1).lineStyle   	= '-';
+postPlot(1).axisType    	= 'loglog';
+postPlot(1).lineStyle   	= '*-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','formulation','M'};
+postPlot(1).legendEntries 	= {'method','formulation','M','N','IEbasis'};
 postPlot(1).fileDataHeaderX	= [];
-postPlot(1).noXLoopPrms   	= 0;
-postPlot(1).xScale          = 180/pi;
+postPlot(1).noXLoopPrms   	= 1;
+postPlot(1).addCommands   	= [];
 
 collectIntoTasks
 

@@ -167,30 +167,7 @@ switch options.noXLoopPrms
                 y_ref_temp = y_ref(indices);
             end
 
-            [legendName, saveName] = constructStrings(legendEntries,i,idxMap(i),study,model,noParms,loopParameters);
-            for j = otherInd
-                temp2 = loopParameters{j};
-                temp = study.tasks(idxMap(i)).task.(loopParameters{j});
-                if isnumeric(temp) || islogical(temp)
-                    temp = num2str(temp);
-                end
-                if j ~= otherInd(1)
-                    legendName = [legendName ', ' ];
-                end
-                if isstruct(temp)
-                    fieldNames = fieldnames(temp);
-                    temp2 = fieldNames{1};
-                    temp = temp.(temp2);
-                end
-                switch loopParameters{j}
-                    case {'formulation','IEbasis','method','coreMethod','BC'}
-                        saveName = [saveName '_' temp];
-                        legendName = [legendName temp];
-                    otherwise
-                        saveName = [saveName '_' temp2 temp];
-                        legendName = [legendName loopParameters{j} '=' temp];
-                end
-            end
+            [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd);
             if printResults
                 saveName(saveName == '.') = [];
                 printResultsToFile2([subFolderName '/' saveName], {'x', x_temp(:), 'y', y_temp(:), 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
@@ -323,98 +300,114 @@ if plotResults
     savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
 end
 
-function [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters)
+function [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd)
 saveName = model;           
-legendName = [];
-if nargin > 5
-    for j = 1:noParms
-        temp2 = loopParameters{j};
-
-        temp = study.tasks(i).task.(loopParameters{j});
-        if ~ischar(temp)
-            temp = num2str(temp);
-        end
-        if j ~= 1
-            legendName = [legendName ', '];
-        end
-        if isstruct(temp)
-            fieldNames = fieldnames(temp);
-            temp2 = fieldNames{1};
-            temp = temp.(temp2);
-        end
-        switch loopParameters{j}
-            case {'formulation','IEbasis','method','coreMethod','BC'}
-                saveName = [saveName '_' temp];
-                legendName = [legendName temp];
-            otherwise
-                saveName = [saveName '_' temp2 temp];
-                legendName = [legendName loopParameters{j} '=' temp];
-        end
-    end 
-end            
+legendName = [];          
             
-if ~isempty(legendEntries)
-    legendName = [];
-    saveName = model;  
+if isempty(legendEntries)
+    if nargin > 7
+        for j = otherInd
+            temp2 = loopParameters{j};
+            temp = study.tasks(idxMap(i)).task.(loopParameters{j});
+            if isnumeric(temp) || islogical(temp)
+                temp = num2str(temp);
+            end
+            if isstruct(temp)
+                fieldNames = fieldnames(temp);
+                temp2 = fieldNames{1};
+                temp = temp.(temp2);
+            end
+            [mathematicalLegend, legendEntriesMath, scale, postfix] = fixLegendEntry(loopParameters{j});
+            [saveName, legendName] = updateStrings(saveName, legendName, j, loopParameters, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2);
+        end
+    else
+        for j = 1:noParms
+            temp2 = loopParameters{j};
+
+            temp = study.tasks(i).task.(loopParameters{j});
+            if ~ischar(temp)
+                temp = num2str(temp);
+            end
+            if isstruct(temp)
+                fieldNames = fieldnames(temp);
+                temp2 = fieldNames{1};
+                temp = temp.(temp2);
+            end
+            [mathematicalLegend, legendEntriesMath, scale, postfix] = fixLegendEntry(loopParameters{j});
+            [saveName, legendName] = updateStrings(saveName, legendName, j, loopParameters, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2);
+        end 
+    end  
+else
     for j = 1:length(legendEntries)
         temp2 = legendEntries{j};
-        if ~isfield(study.tasks(idxMap).task,legendEntries{j})
+        if ~isfield(study.tasks(i).task,legendEntries{j})
             continue
         end
-        temp = study.tasks(idxMap).task.(legendEntries{j});
-        mathematicalLegend = false;
-        scale = 1;
-        postfix = '';
-        switch legendEntries{j}
-            case 'extraGP'
-                mathematicalLegend = true;
-                legendEntriesMath = 'n_{\mathrm{eq}}^{(1)}';
-            case 'extraGPBEM'
-                mathematicalLegend = true;
-                legendEntriesMath = 'n_{\mathrm{eq}}^{(2)}';
-            case 'colBEM_C0'
-                mathematicalLegend = true;
-                legendEntriesMath = 'C_{\mathrm{col}}';
-            case 'agpBEM'
-                mathematicalLegend = true;
-                legendEntriesMath = 's';
-            case 'alpha_s'
-                mathematicalLegend = true;
-                legendEntriesMath = '{\alpha}_s';
-                postfix = '$$^\circ$$';
-                scale = 180/pi;
-            case 'beta_s'
-                mathematicalLegend = true;
-                legendEntriesMath = '\beta';
-                postfix = '$$^\circ$$';
-                scale = 180/pi;
-        end
-        if isnumeric(temp) || islogical(temp)
-            temp = num2str(temp*scale);
-        end
-        if isstruct(temp)
-            fieldNames = fieldnames(temp);
-            temp2 = fieldNames{1};
-            temp = temp.(temp2);
-        end
+        temp = study.tasks(i).task.(legendEntries{j});
         if strcmp(temp,'NaN')
             continue
         end
-        if j ~= 1
-            legendName = [legendName ', ' ];
-        end
-        switch legendEntries{j}
-            case {'formulation','IEbasis','method','coreMethod','BC'}
-                legendName = [legendName temp];
-                saveName = [saveName '_' temp];
-            otherwise
-                saveName = [saveName '_' temp2 temp];
-                if mathematicalLegend
-                    legendName = [legendName '$$' legendEntriesMath '$$=' temp postfix];
-                else
-                    legendName = [legendName legendEntries{j} '=' temp];
-                end
-        end
+        [mathematicalLegend, legendEntriesMath, scale, postfix] = fixLegendEntry(legendEntries{j});
+        [saveName, legendName] = updateStrings(saveName, legendName, j, legendEntries, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2);
     end
 end
 
+function [saveName, legendName] = updateStrings(saveName, legendName, j, legendEntries, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2)
+if isnumeric(temp) || islogical(temp)
+    temp = num2str(temp*scale);
+end
+if isstruct(temp)
+    fieldNames = fieldnames(temp);
+    temp2 = fieldNames{1};
+    temp = temp.(temp2);
+end
+if ~isempty(legendName)
+    legendName = [legendName ', ' ];
+end
+switch legendEntries{j}
+    case {'formulation','IEbasis','method','coreMethod','BC'}
+        legendName = [legendName temp];
+        saveName = [saveName '_' temp];
+    otherwise
+        saveName = [saveName '_' temp2 temp];
+        if mathematicalLegend
+            legendName = [legendName '$$' legendEntriesMath '$$=' temp postfix];
+        else
+            legendEntry = legendEntries{j};
+            legendEntry = insertBefore(legendEntry,'_','\');
+            legendName = [legendName legendEntry '=' temp];
+        end
+end
+
+function [mathematicalLegend, legendEntriesMath, scale, postfix] = fixLegendEntry(legendEntry)
+mathematicalLegend = false;
+scale = 1;
+postfix = '';
+legendEntriesMath = NaN;
+switch legendEntry
+    case 'extraGP'
+        mathematicalLegend = true;
+        legendEntriesMath = 'n_{\mathrm{eq}}^{(1)}';
+    case 'extraGPBEM'
+        mathematicalLegend = true;
+        legendEntriesMath = 'n_{\mathrm{eq}}^{(2)}';
+    case 'colBEM_C0'
+        mathematicalLegend = true;
+        legendEntriesMath = 'C_{\mathrm{col}}';
+    case 'c_x'
+        mathematicalLegend = true;
+        legendEntriesMath = 'c_x';
+    case 'agpBEM'
+        mathematicalLegend = true;
+        legendEntriesMath = 's';
+    case 'alpha_s'
+        mathematicalLegend = true;
+        legendEntriesMath = '{\alpha}_s';
+        postfix = '$$^\circ$$';
+        scale = 180/pi;
+    case 'beta_s'
+        mathematicalLegend = true;
+        legendEntriesMath = '\beta';
+        postfix = '$$^\circ$$';
+        scale = 180/pi;
+end

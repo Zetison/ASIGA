@@ -1,7 +1,5 @@
 function v = getFarFieldPoints(alpha,beta,r)
-if length(beta) ~= 1
-    error('Not fully implemented')
-end
+
 v = zeros(length(alpha)*length(beta)*length(r),3);
 counter = 1;
 for l = 1:length(r)

@@ -1,18 +1,17 @@
-function container = setMockShellParameters()
+function layer = setMockShellParameters(noDomains)
 
-P_inc = 1; % Amplitude of incident wave
-rho_s = 7850; % Density of solid
-rho_f = [1000, 1000]; % Density of fluids
-c_f = [1500, 1500];  % Speed of sound in fluid domains
-E = 210e9; % Youngs modulus of elastic material
-nu = 0.3; % Poisson ratio of elastic material
+layer{1} = struct('media', 'fluid', ...
+                  't', 0.008, ...
+                  'R', 1, ...
+                  'L',  10, ...
+                  'c_f', 1500, ...
+                  'rho', 1000);
+layer{2} = struct('media', 'solid', ...
+                  'E', 210e9, ...
+                  'nu', 0.3, ...
+                  'rho', 7850);
+layer{3} = struct('media', 'fluid', ...
+                  'c_f', 1500, ...
+                  'rho', 1000);
 
-R_o = 1;
-% t = 0.0406; % Thickness of the Mock shell of Ihlenburg
-t = 0.008; % BeTSSi thickness
-% L = 4*R_o; % Shirron example 1
-L = 10*R_o; % Shirron example 2
-
-% mult = 1;
-
-putVariablesIntoContainer
+layer = layer(1:noDomains);

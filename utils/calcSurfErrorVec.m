@@ -1,6 +1,6 @@
 function relError = calcSurfErrorVec(varCol, U, LpOrder)
 
-degree = varCol.degree; % assume degree is equal in all patches
+degree = varCol.degree;
 
 index = varCol.index;
 noElems = varCol.noElems;
@@ -31,7 +31,7 @@ end
 % end
 
 extraGP = varCol.extraGP;
-[Q, W] = gaussTensorQuad(degree+3+extraGP);
+[Q, W] = gaussTensorQuad(degree(1:2)+3+extraGP);
 
 p_h = zeros(size(W,1),length(surfaceElements));
 fact = zeros(size(W,1),length(surfaceElements));

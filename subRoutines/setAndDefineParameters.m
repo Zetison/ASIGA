@@ -3,6 +3,9 @@ switch model
     case {'SS', 'PS', 'S1', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL'}
         analyticSolutionExist = true;
         isSphericalShell = true;
+    case {'Safjan2002tdi'}
+        analyticSolutionExist = true;
+        isSphericalShell = false;
     otherwise
         analyticSolutionExist = false;
         isSphericalShell = false;

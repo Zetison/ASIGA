@@ -11,7 +11,6 @@ beta_s  = task.beta_s;
 alpha = task.alpha;
 beta = task.beta;
 r = task.r;
-N_max = task.N_max;
 
 degree = task.degree;
 
@@ -43,7 +42,10 @@ varCol{1}.initMeshFactZeta	= task.initMeshFactZeta;
 varCol{1}.parm          = task.parm;
 varCol{1}.r_a           = task.r_a;
 varCol{1}.N             = task.N;
-varCol{1}.method = method;
+varCol{1}.method        = method;
+varCol{1}.model         = model;
+varCol{1}.useROM         = useROM;
+varCol{1}.N_max         = task.N_max;
 for i = 1:numel(varCol)
     varCol{i}.progressBars = task.progressBars;
 end
@@ -51,6 +53,15 @@ end
 plotResidualError       = task.plotResidualError;
 if isfield(task,'delta')
     varCol{1}.delta = task.delta;
+end
+if isfield(task,'c_x')
+    varCol{1}.c_x = task.c_x;
+end
+if isfield(task,'c_y')
+    varCol{1}.c_y = task.c_y;
+end
+if isfield(task,'c_z')
+    varCol{1}.c_z = task.c_z;
 end
 if isfield(task,'P_inc')
     varCol{1}.P_inc = task.P_inc;
@@ -107,7 +118,7 @@ if strcmp(method, 'IENSG') && ~(strcmp(formulation, 'PGU') || ...
                                 strcmp(formulation, 'BGC'))
 	error('The only "formulation"s available for "method = IENSG" are PGU, BGU, PGC and BGC')
 end
-if strcmp(method,'BA') && ~strcmp(scatteringCase,'BI')
+if strcmp(method,'BA') && strcmp(scatteringCase,'MS')
     error('This is case is not implemented. The best approximation method must be combined with "scatteringCase = BI"')
 end
 

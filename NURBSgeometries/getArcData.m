@@ -33,7 +33,7 @@ while i < length(Xi)
     theta_i = Xi(i)*theta;
     P3 = [cos(theta_i); sin(theta_i)];
     t1 = (1-P1(1)*P3(1)-P1(2)*P3(2))/(P1(2)*P3(1)-P1(1)*P3(2));
-    P2 = P1 + t1*[P1(2);-P1(1)];
+    P2 = P1 + t1*[P1(2); -P1(1)];
     w2 = cos((theta_i-theta_prev)/2);
     
     controlPtsTemp = zeros(3,3);
