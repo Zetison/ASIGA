@@ -122,12 +122,15 @@ colMethod         	= 'Grev';     	% In collocation BEM: Location of collocation 
 internalPts      	= zeros(1,3);   % Internal points for the CHIEF method (Combined Helmholtz integral equation formulation)
 
 %% Settings for the IEM (infinite element method)
-r_a   	= NaN;    % Radial value for the artificial boundary
-N     	= 3;        % Number of basis function in the radial direction for the IEM
-IEbasis	= 'Chebyshev';
+r_a   	 = NaN;          % Radial value for the artificial boundary
+N     	 = 3;            % Number of basis function in the radial direction for the IEM
+IEbasis	 = 'Chebyshev';  % Choose between 'Chebyshev', 'Bernstein' and 'Lagrange'
+ie_Zeta  = [];           % Node/knot placements for basis function with local support in the infinite elements
+IElocSup = false;        % Toggle usage of radial shape functions in IE with local support
+p_ie     = NaN;            % Set polynomial order for radial shape functions
 
 %% Settings for the MFS (method of fundamental solution)
-delta = 0.1;    % Distance from the boundary to the internal source points
+delta = 0.1;            % Distance from the boundary to the internal source points
 
 %% Settings for ROM (reduced order modelling)
 useROM      = false;    % Toggle the usage of ROM

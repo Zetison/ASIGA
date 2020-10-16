@@ -15,8 +15,8 @@
 
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
-% studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
-studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
+% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 
 %% Venas2020ibe
 % studyName = 'articleBEM_S1_quadVis'; %getTask_articleBEM_S1_quadVis

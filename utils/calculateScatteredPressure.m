@@ -80,15 +80,15 @@ if useExtraQuadPts
     noGpXi = degree(1)+1+5;
     noGpEta = degree(2)+1+5;
 else
-    noGpXi = degree(1)+1+extraGP;
-    noGpEta = degree(2)+1+extraGP;
+    noGpXi = degree(1)+3+extraGP;
+    noGpEta = degree(2)+3+extraGP;
 end
 [Q, W] = gaussTensorQuad([noGpXi,noGpEta]); 
 
 p_h = zeros(size(P_far,1),1);
 
-for i = 1:length(surfaceElements) %
-% parfor i = 1:length(surfaceElements)
+% for i = 1:length(surfaceElements) %
+parfor i = 1:length(surfaceElements)
     if d_p == 3
         e = surfaceElements(i);
     else

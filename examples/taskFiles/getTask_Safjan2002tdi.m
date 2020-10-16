@@ -11,18 +11,21 @@ getDefaultTaskValues
 scatteringCase = 'BI';
 model = 'Safjan2002tdi'; % Simpson sphere
 method = {'IENSG'};
+% method = {'IE'};
 IEbasis	= 'Chebyshev';
 % IEbasis	= 'Lagrange';
+% IEbasis	= {'Chebyshev','Bernstein','Lagrange'};
 BC = 'NBC';
 formulation = {'PGU','PGC','BGU','BGC'};
-% formulation = {'PGC'};
+formulation = {'PGC','BGC'};
+formulation = {'PGC'};
 coreMethod = 'IGA';
 runTasksInParallel = 0;
 progressBars = false;        % Show progress bars for building system matrices
 applyLoad = 'Safjan';
 
-% Upsilon = [22*sqrt(2)/3, 44*sqrt(3)/7];
-Upsilon = 22*sqrt(2)/3;
+% Upsilon = [22*sqrt(2)/3, 44*sqrt(3)/7]; % 3:1, 7:1
+Upsilon = 22*sqrt(2)/3; % 3:1
 
 c_z = 11;
 c_x = sqrt(c_z^2-Upsilon.^2);
@@ -39,7 +42,7 @@ omega = c_f*k;         % Angular frequency
 f = omega/(2*pi);      % Frequency
 
 M = 1:7;
-M = 4;
+M = 5;
 parm = 1;
 alpha = 0;
 beta = (-90:0.5:90)*pi/180;
@@ -52,11 +55,9 @@ calculateFarFieldPattern = false;     % Calculate far field pattern
 % prePlot.resolution = [20,20,0];
 
 degree = 5;
-N = 1:20;
-N = 5;
 
 warning('off','NURBS:weights')
-loopParameters = {'M','N','method','formulation', 'c_x'};
+loopParameters = {'N','p_ie','IElocSup', 'c_x'};
 
 postPlot(1).xname       	= 'N';
 postPlot(1).yname        	= 'surfaceError';
@@ -86,6 +87,22 @@ postPlot(2).yname        	= 'cond_number';
 % postPlot(4).yname           = 'abs_p';
 % postPlot(4).axisType        = 'plot';
 
+IElocSup = true;
+for p_ie = 3:5
+    N = 2*p_ie:11;
+    % N = 3;
+%     collectIntoTasks
+end
+
+IEbasis	= 'Lagrange';
+for p_ie = 3:5
+    N = 2*p_ie:p_ie:11;
+    N = 4*p_ie;
+%     collectIntoTasks
+end
+
+IElocSup = false;
+N = 1:11;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,5 +112,5 @@ useNeumanProj = 0;
 solveForPtot = 0;
 N = [N(1),N(end)];
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks
 

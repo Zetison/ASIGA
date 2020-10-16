@@ -44,8 +44,12 @@ varCol{1}.r_a           = task.r_a;
 varCol{1}.N             = task.N;
 varCol{1}.method        = method;
 varCol{1}.model         = model;
-varCol{1}.useROM         = useROM;
+varCol{1}.useROM        = useROM;
 varCol{1}.N_max         = task.N_max;
+varCol{1}.ie_Zeta       = task.ie_Zeta;
+varCol{1}.IElocSup      = task.IElocSup;
+varCol{1}.p_ie          = task.p_ie;
+
 for i = 1:numel(varCol)
     varCol{i}.progressBars = task.progressBars;
 end

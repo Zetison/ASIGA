@@ -1,11 +1,42 @@
-function [D,Dt] = generateCoeffMatrix(varCol)
+function [D,Dt,x_n] = generateCoeffMatrix(varCol)
 
-N = varCol.N;
+r_a = varCol.r_a;
+
+if varCol.IElocSup
+    n_n = varCol.N;
+    p_ie = varCol.p_ie;
+    N = p_ie;
+    kappa = 1:n_n;
+    if 1
+        z = 1 + (1-kappa)/n_n;
+    else
+        z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
+    end
+    x_n = 1./z;
+    x = 1./z(end-p_ie+1:end);
+else
+    N = varCol.N;
+    x = zeros(N,1);
+%     a = 0.65;
+%     b = 9;
+%     logb = @(x,b) log(x)/log(b);
+    for m = 1:N
+        x(m) = 1/m;
+%         x(m) = 1/(1+(1-m)/N);
+%         x(m) = (N-m+1)/N;
+%         x(m) = a+(1-a)*(N-m+1)/N;
+%         x(m) = 1/log10(10*m);
+%         x(m) = 1/10^(m-1);
+%         x(m) = 1/logb(b*m,b);
+    end
+%     GLL = gaussLobattoLegendreQuad(N+1);
+%     x = 1./(0.5-0.5*GLL(1:end-1));
+    x_n = NaN;
+end
 switch varCol.IEbasis
     case 'Standard'
         error('It is assumed that the radial basis functions satisfies the Kronecker delta property at the artificial boundary')
         k = varCol.k;
-        r_a = varCol.r_a;
         D = eye(N)*exp(1i*k*r_a);
         Dt = D;
     case 'Chebyshev'        
@@ -36,23 +67,10 @@ switch varCol.IEbasis
         D = flipud(D);
         Dt = D;
     case 'Lagrange'
-        x = zeros(N,1);
-%         a = 0.65;
-%         b = 9;
-%         logb = @(x,b) log(x)/log(b);
-        for m = 1:N
-            x(m) = 1/m;
-%             x(m) = (N-m+1)/N;
-%             x(m) = a+(1-a)*(N-m+1)/N;
-%             x(m) = 1/log10(10*m);
-%             x(m) = 1/10^(m-1);
-%             x(m) = 1/logb(b*m,b);
-        end
         B = zeros(N);
         Bt = zeros(N);
         E = zeros(N);
         k = varCol.k;
-        r_a = varCol.r_a;
         for m = 1:N
             for l = 1:N
                 B(m,l) = x(l)^m;

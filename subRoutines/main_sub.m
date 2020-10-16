@@ -139,7 +139,8 @@ else
 %                         [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM2(varCol{1});
                         [A3_gamma_a, newDofsToRemove, A2_gamma_a, A_gamma_a] = buildIEmatrix(varCol{1});
                     else
-                        [A_gamma_a, newDofsToRemove] = buildIEmatrix(varCol{1});
+%                         [A_gamma_a, newDofsToRemove] = buildIEmatrix(varCol{1});
+                        [A_gamma_a, newDofsToRemove] = addInfElements3(varCol{1});
                     end
 
             %         [A_inf, newDofsToRemove] = addInfElements4(varCol{1}, k(1), Upsilon); 
@@ -383,7 +384,8 @@ else
                 end
 
                 varCol{1}.dofsToRemove = dofsToRemove;
-                noDofs_tot = varCol{1}.noDofs*varCol{1}.N;
+                noDofs_tot = max(size(A));
+                
                 varCol{1}.noDofs_tot = noDofs_tot;
 
                 % Apply Neumann conditions

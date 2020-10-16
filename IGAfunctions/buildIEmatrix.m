@@ -5,7 +5,40 @@ knotVecs = varCol.knotVecs;
 
 degree = varCol.degree(1:2); % assume degree is equal in all patches
 
-N = varCol.N;
+Ntot = varCol.N;
+r_a = varCol.r_a;
+IEbasis = varCol.IEbasis;
+p_ie = varCol.p_ie;
+IElocSup = varCol.IElocSup;
+[D,Dt,x_n] = generateCoeffMatrix(varCol);
+if IElocSup
+    N = p_ie;
+    if Ntot-2*p_ie < 0
+        warning('Too low input N for local IE basis functions. Using N = 2*p_ie instead')
+        Ntot = 2*p_ie;
+    end
+    noElems = round(Ntot/p_ie);
+    if strcmp(IEbasis,'Lagrange')
+        ie_Zeta = [0, reshape(repmat((0:noElems-1)/(noElems-1),p_ie,1),1,noElems*p_ie), 1];
+        rho = r_a*x_n(1:end-p_ie+1);
+    else
+        ie_Zeta = [zeros(1,p_ie+1), linspace2(0,1,Ntot-2*p_ie), ones(1,p_ie+1)];
+    end
+%     x = x_n(p_ie:Ntot-(2*p_ie-1));
+%     if isempty(x)
+%         ie_Zeta = [zeros(1,p_ie+1), linspace2(0,1,Ntot-2*p_ie), ones(1,p_ie+1)];
+%     else
+%         x = (x-1)/(x(end)-1);
+%         ie_Zeta = [zeros(1,p_ie+1), x, ones(1,p_ie+1)];
+%     end
+else
+    N = Ntot;
+end
+if ~isempty(varCol.ie_Zeta)
+    ie_Zeta = varCol.ie_Zeta;
+    p_ie = numel(find(abs(ie_Zeta) < 10*eps));
+    Ntot = numel(ie_Zeta)-2;
+end
 formulation = varCol.formulation;
 A_2 = varCol.A_2;
 x_0 = varCol.x_0;
@@ -16,9 +49,6 @@ controlPts = varCol.controlPts;
 
 k = varCol.k(1);
 Upsilon = varCol.Upsilon;
-r_a = varCol.r_a;
-
-[D,Dt] = generateCoeffMatrix(varCol);
 if strcmp(varCol.method,'IENSG')
     noElems = varCol.noElems;
     element = varCol.element;
@@ -171,10 +201,42 @@ A5values = sparse(spIdx(:,1),spIdx(:,2),A5values,noSurfDofs,noSurfDofs,numel(Iun
 %% Evaluate analytic integrals in ``radial'' direction. 
 % Note that the last two integrals (B1(end) and B1(end-1),
 % B2(end) and B2(end-1)) will be redundant for the cases 'BGC' and 'BGU'
+
+if IElocSup
+    oldMethod = 0;
+    if oldMethod
+        coeffs = aveknt(ie_Zeta, p_ie+1);
+        r_b = 2*r_a;
+    else
+        n_n = Ntot;
+        if 1
+            kappa = 1:n_n;
+            if 1
+                z = 1 + (1-kappa)/n_n;
+            else
+                z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
+            end
+            coeffs = r_a./z(1:end-(p_ie-1));
+            r_b = coeffs(1,end);
+        else
+            r_b = 2*r_a;
+            coeffs = linspace(r_a,r_b,n_n);            
+        end
+    end
+    if strcmp(IEbasis,'Lagrange')
+        r_b = rho(end);
+    end
+    coeffs(2,:) = 1;
+    
+    ra = r_b;
+else
+    ra = r_a;
+end
+
 B1 = zeros(2*N+4,1);
 B2 = zeros(2*N+3,1);
-varrho1 = Upsilon/r_a;
-varrho2 = k*r_a;
+varrho1 = Upsilon/ra;
+varrho2 = k*ra;
 varrho3 = k*Upsilon;
 for n = 1:2*N+4
     B1(n) = radialIntegral3(n, varrho1, varrho2, formulation, 1);
@@ -186,16 +248,16 @@ nt = (1:N).';
 mt = 1:N;
 ntpmt = nt+mt;
 switch formulation
-    case 'PGU'
+    case 'PGU'   
         K1 = -2*varrho2^2*B1(ntpmt) - 1i*varrho2*(ntpmt+2).*B1(ntpmt+1) + ((nt+2)*mt + varrho3^2).*B1(ntpmt+2) ...
-             +1i*varrho1*varrho3*(ntpmt+2)*B1(ntpmt+3) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
+             +1i*varrho1*varrho3*(ntpmt+2).*B1(ntpmt+3) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
         K2 = B1(ntpmt+2);
         K3 = varrho3^2*B1(ntpmt+2);
         K4 = B2(ntpmt+1);
         K5 = -varrho1^2*B2(ntpmt+3);
     case 'PGC'
-        K1_0 = (nt+2)*mt.*B1(ntpmt+2) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
-        K1_1 = -1i*varrho2*(nt-mt+2).*B1(ntpmt+1) +1i*varrho1*varrho3*(nt-mt+2).*B1(ntpmt+3);
+        K1 = (nt+2)*mt.*B1(ntpmt+2) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
+        K1_1 = -1i*varrho2*(nt-mt+2).*B1(ntpmt+1) + 1i*varrho1*varrho3*(nt-mt+2).*B1(ntpmt+3);
         K1_2 = -varrho3^2.*B1(ntpmt+2);
         K2 = B1(ntpmt+2);
         K3 = varrho3^2*B1(ntpmt+2);
@@ -218,7 +280,7 @@ switch formulation
         K5(1) = -varrho1^2*B2(3);
     case 'BGC'
         ntpmt(1) = 3; % To avoid exceeding array bounds (nt,mt=1 is treated separately)
-        K1_0 = nt*mt.*B1(ntpmt) - varrho1^2*nt*mt.*B1(ntpmt+2);
+        K1 = nt*mt.*B1(ntpmt) - varrho1^2*nt*mt.*B1(ntpmt+2);
         K1_1 = -1i*varrho2*(nt-mt).*B1(ntpmt-1) + 1i*varrho1*varrho3*(nt-mt).*B1(ntpmt+1);
         K1_2 = -varrho3^2.*B1(ntpmt);
         
@@ -228,7 +290,7 @@ switch formulation
         K4 = B2(ntpmt-1);
         K5 = -varrho1^2*B2(ntpmt+1);
         
-        K1_0(1) = B1(2) - varrho1^2*B1(4);
+        K1(1) = B1(2) - varrho1^2*B1(4);
         K1_1(1) = -1i*varrho2;
         K1_2(1) = -varrho3^2.*B1(2);
         K2(1) = B1(2);
@@ -236,47 +298,203 @@ switch formulation
         K4(1) = B2(1);
         K5(1) = -varrho1^2*B2(3);
 end
+K1 = Dt*K1*D.'*ra;
+K2 = Dt*K2*D.'*ra;
+K3 = Dt*K3*D.'*ra;
+K4 = Dt*K4*D.'*ra;
+K5 = Dt*K5*D.'*ra;
 switch formulation
     case {'PGC', 'BGC'}
-        K1_0 = K1_0*r_a;
-        K1_1 = K1_1*r_a;
-        K1_2 = K1_2*r_a;
-        K2 = K2*r_a;
-        K3 = K3*r_a;
-        K4 = K4*r_a;
-        K5 = K5*r_a;
+        K1_1 = Dt*K1_1*D.'*ra;
+        K1_2 = Dt*K1_2*D.'*ra;
+end
+
+if IElocSup     
+    varCol_ie.nurbs = createNURBSobject(coeffs, ie_Zeta);
+    varCol_ie.dimension = 1; 
+    varCol_ie = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_ie)));
+    
+
+    %% Extract all needed data from options and varCol_ie
+    degree = varCol_ie.degree;
+    knotVecs = varCol_ie.knotVecs;
+    index = varCol_ie.index;
+    noElems = varCol_ie.noElems;
+    elRange = varCol_ie.elRange;
+    element = varCol_ie.element;
+    element2 = varCol_ie.element2;
+    weights = varCol_ie.weights;
+    controlPts = varCol_ie.controlPts;
+    pIndex = varCol_ie.pIndex;
+    noDofs_ie = varCol_ie.noDofs;
+
+    varrho2 = k*r_a;
+    
+    %% Preallocation and initiallizations
+    n_en = prod(degree+1);
+    sizeKe = n_en^2;
+    spIdxRow = zeros(sizeKe,noElems);
+    spIdxCol = zeros(sizeKe,noElems);
+    K1values = zeros(sizeKe,noElems); 
+    K1_1values = zeros(sizeKe,noElems); 
+    K1_2values = zeros(sizeKe,noElems); 
+    K2values = zeros(sizeKe,noElems); 
+    K3values = zeros(sizeKe,noElems); 
+    K4values = zeros(sizeKe,noElems); 
+    K5values = zeros(sizeKe,noElems); 
+
+    extraGP = varCol.extraGP;
+%     [Q, W] = gaussTensorQuad(degree+1+extraGP);
+    [Q, W] = gaussTensorQuad(50);
+    %% Build global matrices
+    % keyboard
+    for e = 1:noElems
+%     parfor e = 1:noElems
+        patch = pIndex(e);
+        knots = knotVecs{patch};
+        Xi_e = elRange{1}(index(e,1),:);
+        
+        sctr = element(e,:);
+        pts = controlPts(sctr,:);
+        wgts = weights(element2(e,:),:);
+
+        if strcmp(IEbasis,'Lagrange')
+            rho_1 = rho(1+(e-1)*p_ie);
+            rho_n = rho(1+e*p_ie);
+            a = 0.5*(1/rho_n-1/rho_1);
+            b = 0.5*(1/rho_n+1/rho_1);
+            r = 1./(a*Q + b);
+            J_1 = -a./(a*Q + b).^2;
+            x = 1./r;
+            x_i = 1./rho(1+(e-1)*p_ie:1+e*p_ie);
+            [L,dLdx] = lagrangePolynomials(x,1:p_ie+1,p_ie+1,x_i);
+            R = cell(1,2);
+            R{1} = L;
+            dxdr = -1./r.^2;
+            dRdr = dLdx.*dxdr;
+            J_2 = 1;
+        else
+            J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2;
+
+            zeta = parent2ParametricSpace(Xi_e, Q);
+            I = findKnotSpans(degree, zeta(1,:), knots);
+            R = NURBSbasis(I, zeta, degree, knots, wgts);
+            if oldMethod
+                a = 1/r_a;
+                b = 1/r_b-a;
+                r = 1./(b*zeta+a);
+                J_1 = -b./(b*zeta+a).^2;
+                dRdr = R{2}./J_1; % = -1./r.^2/b;
+            else
+    %             r = R{1}*pts;
+    %             J_1 = getJacobian(R,pts,1);
+    %             dRdr = R{2}./J_1; % = -1./r.^2/b;
+
+                r = R{1}*pts;
+                J_1 = getJacobian(R,pts,1);
+                dRdr = R{2}./J_1; % = -1./r.^2/b;
+            end
+        end
+        
+        k1_e = zeros(n_en);
+        k1_1_e = zeros(n_en);
+        k1_2_e = zeros(n_en);
+        k2_e = zeros(n_en);
+        k3_e = zeros(n_en);
+        k4_e = zeros(n_en);
+        k5_e = zeros(n_en);
+        for i = 1:numel(W)
+            RR = R{1}(i,:).'*R{1}(i,:);
+            RdRdr = R{1}(i,:).'*dRdr(i,:);
+            fact = abs(J_1(i)) * J_2 * W(i);
+            rUps = r(i)^2-Upsilon^2;
+            kr = k*r(i);
+            switch formulation
+                case {'PGC', 'BGC'}
+                    k1_e   = k1_e   + rUps*dRdr(i,:).'*dRdr(i,:) * fact;  
+                    k1_1_e = k1_1_e + rUps*1i*k*(RdRdr - RdRdr.') * fact;
+                    k1_2_e = k1_2_e - varrho3^2*RR                * fact;   
+                case {'PGU', 'BGU'}
+                    fact = fact * exp(2*1i*kr);
+                    k1_e = k1_e + (  rUps*dRdr(i,:).'*dRdr(i,:) ... 
+                                   + rUps*1i*k*(RdRdr + RdRdr.') ...
+                                   - (2*kr^2-varrho3^2)*RR) * fact;  
+            end
+            k2_e = k2_e +                  RR * fact;  
+            k3_e = k3_e + varrho3^2      * RR * fact;  
+            k4_e = k4_e + r(i)^2/rUps    * RR * fact;   
+            k5_e = k5_e - Upsilon^2/rUps * RR * fact;  
+        end
+        spIdxRow(:,e) = kron(ones(1,n_en),sctr);
+        spIdxCol(:,e) = kron(sctr,ones(1,n_en));
+        
+        K1values(:,e) = reshape(k1_e, sizeKe, 1);
+        K1_1values(:,e) = reshape(k1_1_e, sizeKe, 1);
+        K1_2values(:,e) = reshape(k1_2_e, sizeKe, 1);
+        K2values(:,e) = reshape(k2_e, sizeKe, 1);
+        K3values(:,e) = reshape(k3_e, sizeKe, 1);
+        K4values(:,e) = reshape(k4_e, sizeKe, 1);
+        K5values(:,e) = reshape(k5_e, sizeKe, 1);
+    end
+    Ntot = N-1 + noDofs_ie;
+    K1 = shiftMatrix(Ntot-N,Ntot,K1);
+    switch formulation
+        case {'BGC', 'PGC'}  
+            K1_1 = shiftMatrix(Ntot-N,Ntot,K1_1);
+            K1_2 = shiftMatrix(Ntot-N,Ntot,K1_2);
+            
+            K1_1 = K1_1 + sparse(spIdxRow,spIdxCol,K1_1values,Ntot,Ntot,numel(K1_1values));
+            K1_2 = K1_2 + sparse(spIdxRow,spIdxCol,K1_2values,Ntot,Ntot,numel(K1_2values));
+    end
+    K2 = shiftMatrix(Ntot-N,Ntot,K2);
+    K3 = shiftMatrix(Ntot-N,Ntot,K3);
+    K4 = shiftMatrix(Ntot-N,Ntot,K4);
+    K5 = shiftMatrix(Ntot-N,Ntot,K5);
+    
+    K1 = K1 + sparse(spIdxRow,spIdxCol,K1values,Ntot,Ntot,numel(K1values));
+    K2 = K2 + sparse(spIdxRow,spIdxCol,K2values,Ntot,Ntot,numel(K2values));
+    K3 = K3 + sparse(spIdxRow,spIdxCol,K3values,Ntot,Ntot,numel(K3values));
+    K4 = K4 + sparse(spIdxRow,spIdxCol,K4values,Ntot,Ntot,numel(K4values));
+    K5 = K5 + sparse(spIdxRow,spIdxCol,K5values,Ntot,Ntot,numel(K5values));
+    
+    noDofs_new = noDofs_new + noDofs_ie-1;
+else
+    Ntot = N;
+end
+
+switch formulation
     case {'PGU', 'BGU'}
-        K1 = K1*r_a*exp(-2*1i*varrho2);
-        K2 = K2*r_a*exp(-2*1i*varrho2);
-        K3 = K3*r_a*exp(-2*1i*varrho2);
-        K4 = K4*r_a*exp(-2*1i*varrho2);
-        K5 = K5*r_a*exp(-2*1i*varrho2);
+        K1 = K1*exp(-2*1i*varrho2);
+        K2 = K2*exp(-2*1i*varrho2);
+        K3 = K3*exp(-2*1i*varrho2);
+        K4 = K4*exp(-2*1i*varrho2);
+        K5 = K5*exp(-2*1i*varrho2);
 end
 if varCol.useROM
-    A_2 =  kron(Dt*K1_2/k^2*D.',A1values) ...
-         + kron(Dt*K3/k^2*D.',A3values);
-    A_1 =  kron(Dt*K1_1/k*D.',A1values);
-    A =    kron(Dt*K1_0*D.',A1values) ...
-         + kron(Dt*K2*D.',A2values) ...
-         + kron(Dt*K4*D.',A4values) ...
-         + kron(Dt*K5*D.',A5values);
+    A_2 =  kron(K1_2/k^2,A1values) ...
+         + kron(K3/k^2,A3values);
+    A_1 =  kron(K1_1/k,A1values);
+    A =    kron(K1,A1values) ...
+         + kron(K2,A2values) ...
+         + kron(K4,A4values) ...
+         + kron(K5,A5values);
 else
     switch formulation
         case {'PGC', 'BGC'}
-            K1 = K1_0 + K1_1 + K1_2;
+            K1 = K1 + K1_1 + K1_2;
     end
-    A  =   kron(Dt*K1*D.',A1values) ...
-         + kron(Dt*K2*D.',A2values) ...
-         + kron(Dt*K3*D.',A3values) ...
-         + kron(Dt*K4*D.',A4values) ...
-         + kron(Dt*K5*D.',A5values);
+    A =   kron(K1,A1values) ...
+        + kron(K2,A2values) ...
+        + kron(K3,A3values) ...
+        + kron(K4,A4values) ...
+        + kron(K5,A5values);
 end
   
 dofsToRemove = setdiff(1:noSurfDofs,unique(spIdx(:,1)));
 noDofsToRemove = numel(dofsToRemove);
-newDofsToRemove = zeros(1,noDofsToRemove*N);
+newDofsToRemove = zeros(1,noDofsToRemove*Ntot);
 i = 1;
-for n = 1:N
+for n = 1:Ntot
     newDofsToRemove(i:i+noDofsToRemove-1) = dofsToRemove+(n-1)*noSurfDofs;
     i = i + noDofsToRemove;
 end
@@ -296,6 +514,12 @@ if noDofs > 0
         A_2 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
     end
 end
+
+function A = shiftMatrix(shift,noDofs,A)
+[i,j,Kvalues] = find(A);
+i = i+shift;
+j = j+shift;
+A = sparse(i,j,Kvalues,noDofs,noDofs);
 
 function [i,j,newDofsToRemove] = modifyIndices(i,j,noSurfDofs,noDofs,nodes,newDofsToRemove)
 

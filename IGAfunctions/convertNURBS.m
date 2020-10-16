@@ -68,7 +68,7 @@ for patch = 1:numel(nurbsPatches)
         case 1
             p = nurbs.degree;
 
-            Xi = nurbs.knots;
+            Xi = nurbs.knots{1};
 
             n = length(Xi)-p-1;
 
