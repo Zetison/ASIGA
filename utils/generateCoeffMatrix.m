@@ -1,4 +1,4 @@
-function [D,Dt,x_n] = generateCoeffMatrix(varCol)
+function [D,Dt,y_n] = generateCoeffMatrix(varCol)
 
 r_a = varCol.r_a;
 
@@ -12,26 +12,24 @@ if varCol.IElocSup
     else
         z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
     end
-    x_n = 1./z;
-    x = 1./z(end-p_ie+1:end);
+    y_n = 1./z;
+    x = z(end-p_ie+1:end)/z(end-p_ie+1);
 else
     N = varCol.N;
-    x = zeros(N,1);
 %     a = 0.65;
 %     b = 9;
 %     logb = @(x,b) log(x)/log(b);
-    for m = 1:N
-        x(m) = 1/m;
-%         x(m) = 1/(1+(1-m)/N);
-%         x(m) = (N-m+1)/N;
-%         x(m) = a+(1-a)*(N-m+1)/N;
-%         x(m) = 1/log10(10*m);
-%         x(m) = 1/10^(m-1);
-%         x(m) = 1/logb(b*m,b);
-    end
+    m = 1:N;
+    x = 1./m;
+%     x(m) = 1./(1+(1-m)/N);
+%     x(m) = (N-m+1)/N;
+%     x(m) = a+(1-a)*(N-m+1)/N;
+%     x(m) = 1./log10(10*m);
+%     x(m) = 1./10.^(m-1);
+%     x(m) = 1./logb(b*m,b);
 %     GLL = gaussLobattoLegendreQuad(N+1);
 %     x = 1./(0.5-0.5*GLL(1:end-1));
-    x_n = NaN;
+    y_n = NaN;
 end
 switch varCol.IEbasis
     case 'Standard'
@@ -81,8 +79,15 @@ switch varCol.IEbasis
                         Bt(m,l) = B(m,l);
                 end
             end
-            E(m,m) = exp(1i*k*r_a*(1-1/x(m)));
+            if varCol.IElocSup
+                E(m,m) = 1;
+            else
+                E(m,m) = exp(1i*k*r_a*(1-1/x(m)));
+            end
         end
         D = E/B;
-        Dt = E/Bt;      
+        Dt = E/Bt;   
+%         Binv = invVandermonde(x.');   
+%         D = E*Binv;
+%         Dt = E*Binv;   
 end

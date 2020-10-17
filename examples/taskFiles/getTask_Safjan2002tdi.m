@@ -57,7 +57,7 @@ calculateFarFieldPattern = false;     % Calculate far field pattern
 degree = 5;
 
 warning('off','NURBS:weights')
-loopParameters = {'N','p_ie','IElocSup', 'c_x'};
+loopParameters = {'N','p_ie','IElocSup', 'IEbasis', 'c_x'};
 
 postPlot(1).xname       	= 'N';
 postPlot(1).yname        	= 'surfaceError';
@@ -70,10 +70,11 @@ postPlot(1).yScale          = 1/100;
 % postPlot(1).legendEntries 	= {'method','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
-postPlot(1).addCommands   	= [];
+postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_error(i_study);
 
 postPlot(2) = postPlot(1);
 postPlot(2).yname        	= 'cond_number';
+postPlot(2).addCommands   	= [];
 
 % postPlot(3) = postPlot(1);
 % postPlot(3).noXLoopPrms     = 0;
@@ -88,21 +89,28 @@ postPlot(2).yname        	= 'cond_number';
 % postPlot(4).axisType        = 'plot';
 
 IElocSup = true;
-for p_ie = 3:5
+for p_ie = 3
     N = 2*p_ie:11;
+    N = 4*p_ie;
     % N = 3;
 %     collectIntoTasks
 end
 
 IEbasis	= 'Lagrange';
-for p_ie = 3:5
-    N = 2*p_ie:p_ie:11;
-    N = 4*p_ie;
-%     collectIntoTasks
+% IEbasis	= 'Chebyshev';
+for p_ie = 1:5
+    N = 2*p_ie:p_ie:100;
+%     N = 2*p_ie:p_ie:20;
+%     N = 4*p_ie;
+    collectIntoTasks
 end
 
 IElocSup = false;
-N = 1:11;
+N = 1:30;
+% N = 1:15;
+% N = 4;
+p_ie = NaN;
+IEbasis	= 'Bernstein';
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -113,4 +121,16 @@ solveForPtot = 0;
 N = [N(1),N(end)];
 formulation = {'SL2E'};
 % collectIntoTasks
+
+function addCommands_error(i_study)
+if i_study == 1
+    error_safjan = importdata('miscellaneous/refSolutions/Safjan2002tdi_Figure4_IElocSup0.csv');
+    loglog(error_safjan(:,1),error_safjan(:,2),'*','DisplayName','Safjan, Global multipole IE');
+    for p = 1:5
+        error_safjan = importdata(['miscellaneous/refSolutions/Safjan2002tdi_Figure4_IElocSup1_p' num2str(p) '.csv']);
+        loglog(error_safjan(:,1),error_safjan(:,2),'*','DisplayName',['Safjan, p = ' num2str(p)]);
+    end
+    legend('off');
+    legend('show');
+end
 

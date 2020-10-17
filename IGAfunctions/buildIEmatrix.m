@@ -203,7 +203,7 @@ A5values = sparse(spIdx(:,1),spIdx(:,2),A5values,noSurfDofs,noSurfDofs,numel(Iun
 % B2(end) and B2(end-1)) will be redundant for the cases 'BGC' and 'BGU'
 
 if IElocSup
-    oldMethod = 0;
+    oldMethod = 1;
     if oldMethod
         coeffs = aveknt(ie_Zeta, p_ie+1);
         r_b = 2*r_a;
@@ -223,7 +223,7 @@ if IElocSup
             coeffs = linspace(r_a,r_b,n_n);            
         end
     end
-    if strcmp(IEbasis,'Lagrange')
+    if 1 %strcmp(IEbasis,'Lagrange')
         r_b = rho(end);
     end
     coeffs(2,:) = 1;
@@ -348,8 +348,8 @@ if IElocSup
     [Q, W] = gaussTensorQuad(50);
     %% Build global matrices
     % keyboard
-    for e = 1:noElems
-%     parfor e = 1:noElems
+%     for e = 1:noElems
+    parfor e = 1:noElems
         patch = pIndex(e);
         knots = knotVecs{patch};
         Xi_e = elRange{1}(index(e,1),:);

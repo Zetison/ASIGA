@@ -830,6 +830,7 @@ else
                     rng('default') % for reproducibility in condest
                     condNumber = condest(A);
         %             condNumber = cond(full(A))
+                    fprintf('\nCondition number = %d', condNumber)
                 else
                     condNumber = NaN;
                 end
