@@ -104,5 +104,5 @@ if i_study == 1
     error_simpson = importdata('miscellaneous/refSolutions/Fig17_M3.csv');
     loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=3');
     legend('off');
-    legend('show');
+    legend('show','Interpreter','latex');
 end

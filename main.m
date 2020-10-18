@@ -17,6 +17,7 @@ end
 studiesCol = getTasks(studyName);
 
 %% Perform studies
+diary(['output' datestr(datetime('now')) '.log'])
 for i_col = 1:numel(studiesCol)
     t_start_study = tic;
     studies = studiesCol{i_col};

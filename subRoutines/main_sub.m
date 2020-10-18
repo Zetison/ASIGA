@@ -827,9 +827,11 @@ else
                 % condest(A)
                 % keyboard
                 if computeCondNumber && (size(A,1) == size(A,2))
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating condition number ... ')
                     rng('default') % for reproducibility in condest
                     condNumber = condest(A);
         %             condNumber = cond(full(A))
+                    fprintf('using %12f seconds.', toc)
                     fprintf('\nCondition number = %d', condNumber)
                 else
                     condNumber = NaN;

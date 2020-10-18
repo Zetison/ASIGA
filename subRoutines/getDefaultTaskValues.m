@@ -28,6 +28,7 @@ initMeshFactEta 	= 1;	% initial number of knots in eta direction
 initMeshFactZeta    = 1;	% initial number of knots in zeta direction
 extraGP             = 0;    % extra quadrature points
 parm                = 1;    % Toggle different parameterizations of a geometric model
+refineThetaOnly     = 0;    % For the ellipsoidal/spherical geometries, refine in the theta direction only
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plot2Dgeometry      = false;       % Plot cross section of mesh and geometry

@@ -42,7 +42,7 @@ omega = c_f*k;         % Angular frequency
 f = omega/(2*pi);      % Frequency
 
 M = 1:7;
-M = 5;
+M = 7;
 parm = 1;
 alpha = 0;
 beta = (-90:0.5:90)*pi/180;
@@ -52,6 +52,7 @@ prePlot.plotArtificialBndry = false;        % Plot the artificial boundary for t
 computeCondNumber = 1;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = false;     % Calculate far field pattern
+refineThetaOnly = true;
 % prePlot.resolution = [20,20,0];
 
 degree = 5;
@@ -76,21 +77,9 @@ postPlot(2) = postPlot(1);
 postPlot(2).yname        	= 'cond_number';
 postPlot(2).addCommands   	= [];
 
-% postPlot(3) = postPlot(1);
-% postPlot(3).noXLoopPrms     = 0;
-% postPlot(3).lineStyle       = '-';
-% postPlot(3).xname           = 'beta';
-% postPlot(3).yname           = 'error_p';
-% postPlot(3).axisType        = 'semilogy';
-% postPlot(3).xScale          = 180/pi;
-
-% postPlot(4) = postPlot(3);
-% postPlot(4).yname           = 'abs_p';
-% postPlot(4).axisType        = 'plot';
-
 IElocSup = true;
-for p_ie = 3
-    N = 2*p_ie:11;
+for p_ie = 5 %1:5
+    N = p_ie*2.^(1:round(log(100/p_ie)/log(2)));
     N = 4*p_ie;
     % N = 3;
 %     collectIntoTasks
@@ -99,20 +88,22 @@ end
 IEbasis	= 'Lagrange';
 % IEbasis	= 'Chebyshev';
 for p_ie = 1:5
-    N = 2*p_ie:p_ie:100;
+    N = p_ie*2.^(1:round(log(100/p_ie)/log(2)));
+%     N = p_ie*round((2*p_ie:p_ie:100)/p_ie);
+%     N = p_ie*2.^(1:7);
 %     N = 2*p_ie:p_ie:20;
 %     N = 4*p_ie;
     collectIntoTasks
 end
 
 IElocSup = false;
-N = 1:30;
+N = 1:20;
 % N = 1:15;
 % N = 4;
 p_ie = NaN;
 IEbasis	= 'Bernstein';
 collectIntoTasks
-
+% 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 method = {'BA'};
@@ -123,14 +114,14 @@ formulation = {'SL2E'};
 % collectIntoTasks
 
 function addCommands_error(i_study)
-if i_study == 1
-    error_safjan = importdata('miscellaneous/refSolutions/Safjan2002tdi_Figure4_IElocSup0.csv');
-    loglog(error_safjan(:,1),error_safjan(:,2),'*','DisplayName','Safjan, Global multipole IE');
+if i_study == 6
     for p = 1:5
         error_safjan = importdata(['miscellaneous/refSolutions/Safjan2002tdi_Figure4_IElocSup1_p' num2str(p) '.csv']);
         loglog(error_safjan(:,1),error_safjan(:,2),'*','DisplayName',['Safjan, p = ' num2str(p)]);
     end
+    error_safjan = importdata('miscellaneous/refSolutions/Safjan2002tdi_Figure4_IElocSup0.csv');
+    loglog(error_safjan(:,1),error_safjan(:,2),'*','DisplayName','Safjan, Global multipole IE');
     legend('off');
-    legend('show');
+    legend('show','Interpreter','latex');
 end
 

@@ -4,7 +4,7 @@ elRange = varCol.elRange(1:2);
 knotVecs = varCol.knotVecs;
 
 degree = varCol.degree(1:2); % assume degree is equal in all patches
-
+rho = NaN; % avoid par-for transparency issue
 Ntot = varCol.N;
 r_a = varCol.r_a;
 IEbasis = varCol.IEbasis;
@@ -203,27 +203,22 @@ A5values = sparse(spIdx(:,1),spIdx(:,2),A5values,noSurfDofs,noSurfDofs,numel(Iun
 % B2(end) and B2(end-1)) will be redundant for the cases 'BGC' and 'BGU'
 
 if IElocSup
-    oldMethod = 1;
+    oldMethod = 0;
     if oldMethod
         coeffs = aveknt(ie_Zeta, p_ie+1);
         r_b = 2*r_a;
     else
         n_n = Ntot;
+        kappa = 1:n_n;
         if 1
-            kappa = 1:n_n;
-            if 1
-                z = 1 + (1-kappa)/n_n;
-            else
-                z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
-            end
-            coeffs = r_a./z(1:end-(p_ie-1));
-            r_b = coeffs(1,end);
+            z = 1 + (1-kappa)/n_n;
         else
-            r_b = 2*r_a;
-            coeffs = linspace(r_a,r_b,n_n);            
+            z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
         end
+        coeffs = z(1:end-(p_ie-1));
+        r_b = r_a./coeffs(1,end);
     end
-    if 1 %strcmp(IEbasis,'Lagrange')
+    if strcmp(IEbasis,'Lagrange')
         r_b = rho(end);
     end
     coeffs(2,:) = 1;
@@ -347,7 +342,7 @@ if IElocSup
 %     [Q, W] = gaussTensorQuad(degree+1+extraGP);
     [Q, W] = gaussTensorQuad(50);
     %% Build global matrices
-    % keyboard
+    
 %     for e = 1:noElems
     parfor e = 1:noElems
         patch = pIndex(e);
@@ -386,13 +381,11 @@ if IElocSup
                 J_1 = -b./(b*zeta+a).^2;
                 dRdr = R{2}./J_1; % = -1./r.^2/b;
             else
-    %             r = R{1}*pts;
-    %             J_1 = getJacobian(R,pts,1);
-    %             dRdr = R{2}./J_1; % = -1./r.^2/b;
-
-                r = R{1}*pts;
-                J_1 = getJacobian(R,pts,1);
-                dRdr = R{2}./J_1; % = -1./r.^2/b;
+                x = R{1}*pts;
+                r = r_a./x;
+                dxdzeta = getJacobian(R,pts,1);
+                J_1 = -r_a./x.^2.*dxdzeta;
+                dRdr = R{2}./J_1;
             end
         end
         

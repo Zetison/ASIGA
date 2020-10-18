@@ -37,8 +37,9 @@ colBEM_C0               = task.colBEM_C0;
 colMethod               = task.colMethod;
 solveForPtot            = task.solveForPtot;
 varCol                  = task.varCol;
-varCol{1}.initMeshFactXi  	= task.initMeshFactXi;
-varCol{1}.initMeshFactZeta	= task.initMeshFactZeta;
+varCol{1}.initMeshFactXi   = task.initMeshFactXi;
+varCol{1}.initMeshFactZeta = task.initMeshFactZeta;
+varCol{1}.refineThetaOnly  = task.refineThetaOnly;
 varCol{1}.parm          = task.parm;
 varCol{1}.r_a           = task.r_a;
 varCol{1}.N             = task.N;
@@ -49,7 +50,6 @@ varCol{1}.N_max         = task.N_max;
 varCol{1}.ie_Zeta       = task.ie_Zeta;
 varCol{1}.IElocSup      = task.IElocSup;
 varCol{1}.p_ie          = task.p_ie;
-
 for i = 1:numel(varCol)
     varCol{i}.progressBars = task.progressBars;
 end

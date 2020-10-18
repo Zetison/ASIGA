@@ -44,7 +44,14 @@ if varCol{1}.boundaryMethod
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
     end
-    solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0);
+    if varCol{1}.refineThetaOnly
+        if parm ~= 1
+            error('Must have parm = 1 for pure theta refinement')
+        end
+        solid = insertKnotsInNURBS(solid,[0,2^(M-1)-1,0]);
+    else
+        solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0);
+    end
     L_gamma = 2*c_z;
     
     options.at = [0 0; 0 0; 0 1];
