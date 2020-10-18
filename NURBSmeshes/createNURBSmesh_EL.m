@@ -10,6 +10,12 @@ switch varCol{1}.method
                          0 0 1];
         varCol{1}.alignWithAxis = alignWithAxis;
 end
+Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
+if isfield(varCol{1}, 'Xi')
+    Xi = varCol{1}.Xi;
+else
+    Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
+end
 if isfield(varCol{1},'c_z')
     c_x = varCol{1}.c_x;
     if ~isfield(varCol,'c_y')
@@ -34,7 +40,7 @@ else
 end
 parm = varCol{1}.parm(1);
 if varCol{1}.boundaryMethod
-    solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t);
+    solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
     solid = makeUniformNURBSDegree(solid,degree);
 %     solid = explodeNURBS(solid,'eta');
 %     solid = explodeNURBS(solid,'xi');

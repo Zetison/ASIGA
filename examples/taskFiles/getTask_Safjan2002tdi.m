@@ -26,6 +26,7 @@ applyLoad = 'Safjan';
 
 % Upsilon = [22*sqrt(2)/3, 44*sqrt(3)/7]; % 3:1, 7:1
 Upsilon = 22*sqrt(2)/3; % 3:1
+Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 
 c_z = 11;
 c_x = sqrt(c_z^2-Upsilon.^2);
@@ -42,7 +43,7 @@ omega = c_f*k;         % Angular frequency
 f = omega/(2*pi);      % Frequency
 
 M = 1:7;
-M = 7;
+M = 6;
 parm = 1;
 alpha = 0;
 beta = (-90:0.5:90)*pi/180;
@@ -78,17 +79,19 @@ postPlot(2).yname        	= 'cond_number';
 postPlot(2).addCommands   	= [];
 
 IElocSup = true;
-for p_ie = 5 %1:5
-    N = p_ie*2.^(1:round(log(100/p_ie)/log(2)));
-    N = 4*p_ie;
+maxN = 100;
+% maxN = 40;
+for p_ie = 1:5
+    N = p_ie*2.^(1:round(log(maxN/p_ie)/log(2)));
+%     N = 4*p_ie;
     % N = 3;
-%     collectIntoTasks
+    collectIntoTasks
 end
 
 IEbasis	= 'Lagrange';
 % IEbasis	= 'Chebyshev';
 for p_ie = 1:5
-    N = p_ie*2.^(1:round(log(100/p_ie)/log(2)));
+    N = p_ie*2.^(1:round(log(maxN/p_ie)/log(2)));
 %     N = p_ie*round((2*p_ie:p_ie:100)/p_ie);
 %     N = p_ie*2.^(1:7);
 %     N = 2*p_ie:p_ie:20;
@@ -111,7 +114,7 @@ useNeumanProj = 0;
 solveForPtot = 0;
 N = [N(1),N(end)];
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 function addCommands_error(i_study)
 if i_study == 6

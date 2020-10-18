@@ -58,6 +58,9 @@ plotResidualError       = task.plotResidualError;
 if isfield(task,'delta')
     varCol{1}.delta = task.delta;
 end
+if isfield(task,'Xi')
+    varCol{1}.Xi = task.Xi;
+end
 if isfield(task,'c_x')
     varCol{1}.c_x = task.c_x;
 end

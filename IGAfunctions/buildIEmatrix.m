@@ -10,7 +10,7 @@ r_a = varCol.r_a;
 IEbasis = varCol.IEbasis;
 p_ie = varCol.p_ie;
 IElocSup = varCol.IElocSup;
-[D,Dt,x_n] = generateCoeffMatrix(varCol);
+[D,Dt,y_n] = generateCoeffMatrix(varCol);
 if IElocSup
     N = p_ie;
     if Ntot-2*p_ie < 0
@@ -20,7 +20,7 @@ if IElocSup
     noElems = round(Ntot/p_ie);
     if strcmp(IEbasis,'Lagrange')
         ie_Zeta = [0, reshape(repmat((0:noElems-1)/(noElems-1),p_ie,1),1,noElems*p_ie), 1];
-        rho = r_a*x_n(1:end-p_ie+1);
+        rho = r_a*y_n(1:end-p_ie+1);
     else
         ie_Zeta = [zeros(1,p_ie+1), linspace2(0,1,Ntot-2*p_ie), ones(1,p_ie+1)];
     end
@@ -208,14 +208,8 @@ if IElocSup
         coeffs = aveknt(ie_Zeta, p_ie+1);
         r_b = 2*r_a;
     else
-        n_n = Ntot;
-        kappa = 1:n_n;
-        if 1
-            z = 1 + (1-kappa)/n_n;
-        else
-            z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
-        end
-        coeffs = z(1:end-(p_ie-1));
+        x_n = 1./y_n(1:end-p_ie+1);
+        coeffs = x_n(1)+aveknt(ie_Zeta, p_ie+1)*(x_n(end)-x_n(1));
         r_b = r_a./coeffs(1,end);
     end
     if strcmp(IEbasis,'Lagrange')

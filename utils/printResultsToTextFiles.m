@@ -263,7 +263,7 @@ if plotResults
         case 'L2Error'
             yLabel = '$$\frac{\|p-p_h\|_{L^2}}{\|p\|_{L^2}}$$';
         case 'cond_number'
-            yLabel = 'Conditioning number';
+            yLabel = 'Condition number';
         otherwise
             yLabel = yname;
             intrprtrY = 'none';
