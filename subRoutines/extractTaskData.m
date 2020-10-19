@@ -50,6 +50,8 @@ varCol{1}.N_max         = task.N_max;
 varCol{1}.ie_Zeta       = task.ie_Zeta;
 varCol{1}.IElocSup      = task.IElocSup;
 varCol{1}.p_ie          = task.p_ie;
+varCol{1}.s_ie          = task.s_ie;
+
 for i = 1:numel(varCol)
     varCol{i}.progressBars = task.progressBars;
 end

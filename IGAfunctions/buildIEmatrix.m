@@ -24,20 +24,8 @@ if IElocSup
     else
         ie_Zeta = [zeros(1,p_ie+1), linspace2(0,1,Ntot-2*p_ie), ones(1,p_ie+1)];
     end
-%     x = x_n(p_ie:Ntot-(2*p_ie-1));
-%     if isempty(x)
-%         ie_Zeta = [zeros(1,p_ie+1), linspace2(0,1,Ntot-2*p_ie), ones(1,p_ie+1)];
-%     else
-%         x = (x-1)/(x(end)-1);
-%         ie_Zeta = [zeros(1,p_ie+1), x, ones(1,p_ie+1)];
-%     end
 else
     N = Ntot;
-end
-if ~isempty(varCol.ie_Zeta)
-    ie_Zeta = varCol.ie_Zeta;
-    p_ie = numel(find(abs(ie_Zeta) < 10*eps));
-    Ntot = numel(ie_Zeta)-2;
 end
 formulation = varCol.formulation;
 A_2 = varCol.A_2;
@@ -202,21 +190,19 @@ A5values = sparse(spIdx(:,1),spIdx(:,2),A5values,noSurfDofs,noSurfDofs,numel(Iun
 % Note that the last two integrals (B1(end) and B1(end-1),
 % B2(end) and B2(end-1)) will be redundant for the cases 'BGC' and 'BGU'
 
-if IElocSup
-    oldMethod = 0;
-    if oldMethod
-        coeffs = aveknt(ie_Zeta, p_ie+1);
-        r_b = 2*r_a;
-    else
-        x_n = 1./y_n(1:end-p_ie+1);
-        coeffs = x_n(1)+aveknt(ie_Zeta, p_ie+1)*(x_n(end)-x_n(1));
-        r_b = r_a./coeffs(1,end);
-    end
+if IElocSup    
+    s = varCol.s_ie;
+    x = @(zeta) 1 + zeta.^s*(1/Ntot - 1);
+    zeta_a = ((Ntot-p_ie)/(Ntot-1))^(1/s);
+    nurbs = parmFunc(ie_Zeta,p_ie,@(xi) x(xi*zeta_a));
+    
+    varCol_ie.nurbs = nurbs;
+    varCol_ie.dimension = 1; 
+    varCol_ie = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_ie)),1);
+    r_b = r_a./varCol_ie.nurbs{1}.coeffs(1,end);
     if strcmp(IEbasis,'Lagrange')
         r_b = rho(end);
     end
-    coeffs(2,:) = 1;
-    
     ra = r_b;
 else
     ra = r_a;
@@ -298,12 +284,7 @@ switch formulation
         K1_2 = Dt*K1_2*D.'*ra;
 end
 
-if IElocSup     
-    varCol_ie.nurbs = createNURBSobject(coeffs, ie_Zeta);
-    varCol_ie.dimension = 1; 
-    varCol_ie = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_ie)));
-    
-
+if IElocSup      
     %% Extract all needed data from options and varCol_ie
     degree = varCol_ie.degree;
     knotVecs = varCol_ie.knotVecs;
@@ -337,15 +318,13 @@ if IElocSup
     [Q, W] = gaussTensorQuad(50);
     %% Build global matrices
     
-%     for e = 1:noElems
-    parfor e = 1:noElems
+    for e = 1:noElems
+%     parfor e = 1:noElems
         patch = pIndex(e);
         knots = knotVecs{patch};
         Xi_e = elRange{1}(index(e,1),:);
         
         sctr = element(e,:);
-        pts = controlPts(sctr,:);
-        wgts = weights(element2(e,:),:);
 
         if strcmp(IEbasis,'Lagrange')
             rho_1 = rho(1+(e-1)*p_ie);
@@ -363,24 +342,19 @@ if IElocSup
             dRdr = dLdx.*dxdr;
             J_2 = 1;
         else
+            pts = controlPts(sctr,:);
+            wgts = weights(element2(e,:),:);
             J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2;
 
             zeta = parent2ParametricSpace(Xi_e, Q);
             I = findKnotSpans(degree, zeta(1,:), knots);
             R = NURBSbasis(I, zeta, degree, knots, wgts);
-            if oldMethod
-                a = 1/r_a;
-                b = 1/r_b-a;
-                r = 1./(b*zeta+a);
-                J_1 = -b./(b*zeta+a).^2;
-                dRdr = R{2}./J_1; % = -1./r.^2/b;
-            else
-                x = R{1}*pts;
-                r = r_a./x;
-                dxdzeta = getJacobian(R,pts,1);
-                J_1 = -r_a./x.^2.*dxdzeta;
-                dRdr = R{2}./J_1;
-            end
+
+            x = R{1}*pts;
+            r = r_a./x;
+            dxdzeta = getJacobian(R,pts,1);
+            J_1 = -r_a./x.^2.*dxdzeta;
+            dRdr = R{2}./J_1;
         end
         
         k1_e = zeros(n_en);

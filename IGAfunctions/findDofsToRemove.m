@@ -1,5 +1,8 @@
-function varCol = findDofsToRemove(varCol)
+function varCol = findDofsToRemove(varCol,discriminateIdenticalPoints)
 
+if nargin < 2
+    discriminateIdenticalPoints = false;
+end
 patches = varCol.patches;
 noPatches = numel(patches);
 noElemsPatch = zeros(noPatches,1);
@@ -48,51 +51,57 @@ for i = 1:noPatches
     knotVecs{i} = patches{i}.nurbs.knots;
 end
 d = varCol.dimension;
-% Eps = 1e10*eps;
-Eps = 1e7*eps;
-% Eps = 1e5*eps;
-% [~, I, IC] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)));
-% [~, I, IC] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(max(abs(controlPts))));
-[~, gluedNodes] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)), 'OutputAllIndices', true);
-repeatedNode = zeros(numel(gluedNodes),1);
-for i = 1:numel(gluedNodes)
-    repeatedNode(i) = numel(gluedNodes{i}) - 1;
-end
-gluedNodes(repeatedNode == 0) = [];
-noChildrenNodes = sum(repeatedNode);
-% nI = setdiff(1:noCtrlPts,I);
-% Iunique = I(IC);
-% Im = unique(Iunique(nI));
-% gluedNodes = cell(length(Im),1);
-% 
-% parfor i = 1:length(Im)
-%     temp = repmat(controlPts(Im(i),:),noCtrlPts,1);
-%     temp = controlPts-temp;
-%     gluedNodes{i} = find(norm2(temp)./norm2(controlPts) < Eps);
-% end
-% childrenNodes = zeros(size(nI));
-childrenNodes = zeros(1,noChildrenNodes);
 nodesMap = 1:noCtrlPts;
 element2 = element;
-counter = 1;
-for i = 1:length(gluedNodes)
-    parentIdx = gluedNodes{i}(1);
-    for j = 2:length(gluedNodes{i})
-        childrenIdx = gluedNodes{i}(j);
-        indices = (element == childrenIdx);
-        element(indices) = parentIdx;
-        nodesMap(nodesMap == childrenIdx) = parentIdx;
-        childrenNodes(counter) = childrenIdx;        
-        counter = counter + 1;
+if discriminateIdenticalPoints
+    dofsToRemove = [];
+    childrenNodes = [];
+    gluedNodes = {};
+else
+    % Eps = 1e10*eps;
+    Eps = 1e7*eps;
+    % Eps = 1e5*eps;
+    % [~, I, IC] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)));
+    % [~, I, IC] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(max(abs(controlPts))));
+    [~, gluedNodes] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)), 'OutputAllIndices', true);
+    repeatedNode = zeros(numel(gluedNodes),1);
+    for i = 1:numel(gluedNodes)
+        repeatedNode(i) = numel(gluedNodes{i}) - 1;
     end
-end
+    gluedNodes(repeatedNode == 0) = [];
+    noChildrenNodes = sum(repeatedNode);
+    % nI = setdiff(1:noCtrlPts,I);
+    % Iunique = I(IC);
+    % Im = unique(Iunique(nI));
+    % gluedNodes = cell(length(Im),1);
+    % 
+    % parfor i = 1:length(Im)
+    %     temp = repmat(controlPts(Im(i),:),noCtrlPts,1);
+    %     temp = controlPts-temp;
+    %     gluedNodes{i} = find(norm2(temp)./norm2(controlPts) < Eps);
+    % end
+    % childrenNodes = zeros(size(nI));
+    childrenNodes = zeros(1,noChildrenNodes);
+    counter = 1;
+    for i = 1:length(gluedNodes)
+        parentIdx = gluedNodes{i}(1);
+        for j = 2:length(gluedNodes{i})
+            childrenIdx = gluedNodes{i}(j);
+            indices = (element == childrenIdx);
+            element(indices) = parentIdx;
+            nodesMap(nodesMap == childrenIdx) = parentIdx;
+            childrenNodes(counter) = childrenIdx;        
+            counter = counter + 1;
+        end
+    end
 
-dofsToRemove = zeros(1,length(childrenNodes)*d);
-for i = 1:d
-    dofsToRemove(i:d:end) = d*(childrenNodes-1)+i;
-end
+    dofsToRemove = zeros(1,length(childrenNodes)*d);
+    for i = 1:d
+        dofsToRemove(i:d:end) = d*(childrenNodes-1)+i;
+    end
 
-dofsToRemove = sort(unique(dofsToRemove));
+    dofsToRemove = sort(unique(dofsToRemove));
+end
 
 varCol.childrenNodes = unique(childrenNodes);
 varCol.noElemsPatch = noElemsPatch;

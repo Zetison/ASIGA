@@ -212,6 +212,8 @@ if plotResults
             xLabel = '$$k$$';
         case 'beta'
             xLabel = '$$\beta$$';
+        case 's_ie'
+            xLabel = '$$s$$';
         case 'dofs'
             xLabel = 'Degrees of freedom';
         case {'surfDofs'}
@@ -398,6 +400,9 @@ switch legendEntry
         mathematicalLegend = true;
         legendEntriesMath = 'c_x';
     case 'agpBEM'
+        mathematicalLegend = true;
+        legendEntriesMath = 's';
+    case 's_ie'
         mathematicalLegend = true;
         legendEntriesMath = 's';
     case 'alpha_s'
