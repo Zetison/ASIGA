@@ -87,7 +87,8 @@ maxN = 100;
 for p_ie = 1:5
     N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
     N = 4*p_ie;
-%     N = [3*p_ie,4*p_ie];
+    N = [3*p_ie,4*p_ie];
+    N = 2*p_ie:p_ie:4*p_ie;
     % N = 3;
     collectIntoTasks
 end
