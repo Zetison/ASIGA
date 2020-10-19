@@ -23,7 +23,6 @@ coreMethod = 'IGA';
 runTasksInParallel = 0;
 progressBars = false;        % Show progress bars for building system matrices
 applyLoad = 'Safjan';
-runTasksInParallel = true;
 
 % Upsilon = [22*sqrt(2)/3, 44*sqrt(3)/7]; % 3:1, 7:1
 Upsilon = 22*sqrt(2)/3; % 3:1
@@ -44,7 +43,7 @@ omega = c_f*k;         % Angular frequency
 f = omega/(2*pi);      % Frequency
 
 M = 1:7;
-M = 4:5;
+M = 5;
 parm = 1;
 alpha = 0;
 beta = (-90:0.5:90)*pi/180;
@@ -63,13 +62,13 @@ degree = 5;
 warning('off','NURBS:weights')
 loopParameters = {'N','p_ie','s_ie','IElocSup', 'IEbasis','method', 'M', 'c_x'};
 
-postPlot(1).xname       	= 's_ie';
+postPlot(1).xname       	= 'N';
 postPlot(1).yname        	= 'surfaceError';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
 postPlot(1).axisType    	= 'semilogy';
 postPlot(1).lineStyle   	= '*-';
-postPlot(1).xLoopName     	= 's_ie';
+postPlot(1).xLoopName     	= 'N';
 postPlot(1).yScale          = 1/100;
 % postPlot(1).legendEntries 	= {'method','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
@@ -80,37 +79,40 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_error(i_study)
 % postPlot(2).yname        	= 'cond_number';
 % postPlot(2).addCommands   	= [];
 
+runTasksInParallel = 1;
 IElocSup = true;
-s_ie = linspace(0.5,4,100);
+s_ie = [1,2];
+% s_ie = 2;
 maxN = 100;
 % maxN = 40;
 for p_ie = 1:5
     N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
-    N = 4*p_ie;
-    N = [3*p_ie,4*p_ie];
-    N = 2*p_ie:p_ie:4*p_ie;
+%     N = 4*p_ie;
+%     N = [3*p_ie,4*p_ie];
+%     N = 2*p_ie:p_ie:4*p_ie;
     % N = 3;
     collectIntoTasks
 end
 
 IEbasis	= 'Lagrange';
 % IEbasis	= 'Chebyshev';
-for p_ie = 3 %:5
+for p_ie = 1:5
     N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
 %     N = p_ie*round((2*p_ie:p_ie:100)/p_ie);
 %     N = p_ie*2.^(1:7);
 %     N = 2*p_ie:p_ie:20;
-    N = 4*p_ie;
-%     collectIntoTasks
+%     N = 4*p_ie;
+    collectIntoTasks
 end
 
 IElocSup = false;
+s_ie = NaN;
 N = 1:19;
 % N = 1:15;
 % N = 4;
 p_ie = NaN;
 IEbasis	= 'Bernstein';
-% collectIntoTasks
+collectIntoTasks
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
@@ -119,10 +121,10 @@ useNeumanProj = 0;
 solveForPtot = 0;
 N = [N(1),N(end)];
 formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 function addCommands_error(i_study)
-if i_study == 6
+if i_study == 1
     for p = 1:5
         error_safjan = importdata(['miscellaneous/refSolutions/Safjan2002tdi_Figure4_IElocSup1_p' num2str(p) '.csv']);
         loglog(error_safjan(:,1),error_safjan(:,2),'*','DisplayName',['Safjan, p = ' num2str(p)]);

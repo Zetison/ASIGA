@@ -14,7 +14,7 @@ if varCol.IElocSup
             z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
         else
             warning('Not implemented, using s = 2 instead')
-            z = 1 + (1-kappa)/n_n;
+            z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
         end
         y_n = 1./z;
         x = z(end-p_ie+1:end)/z(end-p_ie+1);

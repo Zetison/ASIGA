@@ -39,6 +39,7 @@ for i_col = 1:numel(studiesCol)
                 fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studies)) 
             end
             studies(i_study).tasks = tasks;
+            studies(i_study).resultsFolder = resultsFolder;
         else
             for i_task = 1:noTasks
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel,resultsFolder);
@@ -68,13 +69,14 @@ for i_col = 1:numel(studiesCol)
     close all
     for i_study = 1:numel(studies)  
         study = studies(i_study);
+        study.resultsFolder = resultsFolder;
         for i = 1:numel(study.postPlot)
             figure(i)
-            printResultsToTextFiles(study,study.postPlot(i))
             if isa(study.postPlot(i).addCommands,'function_handle')
                 figure(i)
                 study.postPlot(i).addCommands(study,i_study,studies)
             end
+            printResultsToTextFiles(study,study.postPlot(i))
         end
     end 
     fprintf('\n\nTotal time spent on case "%s": %12f seconds\n', studyName{i_col}, toc(t_start_study)) 
