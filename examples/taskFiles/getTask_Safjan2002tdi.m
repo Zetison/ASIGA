@@ -43,7 +43,7 @@ omega = c_f*k;         % Angular frequency
 f = omega/(2*pi);      % Frequency
 
 M = 1:7;
-M = 5;
+M = 7;
 parm = 1;
 alpha = 0;
 beta = (-90:0.5:90)*pi/180;
@@ -79,7 +79,7 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_error(i_study)
 % postPlot(2).yname        	= 'cond_number';
 % postPlot(2).addCommands   	= [];
 
-runTasksInParallel = 1;
+runTasksInParallel = 0;
 IElocSup = true;
 s_ie = [1,2];
 % s_ie = 2;
