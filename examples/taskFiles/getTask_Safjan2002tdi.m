@@ -43,7 +43,7 @@ omega = c_f*k;         % Angular frequency
 f = omega/(2*pi);      % Frequency
 
 M = 1:7;
-M = 7;
+M = 8;
 parm = 1;
 alpha = 0;
 beta = (-90:0.5:90)*pi/180;
@@ -119,7 +119,7 @@ collectIntoTasks
 method = {'BA'};
 useNeumanProj = 0;
 solveForPtot = 0;
-N = [N(1),N(end)];
+N = [1,100];
 formulation = {'SL2E'};
 collectIntoTasks
 

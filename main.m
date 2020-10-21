@@ -69,7 +69,6 @@ for i_col = 1:numel(studiesCol)
     close all
     for i_study = 1:numel(studies)  
         study = studies(i_study);
-        study.resultsFolder = resultsFolder;
         for i = 1:numel(study.postPlot)
             figure(i)
             if isa(study.postPlot(i).addCommands,'function_handle')
