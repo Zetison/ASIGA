@@ -91,7 +91,7 @@ switch options.noXLoopPrms
             end
             y = y*options.yScale;
             
-            [legendName, saveName] = constructStrings(legendEntries,i,i,study,model,noParms,loopParameters);
+            [legendName, saveName] = constructStrings(legendEntries,i,i,study,model,noParms,loopParameters,yname,fileDataHeaderX);
             if printResults
                 if isrow(y)
                     y = y.';
@@ -167,7 +167,7 @@ switch options.noXLoopPrms
                 y_ref_temp = y_ref(indices);
             end
 
-            [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd);
+            [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd,yname,fileDataHeaderX);
             if printResults
                 saveName(saveName == '.') = [];
                 printResultsToFile2([subFolderName '/' saveName], {'x', x_temp(:), 'y', y_temp(:), 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
@@ -302,7 +302,7 @@ if plotResults
     savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
 end
 
-function [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd)
+function [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd,yname,xname)
 saveName = model;           
 legendName = [];          
             
@@ -353,6 +353,7 @@ else
         [saveName, legendName] = updateStrings(saveName, legendName, j, legendEntries, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2);
     end
 end
+saveName = [saveName '_' yname 'VS' xname];
 
 function [saveName, legendName] = updateStrings(saveName, legendName, j, legendEntries, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2)
 if isnumeric(temp) || islogical(temp)

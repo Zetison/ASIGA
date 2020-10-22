@@ -71,11 +71,11 @@ for i_col = 1:numel(studiesCol)
         study = studies(i_study);
         for i = 1:numel(study.postPlot)
             figure(i)
-            if isa(study.postPlot(i).addCommands,'function_handle')
+            printResultsToTextFiles(study,study.postPlot(i))
+            if isa(study.postPlot(i).addCommands,'function_handle') && i_study == numel(studies) 
                 figure(i)
                 study.postPlot(i).addCommands(study,i_study,studies)
             end
-            printResultsToTextFiles(study,study.postPlot(i))
         end
     end 
     fprintf('\n\nTotal time spent on case "%s": %12f seconds\n', studyName{i_col}, toc(t_start_study)) 
