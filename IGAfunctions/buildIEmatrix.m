@@ -4,13 +4,13 @@ elRange = varCol.elRange(1:2);
 knotVecs = varCol.knotVecs;
 
 degree = varCol.degree(1:2); % assume degree is equal in all patches
-rho = NaN; % avoid par-for transparency issue
 Ntot = varCol.N;
 r_a = varCol.r_a;
 IEbasis = varCol.IEbasis;
 p_ie = varCol.p_ie;
 IElocSup = varCol.IElocSup;
 [D,Dt,y_n] = generateCoeffMatrix(varCol);
+rho = r_a*y_n(1:end-p_ie+1);
 if IElocSup
     N = p_ie;
     if Ntot-2*p_ie < 0
@@ -20,7 +20,6 @@ if IElocSup
     noElems = round(Ntot/p_ie);
     if strcmp(IEbasis,'Lagrange')
         ie_Zeta = [0, reshape(repmat((0:noElems-1)/(noElems-1),p_ie,1),1,noElems*p_ie), 1];
-        rho = r_a*y_n(1:end-p_ie+1);
     else
         ie_Zeta = [zeros(1,p_ie+1), linspace2(0,1,Ntot-2*p_ie), ones(1,p_ie+1)];
     end
@@ -352,8 +351,8 @@ if IElocSup
 
             x = R{1}*pts;
             r = r_a./x;
-            dxdzeta = getJacobian(R,pts,1);
-            J_1 = -r_a./x.^2.*dxdzeta;
+            dxdzeta = R{2}*pts;
+            J_1 = -r_a./x.^2.*dxdzeta; % = drdzeta
             dRdr = R{2}./J_1;
         end
         
@@ -418,7 +417,7 @@ if IElocSup
     K4 = K4 + sparse(spIdxRow,spIdxCol,K4values,Ntot,Ntot,numel(K4values));
     K5 = K5 + sparse(spIdxRow,spIdxCol,K5values,Ntot,Ntot,numel(K5values));
     
-    noDofs_new = noDofs_new + noDofs_ie-1;
+    noDofs_new = noDofs_new + noSurfDofs*(noDofs_ie-1);
 else
     Ntot = N;
 end

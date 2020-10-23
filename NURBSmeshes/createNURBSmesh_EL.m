@@ -10,7 +10,6 @@ switch varCol{1}.method
                          0 0 1];
         varCol{1}.alignWithAxis = alignWithAxis;
 end
-Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 if isfield(varCol{1}, 'Xi')
     Xi = varCol{1}.Xi;
 else
@@ -65,7 +64,7 @@ if varCol{1}.boundaryMethod
     varCol{1}.patchTop = getPatchTopology(fluid);
     if numel(varCol) > 2
         if varCol{3}.R_i > 0
-            fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i);
+            fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i, 'Xi', Xi);
             fluid_i_inner = flipNURBSparametrization(subNURBS(fluid_i,'at',[0,0;0,0;1,0]),1);
             fluid_i_outer = subNURBS(solid,'at',[0,0;0,0;1,0]);
             fluid_i_inner = refineNURBSevenly(fluid_i_inner,(2^(M-1)-1)/(c_z*pi/2),{},0);
@@ -122,7 +121,7 @@ else
     L_gamma = 2*c_z_g;
 
 
-    fluid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid);
+    fluid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi);
     fluid = makeUniformNURBSDegree(fluid,degree);
     explodeNURBSpatches = 0;
     if explodeNURBSpatches
@@ -135,12 +134,19 @@ else
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
     end
-    fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
+    if varCol{1}.refineThetaOnly
+        if parm ~= 1
+            error('Must have parm = 1 for pure theta refinement')
+        end
+        fluid = insertKnotsInNURBS(fluid,[0,2^(M-1)-1,max(round(2^(M-4)-1),0)]);
+    else
+        fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
+    end
     
     varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
 
     if numel(varCol) > 1
-        solid = getEllipsoidData('C', R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t);
+        solid = getEllipsoidData('C', R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
         solid = makeUniformNURBSDegree(solid,degree);
         if explodeNURBSpatches
             solid = explodeNURBS(solid,'eta');
@@ -150,7 +156,7 @@ else
     end
 
     if numel(varCol) > 2
-        fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i);
+        fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i, 'Xi', Xi);
         fluid_i = makeUniformNURBSDegree(fluid_i,degree);
         if explodeNURBSpatches
             fluid_i = explodeNURBS(fluid_i,'eta');

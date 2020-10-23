@@ -139,8 +139,8 @@ else
 %                         [A_gamma_a, A2_gamma_a, A3_gamma_a, newDofsToRemove] = addInfElements3_ROM2(varCol{1});
                         [A3_gamma_a, newDofsToRemove, A2_gamma_a, A_gamma_a] = buildIEmatrix(varCol{1});
                     else
-%                         [A_gamma_a, newDofsToRemove] = buildIEmatrix(varCol{1});
-                        [A_gamma_a, newDofsToRemove] = addInfElements3(varCol{1});
+                        [A_gamma_a, newDofsToRemove] = buildIEmatrix(varCol{1});
+%                         [A_gamma_a, newDofsToRemove] = addInfElements3(varCol{1});
                     end
 
             %         [A_inf, newDofsToRemove] = addInfElements4(varCol{1}, k(1), Upsilon); 

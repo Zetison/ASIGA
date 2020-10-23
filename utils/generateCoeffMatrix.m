@@ -1,26 +1,22 @@
 function [D,Dt,y_n] = generateCoeffMatrix(varCol)
 
 r_a = varCol.r_a;
-
 if varCol.IElocSup
     p_ie = varCol.p_ie;
     N = p_ie;
-    if strcmp(varCol.IEbasis,'Lagrange')
-        n_n = varCol.N;
-        kappa = 1:n_n;
-        if varCol.s_ie == 1
-            z = 1 + (1-kappa)/n_n;
-        elseif varCol.s_ie == 2
-            z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
-        else
-            warning('Not implemented, using s = 2 instead')
-            z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
-        end
-        y_n = 1./z;
-        x = z(end-p_ie+1:end)/z(end-p_ie+1);
+    
+    n_n = varCol.N;
+    kappa = 1:n_n;
+    if varCol.s_ie == 1
+        z = 1 + (1-kappa)/n_n;
+    elseif varCol.s_ie == 2
+        z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
     else
-        y_n = NaN;
+        warning('Not implemented, using s = 2 instead')
+        z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
     end
+    y_n = 1./z;
+    x = z(end-p_ie+1:end)/z(end-p_ie+1);
 else
     N = varCol.N;
 %     a = 0.65;

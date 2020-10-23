@@ -18,7 +18,8 @@ IEbasis	= 'Chebyshev';
 BC = 'NBC';
 formulation = {'PGU','PGC','BGU','BGC'};
 % formulation = {'PGC','BGU'};
-formulation = {'BGC'};
+% formulation = {'BGC'};
+formulation = {'BGU'};
 coreMethod = 'IGA';
 runTasksInParallel = 0;
 progressBars = false;        % Show progress bars for building system matrices
@@ -48,6 +49,7 @@ parm = 1;
 alpha = 0;
 beta = (-90:0.5:90)*pi/180;
 prePlot.plot3Dgeometry = 0;
+prePlot.plot2Dgeometry = 0;
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plotArtificialBndry = false;        % Plot the artificial boundary for the IENSG method
 computeCondNumber = 1;
@@ -84,25 +86,26 @@ IElocSup = true;
 s_ie = [1,2];
 s_ie = 1;
 maxN = 100;
-maxN = 40;
+maxN = 20;
 for p_ie = 3 %1:5
     N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
 %     N = 4*p_ie;
 %     N = [3*p_ie,4*p_ie];
 %     N = 2*p_ie:p_ie:4*p_ie;
-    % N = 3;
+    N = 2*p_ie;
     collectIntoTasks
 end
 
 IEbasis	= 'Lagrange';
 % IEbasis	= 'Chebyshev';
+% IEbasis	= 'Bernstein';
 for p_ie = 3 %1:5
     N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
 %     N = p_ie*round((2*p_ie:p_ie:100)/p_ie);
 %     N = p_ie*2.^(1:7);
 %     N = 2*p_ie:p_ie:20;
-%     N = 4*p_ie;
-%     collectIntoTasks
+    N = 2*p_ie;
+    collectIntoTasks
 end
 
 IElocSup = false;
