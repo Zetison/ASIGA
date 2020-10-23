@@ -3,6 +3,9 @@ function [points, weights] = gaussLaguerreQuad(quadorder, r)
 % https://people.sc.fsu.edu/~jburkardt/m_src/gen_laguerre_rule/gen_laguerre_rule.html
 points = zeros(quadorder,1); 
 weights = zeros(quadorder,1);
+if nargin < 2
+    r = 0;
+end
 
 if quadorder > 63
 	error('There exist no listed Gauss-Laguerre points of order 64 or more: using 63 quadrature points instead...')

@@ -10,7 +10,6 @@ IEbasis = varCol.IEbasis;
 p_ie = varCol.p_ie;
 IElocSup = varCol.IElocSup;
 [D,Dt,y_n] = generateCoeffMatrix(varCol);
-rho = r_a*y_n(1:end-p_ie+1);
 if IElocSup
     N = p_ie;
     if Ntot-2*p_ie < 0
@@ -23,8 +22,10 @@ if IElocSup
     else
         ie_Zeta = [zeros(1,p_ie+1), linspace2(0,1,Ntot-2*p_ie), ones(1,p_ie+1)];
     end
+    rho = r_a*y_n(1:end-p_ie+1);
 else
     N = Ntot;
+    rho = NaN;
 end
 formulation = varCol.formulation;
 A_2 = varCol.A_2;
@@ -54,7 +55,6 @@ end
 
 
 %% Calculate contribution from infinite elements
-
 spIdxRow = zeros(n_en^2,noElems);
 spIdxCol = zeros(n_en^2,noElems);
 A1values = zeros(n_en^2,noElems);
@@ -207,80 +207,141 @@ else
     ra = r_a;
 end
 
-B1 = zeros(2*N+4,1);
-B2 = zeros(2*N+3,1);
-varrho1 = Upsilon/ra;
-varrho2 = k*ra;
-varrho3 = k*Upsilon;
-for n = 1:2*N+4
-    B1(n) = radialIntegral3(n, varrho1, varrho2, formulation, 1);
-    if n < 2*N+4
-        B2(n) = radialIntegral3(n, varrho1, varrho2, formulation, 2);
+if 1
+    B1 = zeros(2*N+4,1);
+    B2 = zeros(2*N+3,1);
+    varrho1 = Upsilon/ra;
+    varrho2 = k*ra;
+    varrho3 = k*Upsilon;
+    for n = 1:2*N+4
+        B1(n) = radialIntegral3(n, varrho1, varrho2, formulation, 1);
+        if n < 2*N+4
+            B2(n) = radialIntegral3(n, varrho1, varrho2, formulation, 2);
+        end
     end
-end
-nt = (1:N).';
-mt = 1:N;
-ntpmt = nt+mt;
-switch formulation
-    case 'PGU'   
-        K1 = -2*varrho2^2*B1(ntpmt) - 1i*varrho2*(ntpmt+2).*B1(ntpmt+1) + ((nt+2)*mt + varrho3^2).*B1(ntpmt+2) ...
-             +1i*varrho1*varrho3*(ntpmt+2).*B1(ntpmt+3) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
-        K2 = B1(ntpmt+2);
-        K3 = varrho3^2*B1(ntpmt+2);
-        K4 = B2(ntpmt+1);
-        K5 = -varrho1^2*B2(ntpmt+3);
-    case 'PGC'
-        K1 = (nt+2)*mt.*B1(ntpmt+2) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
-        K1_1 = -1i*varrho2*(nt-mt+2).*B1(ntpmt+1) + 1i*varrho1*varrho3*(nt-mt+2).*B1(ntpmt+3);
-        K1_2 = -varrho3^2.*B1(ntpmt+2);
-        K2 = B1(ntpmt+2);
-        K3 = varrho3^2*B1(ntpmt+2);
-        K4 = B2(ntpmt+1);
-        K5 = -varrho1^2*B2(ntpmt+3);
-    case 'BGU'
-        ntpmt(1) = 3; % To avoid exceeding array bounds (nt,mt=1 is treated separately)
-        K1 = -2*varrho2^2*B1(ntpmt-2) - 1i*varrho2*ntpmt.*B1(ntpmt-1) + (nt*mt + varrho3^2).*B1(ntpmt) ...
-             +1i*varrho1*varrho3*ntpmt.*B1(ntpmt+1) - varrho1^2*nt*mt.*B1(ntpmt+2);
-        K2 = B1(ntpmt);
-        K3 = varrho3^2*B1(ntpmt);
-        K4 = B2(ntpmt-1);
-        K5 = -varrho1^2*B2(ntpmt+1);
-        
-        K1(1) = -2*1i*varrho2*B1(1) + (1 + varrho3^2)*B1(2) ...
-                +2*1i*varrho1*varrho3*B1(3) - varrho1^2*B1(4) - 1i*varrho2*exp(2*1i*varrho2);
-        K2(1) = B1(2);
-        K3(1) = varrho3^2*B1(2);
-        K4(1) = B2(1);
-        K5(1) = -varrho1^2*B2(3);
-    case 'BGC'
-        ntpmt(1) = 3; % To avoid exceeding array bounds (nt,mt=1 is treated separately)
-        K1 = nt*mt.*B1(ntpmt) - varrho1^2*nt*mt.*B1(ntpmt+2);
-        K1_1 = -1i*varrho2*(nt-mt).*B1(ntpmt-1) + 1i*varrho1*varrho3*(nt-mt).*B1(ntpmt+1);
-        K1_2 = -varrho3^2.*B1(ntpmt);
-        
-        
-        K2 = B1(ntpmt);
-        K3 = varrho3^2*B1(ntpmt);
-        K4 = B2(ntpmt-1);
-        K5 = -varrho1^2*B2(ntpmt+1);
-        
-        K1(1) = B1(2) - varrho1^2*B1(4);
-        K1_1(1) = -1i*varrho2;
-        K1_2(1) = -varrho3^2.*B1(2);
-        K2(1) = B1(2);
-        K3(1) = varrho3^2*B1(2);
-        K4(1) = B2(1);
-        K5(1) = -varrho1^2*B2(3);
-end
-K1 = Dt*K1*D.'*ra;
-K2 = Dt*K2*D.'*ra;
-K3 = Dt*K3*D.'*ra;
-K4 = Dt*K4*D.'*ra;
-K5 = Dt*K5*D.'*ra;
-switch formulation
-    case {'PGC', 'BGC'}
-        K1_1 = Dt*K1_1*D.'*ra;
-        K1_2 = Dt*K1_2*D.'*ra;
+    nt = (1:N).';
+    mt = 1:N;
+    ntpmt = nt+mt;
+    switch formulation
+        case 'PGU'   
+            K1 = -2*varrho2^2*B1(ntpmt) - 1i*varrho2*(ntpmt+2).*B1(ntpmt+1) + ((nt+2)*mt + varrho3^2).*B1(ntpmt+2) ...
+                 +1i*varrho1*varrho3*(ntpmt+2).*B1(ntpmt+3) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
+            K2 = B1(ntpmt+2);
+            K3 = varrho3^2*B1(ntpmt+2);
+            K4 = B2(ntpmt+1);
+            K5 = -varrho1^2*B2(ntpmt+3);
+        case 'PGC'
+            K1 = (nt+2)*mt.*B1(ntpmt+2) - varrho1^2*(nt+2)*mt.*B1(ntpmt+4);
+            K1_1 = -1i*varrho2*(nt-mt+2).*B1(ntpmt+1) + 1i*varrho1*varrho3*(nt-mt+2).*B1(ntpmt+3);
+            K1_2 = -varrho3^2.*B1(ntpmt+2);
+            K2 = B1(ntpmt+2);
+            K3 = varrho3^2*B1(ntpmt+2);
+            K4 = B2(ntpmt+1);
+            K5 = -varrho1^2*B2(ntpmt+3);
+        case 'BGU'
+            ntpmt(1) = 3; % To avoid exceeding array bounds (nt,mt=1 is treated separately)
+            K1 = -2*varrho2^2*B1(ntpmt-2) - 1i*varrho2*ntpmt.*B1(ntpmt-1) + (nt*mt + varrho3^2).*B1(ntpmt) ...
+                 +1i*varrho1*varrho3*ntpmt.*B1(ntpmt+1) - varrho1^2*nt*mt.*B1(ntpmt+2);
+            K2 = B1(ntpmt);
+            K3 = varrho3^2*B1(ntpmt);
+            K4 = B2(ntpmt-1);
+            K5 = -varrho1^2*B2(ntpmt+1);
+
+            K1(1) = -2*1i*varrho2*B1(1) + (1 + varrho3^2)*B1(2) ...
+                    +2*1i*varrho1*varrho3*B1(3) - varrho1^2*B1(4) - 1i*varrho2*exp(2*1i*varrho2);
+            K2(1) = B1(2);
+            K3(1) = varrho3^2*B1(2);
+            K4(1) = B2(1);
+            K5(1) = -varrho1^2*B2(3);
+        case 'BGC'
+            ntpmt(1) = 3; % To avoid exceeding array bounds (nt,mt=1 is treated separately)
+            K1 = nt*mt.*B1(ntpmt) - varrho1^2*nt*mt.*B1(ntpmt+2);
+            K1_1 = -1i*varrho2*(nt-mt).*B1(ntpmt-1) + 1i*varrho1*varrho3*(nt-mt).*B1(ntpmt+1);
+            K1_2 = -varrho3^2.*B1(ntpmt);
+
+
+            K2 = B1(ntpmt);
+            K3 = varrho3^2*B1(ntpmt);
+            K4 = B2(ntpmt-1);
+            K5 = -varrho1^2*B2(ntpmt+1);
+
+            K1(1) = B1(2) - varrho1^2*B1(4);
+            K1_1(1) = -1i*varrho2;
+            K1_2(1) = -varrho3^2.*B1(2);
+            K2(1) = B1(2);
+            K3(1) = varrho3^2*B1(2);
+            K4(1) = B2(1);
+            K5(1) = -varrho1^2*B2(3);
+    end
+    K1 = Dt*K1*D.'*ra;
+    K2 = Dt*K2*D.'*ra;
+    K3 = Dt*K3*D.'*ra;
+    K4 = Dt*K4*D.'*ra;
+    K5 = Dt*K5*D.'*ra;
+    switch formulation
+        case {'PGC', 'BGC'}
+            K1_1 = Dt*K1_1*D.'*ra;
+            K1_2 = Dt*K1_2*D.'*ra;
+    end
+else
+%     rho2 = r_a*y_n(end-p_ie+1:end);
+% %     [Q, W] = gaussTensorQuad(50,'Laguerre');
+%     [Q, W] = gaussTensorQuad(10);
+%     varrho3 = k*Upsilon;
+%     if strcmp(IEbasis,'Lagrange')
+%         rho_1 = rho2(1);
+%         r = 2*rho_1./(1-Q);
+%         J_1 = 2*rho_1./(1-Q).^2;
+%         x = 1./r;
+%         x_i = 1./rho2;
+%         [L,dLdx] = lagrangePolynomials(x,1:p_ie,p_ie,x_i);
+%         L = L.*x/x_i(1);
+%         dLdx = dLdx.*x/x_i(1) + L/x_i(1);
+%         R = cell(1,2);
+%         R{1} = L;
+%         dxdr = -1./r.^2;
+%         dRdr = dLdx.*dxdr;
+%     else
+%         zeta = parent2ParametricSpace(Xi_e, Q);
+%         I = findKnotSpans(degree, zeta(1,:), knots);
+%         R = NURBSbasis(I, zeta, degree, knots, wgts);
+% 
+%         x = R{1}*pts;
+%         r = r_a./x;
+%         dxdzeta = R{2}*pts;
+%         J_1 = -r_a./x.^2.*dxdzeta; % = drdzeta
+%         dRdr = R{2}./J_1;
+%     end
+%     n_en = p_ie;
+%     K1 = zeros(n_en);
+%     K1_1 = zeros(n_en);
+%     K1_2 = zeros(n_en);
+%     K2 = zeros(n_en);
+%     K3 = zeros(n_en);
+%     K4 = zeros(n_en);
+%     K5 = zeros(n_en);
+%     for i = 1:numel(W)
+%         RR = R{1}(i,:).'*R{1}(i,:);
+%         RdRdr = R{1}(i,:).'*dRdr(i,:);
+%         fact = abs(J_1(i)) * W(i);
+%         rUps = r(i)^2-Upsilon^2;
+%         kr = k*r(i);
+%         switch formulation
+%             case {'PGC', 'BGC'}
+%                 K1   = K1   + rUps*dRdr(i,:).'*dRdr(i,:) * fact;  
+%                 K1_1 = K1_1 + rUps*1i*k*(RdRdr - RdRdr.') * fact;
+%                 K1_2 = K1_2 - varrho3^2*RR                * fact;   
+%             case {'PGU', 'BGU'}
+%                 fact = fact * exp(2*1i*kr);
+%                 K1 = K1 + (  rUps*dRdr(i,:).'*dRdr(i,:) ... 
+%                                + rUps*1i*k*(RdRdr + RdRdr.') ...
+%                                - (2*kr^2-varrho3^2)*RR) * fact;  
+%         end
+%         K2 = K2 +                  RR * fact;  
+%         K3 = K3 + varrho3^2      * RR * fact;  
+%         K4 = K4 + r(i)^2/rUps    * RR * fact;   
+%         K5 = K5 - Upsilon^2/rUps * RR * fact;  
+%     end    
 end
 
 if IElocSup      

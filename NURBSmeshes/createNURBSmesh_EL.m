@@ -40,7 +40,7 @@ end
 parm = varCol{1}.parm(1);
 if varCol{1}.boundaryMethod
     solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
-    %     solid = explodeNURBS(solid,'eta');
+%     solid = explodeNURBS(solid,'eta');
 %     solid = explodeNURBS(solid,'xi');
     if parm == 1
         refLength = c_z*pi/2;
@@ -139,7 +139,7 @@ else
             error('Must have parm = 1 for pure theta refinement')
         end
         fluid = makeUniformNURBSDegree(fluid,[2,degree,degree]);
-        fluid = insertKnotsInNURBS(fluid,[0,2^(M-1)-1,max(round(2^(M-4)-1),0)]);
+        fluid = insertKnotsInNURBS(fluid,[0,2^(M-1)-1,max(2^(M-4)-1,0)]);
     else
         fluid = makeUniformNURBSDegree(fluid,degree);
         fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
