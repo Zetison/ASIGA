@@ -1,11 +1,10 @@
-
-Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
-dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
-dPhi_kdnx = @(xmy,r,ny) Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
-varCol{1}.Phi_k = Phi_k;
-varCol{1}.dPhi_kdny = dPhi_kdny;
-if ~isfield(task,'P_inc')
+function varCol = getAnalyticSolutions(varCol)
+k = varCol{1}.k;
+omega = varCol{1}.omega;
+if ~isfield(varCol{1},'P_inc')
     P_inc = 1;
+else
+    P_inc = varCol{1}.P_inc;
 end
 BC = varCol{1}.BC;
 applyLoad = varCol{1}.applyLoad;
@@ -52,6 +51,10 @@ switch applyLoad
         dpdn = @(v,n) zeros(size(v,1),1);
         varCol{1}.d_vec = d_vec;
 end
+Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
+dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
+varCol{1}.Phi_k = Phi_k;
+varCol{1}.dPhi_kdny = dPhi_kdny;
 varCol{1}.analyticFunctions = @(X) analytic(X,varCol);
 varCol{1}.p_inc = p_inc;
 varCol{1}.dp_inc = dp_inc;
@@ -200,7 +203,6 @@ if nargin < 3
 else
     analyticFunctions = layers{m_func}.(func);
 end
-end
 
 
 function [p,dp] = general3DSolutionHelmholtz(X, k, A, B, C, D, E, F)
@@ -221,8 +223,6 @@ for l = 1:L
         dp(2) = dp(2) + (A(l)*exp(l*x) + B(l)*exp(-l*x)).*(C(m)*m*exp(m*y) - D(m)*m*exp(-m*y)).*(E(l,m)*exp(-1i*lambda*z) + F(l,m)*exp(1i*lambda*z));
         dp(3) = dp(3) + (A(l)*exp(l*x) + B(l)*exp(-l*x)).*(C(m)*exp(m*y) + D(m)*exp(-m*y)).*(E(l,m)*-1i*lambda*exp(-1i*lambda*z) + F(l,m)*1i*lambda*exp(1i*lambda*z));
     end
-end
-
 end
 
 

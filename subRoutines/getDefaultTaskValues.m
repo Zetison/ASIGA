@@ -128,7 +128,8 @@ N     	 = 3;            % Number of basis function in the radial direction for t
 IEbasis	 = 'Chebyshev';  % Choose between 'Chebyshev', 'Bernstein' and 'Lagrange'
 ie_Zeta  = [];           % Node/knot placements for basis function with local support in the infinite elements
 IElocSup = false;        % Toggle usage of radial shape functions in IE with local support
-p_ie     = NaN;            % Set polynomial order for radial shape functions
+p_ie     = NaN;          % Set polynomial order for radial shape functions
+s_ie     = NaN;          % Distrubution order for radial shape functions
 
 %% Settings for the MFS (method of fundamental solution)
 delta = 0.1;            % Distance from the boundary to the internal source points

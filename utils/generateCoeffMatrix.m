@@ -32,7 +32,7 @@ else
 %     x(m) = 1./logb(b*m,b);
 %     GLL = gaussLobattoLegendreQuad(N+1);
 %     x = 1./(0.5-0.5*GLL(1:end-1));
-    y_n = NaN;
+    y_n = 1./x;
 end
 switch varCol.IEbasis
     case 'Standard'
@@ -78,7 +78,7 @@ switch varCol.IEbasis
                 switch varCol.formulation
                     case {'PGC', 'PGU'}
                         Bt(m,l) = x(l)^(m+2);
-                    case {'BGC', 'BGU'}
+                    case {'BGC', 'BGU', 'WBGC', 'WBGU'}
                         Bt(m,l) = B(m,l);
                 end
             end

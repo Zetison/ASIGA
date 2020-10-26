@@ -79,8 +79,7 @@ if strcmp(method,'RT') || strcmp(method,'KDT')
     varCol{1}.k = omega/varCol{1}.c_f;
     varCol{1}.lambda = 2*pi./varCol{1}.k;
     varCol{1}.f = f;
-    k = varCol{1}.k;
-    getAnalyticSolutions
+    varCol = getAnalyticSolutions(varCol);
 else
     for i_f = 1:numel(f)
         f_i = f(i_f);
@@ -97,8 +96,8 @@ else
             end
         end
         t_freq = tic;
-        k = varCol{1}.k;
-        getAnalyticSolutions
+        k_i = varCol{1}.k;
+        varCol = getAnalyticSolutions(varCol);
         rho = varCol{1}.rho;
         switch method
             case {'IE','ABC'}
@@ -117,7 +116,7 @@ else
                 else
         %             [A_K, A_M] = buildGlobalMatrices(varCol{1}, options);
                     [A_K, A_M] = buildMatrices(varCol{1}, options);
-                    A_fluid_o = A_K - k^2*A_M;
+                    A_fluid_o = A_K - k_i^2*A_M;
                 end
                 if clearGlobalMatrices && ~useROM
                     clear A_K A_M
@@ -775,8 +774,8 @@ else
 %                                     A = A_K - k_1^2*A_M + A_gamma_a;
 %                                     A2 = - 2*k_1*A_M + A2_gamma_a;
 %                                     A3 = - 2*A_M + A3_gamma_a;
-                                    A = A_K - k^2*A_M + k^2*A_gamma_a + k*A2_gamma_a + A3_gamma_a;
-                                    A2 = -2*k*A_M + 2*k*A_gamma_a + A2_gamma_a;
+                                    A = A_K - k_i^2*A_M + k_i^2*A_gamma_a + k_i*A2_gamma_a + A3_gamma_a;
+                                    A2 = -2*k_i*A_M + 2*k_i*A_gamma_a + A2_gamma_a;
                                     A3 = -2*A_M + 2*A_gamma_a;
                                     if task.useDGP
                                         varCol{1}.A_K = A_K;
@@ -898,9 +897,22 @@ else
             end
         end
         if ~useROM
-            calculateErrors
+            if i_f == 1
+                task.results.energyError = zeros(1,size(f,2));
+                task.results.L2Error = zeros(1,size(f,2));
+                task.results.H1Error = zeros(1,size(f,2));
+                task.results.H1sError = zeros(1,size(f,2));
+                task.results.surfaceError = zeros(1,size(f,2));
+            end
+            [L2Error, H1Error, H1sError, energyError, surfaceError] ...
+                = calculateErrors(task, varCol, Uc, runTasksInParallel, stringShift, i_f);
+            task.results.surfaceError(i_f) = surfaceError;
+            task.results.energyError(i_f) = energyError;
+            task.results.L2Error(i_f) = L2Error;
+            task.results.H1Error(i_f) = H1Error;
+            task.results.H1sError(i_f) = H1sError;
         end
-        if strcmp(scatteringCase,'Sweep') && size(k,2) > 1
+        if strcmp(scatteringCase,'Sweep') && size(k_i,2) > 1
             fprintf('\nTotal time spent on frequency: %12f\n', toc(t_freq))  
         end
     end
@@ -908,7 +920,8 @@ end
 if useROM
     varCol{1}.U_sweep = U_sweep;
     varCol{1}.U_sweep2 = U_sweep2;
-    varCol{1}.k = k;
+else
+    varCol{1}.k = (2*pi*f)/varCol{1}.c_f;
 end
 
 %% Compute scattered pressure    

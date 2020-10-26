@@ -167,7 +167,7 @@ switch options.noXLoopPrms
                 y_ref_temp = y_ref(indices);
             end
 
-            [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd,yname,fileDataHeaderX);
+            [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,yname,fileDataHeaderX,otherInd);
             if printResults
                 saveName(saveName == '.') = [];
                 printResultsToFile2([subFolderName '/' saveName], {'x', x_temp(:), 'y', y_temp(:), 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
@@ -302,12 +302,12 @@ if plotResults
     savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
 end
 
-function [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,otherInd,yname,xname)
+function [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,yname,xname,otherInd)
 saveName = model;           
 legendName = [];          
             
 if isempty(legendEntries)
-    if nargin > 7
+    if nargin > 9
         for j = otherInd
             temp2 = loopParameters{j};
             temp = study.tasks(idxMap(i)).task.(loopParameters{j});

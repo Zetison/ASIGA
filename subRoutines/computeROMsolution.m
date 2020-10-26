@@ -303,15 +303,29 @@ for i_b = 1:numel(basisROMcell)
             surfaceErrorArr = zeros(size(k_ROM));
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
             t_startROM = tic;
-            for i_f = 1:numel(k_ROM)
-                k = k_ROM(i_f);
-                varCol{1}.k = k;
-                omega = varCol{1}.c_f*k;
-                varCol{1}.f = omega/(2*pi);
+            energyError = zeros(1,size(k_ROM,2));
+            L2Error = zeros(1,size(k_ROM,2));
+            H1Error = zeros(1,size(k_ROM,2));
+            H1sError = zeros(1,size(k_ROM,2));
+            surfaceError = zeros(1,size(k_ROM,2));
+            parfor i_f = 1:numel(k_ROM)
+                varCol_temp = varCol;
+                varCol_temp{1}.k = k_ROM(i_f);
+                omega = varCol_temp{1}.c_f*k_ROM(i_f);
+                varCol_temp{1}.omega = omega;
+                varCol_temp{1}.f = omega/(2*pi);
+                Uc = cell(1);
                 Uc{1} = U_fluid_oArr(:,i_f);
-                getAnalyticSolutions
-                calculateErrors
+                varCol_temp = getAnalyticSolutions(varCol_temp);
+                [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] ...
+                                = calculateErrors(task, varCol_temp, Uc, runTasksInParallel, stringShift, i_f);
             end
+            task.results.energyError = energyError;
+            task.results.L2Error = L2Error;
+            task.results.H1Error = H1Error;
+            task.results.H1sError = H1sError;
+            task.results.surfaceError = surfaceError;
+            
             fprintf('using %12f seconds.', toc(t_startROM))
             tasks(i_task,task_ROM,i_b).task = task;
             switch basisROM

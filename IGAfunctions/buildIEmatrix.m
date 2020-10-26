@@ -26,6 +26,7 @@ if IElocSup
 else
     N = Ntot;
     rho = NaN;
+    p_ie = N;
 end
 formulation = varCol.formulation;
 A_2 = varCol.A_2;
@@ -272,6 +273,21 @@ if 1
             K3(1) = varrho3^2*B1(2);
             K4(1) = B2(1);
             K5(1) = -varrho1^2*B2(3);
+        case 'WBGU'
+            K1 = -2*varrho2^2*B1(ntpmt) - 1i*varrho2*ntpmt.*B1(ntpmt+1) + (nt*mt + varrho3^2).*B1(ntpmt+2) ...
+                 +1i*varrho1*varrho3*ntpmt.*B1(ntpmt+3) - varrho1^2*nt*mt.*B1(ntpmt+4);
+            K2 = B1(ntpmt+2);
+            K3 = varrho3^2*B1(ntpmt+2);
+            K4 = B2(ntpmt+1);
+            K5 = -varrho1^2*B2(ntpmt+3);
+        case 'WBGC'
+            K1 = nt*mt.*B1(ntpmt+2) - varrho1^2*nt*mt.*B1(ntpmt+4);
+            K1_1 = -1i*varrho2*(nt-mt).*B1(ntpmt+1) + 1i*varrho1*varrho3*(nt-mt).*B1(ntpmt+3);
+            K1_2 = -varrho3^2.*B1(ntpmt+2);
+            K2 = B1(ntpmt+2);
+            K3 = varrho3^2*B1(ntpmt+2);
+            K4 = B2(ntpmt+1);
+            K5 = -varrho1^2*B2(ntpmt+3);
     end
     K1 = Dt*K1*D.'*ra;
     K2 = Dt*K2*D.'*ra;
@@ -279,69 +295,73 @@ if 1
     K4 = Dt*K4*D.'*ra;
     K5 = Dt*K5*D.'*ra;
     switch formulation
-        case {'PGC', 'BGC'}
+        case {'PGC', 'BGC', 'WBGC'}
             K1_1 = Dt*K1_1*D.'*ra;
             K1_2 = Dt*K1_2*D.'*ra;
     end
 else
-%     rho2 = r_a*y_n(end-p_ie+1:end);
-% %     [Q, W] = gaussTensorQuad(50,'Laguerre');
-%     [Q, W] = gaussTensorQuad(10);
-%     varrho3 = k*Upsilon;
-%     if strcmp(IEbasis,'Lagrange')
-%         rho_1 = rho2(1);
-%         r = 2*rho_1./(1-Q);
-%         J_1 = 2*rho_1./(1-Q).^2;
-%         x = 1./r;
-%         x_i = 1./rho2;
-%         [L,dLdx] = lagrangePolynomials(x,1:p_ie,p_ie,x_i);
-%         L = L.*x/x_i(1);
-%         dLdx = dLdx.*x/x_i(1) + L/x_i(1);
-%         R = cell(1,2);
-%         R{1} = L;
-%         dxdr = -1./r.^2;
-%         dRdr = dLdx.*dxdr;
-%     else
-%         zeta = parent2ParametricSpace(Xi_e, Q);
-%         I = findKnotSpans(degree, zeta(1,:), knots);
-%         R = NURBSbasis(I, zeta, degree, knots, wgts);
-% 
-%         x = R{1}*pts;
-%         r = r_a./x;
-%         dxdzeta = R{2}*pts;
-%         J_1 = -r_a./x.^2.*dxdzeta; % = drdzeta
-%         dRdr = R{2}./J_1;
-%     end
-%     n_en = p_ie;
-%     K1 = zeros(n_en);
-%     K1_1 = zeros(n_en);
-%     K1_2 = zeros(n_en);
-%     K2 = zeros(n_en);
-%     K3 = zeros(n_en);
-%     K4 = zeros(n_en);
-%     K5 = zeros(n_en);
-%     for i = 1:numel(W)
-%         RR = R{1}(i,:).'*R{1}(i,:);
-%         RdRdr = R{1}(i,:).'*dRdr(i,:);
-%         fact = abs(J_1(i)) * W(i);
-%         rUps = r(i)^2-Upsilon^2;
-%         kr = k*r(i);
-%         switch formulation
-%             case {'PGC', 'BGC'}
-%                 K1   = K1   + rUps*dRdr(i,:).'*dRdr(i,:) * fact;  
-%                 K1_1 = K1_1 + rUps*1i*k*(RdRdr - RdRdr.') * fact;
-%                 K1_2 = K1_2 - varrho3^2*RR                * fact;   
-%             case {'PGU', 'BGU'}
-%                 fact = fact * exp(2*1i*kr);
-%                 K1 = K1 + (  rUps*dRdr(i,:).'*dRdr(i,:) ... 
-%                                + rUps*1i*k*(RdRdr + RdRdr.') ...
-%                                - (2*kr^2-varrho3^2)*RR) * fact;  
-%         end
-%         K2 = K2 +                  RR * fact;  
-%         K3 = K3 + varrho3^2      * RR * fact;  
-%         K4 = K4 + r(i)^2/rUps    * RR * fact;   
-%         K5 = K5 - Upsilon^2/rUps * RR * fact;  
-%     end    
+    rho2 = r_a*y_n(end-p_ie+1:end);
+%     [Q, W] = gaussTensorQuad(50,'Laguerre');
+    [Q, W] = gaussTensorQuad(10);
+    varrho3 = k*Upsilon;
+    if strcmp(IEbasis,'Lagrange')
+        rho_1 = rho2(1);
+        r = 2*rho_1./(1-Q);
+        J_1 = 2*rho_1./(1-Q).^2;
+        x = 1./r;
+        x_i = 1./rho2;
+        [L,dLdx] = lagrangePolynomials(x,1:p_ie,p_ie,x_i);
+        L = L.*x/x_i(1);
+        dLdx = dLdx.*x/x_i(1) + L/x_i(1);
+        R = cell(1,2);
+        R{1} = L;
+        dxdr = -1./r.^2;
+        dRdr = dLdx.*dxdr;
+    else
+        zeta = parent2ParametricSpace(Xi_e, Q);
+        I = findKnotSpans(degree, zeta(1,:), knots);
+        R = NURBSbasis(I, zeta, degree, knots, wgts);
+
+        x = R{1}*pts;
+        r = r_a./x;
+        dxdzeta = R{2}*pts;
+        J_1 = -r_a./x.^2.*dxdzeta; % = drdzeta
+        dRdr = R{2}./J_1;
+    end
+    n_en = p_ie;
+    K1 = zeros(n_en);
+    K1_1 = zeros(n_en);
+    K1_2 = zeros(n_en);
+    K2 = zeros(n_en);
+    K3 = zeros(n_en);
+    K4 = zeros(n_en);
+    K5 = zeros(n_en);
+    for i = 1:numel(W)
+        RR = R{1}(i,:).'*R{1}(i,:);
+        RdRdr = R{1}(i,:).'*dRdr(i,:);
+        fact = abs(J_1(i)) * W(i);
+        rUps = r(i)^2-Upsilon^2;
+        kr = k*r(i);
+        switch formulation
+            case {'WBGC', 'WBGU'}
+                fact = fact * (r_a/r(i))^2;
+        end
+        switch formulation
+            case {'PGC', 'BGC'}
+                K1   = K1   + rUps*dRdr(i,:).'*dRdr(i,:) * fact;  
+                K1_1 = K1_1 + rUps*1i*k*(RdRdr - RdRdr.') * fact;
+                K1_2 = K1_2 - varrho3^2*RR                * fact;   
+            case {'PGU', 'BGU'}
+                fact = fact * exp(2*1i*kr);
+                K1 = K1 + (  rUps*dRdr(i,:).'*dRdr(i,:) ... 
+                           + rUps*1i*k*(RdRdr + RdRdr.') ...
+                           - (2*kr^2-varrho3^2)*RR     ) * fact;  
+        end
+        K2 = K2 +                  RR * fact;  
+        K3 = K3 + varrho3^2      * RR * fact;  
+        K4 = K4 + r(i)^2/rUps    * RR * fact;   
+        K5 = K5 - Upsilon^2/rUps * RR * fact;  
+    end    
 end
 
 if IElocSup      
@@ -431,11 +451,15 @@ if IElocSup
             rUps = r(i)^2-Upsilon^2;
             kr = k*r(i);
             switch formulation
-                case {'PGC', 'BGC'}
+                case {'WBGC', 'WBGU'}
+                    fact = fact * (r_a/r(i))^2;
+            end
+            switch formulation
+                case {'PGC', 'BGC', 'WBGC'}
                     k1_e   = k1_e   + rUps*dRdr(i,:).'*dRdr(i,:) * fact;  
                     k1_1_e = k1_1_e + rUps*1i*k*(RdRdr - RdRdr.') * fact;
                     k1_2_e = k1_2_e - varrho3^2*RR                * fact;   
-                case {'PGU', 'BGU'}
+                case {'PGU', 'BGU', 'WBGU'}
                     fact = fact * exp(2*1i*kr);
                     k1_e = k1_e + (  rUps*dRdr(i,:).'*dRdr(i,:) ... 
                                    + rUps*1i*k*(RdRdr + RdRdr.') ...
@@ -460,7 +484,7 @@ if IElocSup
     Ntot = N-1 + noDofs_ie;
     K1 = shiftMatrix(Ntot-N,Ntot,K1);
     switch formulation
-        case {'BGC', 'PGC'}  
+        case {'BGC', 'PGC', 'WBGC'}  
             K1_1 = shiftMatrix(Ntot-N,Ntot,K1_1);
             K1_2 = shiftMatrix(Ntot-N,Ntot,K1_2);
             
@@ -484,7 +508,7 @@ else
 end
 
 switch formulation
-    case {'PGU', 'BGU'}
+    case {'PGU', 'BGU', 'WBGU'}
         K1 = K1*exp(-2*1i*varrho2);
         K2 = K2*exp(-2*1i*varrho2);
         K3 = K3*exp(-2*1i*varrho2);
@@ -501,7 +525,7 @@ if varCol.useROM
          + kron(K5,A5values);
 else
     switch formulation
-        case {'PGC', 'BGC'}
+        case {'PGC', 'BGC', 'WBGC'}
             K1 = K1 + K1_1 + K1_2;
     end
     A =   kron(K1,A1values) ...

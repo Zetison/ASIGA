@@ -1,3 +1,9 @@
+function [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, Uc, runTasksInParallel, stringShift, i_f)
+L2Error = NaN;
+H1Error = NaN;
+H1sError = NaN;
+energyError = NaN;
+surfaceError = NaN;
 if varCol{1}.boundaryMethod
     if task.calculateSurfaceError
         tic 
@@ -9,10 +15,6 @@ if varCol{1}.boundaryMethod
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface error = %.16g', surfaceError)
         end
-        if i_f == 1
-            task.results.surfaceError = zeros(1,size(k,2));
-        end
-        task.results.surfaceError(i_f) = surfaceError;
     end
     if task.calculateSurfEnrgErr
         tic 
@@ -24,10 +26,6 @@ if varCol{1}.boundaryMethod
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface energy error = %.16g', energyError)
         end
-        if i_f == 1
-            task.results.energyError = zeros(1,size(k,2));
-        end
-        task.results.energyError(i_f) = energyError;
     end
 else
     if task.calculateSurfaceError
@@ -44,10 +42,6 @@ else
             fprintf('using %12f seconds.', toc) 
             fprintf('\nSurface error = %.16g', surfaceError)
         end
-        if i_f == 1
-            task.results.surfaceError = zeros(1,size(k,2));
-        end
-        task.results.surfaceError(i_f) = surfaceError;
     end
     if task.calculateVolumeError
         tic 
@@ -65,15 +59,5 @@ else
             fprintf('\nVolume H1-error = %.16g', H1Error)
             fprintf('\nVolume Energy-error = %.16g', energyError)
         end
-        if i_f == 1
-            task.results.energyError = zeros(1,size(k,2));
-            task.results.L2Error = zeros(1,size(k,2));
-            task.results.H1Error = zeros(1,size(k,2));
-            task.results.H1sError = zeros(1,size(k,2));
-        end
-        task.results.energyError(i_f) = energyError;
-        task.results.L2Error(i_f) = L2Error;
-        task.results.H1Error(i_f) = H1Error;
-        task.results.H1sError(i_f) = H1sError;
     end  
 end

@@ -1,7 +1,7 @@
 function I = radialIntegral3(n, varrho1, varrho2, infiniteElementFormulation, type)
 
 switch infiniteElementFormulation
-    case {'PGC', 'BGC',}
+    case {'PGC', 'BGC', 'WBGC'}
         if type == 1
 %             I = integral(1/rho^n) from 1 to infinity
             I = 1/(n-1);
@@ -24,7 +24,7 @@ switch infiniteElementFormulation
                 end
             end
         end
-    case {'PGU', 'BGU'}
+    case {'PGU', 'BGU', 'WBGU'}
         z = -2*1i*varrho2;
         if type == 1
 %             I = integral(exp(-z*r)/r^n) from 1 to infinity
