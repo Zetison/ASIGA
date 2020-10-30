@@ -1,4 +1,4 @@
-function [A, FF, varCol, C, C2] = buildGBEMmatrix(varCol,useSolidDomain)
+function varCol = buildGBEMmatrix(varCol,useSolidDomain)
 
 degree = varCol.degree; % assume p_xi is equal in all patches
 
@@ -282,19 +282,16 @@ parfor e_x = 1:noElems
     end
     Fvalues(:,e_x,:) = F_e;
 end
-A = matrixAssembly(Avalues, idxRow, n_en, noDofs, noElems, 2);
+varCol.A = matrixAssembly(Avalues, idxRow, n_en, noDofs, noElems, 2);
 if useSolidDomain
-    C = matrixAssembly(Cvalues(:,:,noElemsInner+1:end), idxRow2(:,noElemsInner+1:end), n_en, noDofs-noDofsInner, noElems-noElemsInner, 4);
-    C2 = matrixAssembly(C2values, idxRow3, n_en, noDofsInner, noElemsInner, 4);
-else
-    C = NaN;
-    C2 = NaN;
+    varCol.C = matrixAssembly(Cvalues(:,:,noElemsInner+1:end), idxRow2(:,noElemsInner+1:end), n_en, noDofs-noDofsInner, noElems-noElemsInner, 4);
+    varCol.C2 = matrixAssembly(C2values, idxRow3, n_en, noDofsInner, noElemsInner, 4);
 end
 FF = zeros(noDofs,no_angles);
 parfor i = 1:no_angles
     FF(:,i) = vectorAssembly(Fvalues(:,:,i), idxRow, noDofs);
 end
-
+varCol.FF = FF;
 
 varCol.totNoQPnonPolar = totNoQPnonPolar;
 varCol.totNoQP = totNoQP;

@@ -1,3 +1,4 @@
+function [varCol,U,Uc] = postProcessSolution(varCol,task,UU)
 
 %% Sort data from UU into Uc{1}, Uc{2}, and Uc{3}
 if strcmp(method,'MFS')
@@ -44,9 +45,8 @@ if i_f == 1
     end
     varCol{1}.h_max = h_max;
     varCol{1}.nepw = varCol{1}.lambda./h_max;
-    varCol{1}.dofs = actualNoDofs;
     varCol{1}.surfDofs = getNoSurfDofs(varCol{1});
-    if storeSolution
+    if task.storeSolution
         varCol{1}.U = Uc{1};
     end
 end

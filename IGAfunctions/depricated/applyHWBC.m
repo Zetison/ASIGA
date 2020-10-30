@@ -1,6 +1,7 @@
-function F = applyHWBC(varCol,no_angles)
+function varCol = applyHWBC(varCol)
+error('Depricated, use applyNeumannCondition instead')
 dp_inc = varCol.dp_inc;
-noDofs_tot = varCol.noDofs_tot;
+noDofs_tot = varCol.noDofs_new;
 weights = varCol.weights;
 controlPts = varCol.controlPts;
 degree = varCol.degree(1:2);
@@ -9,7 +10,7 @@ d_p = varCol.patches{1}.nurbs.d_p;
 knotVecs = varCol.knotVecs;
 
 [zeta0Nodes, noElems, element, element2, index, pIndex, n_en] = meshBoundary(varCol,0);
-
+no_angles = numel(varCol.alpha_s);
 Fvalues = zeros(n_en,noElems,no_angles);
 indices = zeros(n_en,noElems);
 
@@ -36,12 +37,13 @@ parfor e = 1:noElems
     [J_1, crossProd] = getJacobian(R,pts,d_p-1);
     X = R{1}*pts;
     n = -crossProd./repmat(J_1,1,3);
-    deriv = -dp_inc(X,n);
-    indices(:,e) = sctrXiEta';    
+    deriv = -dp_inc(X,n);   
     Fvalues(:,e,:) = R{1}'*(deriv.*J_1 * J_2 .* W);
+    indices(:,e) = sctrXiEta'; 
 end
 
 F = zeros(noDofs_tot,no_angles);        % external force vector
 for i = 1:no_angles
     F(:,i) = vectorAssembly(Fvalues(:,:,i),indices,noDofs_tot);
 end
+varCol.FF = F;

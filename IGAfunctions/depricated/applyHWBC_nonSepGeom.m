@@ -1,5 +1,5 @@
-function F = applyHWBC_nonSepGeom(varCol,alpha_s_arr)
-
+function varCol = applyHWBC_nonSepGeom(varCol,alpha_s_arr)
+error('Depricated. Use varCol = applyNeumannCondition(varCol,outerBoundary) instead')
 degree = varCol.degree; % assume degree is equal in all patches
 index = varCol.index;
 noElems = varCol.noElems;
@@ -62,3 +62,4 @@ else
         F(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),indices,noDofs_tot);
     end
 end
+varCol.FF = F;

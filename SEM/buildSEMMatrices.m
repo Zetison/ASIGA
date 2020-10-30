@@ -359,7 +359,7 @@ clear spIdxRow spIdxCol
 [spIdx,~,I] = unique(spIdx,'rows','stable');
 Kvalues = accumarray(I,Kvalues);
 noDofs_new = noDofs + noSurfDofs*(N-1);
-K = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kvalues,noDofs_new,noDofs_new,numel(Kvalues));
+varCol.A_K = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kvalues,noDofs_new,noDofs_new,numel(Kvalues));
 clear Kvalues
 
 spIdxM = reshape(spIdxM,numel(spIdxM),1);
@@ -367,14 +367,11 @@ spIdx = [spIdxM, spIdxM];
 [spIdx,~,I] = unique(spIdx,'rows','stable');
 Mvalues = accumarray(I,Mvalues);
 
-M = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Mvalues,noDofs_new,noDofs_new,numel(Mvalues));
-k = varCol.k;
-A_fluid_o = K - k^2*M;
-clear K M
+varCol.A_M = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Mvalues,noDofs_new,noDofs_new,numel(Mvalues));
 
-FF = zeros(noDofs_new,no_angles);        % external force vector
+varCol.FF = zeros(noDofs_new,no_angles);        % external force vector
 for alpha_s_Nr = 1:no_angles
-    FF(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),Findices,noDofs_new);
+    varCol.FF(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),Findices,noDofs_new);
 end
 clear Fvalues
 
@@ -386,13 +383,10 @@ newDofsToRemove = setdiff((noDofs+1):noDofs_new,unique(spIdxRowInf));
 clear spIdxRowInf spIdxColInf
 [spIdx,~,I] = unique(spIdx,'rows','stable');
 Kinfvalues = accumarray(I,Kinfvalues);
-A_gamma_a = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kinfvalues,noDofs_new,noDofs_new,numel(Kinfvalues));
+varCol.Ainf = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kinfvalues,noDofs_new,noDofs_new,numel(Kinfvalues));
 % [A_gamma_a, newDofsToRemove] = addInfElements3_testSEM(varCol);
-A_fluid_o = A_fluid_o + A_gamma_a;
-clear Kinfvalues
 
-
-dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));
+varCol.dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function d = delta(i,j)
 

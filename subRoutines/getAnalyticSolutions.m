@@ -47,6 +47,12 @@ switch applyLoad
             p_inc = @(v) P_inc*R_o(1).*exp(-1i*k*(norm2(v)-R_o(1)))./norm2(v);
             gp_inc = @(v)   -p_inc(v).*(1./norm2(v)+1i*k).*v./norm2(v);
             dp_inc = @(v,n) -p_inc(v).*(1./norm2(v)+1i*k).*sum(v.*n,2)./norm2(v);
+        elseif strcmp(applyLoad,'pointCharge')
+            r_s = varCol{1}.r_s;
+            x_s = d_vec*r_s;
+            p_inc = @(v) P_inc*r_s.*exp(1i*k*norm2(v-x_s))./norm2(v-x_s);
+            gp_inc = @(v)   p_inc(v).*(-1./norm2(v-x_s)+1i*k).*v./norm2(v-x_s);
+            dp_inc = @(v,n) p_inc(v).*(-1./norm2(v-x_s)+1i*k).*sum((v-x_s).*n,2)./norm2(v-x_s);
         end
         dpdn = @(v,n) zeros(size(v,1),1);
         varCol{1}.d_vec = d_vec;
@@ -55,7 +61,9 @@ Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
 dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
 varCol{1}.Phi_k = Phi_k;
 varCol{1}.dPhi_kdny = dPhi_kdny;
-varCol{1}.analyticFunctions = @(X) analytic(X,varCol);
+if varCol{1}.analyticSolutionExist
+    varCol{1}.analyticFunctions = @(X) analytic(X,varCol);
+end
 varCol{1}.p_inc = p_inc;
 varCol{1}.dp_inc = dp_inc;
 varCol{1}.gp_inc = gp_inc;

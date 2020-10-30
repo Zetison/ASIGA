@@ -1,67 +1,36 @@
+function varCol = extractTaskData(task)
+
+formulation = task.formulation;
 scatteringCase = task.scatteringCase;
-model = task.model;
 method = task.method;
-M = task.M;
-f = task.f;
-
-applyLoad = task.applyLoad;
-
-alpha_s  = task.alpha_s;
-beta_s  = task.beta_s;
-alpha = task.alpha;
-beta = task.beta;
-r = task.r;
-
-degree = task.degree;
-
-BC                      = task.BC;
-prePlot                 = task.prePlot;
-para                    = task.para;
-calculateSurfaceError   = task.calculateSurfaceError;
-calculateVolumeError    = task.calculateVolumeError;
-calculateFarFieldPattern = task.calculateFarFieldPattern;
-storeSolution           = task.storeSolution;
-plotFarField            = task.plotFarField;
-formulation             = task.formulation;
-coreMethod              = task.coreMethod;
-clearGlobalMatrices     = task.clearGlobalMatrices;
-computeCondNumber       = task.computeCondNumber;
-storeFullvarCol         = task.storeFullVarCol;
-extraGP                 = task.extraGP;
-extraGPBEM              = task.extraGPBEM;
-agpBEM                  = task.agpBEM;
-useROM                  = task.useROM;
-exteriorProblem         = task.exteriorProblem;
-useNeumanProj           = task.useNeumanProj;
-colBEM_C0               = task.colBEM_C0;
-colMethod               = task.colMethod;
-solveForPtot            = task.solveForPtot;
 varCol                  = task.varCol;
-varCol{1}.initMeshFactXi   = task.initMeshFactXi;
-varCol{1}.initMeshFactZeta = task.initMeshFactZeta;
-varCol{1}.refineThetaOnly  = task.refineThetaOnly;
 varCol{1}.parm          = task.parm;
 varCol{1}.r_a           = task.r_a;
 varCol{1}.N             = task.N;
 varCol{1}.method        = method;
-varCol{1}.model         = model;
-varCol{1}.useROM        = useROM;
+varCol{1}.model         = task.model;
+varCol{1}.useROM        = task.useROM;
 varCol{1}.N_max         = task.N_max;
 varCol{1}.ie_Zeta       = task.ie_Zeta;
 varCol{1}.IElocSup      = task.IElocSup;
 varCol{1}.p_ie          = task.p_ie;
 varCol{1}.s_ie          = task.s_ie;
+varCol{1}.initMeshFactXi   = task.initMeshFactXi;
+varCol{1}.initMeshFactZeta = task.initMeshFactZeta;
+varCol{1}.refineThetaOnly  = task.refineThetaOnly;
+varCol{1}.coreMethod = task.coreMethod;
 
 for i = 1:numel(varCol)
     varCol{i}.progressBars = task.progressBars;
 end
-
-plotResidualError       = task.plotResidualError;
 if isfield(task,'delta')
     varCol{1}.delta = task.delta;
 end
 if isfield(task,'Xi')
     varCol{1}.Xi = task.Xi;
+end
+if isfield(task,'r_s')
+    varCol{1}.r_s = task.r_s;
 end
 if isfield(task,'c_x')
     varCol{1}.c_x = task.c_x;
@@ -83,20 +52,6 @@ if strcmp(task.method,'BEM') && ~task.solveForPtot && ~strcmp(task.BC,'NBC')...
 end
 if task.solveForPtot && ~strcmp(task.applyLoad,'planeWave')
     error('p_inc does not solve the interior problem in the case applyLoad=radialPulsation. For this reason one must have solveForPtot=false here.')
-end
-if isfield(task,'noVecsArr')
-    noVecsArr = task.noVecsArr;
-    noVecs = max(noVecsArr);
-end
-if isfield(task,'k_ROM')
-    k_ROM = task.k_ROM;
-end
-
-if isfield(task,'parm')
-    parm = task.parm;
-end
-if isfield(task,'internalPts')
-    internalPts = task.internalPts;
 end
     
 

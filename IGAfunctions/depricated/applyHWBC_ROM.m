@@ -1,5 +1,5 @@
-function F = applyHWBC_ROM(varCol,noVecs)
-
+function varCol = applyHWBC_ROM(varCol,noVecs)
+error('Depricated, use applyNeumannCondition instead')
 p_inc = varCol.p_inc;
 d_vec = varCol.d_vec;
 k = varCol.k;
@@ -58,4 +58,4 @@ F = zeros(noDofs_tot,noVecs);        % external force vector
 for i = 1:noVecs
     F(:,i) = vectorAssembly(Fvalues(:,:,i),indices,noDofs_tot);
 end
-
+varCol.FF = F;

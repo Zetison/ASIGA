@@ -1,4 +1,4 @@
-function A = addABC(varCol)
+function varCol = addABC(varCol)
 
 elRangeXi = varCol.elRange{1};
 elRangeEta = varCol.elRange{2};
@@ -184,4 +184,4 @@ Avalues = reshape(Avalues,numel(Avalues),1);
 [spIdx,~,IuniqueIdx] = unique([spIdxRow, spIdxCol],'rows');
 Avalues = accumarray(IuniqueIdx,Avalues);
 
-A = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs,noDofs,numel(IuniqueIdx));
+varCol.Ainf = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs,noDofs,numel(IuniqueIdx));

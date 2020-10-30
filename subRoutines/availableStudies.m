@@ -1,5 +1,5 @@
 
-% studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
+studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'M1'; %getTask_M1
 % studyName = 'M2'; %getTask_M2
 % studyName = 'M3'; %getTask_M3
@@ -16,7 +16,8 @@
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
 % studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
-studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+% studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 
 %% Venas2020ibe
 % studyName = 'articleBEM_S1_quadVis'; %getTask_articleBEM_S1_quadVis

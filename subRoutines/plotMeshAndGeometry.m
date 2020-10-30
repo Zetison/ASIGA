@@ -1,10 +1,8 @@
-
-if strcmp(coreMethod, 'linear_FEM')
-    prePlot.resolution = [0,0,0];
-end
+function plotMeshAndGeometry(varCol,task)
+prePlot = task.prePlot;
 if prePlot.plot3Dgeometry
-    figure('Color','white','name',['3D plot of geometry with mesh ' num2str(M)])
-    if strcmp(method, 'IENSG') && prePlot.plotArtificialBndry
+    figure('Color','white','name',['3D plot of geometry with mesh ' num2str(task.M)])
+    if strcmp(task.method, 'IENSG') && prePlot.plotArtificialBndry
         c_z = varCol{1}.c_z;
         c_x = varCol{1}.c_x;
         alignWithAxis = varCol{1}.alignWithAxis;
@@ -17,6 +15,9 @@ if prePlot.plot3Dgeometry
         plotNURBS(ellipsoid,'resolution',[20 40],'alphaValue',0.6,'color','blue');
     end
     for j = 1:numel(varCol)
+        if strcmp(varCol{j}.coreMethod, 'linear_FEM')
+            prePlot.resolution = [0,0,0];
+        end
         nurbs = varCol{j}.nurbs;
         prePlot.displayName = ['Domain ' num2str(j)];
         plotNURBS(nurbs, prePlot);
@@ -44,9 +45,9 @@ if prePlot.plot3Dgeometry
     end
     figName = prePlot.export_fig_name3D;
     if isempty(figName)
-        figName = saveName;
+        figName = task.saveName;
     end
-    figName = [resultsFolder '/' figName '_3D'];
+    figName = [task.resultsFolder '/' figName '_3D'];
     if exist('../export_fig', 'dir')
         export_fig(figName, '-png', '-transparent', '-r200')
     end
@@ -60,26 +61,28 @@ for j = 1:numel(varCol)
     end
 end
 if prePlot.plot2Dgeometry
-    figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(M)])
+    figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(task.M)])
     for j = 1:numel(varCol)
-        switch model
+        switch task.model
             case {'M3','MS'}
                 nurbs2D = varCol{j}.nurbs(1:4:end);
             otherwise
                 nurbs2D = varCol{j}.nurbs;
         end
         nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
-        switch model
-            case {'PH', 'M3', 'MS'}
+        switch task.model
+            case {'PH', 'M3', 'MS', 'IMS'}
                 prePlot.view = [0,90];
             otherwise
                 prePlot.view = [0,0];
-                switch varCol{j}.media
-                    case 'fluid'
-                        prePlot.color = [173, 216, 230]/255;
-                    case 'solid'
-                        prePlot.color = getColor(1);
-                end
+        end
+        if numel(varCol) > 1
+            switch varCol{j}.media
+                case 'fluid'
+                    prePlot.color = [173, 216, 230]/255;
+                case 'solid'
+                    prePlot.color = getColor(1);
+            end
         end
         prePlot.displayName = ['Domain ' num2str(j)];
         plotNURBS(nurbs, prePlot);
@@ -105,9 +108,9 @@ if prePlot.plot2Dgeometry
     ax.Clipping = 'off';    % turn clipping off
     figName = prePlot.export_fig_name2D;
     if isempty(figName)
-        figName = saveName;
+        figName = task.saveName;
     end
-    figName = [resultsFolder '/' figName '_2D'];
+    figName = [task.resultsFolder '/' figName '_2D'];
     if exist('../export_fig', 'dir')
         export_fig(figName, '-png', '-transparent', '-r200')
     end
@@ -115,4 +118,9 @@ if prePlot.plot2Dgeometry
 end
 
 
+
+% plotControlPts(fluid);
+% dofsToRemove = varCol{1}.dofsToRemove;
+% controlPts = varCol{1}.controlPts;
+% plot3(controlPts(dofsToRemove,1),controlPts(dofsToRemove,2),controlPts(dofsToRemove,3),'o','color','blue','MarkerFaceColor','blue')
 

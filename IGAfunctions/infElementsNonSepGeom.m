@@ -1,4 +1,4 @@
-function [A, newDofsToRemove] = infElementsNonSepGeom(varCol)
+function varCol = infElementsNonSepGeom(varCol)
 
 degree = varCol.degree; % assume degree is equal in all patches
 
@@ -306,10 +306,7 @@ Avalues = reshape(Avalues,numel(Avalues),1);
 [spIdx,~,IuniqueIdx] = unique([spIdxRow, spIdxCol],'rows');
 Avalues = accumarray(IuniqueIdx,Avalues);
 
-A = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
+varCol.A = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
 
-if min(size(A)) < noDofs_new
-    A(noDofs_new, noDofs_new) = 0;
-end
-newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
+varCol.newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
 

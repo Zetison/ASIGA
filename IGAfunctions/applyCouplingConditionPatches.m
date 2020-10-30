@@ -1,4 +1,4 @@
-function A = applyCouplingConditionPatches(varColInner,varColOuter,shift,shift2,noDofs_tot)
+function varColInner = applyCouplingConditionPatches(varColInner,varColOuter)
 % Future work: Vectorize over Gauss points
 
 knotVecs = varColInner.knotVecs;
@@ -76,8 +76,7 @@ spIdxRow1 = reshape(spIdxRow1,numel(spIdxRow1),1);
 spIdxCol1 = reshape(spIdxCol1,numel(spIdxCol1),1);
 Avalues = reshape(Avalues,numel(Avalues),1);
 
-[spIdx1,~,IuniqueIdx1] = unique([spIdxRow1+shift, spIdxCol1+shift2],'rows');
+[spIdx1,~,IuniqueIdx1] = unique([spIdxRow1, spIdxCol1],'rows');
 Avalues = accumarray(IuniqueIdx1,Avalues);
 
-A = sparse(spIdx1(:,1),spIdx1(:,2),Avalues,noDofs_tot,noDofs_tot,numel(IuniqueIdx1));
-A = A + A.';
+varColInner.A_C = sparse(spIdx1(:,1),spIdx1(:,2),Avalues,max(spIdx1(:,1)),max(spIdx1(:,2)),numel(IuniqueIdx1));

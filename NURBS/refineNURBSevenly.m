@@ -1,12 +1,22 @@
-function refinednurbs = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts)
+function refinednurbs = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts,dirs,sortImap)
 if nargin < 3
     Imap = {};
 end
+
 if nargin < 4
     noExtraEvalPts = 1;
 end
-for i = 1:numel(Imap)
-    Imap{i} = fliplr(sort(Imap{i}));
+if nargin < 5
+    d_p = nurbs{1}.d_p;
+    dirs = 1:d_p;
+end
+if nargin < 6
+    sortImap = true;
+end
+if sortImap
+    for i = 1:numel(Imap)
+        Imap{i} = fliplr(sort(Imap{i}));
+    end
 end
 Eps = 1e-10;
 refinednurbs = nurbs;
@@ -16,7 +26,7 @@ for patch = 1:numel(nurbs)
     if d_p < 2 || d_p > 3
         error('Not implemented for this case')
     end
-    for dir = 1:d_p
+    for dir = dirs
         uniqueXi = unique(nurbs{patch}.knots{dir});
         dir2 = setdiff(1:d_p,dir);
         

@@ -1,4 +1,5 @@
 function F = applyHWBC2(varCol,alpha_s_arr,gradient)
+error('Depricated, use applyNeumannCondition instead')
 
 %coordinateSystem: 0 is cartesian, 1 is cylindrical, 2 is spherical
 

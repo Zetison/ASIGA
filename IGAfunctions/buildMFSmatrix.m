@@ -1,4 +1,4 @@
-function [A, F, varCol] = buildMFSmatrix(varCol)
+function varCol = buildMFSmatrix(varCol)
 
 
 patches = varCol.patches;
@@ -429,6 +429,8 @@ else
     end
     varCol.y_s = reshape(y_s,n_sp,3);
 end
+varCol.A = A;
+varCol.FF = F;
 % 
 % keyboard
 

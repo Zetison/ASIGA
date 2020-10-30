@@ -1,7 +1,7 @@
-function studies = getTask_Hetmaniuk()
-% This study is based on Hetmaniuk2012raa (Figure 7)
+function studies = getTask_Ihlenburg_MS()
+% This study is based on Ihlenburg1998fea (Figure 7)
 % Hetmaniuk2012raa is available at https://doi.org/10.1002/nme.4271
-
+% Experimental data at scale 1:50
 counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
@@ -10,39 +10,54 @@ getDefaultTaskValues
 %% IE simulation
 scatteringCase = 'Sweep';
 % BC = 'NNBC';
-model = 'S1';  % Spherical shell
+model = 'IMS';  % Spherical shell
 
 coreMethod = {'IGA','hp_FEM'};
 coreMethod = {'IGA'};
 method = {'IE'};
+applyLoad = 'pointSource';
 formulation = {'PGC'};
 
-varCol = setS1Parameters('double',1);
-varCol{1}.meshFile = 'createNURBSmesh_EL';
+varCol{1} = struct('media', 'fluid', ...
+                   't', [0.1143,0.04064], ...
+                   'R1', 4.6863, ...
+                   'R2', 4.6863, ...
+                   'L', 67.9958, ...
+                   'c_f', 1482, ...
+                   'rho', 1000);
+varCol{2} = struct('media', 'solid', ...
+                   'E', 2.0e11, ...
+                   'nu', 0.29, ...
+                   'rho', 7908.5);
 
-k = linspace(9, 36, 3);
-% k = linspace(9, 36, 3)/5;
+varCol{1}.meshFile = 'createNURBSmesh_M3';
+warning('off','NURBS:weights')
+
+k = linspace(2.5, 20, 3)/varCol{1}.R1;
+% k = [9, 22.5, 36]/5;
 
 alpha = 0;
-beta = -pi/2;   
-r_a = 1.2;
+beta = 0;   
+sdfmsc = 3*(varCol{1}.R1+varCol{1}.L+varCol{1}.R2)/1.36;
+r_s = sdfmsc - varCol{1}.L/2;
 
 M = 1:5; % 5
+M = 3; % 5
 N = 1; % 9
 
-degree = 3;
+degree = 4;
 % degree = 2:5;
 parm = 1;
-calculateSurfaceError = 1;
+calculateSurfaceError = 0;
 calculateVolumeError  = 0;
 calculateFarFieldPattern = 0;
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
-prePlot.plot2Dgeometry = 0;
+prePlot.plot2Dgeometry = 1;
 computeCondNumber = 0;
 
 postPlot(1).xname        	= 'k_ROM';
-postPlot(1).yname        	= 'surfaceError';
+postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= false;
 postPlot(1).axisType      	= 'semilogy';
@@ -55,7 +70,6 @@ postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 
-k_ROM = k(1):0.05:k(end);
 k_ROM = k(1):2.5:k(end);
 c_f = 1500;
 f = k*c_f/(2*pi);
@@ -78,7 +92,6 @@ basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is do
 % j = 1:n;
 % k_arr = 1/2*(a+b)+1/2*(b-a)*cos((2*n-2*j+1)*pi/(2*n));
 % k = k_arr(round(linspace(1,n,P)));
-M = 6; % 5
 N = 13; % 9
 % M = 1; 
 % N = 2;
@@ -124,4 +137,4 @@ collectIntoTasks
 p_ie = 5;
 N = p_ie*5; % 9
 IElocSup = 1;
-collectIntoTasks
+% collectIntoTasks

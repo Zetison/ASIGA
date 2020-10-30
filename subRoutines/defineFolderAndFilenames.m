@@ -1,5 +1,5 @@
-
-saveName = model;
+function saveName = defineFolderAndFilenames(task,loopParameters)
+saveName = task.model;
 for i = 1:length(loopParameters)
     temp2 = loopParameters{i};
     temp = task.(loopParameters{i});

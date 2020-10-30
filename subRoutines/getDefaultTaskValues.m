@@ -61,6 +61,11 @@ prePlot.xlabel              = 'x';         % Set x-axis label
 prePlot.ylabel              = 'y';         % Set y-axis label
 prePlot.zlabel              = 'z';         % Set z-axis label
 
+
+%% Solver settings
+solver = 'LU';	        % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
+preconditioner = 'ilu';	% 'ilu', 'SSOR'
+
 %% Error computations
 calculateSurfaceError       = false;	% Only if scatteringCase == 'Bi'
 calculateSurfEnrgErr        = false;	% Only if scatteringCase == 'Bi'

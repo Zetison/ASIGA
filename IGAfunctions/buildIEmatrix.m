@@ -1,4 +1,4 @@
-function [A, newDofsToRemove, A_1, A_2] = buildIEmatrix(varCol)
+function varCol = buildIEmatrix(varCol)
 
 elRange = varCol.elRange(1:2);
 knotVecs = varCol.knotVecs;
@@ -38,7 +38,7 @@ controlPts = varCol.controlPts;
 
 k = varCol.k(1);
 Upsilon = varCol.Upsilon;
-if strcmp(varCol.method,'IENSG')
+if varCol.boundaryMethod
     noElems = varCol.noElems;
     element = varCol.element;
     element2 = varCol.element2;
@@ -547,18 +547,22 @@ end
 if noDofs > 0
     [i,j,Avalues] = find(A);    
     [i,j,newDofsToRemove] = modifyIndices(i,j,noSurfDofs,noDofs,nodes,newDofsToRemove);    
-    A = sparse(i,j,Avalues,noDofs_new,noDofs_new);
+    varCol.Ainf = sparse(i,j,Avalues,noDofs_new,noDofs_new);
     
     if varCol.useROM
         [i,j,Avalues] = find(A_1);
         [i,j] = modifyIndices(i,j,noSurfDofs,noDofs,nodes);
-        A_1 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
+        varCol.Ainf1 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
         
         [i,j,Avalues] = find(A_2);
         [i,j] = modifyIndices(i,j,noSurfDofs,noDofs,nodes);
-        A_2 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
+        varCol.Ainf2 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
     end
 end
+dofsToRemove_old = varCol.dofsToRemove;
+varCol.dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));
+varCol.dofsToRemove_old = dofsToRemove_old;
+varCol.noDofs_new = noDofs_new;
 
 function A = shiftMatrix(shift,noDofs,A)
 [i,j,Kvalues] = find(A);

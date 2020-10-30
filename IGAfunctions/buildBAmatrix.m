@@ -1,4 +1,4 @@
-function [M, F, varCol] = buildBAmatrix(varCol)
+function varCol = buildBAmatrix(varCol)
 % Create IGA global matrices
 % Implemented for linear elasticity operator and the laplace operator, with
 % possibility of computing the mass matrix and loading vector from body
@@ -149,9 +149,9 @@ end
         
 
 %% Collect data into global matrices (and load vector)
-F = vectorAssembly(Fvalues,F_indices,noDofs);
+varCol.FF = vectorAssembly(Fvalues,F_indices,noDofs);
 
-M = sparse(spIdxRow,spIdxCol,Mvalues,noDofs,noDofs);
+varCol.A = sparse(spIdxRow,spIdxCol,Mvalues,noDofs,noDofs);
 
 varCol.totNoQP = totNoQP;
 

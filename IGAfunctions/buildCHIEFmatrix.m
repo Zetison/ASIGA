@@ -1,4 +1,4 @@
-function [A, FF, varCol] = buildCHIEFmatrix(varCol)
+function varCol = buildCHIEFmatrix(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -192,6 +192,7 @@ parfor i = 1:n_cp
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,NaN,NaN,x,NaN,...
                 U,dU,p_inc,dp_inc,dpdn,NaN,NaN,NaN,NaN,sgn);
 end
-
+varCol.A = [varCol{1}.A; A];
+varCol.FF = [varCol{1}.FF; FF];
 % totNoQP
 varCol.totNoQP = varCol.totNoQP + totNoQP;

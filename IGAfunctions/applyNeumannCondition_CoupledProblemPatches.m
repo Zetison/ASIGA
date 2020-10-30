@@ -1,4 +1,4 @@
-function F = applyNeumannCondition_CoupledProblemPatches(varColSolid,varColFluid,omega,rho_f,no_angles,shift)
+function varColFluid = applyNeumannCondition_CoupledProblemPatches(varColSolid,varColFluid,omega,rho_f,no_angles,shift)
 
 knotVecs = varColSolid.knotVecs;
 degree = varColSolid.degree(1:2);
@@ -14,17 +14,17 @@ p_inc = varColSolid.p_inc;
 
 noDofs = varColSolid.noDofs;
 noDofs_tot = varColSolid.noDofs_tot;
-d = varColSolid.dimension;
+d_f = varColSolid.fieldDimension;
 
 [solidNodes,fluidNodes,solidXiEtaMesh,solidIndexXiEta,solidNoElemsXiEta,pIndex,solidNodes2]...
     = createSurfaceMesh(varColSolid,varColFluid);
 
 n_en = prod(degree+1);
 
-F1values = zeros(d*n_en,solidNoElemsXiEta,no_angles);
+F1values = zeros(d_f*n_en,solidNoElemsXiEta,no_angles);
 F2values = zeros(n_en,solidNoElemsXiEta,no_angles);
 
-indices1 = zeros(d*n_en,solidNoElemsXiEta);
+indices1 = zeros(d_f*n_en,solidNoElemsXiEta);
 indices2 = zeros(n_en,solidNoElemsXiEta);
 
 [Q, W] = gaussTensorQuad(degree+1);
@@ -42,9 +42,9 @@ parfor e = 1:solidNoElemsXiEta
     J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^(d_p-1);
 
     solidSctrXiEta = solidNodes(solidXiEtaMesh(e,:));          %  element scatter vector
-    solidSctrXiEtadD = zeros(d*length(solidSctrXiEta),1);
-    for i = 1:d
-        solidSctrXiEtadD(i:d:d*n_en) = d*(solidSctrXiEta-1)+i;
+    solidSctrXiEtadD = zeros(d_f*length(solidSctrXiEta),1);
+    for i = 1:d_f
+        solidSctrXiEtadD(i:d_f:d_f*n_en) = d_f*(solidSctrXiEta-1)+i;
     end
     fluidSctrXiEta = fluidNodes(solidXiEtaMesh(e,:))+noDofs;          %  element scatter vector
 
@@ -59,7 +59,7 @@ parfor e = 1:solidNoElemsXiEta
 
     X = R{1}*pts;
     
-    F1_e = zeros(d*n_en,no_angles);
+    F1_e = zeros(d_f*n_en,no_angles);
     F2_e = zeros(n_en,no_angles);
     for gp = 1:size(W,1)
         F1_e = F1_e + kron(R{1}(gp,:)',normal(gp,:).')*p_inc(X(gp,:)).'*J_1(gp) * J_2 * W(gp);
@@ -71,9 +71,9 @@ parfor e = 1:solidNoElemsXiEta
     F1values(:,e,:) = F1_e;
     F2values(:,e,:) = F2_e;
 end
-
+F = zeros(noDofs_tot,no_angles);
 for alpha_s_Nr = 1:no_angles
     F(:,alpha_s_Nr) = -vectorAssembly(F1values(:,:,alpha_s_Nr),indices1+shift,noDofs_tot);
     F(:,alpha_s_Nr) = F(:,alpha_s_Nr) + 1/(rho_f*omega^2)*vectorAssembly(F2values(:,:,alpha_s_Nr),indices2+shift,noDofs_tot);
 end
-
+varColFluid.FF = F;
