@@ -11,7 +11,7 @@ number = np(2:end);
 
 sizeKnots = zeros(1,d_p);
 for i = 1:d_p % normalize knots
-    knots{i} = knots{i}/knots{i}(end); 
+    knots{i} = (knots{i}-knots{i}(1))/(knots{i}(end)-knots{i}(1)); 
     sizeKnots(i) = numel(knots{i});
 end
 nurbs.d_p = d_p;

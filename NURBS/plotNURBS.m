@@ -65,6 +65,9 @@ elseif size(color,1) < noPatches
 end
 plotJacobian = options.plotJacobian;
 plotSolution = isa(colorFun, 'function_handle');
+maxC = NaN;
+minC = NaN;
+
 hold on
 d_max = -Inf;
 for patch = 1:noPatches
@@ -181,7 +184,7 @@ for patch = 1:noPatches
                             C(1:nuk1,counter+1:counter+nuk2) = log10(J_1);
                         end
                         if plotSolution
-                            C(1:nuk1,counter+1:counter+nuk2) = colorFun(X_temp);
+                            C(1:nuk1,counter+1:counter+nuk2) = reshape(colorFun(reshape(X_temp,nuk1*nuk2,3)),nuk1,nuk2);
                         end
                         counter = counter + nuk2+1;
                     end
@@ -194,6 +197,8 @@ for patch = 1:noPatches
     %                         'FaceLighting', faceLighting, 'DisplayName',displayName)
     %         end
 
+            maxC = max(max(C));
+            minC = min(min(C));
             if plotSolution || plotJacobian
                 surf(X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName)
                 colorbar
@@ -350,6 +355,7 @@ for patch = 1:noPatches
                 end
                 if plotSolution
                     maxC = max(maxC);
+                    minC = min(min(C));
                     colorbar
                 end
             else
