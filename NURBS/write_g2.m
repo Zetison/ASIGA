@@ -27,7 +27,7 @@ for patch = 1:numel(nurbs)
             Xi = nurbs{patch}.knots{i};
             fprintf(fid,'%d %d\n',n,p+1);
             for j = 1:length(Xi)
-                fprintf(fid, '%.15g ',Xi(j));
+                fprintf(fid, '%20.15f ',Xi(j));
             end
             fprintf(fid, '\n');
         end
@@ -39,7 +39,7 @@ for patch = 1:numel(nurbs)
     controlPts = reshape(controlPts,d+1,[]);
 
     for i = 1:size(controlPts,2)
-        fprintf(fid, [repmat('%20.15g',1,size(controlPts,1)) '\n'], controlPts(:,i));
+        fprintf(fid, [repmat('%20.15f',1,size(controlPts,1)) '\n'], controlPts(:,i));
     end
 end
 fclose(fid);
