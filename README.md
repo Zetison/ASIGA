@@ -3,7 +3,7 @@ The ASIGA (Acoustic Scattering using IsoGeometric Analysis) toolbox provides a f
 ![Missing BeTSSi submarine nearfield plot](https://github.com/Zetison/ASIGA/blob/master/miscellaneous/BCA_p_tot.png?raw=true)
 The main focus is to compute the so-called target strength (TS) for a given geometry as illustrated below
 ![Missing target strength plot for the BeTSSi submarine](https://github.com/Zetison/ASIGA/blob/master/miscellaneous/BC_HWBC_MS_AS_E0_F1.png?raw=true)
-The underlying governing equations and results produced by this toolbox can be found in \[[1](https://doi.org/10.1016/j.cma.2018.02.015) and [2](https://www.sciencedirect.com/science/article/pii/S0045782519305559)\].
+The underlying governing equations and results produced by this toolbox can be found in \[[1](https://doi.org/10.1016/j.cma.2018.02.015), [2](https://www.sciencedirect.com/science/article/pii/S0045782519305559)\].
 
 ## Installation
 Get the toolbox from GitHub (the e3Dss repository is needed for exact solutions and export_fig are needed for improved graphics for publications):
