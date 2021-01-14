@@ -19,12 +19,12 @@ noDofs2 = size(U_P2{1},1);
 task.varCol{1} = rmfield(task.varCol{1},'U_sweep');
 task.varCol{1} = rmfield(task.varCol{1},'U_sweep2');
 task.varCol{1} = rmfield(task.varCol{1},'U');
-A_gamma_a = task.varCol{1}.A_gamma_a;
-A2_gamma_a = task.varCol{1}.A2_gamma_a;
-A3_gamma_a = task.varCol{1}.A3_gamma_a;
-task.varCol{1} = rmfield(task.varCol{1},'A_gamma_a');
-task.varCol{1} = rmfield(task.varCol{1},'A2_gamma_a');
-task.varCol{1} = rmfield(task.varCol{1},'A3_gamma_a');
+A_0 = task.varCol{1}.A_0;
+A_1 = task.varCol{1}.A_1;
+A_2 = task.varCol{1}.A_2;
+task.varCol{1} = rmfield(task.varCol{1},'A_0');
+task.varCol{1} = rmfield(task.varCol{1},'A_1');
+task.varCol{1} = rmfield(task.varCol{1},'A_2');
 stringShift = 40;
 varCol = task.varCol;
 % noVec = size(U_P{1},2);
@@ -57,9 +57,9 @@ for i_b = 1:numel(basisROMcell)
                     U(:,i) = U(:,i)/sqrt(U(:,i)'*U(:,i));
                 end
                 V = U;
-                A_gamma_am = V'*A_gamma_a*V;
-                A2_gamma_am = V'*A2_gamma_a*V;
-                A3_gamma_am = V'*A3_gamma_a*V;
+                A_2_am = V'*A_2*V;
+                A_1_am = V'*A_1*V;
+                A_0_am = V'*A_0*V;
             case 'Hermite'
 %                 mp.Digits(400);
 %                 Y = getInterpolatingHermite(mp(k_P.'),mp(k_ROM),noVecs);
@@ -267,7 +267,7 @@ for i_b = 1:numel(basisROMcell)
                     
                     for i_f = 1:numel(k_ROM)
                         k = k_ROM(i_f);
-                        Am = k^2*A_gamma_am + k*A2_gamma_am + A3_gamma_am;
+                        Am = k^2*A_2_am + k*A_1_am + A_0_am;
                         U_fluid_oArr(freeDofs,i_f) = V*(Am\FF(:,i_f));
                         U_fluid_oArr(:,i_f) = addSolutionToRemovedNodes_new(U_fluid_oArr(:,i_f), varCol{1});
                     end

@@ -1,27 +1,28 @@
-function [varCol,U,Uc] = postProcessSolution(varCol,task,UU)
+function [varCol,Uc] = postProcessSolution(varCol,task,UU,i_f)
 
 %% Sort data from UU into Uc{1}, Uc{2}, and Uc{3}
-if strcmp(method,'MFS')
+if strcmp(task.method,'MFS')
     Uc{1} = UU;
 else
-    U = zeros(noDofs_tot,size(UU,2),size(UU,3));
-    U(setdiff(1:noDofs_tot, dofsToRemove'),:,:) = UU;   
+    noDofs_tot = varCol{1}.noDofs_tot;
+    U = zeros(noDofs_tot,size(UU,2));
+    U(setdiff(1:noDofs_tot, varCol{1}.allDofsToRemove'),:) = UU;   
 
     switch numel(varCol)
         case 1
-        %         Uc{1} = U(1:varCol_fluid_o.noDofs,:,:); 
+%             Uc{1} = U(1:varCol_fluid_o.noDofs,:); 
             Uc{1} = U; 
             Uc{1} = addSolutionToRemovedNodes_new(Uc{1}, varCol{1});
         case 2
-            Uc{1} = U((varCol{2}.noDofs+1):end,:,:);
-            Uc{2} = U(1:varCol{2}.noDofs,:,:); 
+            Uc{1} = U((varCol{2}.noDofs+1):end,:);
+            Uc{2} = U(1:varCol{2}.noDofs,:); 
 
             Uc{1} = addSolutionToRemovedNodes_new(Uc{1}, varCol{1});
             Uc{2} = addSolutionToRemovedNodes_new(Uc{2}, varCol{2});
         case 3
-            Uc{1} = U((varCol{3}.noDofs+varCol{2}.noDofs+1):end,:,:); 
-            Uc{2} = U((varCol{3}.noDofs+1):(varCol{3}.noDofs + varCol{2}.noDofs),:,:);
-            Uc{3} = U(1:varCol{3}.noDofs,:,:);
+            Uc{1} = U((varCol{3}.noDofs+varCol{2}.noDofs+1):end,:); 
+            Uc{2} = U((varCol{3}.noDofs+1):(varCol{3}.noDofs + varCol{2}.noDofs),:);
+            Uc{3} = U(1:varCol{3}.noDofs,:);
 
             Uc{1} = addSolutionToRemovedNodes_new(Uc{1}, varCol{1});
             Uc{2} = addSolutionToRemovedNodes_new(Uc{2}, varCol{2});

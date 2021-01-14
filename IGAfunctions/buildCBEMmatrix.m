@@ -361,7 +361,7 @@ parfor i = 1:n_cp
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
 end
-varCol.A = A;
+varCol.A_K = A;
 varCol.FF = FF;
 % totNoQP
 varCol.totNoQPnonPolar = totNoQPnonPolar;

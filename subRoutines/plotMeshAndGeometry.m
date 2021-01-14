@@ -58,6 +58,9 @@ for j = 1:numel(varCol)
     equalWeights = checkNURBSweightsCompatibility(nurbs,prePlot.plot3Dgeometry);
     if ~equalWeights
         warning('NURBS:weights','Some weights in the geometry are not equal. For geometries containing singularities this might be ok (this warning may then be supressed using the key NURBS:weights).')
+        % supress the following warning with warning('off','NURBS:weights')
+        % in your getTask_<model> script if the model contains
+        % singularities
     end
 end
 if prePlot.plot2Dgeometry

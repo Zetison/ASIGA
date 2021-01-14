@@ -151,7 +151,7 @@ end
 %% Collect data into global matrices (and load vector)
 varCol.FF = vectorAssembly(Fvalues,F_indices,noDofs);
 
-varCol.A = sparse(spIdxRow,spIdxCol,Mvalues,noDofs,noDofs);
+varCol.A_K = sparse(spIdxRow,spIdxCol,Mvalues,noDofs,noDofs);
 
 varCol.totNoQP = totNoQP;
 

@@ -1,5 +1,5 @@
 
-studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
+% studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'M1'; %getTask_M1
 % studyName = 'M2'; %getTask_M2
 % studyName = 'M3'; %getTask_M3
@@ -49,7 +49,7 @@ studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 
 %% Venas2018iao
 % studyName = 'articleIGA_convergenceAnalysis'; %getTask_articleIGA_convergenceAnalysis
-% studyName = 'articleIGA_Ihlenburg2'; %getTask_articleIGA_Ihlenburg2 %time
+studyName = 'articleIGA_Ihlenburg2'; %getTask_articleIGA_Ihlenburg2 %time
 % studyName = 'articleIGA_Ihlenburg3'; %getTask_articleIGA_Ihlenburg3 %para
 % studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'articleIGA_IL_sweep'; %getTask_articleIGA_IL_sweep % sweep

@@ -22,7 +22,7 @@ switch media
         if useROM
             p_inc = @(X) p_inc_ROM(X,d_vec,noRHSs,varCol.p_inc);  
         else
-            p_inc = @(X) varCol.p_inc(X).';  
+            p_inc = @(X) varCol.p_inc(X);  
         end
         dp_inc = NaN; % for for-loop transparency
 end
@@ -76,7 +76,7 @@ parfor e = 1:noElems
         case 'fluid' 
             Fvalues(:,e,:) = R{1}'*(dp_inc(X,n).*fact);
         case 'solid'
-            Fvalues(:,e,:) = kron2(n,R{1})*(p_inc(X).*fact);
+            Fvalues(:,e,:) = -kron2(n,R{1})*(p_inc(X).*fact);
     end
     
     indices(:,e) = sctr_f_e.'; 

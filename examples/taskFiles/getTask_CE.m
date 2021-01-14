@@ -30,6 +30,7 @@ beta_s = 0;
 alpha_s = pi/4;
 progressBars = false;        % Show progress bars for building system matrices
 solveForPtot = true;
+warning('off','NURBS:weights')
 
 loopParameters = {'M','parm','f','method','formulation'};
 prePlot.plot3Dgeometry = 1;

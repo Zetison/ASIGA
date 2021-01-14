@@ -1,7 +1,14 @@
+function studies = getTask_articleIGA_Ihlenburg2()
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This study correspond to Table 2 in Venas2018iao
 % Venas2018iao is available at https://doi.org/10.1016/j.cma.2018.02.015 (open access version at http://hdl.handle.net/11250/2493754)
 
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
+
+prePlot.plot2Dgeometry = 0; 
+prePlot.abortAfterPlotting = 1;
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 model = 'IL';
 formulation = 'BGU';
@@ -23,8 +30,9 @@ postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 % postPlot(1).addCommands  = @(study,i_study,studies) addCommands_(i_study,studies);
-M_0 = 4; % 4
-for ii = 1:length(coreMethods) %{'IGA'}
+warning('off','NURBS:weights')
+M_0 = 1; % 4
+for ii = 1:length(coreMethods)
     coreMethod = coreMethods(ii);
     for BC = BCs
         switch BC{1}
@@ -58,6 +66,13 @@ for ii = 1:length(coreMethods) %{'IGA'}
         end
         varCol = setIhlenburgParameters(noDomains);
         varCol{1}.meshFile = 'createNURBSmesh_EL';
+        varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
+        if numel(varCol) > 1
+            varCol{2}.refinement = @(M,t,t_fluid) [2^(M-1)-1, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+        end
+        if numel(varCol) > 2
+            varCol{3}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, max(2^(M-2)-1,0)];
+        end
         alpha_s = pi;
         beta_s = 0;
         plotResultsInParaview = 0;
@@ -102,5 +117,4 @@ if i_study == 1
         end
         fprintf('\n')
     end
-end
 end

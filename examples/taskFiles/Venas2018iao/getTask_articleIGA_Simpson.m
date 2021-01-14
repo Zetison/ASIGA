@@ -66,7 +66,7 @@ postPlot(2).yname           = 'error_pAbs';
 postPlot(2).axisType        = 'semilogy';
 postPlot(2).xScale          = 180/pi;
 postPlot(2).yScale          = 1/100;
-postPlot(2).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
+postPlot(2).addCommands   	= @(study,i_study,studies) addCommands_();
 
 postPlot(3) = postPlot(2);
 postPlot(3).yname       = 'abs_p';
@@ -96,14 +96,13 @@ colBEM_C0 = 0;
 solveForPtot = true;
 collectIntoTasks
 
-function addCommands_(i_study)
-if i_study == 1
-    error_simpson = importdata('miscellaneous/refSolutions/Fig17_M1.csv');
-    loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=1');
-    error_simpson = importdata('miscellaneous/refSolutions/Fig17_M2.csv');
-    loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=2');
-    error_simpson = importdata('miscellaneous/refSolutions/Fig17_M3.csv');
-    loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=3');
-    legend('off');
-    legend('show','Interpreter','latex');
-end
+function addCommands_()
+    
+error_simpson = importdata('miscellaneous/refSolutions/Fig17_M1.csv');
+loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=1');
+error_simpson = importdata('miscellaneous/refSolutions/Fig17_M2.csv');
+loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=2');
+error_simpson = importdata('miscellaneous/refSolutions/Fig17_M3.csv');
+loglog(180/pi*error_simpson(:,1),error_simpson(:,2),'*','DisplayName','Simpson, M=3');
+legend('off');
+legend('show','Interpreter','latex');

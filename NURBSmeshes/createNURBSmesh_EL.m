@@ -107,6 +107,8 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
+    c_x_g = c_x; % 30
+    c_y_g = c_y; % 30
     c_z_g = c_z; % 30
     Upsilon = sqrt(c_z^2-c_x^2);
     if isnan(varCol{1}.r_a)
@@ -142,29 +144,43 @@ else
         fluid = insertKnotsInNURBS(fluid,[0,2^(M-1)-1,max(2^(M-4)-1,0)]);
     else
         fluid = makeUniformNURBSDegree(fluid,degree);
-        fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
+        if isfield(varCol{1},'refinement')
+            fluid = insertKnotsInNURBS(fluid,varCol{1}.refinement(M));
+        else
+            [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
+        end
     end
     
     varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
 
     if numel(varCol) > 1
-        solid = getEllipsoidData('C', R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
+        solid = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
         solid = makeUniformNURBSDegree(solid,degree);
         if explodeNURBSpatches
             solid = explodeNURBS(solid,'eta');
             solid = explodeNURBS(solid,'xi');
         end
-        solid = refineNURBSevenly(solid,(2^(M-1)-1)/(R_i*pi/2),{},0);
+        if isfield(varCol{2},'refinement')
+            solid = insertKnotsInNURBS(solid,varCol{2}.refinement(M,t,t_fluid));
+        else
+            solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,3);
+            solid = insertKnotsInNURBS(solid,{newKnotsIns{1}{1},newKnotsIns{1}{2},{}});
+        end
     end
 
     if numel(varCol) > 2
-        fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i, 'Xi', Xi);
+        fluid_i = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g] - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i, 'Xi', Xi);
         fluid_i = makeUniformNURBSDegree(fluid_i,degree);
         if explodeNURBSpatches
             fluid_i = explodeNURBS(fluid_i,'eta');
             fluid_i = explodeNURBS(fluid_i,'xi');
         end
-        fluid_i = refineNURBSevenly(fluid_i,(2^(M-1)-1)/(varCol{2}.R_i*pi/2),{},0);
+        if isfield(varCol{3},'refinement')
+            fluid_i = insertKnotsInNURBS(fluid_i,varCol{3}.refinement(M));
+        else
+            fluid_i = refineNURBSevenly(fluid_i,(2^(M-1)-1)/refLength,{},0,3);
+            fluid_i = insertKnotsInNURBS(fluid_i,{newKnotsIns{1}{1},newKnotsIns{1}{2},{}});
+        end
     end
 end
 if parm == 2 && degree < 4

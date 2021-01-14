@@ -94,14 +94,22 @@ else
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
                 end
+                varCol{1}.timeBuildSystem = 0;
                 if strcmp(varCol{1}.coreMethod,'SEM')
                     varCol{1} = buildSEMMatrices(varCol{1});
                 else
-                    varCol{1} = buildMatrices(varCol{1});
-                end
-                varCol{1}.timeBuildSystem = toc;
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
+                    for i = 1:noDomains
+                        tic        
+                        % Inner fluid   
+                        if ~runTasksInParallel
+                            fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i) ' ... '])
+                        end
+                        varCol{i} = buildMatrices(varCol{i});
+                        varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                        if ~runTasksInParallel
+                            fprintf('using %12f seconds.', toc)
+                        end
+                    end
                 end
 
                 if strcmp(task.method,'IE') && ~strcmp(varCol{1}.coreMethod,'SEM')
@@ -129,36 +137,10 @@ else
                     end
                 end  
 
-                if noDomains > 1 
-                    tic
-                    % Solid matrices
-                    if ~runTasksInParallel
-                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
-                    end
-                    varCol{2} = buildMatrices(varCol{2});
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                    if ~runTasksInParallel
-                        fprintf('using %12f seconds.', toc)
-                    end
-                end
-
-                if noDomains > 2
-                    tic        
-                    % Inner fluid   
-                    if ~runTasksInParallel
-                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building inner fluid matrix ... ')
-                    end
-                    varCol{3} = buildMatrices(varCol{3});
-
-                    shift = varCol{3}.noDofs;
-                    if ~runTasksInParallel
-                        fprintf('using %12f seconds.', toc)
-                    end
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                end
-
                 % Apply coupling conditions  
                 if noDomains > 1 
+                    varCol{2}.p_inc = varCol{1}.p_inc;
+                    varCol{2}.dp_inc = varCol{1}.dp_inc;
                     tic
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
@@ -198,6 +180,8 @@ else
                 else
                     varCol{1} = infElementsNonSepGeom(varCol{1});  
                 end
+                varCol{1}.A_K = varCol{1}.Ainf;
+                varCol{1} = rmfield(varCol{1},'Ainf');
                 varCol{1}.timeBuildSystem = toc;
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
@@ -220,17 +204,16 @@ else
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building BEM matrix ... ')
                 end
-                switch formulation(1)
+                switch task.formulation(1)
                     case 'G' % Galerkin
                         varCol{1} = buildGBEMmatrix(varCol{1},noDomains > 1);  
                     case 'C' % Collocation
                         varCol{1} = buildCBEMmatrix(varCol{1});  
                 end
-                noDofs_tot = varCol{1}.noDofs;
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
-                if strcmp(formulation(end),'C')
+                if strcmp(task.formulation(end),'C')
                     tic
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
                     varCol{1} = buildCHIEFmatrix(varCol{1});
@@ -290,11 +273,6 @@ else
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building second coupling matrix ... ')
                     end
                     A_coupling = applyCouplingCondition_FEBE(varCol{3});
-                    noDofsInner = varCol{3}.noDofsInner;
-                    solidSurfaceDofs = d*(varCol{3}.noDofs-noDofsInner);
-                    shift2 = varCol{3}.noDofs;
-                    A(shift2+1:shift2+solidSurfaceDofs,noDofsInner+1:shift2) = ...
-                        -A_coupling(noDofsInner+1:end,d*noDofsInner+1:end).';
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
@@ -327,30 +305,85 @@ else
         end
         switch task.method
             case {'IE','IENSG','BEM','BA','ABC','MFS'}
-                Aindices = cell(1,noDomains);
-                noDofs_tot = 0;
+                Aindices = cell(2,noDomains);
+                noRows_tot = 0;
+                noCols_tot = 0;
                 dofsToRemove = [];
                 for i = noDomains:-1:1
-                    Aindices{i} = noDofs_tot+(1:varCol{i}.noDofs);
-                    dofsToRemove = [dofsToRemove (varCol{i}.dofsToRemove+noDofs_tot)];
-                    noDofs_tot = noDofs_tot + varCol{i}.noDofs;
+                    Aindices{1,i} = noRows_tot+(1:size(varCol{i}.A_K,1));
+                    Aindices{2,i} = noCols_tot+(1:size(varCol{i}.A_K,2));
+                    dofsToRemove = [dofsToRemove (varCol{i}.dofsToRemove+noCols_tot)];
+                    noRows_tot = Aindices{1,i}(end);
+                    noCols_tot = Aindices{2,i}(end);
                 end
                 if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
-                    AindicesInf = noDofs_tot+(1:varCol{1}.noDofs_new);
-                    noDofs_tot = noDofs_tot - varCol{1}.noDofs + varCol{1}.noDofs_new;
+                    AindicesInf = noCols_tot+(1:varCol{1}.noDofs_new) - varCol{1}.noDofs;
+                    noCols_tot = noCols_tot - varCol{1}.noDofs + varCol{1}.noDofs_new;
+                    A = sparse(noCols_tot,noCols_tot);
+                    FF = zeros(noCols_tot,varCol{1}.noRHSs);
+                else
+                    A = sparse(Aindices{1,end}(end),Aindices{2,end}(end));
+                    FF = zeros(Aindices{1,end}(end),varCol{1}.noRHSs);
                 end
+                varCol{1}.noDofs_tot = noCols_tot;
+                varCol{1}.allDofsToRemove = dofsToRemove;
+                
+                useOldScaling = false; % The scaling used in Venas2018iao
+                useHetmaniukScaling = true;
                 % Collect all matrices
-                A = sparse(noDofs_tot,noDofs_tot);
-                FF = zeros(noDofs_tot,varCol{1}.noRHSs);
                 for i = 1:noDomains
-%                     j = noDomains-i+1;
-                    A(Aindices{i},Aindices{i}) = varCol{i}.A_K - varCol{i}.k*varCol{i}.A_M; 
-                    FF(Aindices{i},:) = varCol{i}.FF;
+                    switch varCol{i}.media
+                        case 'fluid'
+                            if useOldScaling
+                                eqScale = 1/varCol{i}.rho/omega^2;
+                            else
+                                eqScale = 1/varCol{i}.rho;
+                            end
+                            massMatrixScale = -eqScale*varCol{i}.k^2;
+                            A_Cscale = omega^2;
+                        case 'solid'
+                            if useOldScaling
+                                eqScale = 1;
+                            else
+%                                 eqScale = omega^2;
+                                eqScale = 1;
+                            end
+                            A_Cscale = omega^2;
+                            massMatrixScale = -eqScale*varCol{i}.rho*omega^2;
+                    end
+                    A(Aindices{1,i},Aindices{2,i}) = eqScale*varCol{i}.A_K; 
+                    if isfield(varCol{i},'A_M')
+                        A(Aindices{1,i},Aindices{2,i}) = A(Aindices{1,i},Aindices{2,i}) + massMatrixScale*varCol{i}.A_M; 
+                    end
+                    if i > 1
+                        sz_A_C = size(varCol{i}.A_C);
+                        A_Cindices1 = Aindices{1,i}(end)   + (1:sz_A_C(1));
+                        A_Cindices2 = Aindices{2,i}(1) - 1 + (1:sz_A_C(2));
+                        if useOldScaling
+                            A(A_Cindices1,A_Cindices2) = A(A_Cindices1,A_Cindices2) + varCol{i}.A_C; 
+                            A(A_Cindices2,A_Cindices1) = A(A_Cindices2,A_Cindices1) + varCol{i}.A_C.';
+                        else
+                            A(A_Cindices1,A_Cindices2) = A(A_Cindices1,A_Cindices2) + A_CscalePrev*varCol{i}.A_C; 
+                            A(A_Cindices2,A_Cindices1) = A(A_Cindices2,A_Cindices1) + A_Cscale*varCol{i}.A_C.'; 
+                        end
+                    end
+                    if isfield(varCol{i},'FF')
+                        FF(Aindices{1,i},:) = eqScale*varCol{i}.FF;
+                    end
+                    A_CscalePrev = A_Cscale;
                 end
-                A(AindicesInf,AindicesInf) = A(AindicesInf,AindicesInf) + varCol{1}.Ainf; 
-                A(dofsToRemove,:) = [];
+                if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
+                    if useOldScaling
+                        A(AindicesInf,AindicesInf) = A(AindicesInf,AindicesInf) + 1/varCol{i}.rho/omega^2*varCol{1}.Ainf;
+                    else
+                        A(AindicesInf,AindicesInf) = A(AindicesInf,AindicesInf) + 1/varCol{1}.rho*varCol{1}.Ainf;
+                    end
+                end
+                if ~(strcmp(task.method,'BEM') && strcmp(task.formulation(1),'C'))
+                    A(dofsToRemove,:) = [];
+                    FF(dofsToRemove,:) = [];
+                end
                 A(:,dofsToRemove) = [];
-                FF(dofsToRemove,:) = [];
                 
                 
                 if ~runTasksInParallel
@@ -421,7 +454,7 @@ else
                             end
                             fprintf('using %12f seconds.', toc)
                         else
-                            A = varCol{1}.A_K - varCol{1}.k^2*varCol{1}.A_M + varCol{1}.Ainf;
+%                             A = varCol{1}.A_K - varCol{1}.k^2*varCol{1}.A_M + varCol{1}.Ainf;
                             if strcmp(task.method,'MFS') && strcmp(formulation,'SS')
                                 Pinv = diag(1./max(abs(A)));
                                 UU = diag(Pinv).*((A*Pinv)\FF);
@@ -436,7 +469,7 @@ else
                     fprintf('using %12f seconds.', toc)
                 end
                 varCol{1}.timeSolveSystem = toc;
-                if computeCondNumber && (size(A,1) == size(A,2))
+                if task.computeCondNumber && (size(A,1) == size(A,2))
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating condition number ... ')
                     rng('default') % for reproducibility in condest
                     condNumber = condest(A);
@@ -454,7 +487,7 @@ else
                 end
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*varCol{1}.noElems)/nnz(A_fluid_o))
                 varCol{1}.dofs = dofs;
-                [varCol,U,Uc] = postProcessSolution(varCol,task,UU);
+                [varCol,Uc] = postProcessSolution(varCol,task,UU,i_f);
                 if varCol{1}.boundaryMethod
                     varCol{1}.tau = computeTau(varCol{1});
                 end
@@ -482,9 +515,20 @@ else
             task.results.H1Error(i_f) = H1Error;
             task.results.H1sError(i_f) = H1sError;
         end
-        if strcmp(scatteringCase,'Sweep') && size(k_i,2) > 1
+        if strcmp(task.scatteringCase,'Sweep') && size(k_i,2) > 1
             fprintf('\nTotal time spent on frequency: %12f\n', toc(t_freq))  
         end
+    end
+    if task.clearGlobalMatrices
+        matrixNames = {'A_K','A_M','A_C','FF'};
+        for j = 1:numel(matrixNames)
+            for i = 1:noDomains
+                if isfield(varCol{i},matrixNames{j})
+                    varCol{i} = rmfield(varCol{i},matrixNames{j});
+                end
+            end
+        end
+        clear A FF
     end
 end
 if ~task.useROM
@@ -493,7 +537,7 @@ end
 
 %% Compute scattered pressure    
 tic
-if calculateFarFieldPattern && ~task.useROM
+if task.calculateFarFieldPattern && ~task.useROM
     if ~runTasksInParallel
         fprintf(['\n%-' num2str(stringShift) 's'], 'Computing far-field pattern ... ')
     end
@@ -501,9 +545,9 @@ if calculateFarFieldPattern && ~task.useROM
 
     switch task.method
         case {'IE','ABC','IENSG','BA','BEM'}
-            p_h = calculateScatteredPressure(varCol, Uc, v, 0, plotFarField);
+            p_h = calculateScatteredPressure(varCol, Uc, v, 0, task.plotFarField);
         case 'MFS'
-            p_h = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, plotFarField);
+            p_h = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, task.plotFarField);
         case 'KDT'
             switch varCol{1}.coreMethod
                 case 'linear_FEM'
@@ -612,9 +656,9 @@ if calculateFarFieldPattern && ~task.useROM
     end
     task.results.p = p_h;
     task.results.abs_p = abs(p_h);
-    task.results.TS = 20*log10(abs(p_h/P_inc));
-    if analyticSolutionExist
-        if plotFarField
+    task.results.TS = 20*log10(abs(p_h/varCol{1}.P_inc));
+    if varCol{1}.analyticSolutionExist
+        if task.plotFarField
             p_ref = varCol{1}.p_0(v);
 %             p_ref = exactKDT(varCol{1}.k,varCol{1}.P_inc,parms.R_o);
         else
@@ -622,7 +666,7 @@ if calculateFarFieldPattern && ~task.useROM
         end
         task.results.p_ref = p_ref;
         task.results.abs_p_ref = abs(p_ref);
-        task.results.TS_ref = 20*log10(abs(p_ref/P_inc));
+        task.results.TS_ref = 20*log10(abs(p_ref/varCol{1}.P_inc));
 
         task.results.error_pAbs = 100*abs(abs(p_ref)-abs(p_h))./abs(p_ref);
         task.results.error_p = 100*abs(p_ref-p_h)./abs(p_ref);
@@ -638,19 +682,19 @@ end
 %     task.results.varCol{3} = varCol{3};
 % %     task.results.Uc{3} = Uc{3};
 % end
-if strcmp(scatteringCase,'Ray')
+if strcmp(task.scatteringCase,'Ray')
     plotSolutionAlongRay
 end
 
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
 if ~task.useROM && ~strcmp(task.method,'RT')
-    switch scatteringCase
+    switch task.scatteringCase
         case {'BI', 'Sweep','Ray'}    
             tic
-            if plotResidualError && analyticSolutionExist && strcmp(formulation,'GCBIE')
+            if task.plotResidualError && varCol{1}.analyticSolutionExist && strcmp(task.formulation,'GCBIE')
 %                 close all
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting zeros of residual ... ')
-                plotGalerkinResidual(varCol{1},U);
+                plotGalerkinResidual(varCol{1},Uc);
                 fprintf('using %12f seconds.', toc)
                 axis equal
                 axis off
@@ -693,6 +737,7 @@ if ~task.useROM && ~strcmp(task.method,'RT')
     %             hold off
     %             savefig([resultsFolderName '/' task.saveName '_surfPlot_mesh' num2str(M) '_formulation_' formulation '_degree' num2str(max(fluid.degree)) '.fig'])
             end
+            para = task.para;
             if para.plotResultsInParaview
                 tic
                 if ~runTasksInParallel
@@ -737,7 +782,7 @@ varCol{1}.tot_time = toc(t_start);
 
 fprintf('\nTotal time spent on task: %12f', varCol{1}.tot_time)  
 
-if storeFullvarCol
+if task.storeFullVarCol
     varColTemp = varCol{1};
 else
     varColTemp.alpha = varCol{1}.alpha;
@@ -757,7 +802,7 @@ else
         varColTemp.tot_time = varCol{1}.tot_time;
         varColTemp.noElems = varCol{1}.noElems;
         varColTemp.totNoElems = varCol{1}.totNoElems;
-        if storeSolution
+        if task.storeSolution
             varColTemp.U = varCol{1}.Uc;
         end
         if task.useROM

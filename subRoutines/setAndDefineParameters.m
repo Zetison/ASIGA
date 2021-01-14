@@ -31,7 +31,7 @@ switch task.method
     case {'IENSG','BEM','KDT','MFS','RT'}
         boundaryMethod = true;
     case 'BA'
-        switch formulation
+        switch task.formulation
             case {'SL2E','SL2Etot'}
                 boundaryMethod = true;
             case {'VL2E','VL2Etot'}
@@ -39,13 +39,6 @@ switch task.method
             otherwise
                 error('Not implemented')
         end
-end
-for i = 1:numel(varCol)
-    if mod(i,2)
-        varCol{i}.boundaryMethod = boundaryMethod; % Assume only 3D elasticity is implemented
-    else
-        varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
-    end
 end
 
 varCol{1}.analyticSolutionExist = analyticSolutionExist;
@@ -60,9 +53,17 @@ switch task.scatteringCase
         varCol{1}.alpha_s = task.alpha_s;
         varCol{1}.beta_s  = task.beta_s;
 end
-if varCol{1}.useROM
-    varCol{1}.noRHSs = varCol{1}.noVecs;
-else
-    varCol{1}.noRHSs = numel(varCol{1}.alpha_s);
+
+for i = 1:numel(varCol)
+    if mod(i,2)
+        varCol{i}.boundaryMethod = boundaryMethod; % Assume only 3D elasticity is implemented
+    else
+        varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
+    end
+    if varCol{i}.useROM
+        varCol{i}.noRHSs = varCol{1}.noVecs;
+    else
+        varCol{i}.noRHSs = numel(varCol{1}.alpha_s);
+    end
 end
     

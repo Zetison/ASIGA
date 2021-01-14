@@ -61,7 +61,7 @@ parfor e = 1:innerNoElemsXiEta
     A_e = zeros(d_outer*n_en,d_inner*n_en);
     for gp = 1:size(W,1)
         if d_outer > d_inner
-            A_e = A_e + kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)').'*J_1(gp) * J_2 * W(gp);       
+            A_e = A_e - kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)').'*J_1(gp) * J_2 * W(gp);       
         else
             A_e = A_e + kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)')*J_1(gp) * J_2 * W(gp);       
         end

@@ -1,4 +1,4 @@
-function refinednurbs = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts,dirs,sortImap)
+function [refinednurbs, newKnotsIns] = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts,dirs,sortImap)
 if nargin < 3
     Imap = {};
 end
@@ -20,12 +20,15 @@ if sortImap
 end
 Eps = 1e-10;
 refinednurbs = nurbs;
+noPatches = numel(nurbs);
+newKnotsIns = cell(1,noPatches);
 I_maxRecord = [];
-for patch = 1:numel(nurbs)
+for patch = 1:noPatches
     d_p = nurbs{patch}.d_p;
     if d_p < 2 || d_p > 3
         error('Not implemented for this case')
     end
+    newKnots = cell(1,d_p);
     for dir = dirs
         uniqueXi = unique(nurbs{patch}.knots{dir});
         dir2 = setdiff(1:d_p,dir);
@@ -41,6 +44,7 @@ for patch = 1:numel(nurbs)
         end
         parm_pts = NaN(size(uniqueEta,1),d_p);
         parm_pts(:,dir2) = uniqueEta;
+        newXiKnots = [];
         for j = 1:numel(uniqueXi)-1
             I_max = -Inf;
             for i = 1:size(parm_pts,1)
@@ -58,11 +62,11 @@ for patch = 1:numel(nurbs)
             if ~any(abs(I_maxRecord-I_max) < Eps)
                 I_maxRecord = [I_maxRecord, I_max];
             end
-            newXiKnots = linspace2(uniqueXi(j),uniqueXi(j+1),round(I_max*n));
-            newKnots = cell(1,d_p);
-            newKnots{dir} = newXiKnots;
-            refinednurbs(patch) = insertKnotsInNURBS(refinednurbs(patch),newKnots);
+            newXiKnots = [newXiKnots, linspace2(uniqueXi(j),uniqueXi(j+1),round(I_max*n))];
         end
+        newKnots{dir} = newXiKnots;
     end
+    newKnotsIns{patch} = newKnots;
+    refinednurbs(patch) = insertKnotsInNURBS(refinednurbs(patch),newKnots);
 end
 % I_maxRecord

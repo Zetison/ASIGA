@@ -4,17 +4,17 @@ close all
 addpath(genpath('../export_fig'))
 no2Dpoints = 1000;
 startMatlabPool
-para.plotResultsInParaview = 0;
+para.plotResultsInParaview = 1;
 clear varCol
-% model = 'bridge-quadratic';
-model = 'ScordelisLoRoof';
-prePlot.plot3Dgeometry = false;
+model = 'bridge-quadratic';
+% model = 'ScordelisLoRoof';
+prePlot.plot3Dgeometry = 0;
 
 
-for M = 3
+for M = 2
     switch model
         case 'bridge-quadratic'
-            nurbs = read_g2(['../../../SINTEF/DT/bridge-quadratic/' model '.g2']);
+            nurbs = read_g2(['/home/zetison/OneDrive/SINTEF/DT/bridge-quadratic/' model '.g2']);
             E = 3.0e10;
             nu = 0.2;
             rho = 2500;
@@ -34,6 +34,7 @@ for M = 3
         case 'ScordelisLoRoof'        
             options.degree = 5*ones(1,3);
             options.degree = [4,5,4];
+%             options.degree = [7,7,7];
 %             options.degree = [2,2,2];
             nurbs = eval(['get' model 'Data(options)']);
             E = 4.32e8;
@@ -45,6 +46,11 @@ for M = 3
             noInsPts = 100;
             newKnots = (2^(M-1)-1)*[0,1,1]+[3,0,0];
     end
+    varCol.BC = 'None';    % not needed
+    varCol.media = 'solid';
+    varCol.analyticSolutionExist = false;
+    varCol.applyLoad = 'None'; % no inhomogeneous Neumann condition
+    varCol.boundaryMethod = false;
     nurbs = insertKnotsInNURBS(nurbs,newKnots);
     force = @(v) rho*repmat([0,0,-g],size(v,1),1);
 
@@ -94,7 +100,7 @@ for M = 3
                                        {'fixedXdofs','fixedYdofs','fixedZdofs','midSpanNode'})
             end
     end
-%                 return
+    varCol.progressBars = true;
     d = varCol.dimension;
     fixeddofs = union(union(fixedXdofs*d-2,fixedYdofs*d-1),fixedZdofs*d); 
     dofsToRemove = varCol.dofsToRemove;
@@ -121,7 +127,7 @@ for M = 3
     U = addSolutionToRemovedNodes_new(U, varCol);
     para.U = U;
     celltype = 'VTK_HEXAHEDRON';
-    para.name = ['../../../SINTEF/DT/bridge-quadratic/' model 'ASIGA_' num2str(noInsPts)];
+    para.name = ['/home/zetison/results/ASIGA/' model '/' model 'ASIGA_' num2str(noInsPts)];
     if strcmp(model,'ScordelisLoRoof')
         Uz = U(3:d:noDofs);
         abs(min(Uz))
@@ -157,10 +163,10 @@ for M = 3
         para.plotArtificialBoundary = false;
         para.plotDisplacementVectors = true;
         fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting results in Paraview ... ')
-        createParaviewFiles(varCol, para);
+        createParaviewFiles({varCol}, 'U', {U}, 'para_options', para);
         fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting mesh files in Paraview ... ')
         tic
-        createVTKmeshFiles(varCol, para)
+        createVTKmeshFiles({varCol}, 'U', {U}, 'para_options', para)
         fprintf('using %12f seconds.\n', toc)
     end
 end

@@ -17,6 +17,7 @@ weights = varCol.weights;
 controlPts = varCol.controlPts;
 pIndex = varCol.pIndex;
 noDofs = varCol.noDofs;
+noCtrlPts = varCol.noCtrlPts;
 
 d_f = varCol.fieldDimension;
 d_p = varCol.patches{1}.nurbs.d_p;
@@ -63,8 +64,8 @@ else
 end
 
 %% Build global matrices
-for e = 1:noElems
-% parfor e = 1:noElems
+% for e = 1:noElems
+parfor e = 1:noElems
 	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
@@ -137,6 +138,6 @@ if applyBodyLoading
 end
 
 if buildMassMatrix
-    varCol.A_M = kron(sparse(double(spIdxRowM),double(spIdxColM),Mvalues,noDofs,noDofs,numel(Mvalues)),eye(d_f));
+    varCol.A_M = kron(sparse(double(spIdxRowM),double(spIdxColM),Mvalues,noCtrlPts,noCtrlPts,numel(Mvalues)),eye(d_f));
 end
 

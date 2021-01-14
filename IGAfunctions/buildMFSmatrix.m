@@ -429,7 +429,7 @@ else
     end
     varCol.y_s = reshape(y_s,n_sp,3);
 end
-varCol.A = A;
+varCol.A_K = A;
 varCol.FF = F;
 % 
 % keyboard
