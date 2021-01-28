@@ -17,6 +17,7 @@
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
 % studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
 % studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
 % studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 
 %% Venas2020ibe
@@ -49,7 +50,7 @@
 
 %% Venas2018iao
 % studyName = 'articleIGA_convergenceAnalysis'; %getTask_articleIGA_convergenceAnalysis
-studyName = 'articleIGA_Ihlenburg2'; %getTask_articleIGA_Ihlenburg2 %time
+% studyName = 'articleIGA_Ihlenburg2'; %getTask_articleIGA_Ihlenburg2 %time
 % studyName = 'articleIGA_Ihlenburg3'; %getTask_articleIGA_Ihlenburg3 %para
 % studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'articleIGA_IL_sweep'; %getTask_articleIGA_IL_sweep % sweep

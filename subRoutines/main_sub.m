@@ -1,7 +1,7 @@
 function task = main_sub(task,loopParameters,runTasksInParallel,resultsFolder)
 
 stringShift = 40;
-varCol = extractTaskData(task);
+[varCol,task] = extractTaskData(task);
 task.saveName = defineFolderAndFilenames(task,loopParameters);
 task.resultsFolder = resultsFolder;
 if ~runTasksInParallel
@@ -58,18 +58,11 @@ end
 
 %% Build stiffness matrix
 t_start = tic;
-if task.useROM && strcmp(scatteringCase,'Sweep')
+f = task.f;
+if task.useROM && strcmp(task.scatteringCase,'Sweep')
     U_sweep = cell(1,numel(f));
 end
-f = task.f;
-if strcmp(task.method,'RT') || strcmp(task.method,'KDT')
-    omega = 2*pi*f;
-    varCol{1}.omega = omega;
-    varCol{1}.k = omega/varCol{1}.c_f;
-    varCol{1}.lambda = 2*pi./varCol{1}.k;
-    varCol{1}.f = f;
-    varCol = getAnalyticSolutions(varCol);
-else
+if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
     for i_f = 1:numel(f)
         f_i = f(i_f);
         omega = 2*pi*f_i;
@@ -85,9 +78,7 @@ else
             end
         end
         t_freq = tic;
-        k_i = varCol{1}.k;
         varCol = getAnalyticSolutions(varCol);
-        rho = varCol{1}.rho;
         switch task.method
             case {'IE','ABC'}
                 tic  
@@ -158,6 +149,10 @@ else
                 tic
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building RHS vector ... ')
+                end
+                if task.useROM && noDomains > 1
+                    varCol{2}.p_inc_ROM = varCol{1}.p_inc_ROM;
+                    varCol{2}.dp_inc_ROM = varCol{1}.dp_inc_ROM;
                 end
                 for i = 1:min(noDomains,2)
                     varCol{i} = applyNeumannCondition(varCol{i},i==2);
@@ -250,29 +245,18 @@ else
                         fprintf('using %12f seconds.', toc)
                     end
                 end
-                % Apply coupling conditions    
+
+                % Apply coupling conditions  
                 if noDomains > 1 
                     tic
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
+                    end  
+                    for i = 2:noDomains
+                        if strcmp(varCol{i}.media,'fluid')
+                            varCol{i} = applyCouplingCondition_FEBE(varCol{i});
+                        end
                     end
-                    A_coupling = applyCouplingCondition_FEBE(varCol{1});
-                    d = 3;
-                    solidSurfaceDofs = d*varCol{1}.noDofs;
-                    shift2 = shift+varCol{2}.noDofs;
-                    A(shift2-solidSurfaceDofs+1:shift2,shift2+1:shift2+varCol{1}.noDofs) = A_coupling.';
-                    if ~runTasksInParallel
-                        fprintf('using %12f seconds.', toc)
-                    end
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                end
-
-                if noDomains > 2 
-                    tic
-                    if ~runTasksInParallel
-                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building second coupling matrix ... ')
-                    end
-                    A_coupling = applyCouplingCondition_FEBE(varCol{3});
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
@@ -305,86 +289,8 @@ else
         end
         switch task.method
             case {'IE','IENSG','BEM','BA','ABC','MFS'}
-                Aindices = cell(2,noDomains);
-                noRows_tot = 0;
-                noCols_tot = 0;
-                dofsToRemove = [];
-                for i = noDomains:-1:1
-                    Aindices{1,i} = noRows_tot+(1:size(varCol{i}.A_K,1));
-                    Aindices{2,i} = noCols_tot+(1:size(varCol{i}.A_K,2));
-                    dofsToRemove = [dofsToRemove (varCol{i}.dofsToRemove+noCols_tot)];
-                    noRows_tot = Aindices{1,i}(end);
-                    noCols_tot = Aindices{2,i}(end);
-                end
-                if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
-                    AindicesInf = noCols_tot+(1:varCol{1}.noDofs_new) - varCol{1}.noDofs;
-                    noCols_tot = noCols_tot - varCol{1}.noDofs + varCol{1}.noDofs_new;
-                    A = sparse(noCols_tot,noCols_tot);
-                    FF = zeros(noCols_tot,varCol{1}.noRHSs);
-                else
-                    A = sparse(Aindices{1,end}(end),Aindices{2,end}(end));
-                    FF = zeros(Aindices{1,end}(end),varCol{1}.noRHSs);
-                end
-                varCol{1}.noDofs_tot = noCols_tot;
-                varCol{1}.allDofsToRemove = dofsToRemove;
-                
-                useOldScaling = false; % The scaling used in Venas2018iao
-                useHetmaniukScaling = true;
-                % Collect all matrices
-                for i = 1:noDomains
-                    switch varCol{i}.media
-                        case 'fluid'
-                            if useOldScaling
-                                eqScale = 1/varCol{i}.rho/omega^2;
-                            else
-                                eqScale = 1/varCol{i}.rho;
-                            end
-                            massMatrixScale = -eqScale*varCol{i}.k^2;
-                            A_Cscale = omega^2;
-                        case 'solid'
-                            if useOldScaling
-                                eqScale = 1;
-                            else
-%                                 eqScale = omega^2;
-                                eqScale = 1;
-                            end
-                            A_Cscale = omega^2;
-                            massMatrixScale = -eqScale*varCol{i}.rho*omega^2;
-                    end
-                    A(Aindices{1,i},Aindices{2,i}) = eqScale*varCol{i}.A_K; 
-                    if isfield(varCol{i},'A_M')
-                        A(Aindices{1,i},Aindices{2,i}) = A(Aindices{1,i},Aindices{2,i}) + massMatrixScale*varCol{i}.A_M; 
-                    end
-                    if i > 1
-                        sz_A_C = size(varCol{i}.A_C);
-                        A_Cindices1 = Aindices{1,i}(end)   + (1:sz_A_C(1));
-                        A_Cindices2 = Aindices{2,i}(1) - 1 + (1:sz_A_C(2));
-                        if useOldScaling
-                            A(A_Cindices1,A_Cindices2) = A(A_Cindices1,A_Cindices2) + varCol{i}.A_C; 
-                            A(A_Cindices2,A_Cindices1) = A(A_Cindices2,A_Cindices1) + varCol{i}.A_C.';
-                        else
-                            A(A_Cindices1,A_Cindices2) = A(A_Cindices1,A_Cindices2) + A_CscalePrev*varCol{i}.A_C; 
-                            A(A_Cindices2,A_Cindices1) = A(A_Cindices2,A_Cindices1) + A_Cscale*varCol{i}.A_C.'; 
-                        end
-                    end
-                    if isfield(varCol{i},'FF')
-                        FF(Aindices{1,i},:) = eqScale*varCol{i}.FF;
-                    end
-                    A_CscalePrev = A_Cscale;
-                end
-                if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
-                    if useOldScaling
-                        A(AindicesInf,AindicesInf) = A(AindicesInf,AindicesInf) + 1/varCol{i}.rho/omega^2*varCol{1}.Ainf;
-                    else
-                        A(AindicesInf,AindicesInf) = A(AindicesInf,AindicesInf) + 1/varCol{1}.rho*varCol{1}.Ainf;
-                    end
-                end
-                if ~(strcmp(task.method,'BEM') && strcmp(task.formulation(1),'C'))
-                    A(dofsToRemove,:) = [];
-                    FF(dofsToRemove,:) = [];
-                end
-                A(:,dofsToRemove) = [];
-                
+                [varCol,FF,A0,A1,A2,A4] = collectMatrices(varCol,task);
+                A = A0 + omega*A1 + omega^2*A2 + omega^4*A4;
                 
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Total time building system ... ')
@@ -426,40 +332,47 @@ else
                         % noRestarts = 2;
                         [UU,~,~,it1,rv1] = gmres(A,FF,noRestarts,1e-20,1000,L_A,U_A);
                     case 'LU'
-                        
-                                
                         if task.useROM
-                            A = A_K - k_i^2*A_M + k_i^2*A_2 + k_i*A_1 + A_0;
-                            dAdk = -2*k_i*A_M + 2*k_i*A_2 + A_1;
-                            d2Adk2 = -2*A_M + 2*A_2;
+                            dAdomega = A1 + 2*omega*A2 + 4*omega^3*A4;
+                            d2Adomega2 = 2*A2 + 12*omega^2*A4;
                             if task.useDGP
-                                varCol{1}.A_gamma_a = A_2;
-                                varCol{1}.A2_gamma_a = A_1;
-                                varCol{1}.A3_gamma_a = A_0;
+                                varCol{1}.A0 = A0;
+                                varCol{1}.A1 = A1;
+                                varCol{1}.A2 = A2;
                             end
                             UU = zeros(size(FF));
                             dA = decomposition(A,'lu');
                             fprintf('using %12f seconds.', toc)
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
-                            for i = 1:noVecs
+                            for i = 1:varCol{1}.noRHSs
                                 j = i-1;
                                 b = FF(:,i);
                                 if j > 0
-                                    b = b - j*dAdk*UU(:,i-1);
+                                    b = b - j*dAdomega*UU(:,i-1);
                                 end
                                 if j > 1
-                                    b = b - j*(j-1)/2*d2Adk2*UU(:,i-2);
+                                    b = b - j*(j-1)/2*d2Adomega2*UU(:,i-2);
                                 end
                                 UU(:,i) = dA\b;
                             end
-                            fprintf('using %12f seconds.', toc)
                         else
+                            if i_f == 1 && strcmp(task.formulation,'Sweep')
+                                UU = zeros(size(A,1),numel(f));
+                            end
 %                             A = varCol{1}.A_K - varCol{1}.k^2*varCol{1}.A_M + varCol{1}.Ainf;
                             if strcmp(task.method,'MFS') && strcmp(formulation,'SS')
                                 Pinv = diag(1./max(abs(A)));
-                                UU = diag(Pinv).*((A*Pinv)\FF);
+                                if strcmp(task.scatteringCase,'Sweep')
+                                    UU(:,i_f) = diag(Pinv).*((A*Pinv)\FF);
+                                else
+                                    UU = diag(Pinv).*((A*Pinv)\FF);
+                                end
                             else
-                                UU = A\FF;
+                                if strcmp(task.scatteringCase,'Sweep')
+                                    UU(:,i_f) = A\FF;
+                                else
+                                    UU = A\FF;
+                                end
                             end
                         end
                     otherwise
@@ -486,19 +399,41 @@ else
                     fprintf('\nNumber of degrees of freedom = %d', dofs)
                 end
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*varCol{1}.noElems)/nnz(A_fluid_o))
-                varCol{1}.dofs = dofs;
-                [varCol,Uc] = postProcessSolution(varCol,task,UU,i_f);
-                if varCol{1}.boundaryMethod
-                    varCol{1}.tau = computeTau(varCol{1});
-                end
         end
-        if task.useROM && strcmp(scatteringCase,'Sweep')
+        varCol{1}.dofs = dofs;
+        if task.useROM && strcmp(task.scatteringCase,'Sweep')
+            [varCol,Uc] = postProcessSolution(varCol,task,UU);
             U_sweep{i_f} = Uc{1}(1:varCol{1}.noDofs,:);
             U_sweep2{i_f} = Uc{1};
-            if strcmp(BC,'SSBC') || strcmp(BC,'NNBC')
+            if strcmp(task.BC,'SSBC') || strcmp(task.BC,'NNBC')
                 error('not implemented due to noDofs')
             end
         end
+        if strcmp(task.scatteringCase,'Sweep') && numel(f) > 1
+            fprintf('\nTotal time spent on frequency: %12f\n', toc(t_freq))  
+        end
+    end
+    if ~task.useROM
+        [varCol,Uc] = postProcessSolution(varCol,task,UU);
+        if varCol{1}.boundaryMethod
+            varCol{1}.tau = computeTau(varCol{1});
+        end
+    end
+    for i_f = 1:numel(f)
+        f_i = f(i_f);
+        omega = 2*pi*f_i;
+        for m = 1:noDomains
+            varCol{m}.omega = omega;
+            switch varCol{m}.media
+                case 'fluid'
+                    varCol{m}.f = f_i;
+                    varCol{m}.k = omega/varCol{m}.c_f;
+                    varCol{m}.lambda = 2*pi/varCol{m}.k;
+                case 'solid'
+                    varCol{m}.k = NaN;
+            end
+        end
+        varCol = getAnalyticSolutions(varCol);
         if ~task.useROM
             if i_f == 1
                 task.results.energyError = zeros(1,size(f,2));
@@ -507,183 +442,39 @@ else
                 task.results.H1sError = zeros(1,size(f,2));
                 task.results.surfaceError = zeros(1,size(f,2));
             end
+            Uctemp = cell(1,noDomains);
+            for i = 1:noDomains
+                Uctemp{i} = Uc{i}(:,i_f);
+            end
             [L2Error, H1Error, H1sError, energyError, surfaceError] ...
-                = calculateErrors(task, varCol, Uc, runTasksInParallel, stringShift, i_f);
+                = calculateErrors(task, varCol, Uctemp, runTasksInParallel, stringShift);
             task.results.surfaceError(i_f) = surfaceError;
             task.results.energyError(i_f) = energyError;
             task.results.L2Error(i_f) = L2Error;
             task.results.H1Error(i_f) = H1Error;
             task.results.H1sError(i_f) = H1sError;
         end
-        if strcmp(task.scatteringCase,'Sweep') && size(k_i,2) > 1
-            fprintf('\nTotal time spent on frequency: %12f\n', toc(t_freq))  
-        end
     end
     if task.clearGlobalMatrices
-        matrixNames = {'A_K','A_M','A_C','FF'};
-        for j = 1:numel(matrixNames)
-            for i = 1:noDomains
-                if isfield(varCol{i},matrixNames{j})
-                    varCol{i} = rmfield(varCol{i},matrixNames{j});
-                end
-            end
-        end
+        varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
         clear A FF
     end
+end  
+
+%% Compute scattered pressure   
+if task.calculateFarFieldPattern && ~task.useROM
+    omega = 2*pi*f;
+    varCol{1}.omega = omega;
+    varCol{1}.k = omega/varCol{1}.c_f;
+    varCol{1}.lambda = 2*pi./varCol{1}.k;
+    varCol{1}.f = f;
+    varCol = getAnalyticSolutions(varCol);
+    task = calculateTS(varCol,task,Uc,runTasksInParallel,stringShift);
 end
 if ~task.useROM
     varCol{1}.k = (2*pi*f)/varCol{1}.c_f;
-end
-
-%% Compute scattered pressure    
-tic
-if task.calculateFarFieldPattern && ~task.useROM
-    if ~runTasksInParallel
-        fprintf(['\n%-' num2str(stringShift) 's'], 'Computing far-field pattern ... ')
-    end
-    v = getFarFieldPoints(task.alpha,task.beta,task.r);
-
-    switch task.method
-        case {'IE','ABC','IENSG','BA','BEM'}
-            p_h = calculateScatteredPressure(varCol, Uc, v, 0, task.plotFarField);
-        case 'MFS'
-            p_h = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, task.plotFarField);
-        case 'KDT'
-            switch varCol{1}.coreMethod
-                case 'linear_FEM'
-                    noElems = varCol{1}.noElems;
-                    element = varCol{1}.element;
-                    tri = NaN(size(element,1),2,3);
-                    P = varCol{1}.controlPts;
-                    Eps = 1e2*eps;
-                    for e = 1:noElems
-                        sctr = element(e,:);
-                        P1 = P(sctr(1),:);
-                        P2 = P(sctr(2),:);
-                        P3 = P(sctr(3),:);
-                        P4 = P(sctr(4),:);
-                        tri_e = NaN(1,2,3);
-                        if norm(P1-P2) < Eps
-                            tri_e(1,1,:) = element(e,[1,4,3]);
-                        elseif norm(P1-P3) < Eps
-                            tri_e(1,1,:) = element(e,[1,2,4]);
-                        elseif norm(P2-P4) < Eps || norm(P3-P4) < Eps
-                            tri_e(1,1,:) = element(e,[1,2,3]);
-                        else
-                            if norm(P2-P3) > norm(P1-P4)
-                                tri_e(1,1,:) = element(e,[1,2,4]);
-                                tri_e(1,2,:) = element(e,[1,4,3]);
-                            else
-                                tri_e(1,1,:) = element(e,[1,2,3]);
-                                tri_e(1,2,:) = element(e,[2,4,3]);
-                            end                                
-                        end
-                        tri(e,:,:) = tri_e;
-                    end
-                    tri = reshape(tri,size(tri,1)*size(tri,2),3);
-                    tri(any(isnan(tri),2),:) = [];
-
-                    %% Find h_max and store results
-                    varCol{1}.h_max = max([norm2(P(tri(:,1),:)-P(tri(:,2),:)); 
-                                        norm2(P(tri(:,1),:)-P(tri(:,3),:)); 
-                                        norm2(P(tri(:,2),:)-P(tri(:,3),:))]);
-                    varCol{1}.dofs = size(unique(tri,'rows','stable'),1);
-                    varCol{1}.nepw = lambda(1)./varCol{1}.h_max;
-                    varCol{1}.noElems = size(tri,1);
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                     trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', getColor(1))
-%                     view(106,26) % sphere and cube
-%                     axis off
-%                     axis equal
-%                     camlight
-%                     ax = gca;               % get the current axis
-%                     ax.Clipping = 'off';    % turn clipping off
-%                     figureFullScreen(gcf)
-% %                     
-%                     export_fig(['../../graphics/sphericalShell/trianglesParm2_' num2str(varCol{1}.noElems)], '-png', '-transparent', '-r300')
-%                     
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    
-                    
-                    p_h = kirchApprTri(tri,P,v,varCol{1});
-                case 'IGA'
-                    varCol{1}.h_max = findMaxElementDiameter(varCol{1}.patches);
-                    varCol{1}.nepw = varCol{1}.lambda./varCol{1}.h_max;
-                    varCol{1}.dofs = varCol{1}.noDofs;
-%                     p = calculateScatteredPressureBA(varCol{1}, Uc{1}, v, 0, plotFarField);
-                    p_h = calculateScatteredPressureKDT(varCol{1}, v, plotFarField);
-            end
-        case 'RT'
-            switch scatteringCase
-                case 'MS'
-                    d_vec = varCol{1}.d_vec;
-                    p_h = zeros(size(d_vec,2),1);
-%                     for i = 1:size(d_vec,2) %874%
-                    plotFarField = task.plotFarField;
-                    noIncDir = size(d_vec,2);
-                    progressBars = varCol{1}.progressBars;
-                    nProgressStepSize = ceil(noIncDir/1000);
-                    if progressBars
-                        ppm = ParforProgMon('Tracing rays: ', noIncDir, nProgressStepSize);
-                    else
-                        ppm = NaN;
-                    end
-%                     for i = 1:noIncDir
-                    parfor i = 1:noIncDir
-                        if progressBars && mod(i,nProgressStepSize) == 0
-                            ppm.increment();
-                        end
-                        varColTemp2 = varCol{1};
-                        varColTemp2.d_vec = d_vec(:,i);
-%                         tic
-                        varColTemp2 = createRays(varColTemp2);
-%                         fprintf('\nCreating rays in %12f seconds.', toc)
-%                         tic
-                        varColTemp2 = traceRays(varColTemp2);    
-%                         fprintf('\nTracing rays in %12f seconds.', toc)
-%                         tic        
-                        p_h(i) = calculateScatteredPressureRT(varColTemp2, v(i,:), plotFarField);
-%                         fprintf('\nFar field in %12f seconds.', toc)
-                    end
-                otherwise
-                    varCol{1} = createRays(varCol{1});
-                    varCol{1} = traceRays(varCol{1});            
-                    p_h = calculateScatteredPressureRT(varCol{1}, v, plotFarField);
-            end
-    end
-    if ~runTasksInParallel
-        fprintf('using %12f seconds.', toc)
-    end
-    task.results.p = p_h;
-    task.results.abs_p = abs(p_h);
-    task.results.TS = 20*log10(abs(p_h/varCol{1}.P_inc));
-    if varCol{1}.analyticSolutionExist
-        if task.plotFarField
-            p_ref = varCol{1}.p_0(v);
-%             p_ref = exactKDT(varCol{1}.k,varCol{1}.P_inc,parms.R_o);
-        else
-            p_ref = varCol{1}.p(v);
-        end
-        task.results.p_ref = p_ref;
-        task.results.abs_p_ref = abs(p_ref);
-        task.results.TS_ref = 20*log10(abs(p_ref/varCol{1}.P_inc));
-
-        task.results.error_pAbs = 100*abs(abs(p_ref)-abs(p_h))./abs(p_ref);
-        task.results.error_p = 100*abs(p_ref-p_h)./abs(p_ref);
-    end
-end
-
-% task.results.Uc{1} = Uc{1};
-% if noDomains > 1
-%     task.results.varCol{2} = varCol{2};
-% %     task.results.Uc{2} = Uc{2};
-% end
-% if noDomains > 2
-%     task.results.varCol{3} = varCol{3};
-% %     task.results.Uc{3} = Uc{3};
-% end
-if strcmp(task.scatteringCase,'Ray')
-    plotSolutionAlongRay
+    varCol{1}.f = f;
+    varCol{1}.omega = f/(2*pi);
 end
 
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
@@ -783,49 +574,20 @@ varCol{1}.tot_time = toc(t_start);
 fprintf('\nTotal time spent on task: %12f', varCol{1}.tot_time)  
 
 if task.storeFullVarCol
-    varColTemp = varCol{1};
+    varColTemp = varCol;
+    if task.useROM
+        varColTemp{1}.allDofsToRemove = varCol{1}.allDofsToRemove;
+        varColTemp{1}.U_sweep = U_sweep;
+        varColTemp{1}.U_sweep2 = U_sweep2;
+        if task.useDGP
+            varColTemp{1}.A0 = A0;
+            varColTemp{1}.A1 = A1;
+            varColTemp{1}.A2 = A2;
+        end
+    elseif task.storeSolution
+        varColTemp{1}.U = varCol{1}.Uc;
+    end
+    task.varCol = varColTemp;
 else
-    varColTemp.alpha = varCol{1}.alpha;
-    varColTemp.beta = varCol{1}.beta;
-    varColTemp.k = varCol{1}.k;
-    varColTemp.f = varCol{1}.f;
-    varColTemp.c_f = varCol{1}.c_f;
-    if ~strcmp(task.method,'RT') && ~strcmp(task.method,'KDT')
-        varColTemp.surfDofs = varCol{1}.surfDofs;
-        varColTemp.dofs = varCol{1}.dofs;
-        varColTemp.dofsAlg = (varCol{1}.dofs)^(1/3);
-        varColTemp.h_max = varCol{1}.h_max;
-        if isfield(varCol{1},'tau')
-            varColTemp.tau = varCol{1}.tau;
-        end
-        varColTemp.nepw = varCol{1}.nepw;
-        varColTemp.tot_time = varCol{1}.tot_time;
-        varColTemp.noElems = varCol{1}.noElems;
-        varColTemp.totNoElems = varCol{1}.totNoElems;
-        if task.storeSolution
-            varColTemp.U = varCol{1}.Uc;
-        end
-        if task.useROM
-            varColTemp.U_sweep = U_sweep;
-            varColTemp.U_sweep2 = U_sweep2;
-        end
-        if isfield(varCol{1},'N')
-            varColTemp.N = varCol{1}.N;
-        end
-        if isfield(varCol{1},'timeBuildSystem')
-            varColTemp.timeBuildSystem = varCol{1}.timeBuildSystem;
-        end
-        if isfield(varCol{1},'timeSolveSystem')
-            varColTemp.timeSolveSystem = varCol{1}.timeSolveSystem;
-        end
-        if isfield(varCol{1},'totNoQP')
-            varColTemp.totNoQP = varCol{1}.totNoQP;
-        end
-        if isfield(varCol{1},'totNoQPnonPolar')
-            varColTemp.totNoQPnonPolar = varCol{1}.totNoQPnonPolar;
-        end
-    end 
-    varColTemp.analyticSolutionExist = varCol{1}.analyticSolutionExist;
-    varColTemp.boundaryMethod = varCol{1}.boundaryMethod;
+    task.varCol = extractVarColFields(task,varCol);
 end
-task.varCol{1} = varColTemp;

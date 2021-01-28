@@ -10,17 +10,21 @@ d_f = varCol.fieldDimension;
 media = varCol.media;
 useROM = varCol.useROM;
 noRHSs = varCol.noRHSs;
+if useROM
+    dp_inc_ROM = varCol.dp_inc_ROM;
+    p_inc_ROM = varCol.p_inc_ROM;
+end
 switch media
     case 'fluid' 
         if useROM
-            dp_inc = @(X,n) dp_inc_ROM(X,n,d_vec,noRHSs,varCol.p_inc);  
+            dp_inc = @(X,n) dp_inc_ROM(X,n);  
         else
             dp_inc = @(X,n) varCol.dp_inc(X,n);  
         end
         p_inc = NaN; % for for-loop transparency
     case 'solid'
         if useROM
-            p_inc = @(X) p_inc_ROM(X,d_vec,noRHSs,varCol.p_inc);  
+            p_inc = @(X) p_inc_ROM(X);  
         else
             p_inc = @(X) varCol.p_inc(X);  
         end
@@ -87,21 +91,6 @@ for i = 1:noRHSs
     F(:,i) = vectorAssembly(Fvalues(:,:,i),indices,noDofs);
 end
 varCol.FF = F;
-
-function dp_inc_ROM = dp_inc_ROM(X,n,d_vec,noRHSs,p_inc)
-
-m = 0:(noRHSs-1);
-d_vecX = X*d_vec;
-temp = zeros(numel(d_vecX),noRHSs);
-temp(:,2:end) = (1/d_vecX)*m(2:end);
-dp_inc_ROM = -(n*d_vec)*exp(1i*pi*m/2).*p_inc(X).*d_vecX.^m.*(temp+1i*k);
-
-function p_inc_ROM = p_inc_ROM(X,d_vec,noRHSs,p_inc)
-
-m = 0:(noRHSs-1);
-d_vecX = X*d_vec;
-p_inc_ROM = p_inc(X).*d_vecX.^m;
-
 
 
 

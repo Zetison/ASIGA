@@ -1,3 +1,4 @@
+error('Depricated, use calculateScatteredPressure() instead')
 if true % plot only inside artificial boundary
 %     xi = 0;
 %     eta = 0.5;

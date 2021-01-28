@@ -206,7 +206,9 @@ if plotResults
     switch xname
         case 'alpha'
             xLabel = '$$\alpha$$';
-        case 'f'
+        case {'omega','omega_ROM'}
+            xLabel = '$$\omega$$';
+        case {'f','f_ROM'}
             xLabel = '$$f$$';
         case {'k','k_ROM'}
             xLabel = '$$k$$';

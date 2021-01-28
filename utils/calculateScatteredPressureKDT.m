@@ -133,6 +133,9 @@ switch formulation
             end
         end
 end
+if numel(k) > 1
+    p_h = p_h.';
+end
 if computeFarField
     p_h = -1/(4*pi)*p_h;
 end

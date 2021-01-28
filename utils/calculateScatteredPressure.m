@@ -85,7 +85,7 @@ else
 end
 [Q, W] = gaussTensorQuad([noGpXi,noGpEta]); 
 
-p_h = zeros(size(P_far,1),1);
+p_h = zeros(size(P_far,1),numel(k));
 
 % for i = 1:length(surfaceElements) %
 parfor i = 1:length(surfaceElements)
@@ -161,20 +161,23 @@ parfor i = 1:length(surfaceElements)
         x_d_n = normals*X.';
         x_d_y = Y*X.';
         if solveForPtot
-            p_h = p_h + (1i*k*p_h_gp.*x_d_n.*exp(-1i*k*x_d_y)).'* (J_1 * J_2 .* W);  
+            p_h = p_h + (1i*k.*p_h_gp.*x_d_n.*exp(-1i*k.*x_d_y)).'* (J_1 * J_2 .* W);  
         else
-            p_h = p_h + ((1i*k*p_h_gp.*x_d_n + dp_h_gp).*exp(-1i*k*x_d_y)).'* (J_1 * J_2 .* W);  
+            p_h = p_h + ((1i*k.*p_h_gp.*x_d_n + dp_h_gp).*exp(-1i*k.*x_d_y)).'* (J_1 * J_2 .* W);  
         end
     else
         xmy = reshape(P_far,[1,size(P_far,1),3]) - reshape(Y,[size(Y,1),1,3]);
         r = norm2(xmy);
-        dPhidny =  Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*repmat(reshape(normals,size(normals,1),1,3),1,size(P_far,1),1),3);
+        dPhidny =  Phi_k(r)./r.^2.*(1 - 1i*k.*r).*sum(xmy.*repmat(reshape(normals,size(normals,1),1,3),1,size(P_far,1),1),3);
         if solveForPtot
             p_h = p_h + (p_h_gp.*dPhidny).'* (J_1 * J_2 .* W); 
         else 
             p_h = p_h + (p_h_gp.*dPhidny - dp_h_gp.*Phi_k(r)).'* (J_1 * J_2 .* W);
         end 
     end
+end
+if numel(k) > 1
+    p_h = p_h.';
 end
 if computeFarField
     p_h = -1/(4*pi)*p_h;

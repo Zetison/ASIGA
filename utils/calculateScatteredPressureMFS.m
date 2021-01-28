@@ -48,4 +48,7 @@ switch varCol.formulation
         end
 
 end
+if numel(k) > 1
+    p_h = p_h.';
+end
 

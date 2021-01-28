@@ -1,4 +1,4 @@
-function varCol = extractTaskData(task)
+function [varCol,task] = extractTaskData(task)
 
 formulation = task.formulation;
 scatteringCase = task.scatteringCase;

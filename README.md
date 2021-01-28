@@ -12,6 +12,23 @@ git clone https://github.com/altmany/export_fig
 git clone https://github.com/Zetison/e3Dss 
 git clone https://github.com/Zetison/ASIGA
 ```
+In order to convert .iges-files to g2-files (which can be read using ASIGA), one needs the iges2go converter program from GoTools (which can be installed from https://github.com/SINTEF-Geometry/GoTools).
+```
+git clone --recursive https://github.com/SINTEF-Geometry/GoTools.git
+git remote add Zetison https://github.com/Zetison/GoTools
+git pull Zetison master
+
+git clone git@github.com:Zetison/GoTools.git
+cd GoTools
+mkdir build
+cd build
+ccmake .. # Follow instructions
+make
+sudo make install
+sudo ln -s $HOME/kode/GoTools/build/igeslib/app/iges2go /usr/local/bin/iges2go
+iges2go < ~/kode/ASIGA/miscellaneous/FreeCADsphere.iges > ~/kode/ASIGA/miscellaneous/FreeCADsphere.g2
+
+```
 
 ## Run program
 The following will run the input script scriptName.m (given that studyName = 'scriptName'; is set in availableStudies.m)

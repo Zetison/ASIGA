@@ -1,12 +1,12 @@
-function [varCol,Uc] = postProcessSolution(varCol,task,UU,i_f)
+function [varCol,Uc] = postProcessSolution(varCol,task,UU)
 
 %% Sort data from UU into Uc{1}, Uc{2}, and Uc{3}
 if strcmp(task.method,'MFS')
     Uc{1} = UU;
 else
-    noDofs_tot = varCol{1}.noDofs_tot;
-    U = zeros(noDofs_tot,size(UU,2));
-    U(setdiff(1:noDofs_tot, varCol{1}.allDofsToRemove'),:) = UU;   
+    noCols_tot = varCol{1}.noCols_tot;
+    U = zeros(noCols_tot,size(UU,2));
+    U(setdiff(1:noCols_tot, varCol{1}.allDofsToRemove'),:) = UU;   
 
     switch numel(varCol)
         case 1
@@ -33,21 +33,19 @@ else
 end
 
 %% Find h_max and store results
-if i_f == 1
-    h_max_fluid = findMaxElementDiameter(varCol{1}.patches);
-    h_max = h_max_fluid;
-    if numel(varCol) > 1
-        h_max_solid = findMaxElementDiameter(varCol{2}.patches);
-        h_max = max([h_max, h_max_solid]);
-    end
-    if numel(varCol) > 2
-        h_max_fluid_i = findMaxElementDiameter(varCol{3}.patches);
-        h_max = max([h_max, h_max_fluid_i]);
-    end
-    varCol{1}.h_max = h_max;
-    varCol{1}.nepw = varCol{1}.lambda./h_max;
-    varCol{1}.surfDofs = getNoSurfDofs(varCol{1});
-    if task.storeSolution
-        varCol{1}.U = Uc{1};
-    end
+h_max_fluid = findMaxElementDiameter(varCol{1}.patches);
+h_max = h_max_fluid;
+if numel(varCol) > 1
+    h_max_solid = findMaxElementDiameter(varCol{2}.patches);
+    h_max = max([h_max, h_max_solid]);
+end
+if numel(varCol) > 2
+    h_max_fluid_i = findMaxElementDiameter(varCol{3}.patches);
+    h_max = max([h_max, h_max_fluid_i]);
+end
+varCol{1}.h_max = h_max;
+varCol{1}.nepw = varCol{1}.lambda./h_max;
+varCol{1}.surfDofs = getNoSurfDofs(varCol{1});
+if task.storeSolution
+    varCol{1}.U = Uc{1};
 end
