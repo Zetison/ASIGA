@@ -29,8 +29,8 @@ f = 1000;
  
 calculateSurfaceError = 1;
 calculateFarFieldPattern = 1;
-prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plot3Dgeometry = 0;
+prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
+prePlot.plot3Dgeometry = 1;
 prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [200,400];
 
@@ -63,7 +63,7 @@ degree = 3; % FreeCAD exports to p = 3
 M = 1:2; % 5
 solveForPtot = true;
 loopParameters = {'M','method'};
-collectIntoTasks
+% collectIntoTasks
 
 method = {'BA'};
 formulation = {'SL2E'};

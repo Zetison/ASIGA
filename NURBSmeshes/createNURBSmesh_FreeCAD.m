@@ -5,7 +5,8 @@ switch varCol{1}.method
         error('Not implemented')
 end
 if varCol{1}.boundaryMethod
-    fluid = read_g2('~/kode/ASIGA/miscellaneous/FreeCADsphere.g2');
+    fluid = read_g2('~/kode/ASIGA/miscellaneous/FreeCAD.g2');
+    X = computeBoundingBox(fluid);
     surfObjs = [];
     for i = 1:numel(fluid)
         if fluid{i}.d_p == 2
@@ -13,8 +14,11 @@ if varCol{1}.boundaryMethod
         end
     end
     fluid = fluid(surfObjs);
+    fluid = permuteNURBS(fluid,[2,1]);
+    fluid = flipNURBSparametrization(fluid,1);
 %     fluid = scaleNURBS(fluid,1/1000); % Scale from mm to m
-    refLength = 1;
+    L_gamma = max(X(:,2)-X(:,1));
+    refLength = L_gamma/10;
     fluid = makeUniformNURBSDegree(fluid,degree);
     fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
     
@@ -32,5 +36,4 @@ else
 end
 varCol{1}.nurbs = fluid;
 
-X = computeBoundingBox(fluid);
 varCol{1}.L_gamma = max(X(:,2)-X(:,1));

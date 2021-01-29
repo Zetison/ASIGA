@@ -459,6 +459,8 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
         clear A FF
     end
+else
+    Uc = cell(1);
 end  
 
 %% Compute scattered pressure   
@@ -545,6 +547,7 @@ if ~task.useROM && ~strcmp(task.method,'RT')
 
 
                 para.plotArtificialBoundary = para.plotArtificialBoundary && (strcmp(task.method,'IE') || strcmp(task.method,'ABC') || strcmp(task.method,'PML'));
+                M = task.M;
                 para.extraXiPts = eval(para.extraXiPts);
                 para.extraEtaPts = eval(para.extraEtaPts);
                 para.extraZetaPts = eval(para.extraZetaPts);
@@ -554,7 +557,7 @@ if ~task.useROM && ~strcmp(task.method,'RT')
                     Uc{1} = zeros(varCol{1}.noDofs,1);
                 end
         
-                createParaviewFiles(varCol, 'U', Uc, 'para_options', para, 'e3Dss_options', e3Dss_options);
+                createParaviewFiles(varCol, 'U', Uc, 'para_options', para, 'e3Dss_options', varCol{1}.e3Dss_options);
 
                 if para.plotMesh
                     createVTKmeshFiles(varCol, 'U', Uc, 'para_options', para)

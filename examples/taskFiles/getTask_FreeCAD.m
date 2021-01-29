@@ -20,35 +20,47 @@ noDomains = 1;
 varCol = setS1Parameters('double',1);
 varCol{1}.meshFile = 'createNURBSmesh_FreeCAD';
 
-alpha_s = 240*pi/180;
-beta_s = 30*pi/180;
-alpha = (0:0.1:360)*pi/180;
-beta = 30*pi/180;
-f = 1000;
 
- 
+applyLoad = 'planeWave';
+BC = 'SHBC';
+alpha_s = 240*pi/180;
+beta_s = 0;
+alpha = (0:0.1:360)*pi/180;
+beta = 0;
+f = 100;
+
+
 calculateFarFieldPattern = 1;
-prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plot3Dgeometry = 0;
-prePlot.colorFun = @(v) abs(norm2(v)-1);
-prePlot.resolution = [200,400];
+prePlot.abortAfterPlotting  = false;       % Abort simulation after pre plotting
+prePlot.plotNormalVectors = true;
+prePlot.plot3Dgeometry = 1;
+prePlot.plotControlPolygon = 1;
+prePlot.resolution = [100,100];
 
 postPlot(1).xname        	= 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= false;
-postPlot(1).axisType      	= 'plot';
+postPlot(1).axisType      	= 'polar';
 postPlot(1).lineStyle    	= '-';
-postPlot(1).xScale       	= 1;
+postPlot(1).xScale          = 180/pi;
 postPlot(1).yScale       	= 1;
 postPlot(1).legendEntries 	= {};
 postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 
-degree = 3; % FreeCAD exports to p = 3
-M = 1; % 5
-solveForPtot = true;
-loopParameters = {'M','degree'};
-collectIntoTasks
+para.name                    = '';
+para.plotResultsInParaview	 = 1;	% Only if scatteringCase == 'Bi'
 
+degree = 3; % FreeCAD exports to p = 3
+M = 2:3; % 5
+solveForPtot = true;
+loopParameters = {'M','method'};
+% collectIntoTasks
+
+method = {'KDT'};
+formulation = {'MS1'};
+solveForPtot = false;
+para.plotResultsInParaview = 0;	% Only if scatteringCase == 'Bi'
+collectIntoTasks

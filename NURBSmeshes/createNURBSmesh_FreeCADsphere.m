@@ -5,7 +5,7 @@ switch varCol{1}.method
         error('Not implemented')
 end
 if varCol{1}.boundaryMethod
-    fluid = read_g2('~/kode/ASIGA/miscellaneous/FreeCADsphere.g2');
+    fluid = read_g2('~/kode/ASIGA/miscellaneous/FreeCADsphere2.g2');
     surfObjs = [];
     for i = 1:numel(fluid)
         if fluid{i}.d_p == 2
