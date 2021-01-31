@@ -64,8 +64,12 @@ varCol{1}.dPhi_kdny = dPhi_kdny;
 if varCol{1}.analyticSolutionExist
     varCol{1}.analyticFunctions = @(X) analytic(X,varCol);
 end
+noRHSs = varCol{1}.noRHSs;
+c_f = varCol{1}.c_f;
 varCol{1}.p_inc = p_inc;
 varCol{1}.dp_inc = dp_inc;
+varCol{1}.p_inc_ROM = @(X) p_inc_ROM(X,c_f,d_vec,noRHSs,p_inc);
+varCol{1}.dp_inc_ROM = @(X,n) dp_inc_ROM(X,n,omega,c_f,d_vec,noRHSs,p_inc);
 varCol{1}.gp_inc = gp_inc;
 varCol{1}.dpdn = dpdn;
 varCol{1}.p = @(X) analytic({X},varCol,NaN,'p',1);
@@ -232,6 +236,23 @@ for l = 1:L
         dp(3) = dp(3) + (A(l)*exp(l*x) + B(l)*exp(-l*x)).*(C(m)*exp(m*y) + D(m)*exp(-m*y)).*(E(l,m)*-1i*lambda*exp(-1i*lambda*z) + F(l,m)*1i*lambda*exp(1i*lambda*z));
     end
 end
+
+
+
+function dp_inc_ROM = dp_inc_ROM(X,n,omega,c_f,d_vec,noRHSs,p_inc)
+
+m = 0:(noRHSs-1);
+d_vecX = X*d_vec;
+temp = zeros(numel(d_vecX),noRHSs);
+temp(:,2:end) = (1./d_vecX)*m(2:end);
+dp_inc_ROM = (n*d_vec).*p_inc(X).*(1i*d_vecX/c_f).^m.*(temp+1i*omega/c_f);
+
+function p_inc_ROM = p_inc_ROM(X,c_f,d_vec,noRHSs,p_inc)
+
+m = 0:(noRHSs-1);
+d_vecX = X*d_vec;
+p_inc_ROM = p_inc(X).*(1i*d_vecX/c_f).^m;
+
 
 
 

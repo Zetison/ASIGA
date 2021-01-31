@@ -1,4 +1,5 @@
 function U = addSolutionToRemovedNodes_new(U, varCol, d)
+% error('Depricated, use addSolutionToRemovedNodes() instead')
 if nargin < 3
     d = varCol.dimension;
 end

@@ -18,6 +18,7 @@ coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
 coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 BCs = {'SHBC','SSBC','NNBC'};
 BCs = {'NNBC'};
+% BCs = {'SHBC'};
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
@@ -31,7 +32,7 @@ postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 % postPlot(1).addCommands  = @(study,i_study,studies) addCommands_(i_study,studies);
 warning('off','NURBS:weights')
-M_0 = 1; % 4
+M_0 = 4; % 4
 for ii = 1:length(coreMethods)
     coreMethod = coreMethods(ii);
     for BC = BCs

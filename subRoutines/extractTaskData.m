@@ -18,7 +18,6 @@ varCol{1}.initMeshFactXi   = task.initMeshFactXi;
 varCol{1}.initMeshFactZeta = task.initMeshFactZeta;
 varCol{1}.refineThetaOnly  = task.refineThetaOnly;
 varCol{1}.coreMethod = task.coreMethod;
-
 for i = 1:numel(varCol)
     varCol{i}.progressBars = task.progressBars;
     varCol{i}.useROM       = task.useROM;
@@ -82,6 +81,7 @@ if strcmp(method,'BA') && strcmp(scatteringCase,'MS')
     error('This is case is not implemented. The best approximation method must be combined with "scatteringCase = BI"')
 end
 
+task.storeFullVarCol = task.storeFullVarCol || task.useROM;
 
 
 

@@ -39,7 +39,7 @@ studies(counter).loopParametersArr = loopParametersArr;
 studies(counter).runTasksInParallel = runTasksInParallel;
 if exist('basisROMcell','var')
     studies(counter).basisROMcell = basisROMcell;
-    studies(counter).k_ROM = k_ROM;
+    studies(counter).omega_ROM = omega_ROM;
     studies(counter).noVecsArr = noVecsArr;
 end
 

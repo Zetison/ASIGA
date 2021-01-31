@@ -61,7 +61,7 @@ for i = 1:numel(varCol)
         varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
     end
     if varCol{i}.useROM
-        varCol{i}.noRHSs = varCol{1}.noVecs;
+        varCol{i}.noRHSs = max(task.noVecsArr);
     else
         varCol{i}.noRHSs = numel(varCol{1}.alpha_s);
     end

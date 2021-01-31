@@ -18,9 +18,6 @@ if ~strcmp(task.method,'RT') && ~strcmp(task.method,'KDT')
     varCol2{1}.tot_time = varCol{1}.tot_time;
     varCol2{1}.noElems = varCol{1}.noElems;
     varCol2{1}.totNoElems = varCol{1}.totNoElems;
-    if task.storeSolution
-        varCol2{1}.U = varCol{1}.Uc;
-    end
     if isfield(varCol{1},'N')
         varCol2{1}.N = varCol{1}.N;
     end

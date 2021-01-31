@@ -82,7 +82,6 @@ for i_b = 1:numel(basisROMcell)
                         [p{i},q{i}] = pade(f,omega_P(i),n,m); 
                     end
                 end
-                
             case 'Splines'
                 Vsize = P*noVecs;
         %         p_ROM = noVecs;
@@ -354,7 +353,12 @@ for i_b = 1:numel(basisROMcell)
                     fieldCell = [fieldCell, 'p_ref','abs_p_ref','TS_ref','error_pAbs','error_p'];
                 end
                 for field = fieldCell
-                    tasks(i_task,taskROM,i_b).task.results.(field{1}) = task.results.(field{1});
+                    switch basisROM
+                        case {'Taylor','Pade'}
+                            tasks(i_task,taskROM,i_b).task.results.(field{1}) = insertNaN(omega_ROM,task.results.(field{1}),omega_P);
+                        otherwise
+                            tasks(i_task,taskROM,i_b).task.results.(field{1}) = task.results.(field{1});
+                    end
                 end
             end
             tasks(i_task,taskROM,i_b).task.results.energyError = energyError;

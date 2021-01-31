@@ -16,9 +16,9 @@
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
 % studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
-% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'FreeCAD'; %getTask_FreeCAD
-studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
+% studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
 % studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 
 %% Venas2020ibe

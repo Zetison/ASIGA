@@ -84,8 +84,10 @@ else
     noGpEta = degree(2)+3+extraGP;
 end
 [Q, W] = gaussTensorQuad([noGpXi,noGpEta]); 
-
-p_h = zeros(size(P_far,1),numel(k));
+if numel(k) > 1 && size(P_far,1) > 1
+    error('not implemented')
+end
+p_h = zeros(max([size(P_far,1),numel(k)]),1);
 
 % for i = 1:length(surfaceElements) %
 parfor i = 1:length(surfaceElements)

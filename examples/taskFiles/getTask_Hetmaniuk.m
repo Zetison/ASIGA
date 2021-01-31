@@ -87,10 +87,10 @@ noVecsArr = 64;
 % j = 1:n;
 % k_arr = 1/2*(a+b)+1/2*(b-a)*cos((2*n-2*j+1)*pi/(2*n));
 % k = k_arr(round(linspace(1,n,P)));
-degree = 2;
+degree = 4;
 % degree = 2:5;
 M = 3; % 5
-N = 2; % 9
+N = 7; % 9
 % M = 1; 
 % N = 2;
 useROM = true;
@@ -109,11 +109,7 @@ IElocSup = 0;        % Toggle usage of radial shape functions in IE with local s
 
 storeFullVarCol = false;
 loopParameters = {'M','method'};
-% collectIntoTasks
-
-N = 40; % 9
-IElocSup = 0; 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 useROM = false;
@@ -124,7 +120,7 @@ f = omega/(2*pi);
 coreMethod = {'IGA'};
 method = {'BA'};
 formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 method = {'IE'};
