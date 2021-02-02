@@ -49,8 +49,8 @@ indices = zeros(d_f*n_en,noElems);
 
 [Q, W] = gaussTensorQuad(degree+1);
 
-parfor e = 1:noElems
-% for e = 1:noElems
+% parfor e = 1:noElems
+for e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch}(1:2);
     Xi_e = zeros(d_p-1,2);

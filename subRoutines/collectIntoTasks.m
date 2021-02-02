@@ -8,7 +8,7 @@ end
 if task.useROM
     task.storeSolution = true;
 end
-if (~isnan(alpha_s(1)) || ~isnan(beta_s(1))) && (strcmp(scatteringCase,'MS') || strcmp(scatteringCase,'Sweep'))
+if (~isnan(alpha_s(1)) || ~isnan(beta_s(1))) && (strcmp(scatteringCase,'MS'))
     error(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
            'Note that alpha_s = alpha and beta_s = beta.'])
 end

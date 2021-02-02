@@ -1,4 +1,4 @@
-function relError = calcSurfErrorVec(varCol, U, LpOrder)
+function relError = calcSurfErrorVec(varCol, LpOrder)
 
 degree = varCol.degree;
 
@@ -12,6 +12,7 @@ controlPts = varCol.controlPts;
 knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
 
+U = varCol.U;
 
 % Find elements on the inner surface for evaluation of
 % backscattered pressure in far field

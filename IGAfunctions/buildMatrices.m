@@ -21,6 +21,7 @@ noCtrlPts = varCol.noCtrlPts;
 
 d_f = varCol.fieldDimension;
 d_p = varCol.patches{1}.nurbs.d_p;
+buildStiffnessMatrix = varCol.buildStiffnessMatrix;
 buildMassMatrix = varCol.buildMassMatrix;
 applyBodyLoading = varCol.applyBodyLoading;
 operator = varCol.operator;
@@ -39,10 +40,16 @@ spIdxRow = zeros(sizeKe,noElems,'uint32');
 spIdxCol = zeros(sizeKe,noElems,'uint32');
 spIdxRowM = zeros(sizeMe,noElems,'uint32');
 spIdxColM = zeros(sizeMe,noElems,'uint32');
-Kvalues = zeros(sizeKe,noElems); 
+if buildStiffnessMatrix
+    Kvalues = zeros(sizeKe,noElems); 
+else
+    Kvalues = NaN;
+end
 
 if buildMassMatrix
     Mvalues = zeros(sizeMe,noElems); 
+else
+    Mvalues = NaN;
 end
 if applyBodyLoading
     F_indices = zeros(d_f*n_en,noElems); 
@@ -93,28 +100,30 @@ parfor e = 1:noElems
     J_1 = getJacobian(R,pts,d_p);
     fact = J_1 * J_2 .* W;
 
-    dXdxi = R{2}*pts;
-    dXdeta = R{3}*pts;
-    dXdzeta = R{4}*pts;
-                
-    a11 = dXdxi(:,1);
-    a21 = dXdxi(:,2);
-    a31 = dXdxi(:,3);
-    a12 = dXdeta(:,1);
-    a22 = dXdeta(:,2);
-    a32 = dXdeta(:,3);
-    a13 = dXdzeta(:,1);
-    a23 = dXdzeta(:,2);
-    a33 = dXdzeta(:,3);
-    Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
-    Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
-    Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
-    dRdX = cell(d_f,1);
-    dRdX{1} = repmat(Jinv1(:,1),1,n_en).*R{2} + repmat(Jinv1(:,2),1,n_en).*R{3} + repmat(Jinv1(:,3),1,n_en).*R{4};
-    dRdX{2} = repmat(Jinv2(:,1),1,n_en).*R{2} + repmat(Jinv2(:,2),1,n_en).*R{3} + repmat(Jinv2(:,3),1,n_en).*R{4};
-    dRdX{3} = repmat(Jinv3(:,1),1,n_en).*R{2} + repmat(Jinv3(:,2),1,n_en).*R{3} + repmat(Jinv3(:,3),1,n_en).*R{4};
-    
-    Kvalues(:,e) = stiffnessElementMatrix(dRdX,fact,d_f,n_en,operator,C);
+    if buildStiffnessMatrix
+        dXdxi = R{2}*pts;
+        dXdeta = R{3}*pts;
+        dXdzeta = R{4}*pts;
+
+        a11 = dXdxi(:,1);
+        a21 = dXdxi(:,2);
+        a31 = dXdxi(:,3);
+        a12 = dXdeta(:,1);
+        a22 = dXdeta(:,2);
+        a32 = dXdeta(:,3);
+        a13 = dXdzeta(:,1);
+        a23 = dXdzeta(:,2);
+        a33 = dXdzeta(:,3);
+        Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
+        Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
+        Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
+        dRdX = cell(d_f,1);
+        dRdX{1} = repmat(Jinv1(:,1),1,n_en).*R{2} + repmat(Jinv1(:,2),1,n_en).*R{3} + repmat(Jinv1(:,3),1,n_en).*R{4};
+        dRdX{2} = repmat(Jinv2(:,1),1,n_en).*R{2} + repmat(Jinv2(:,2),1,n_en).*R{3} + repmat(Jinv2(:,3),1,n_en).*R{4};
+        dRdX{3} = repmat(Jinv3(:,1),1,n_en).*R{2} + repmat(Jinv3(:,2),1,n_en).*R{3} + repmat(Jinv3(:,3),1,n_en).*R{4};
+
+        Kvalues(:,e) = stiffnessElementMatrix(dRdX,fact,d_f,n_en,operator,C);
+    end
     if buildMassMatrix
         Mvalues(:,e) = kron2(R{1},R{1}) * fact;
     end
@@ -124,14 +133,20 @@ parfor e = 1:noElems
         F_indices(:,e) = sctr_k_e;
         Fvalues(:,e) = kron2(f_gp,R{1}) * fact;
     end
-    spIdxRow(:,e) = kron(ones(1,d_f*n_en),sctr_k_e);
-    spIdxCol(:,e) = kron(sctr_k_e,ones(1,d_f*n_en));
-    spIdxRowM(:,e) = kron(ones(1,n_en),sctr);
-    spIdxColM(:,e) = kron(sctr,ones(1,n_en));
+    if buildStiffnessMatrix
+        spIdxRow(:,e) = kron(ones(1,d_f*n_en),sctr_k_e);
+        spIdxCol(:,e) = kron(sctr_k_e,ones(1,d_f*n_en));
+    end
+    if buildMassMatrix
+        spIdxRowM(:,e) = kron(ones(1,n_en),sctr);
+        spIdxColM(:,e) = kron(sctr,ones(1,n_en));
+    end
 end
 
 %% Collect data into global matrices (and load vector)
-varCol.A_K = sparse(double(spIdxRow),double(spIdxCol),Kvalues,noDofs,noDofs,numel(Kvalues));
+if buildStiffnessMatrix
+    varCol.A_K = sparse(double(spIdxRow),double(spIdxCol),Kvalues,noDofs,noDofs,numel(Kvalues));
+end
 
 if applyBodyLoading
     varCol.F = vectorAssembly(Fvalues,F_indices,noDofs);

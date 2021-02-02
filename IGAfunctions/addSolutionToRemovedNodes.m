@@ -2,7 +2,7 @@ function varCol = addSolutionToRemovedNodes(varCol)
 
 for patch = 1:numel(varCol)
     gluedNodes = varCol{patch}.gluedNodes;
-
+    d = varCol{patch}.dimension;
     for i = 1:length(gluedNodes)
         parentIdx = gluedNodes{i}(1);
         for j = 2:length(gluedNodes{i})

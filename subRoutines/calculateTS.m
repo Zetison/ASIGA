@@ -1,16 +1,17 @@
-function task = calculateTS(varCol,task,Uc,runTasksInParallel,stringShift)
+function task = calculateTS(varCol,task,runTasksInParallel,stringShift)
 plotFarField = task.plotFarField;
 if ~runTasksInParallel
     fprintf(['\n%-' num2str(stringShift) 's'], 'Computing far-field pattern ... ')
 end
+
 tic
 v = getFarFieldPoints(task.alpha,task.beta,task.r);
 
 switch task.method
     case {'IE','ABC','IENSG','BA','BEM'}
-        p_h = calculateScatteredPressure(varCol, Uc, v, 0, plotFarField);
+        p_h = calculateScatteredPressure(varCol, v, 0, plotFarField);
     case 'MFS'
-        p_h = calculateScatteredPressureMFS(varCol{1}, Uc{1}, v, plotFarField);
+        p_h = calculateScatteredPressureMFS(varCol{1}, v, plotFarField);
     case 'KDT'
         switch varCol{1}.coreMethod
             case 'linear_FEM'
@@ -114,16 +115,20 @@ switch task.method
         end
 end
 task.results.p = p_h;
+task.results.p_Re = real(p_h);
+task.results.p_Im = imag(p_h);
 task.results.abs_p = abs(p_h);
 task.results.TS = 20*log10(abs(p_h/varCol{1}.P_inc));
 if varCol{1}.analyticSolutionExist
     if task.plotFarField
-        p_ref = varCol{1}.p_0(v);
+        p_ref = varCol{1}.p_0_(v);
 %             p_ref = exactKDT(varCol{1}.k,varCol{1}.P_inc,parms.R_o);
     else
-        p_ref = varCol{1}.p(v);
+        p_ref = varCol{1}.p_(v);
     end
     task.results.p_ref = p_ref;
+    task.results.p_Re_ref = real(p_ref);
+    task.results.p_Im_ref = imag(p_ref);
     task.results.abs_p_ref = abs(p_ref);
     task.results.TS_ref = 20*log10(abs(p_ref/varCol{1}.P_inc));
 

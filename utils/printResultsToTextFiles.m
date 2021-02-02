@@ -52,20 +52,28 @@ if isempty(options.fileDataHeaderX)
 else
     fileDataHeaderX = options.fileDataHeaderX;
 end
-if ~isempty(get(gca, 'Children'))
+prevGrafs = get(gca, 'Children');
+if ~isempty(prevGrafs)
     legendPrev = legend;
     legendArr = legendPrev.String;
     analyticPlotted = false;
     for i = 1:numel(legendArr)
         if strcmp(legendArr{i},'Analytic solution')
-            analyticPlotted = true;
+            
+            y_ref = study.tasks(1).task.results.([yname '_ref']);
+            x = study.tasks(1).task.varCol{1}.(xname);
+            x = x*options.xScale;
+            y_ref = y_ref*options.yScale;
+            if all(size(y_ref) == size(prevGrafs(i).YData)) && all(y_ref == prevGrafs(i).YData)
+                analyticPlotted = true;
+            end
         end
     end
 else
     analyticPlotted = false;
 end
 
-plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'abs_p')) && ~analyticPlotted;
+plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p')) && ~analyticPlotted;
 switch options.noXLoopPrms
     case 0
         if plotAnalyticSolution
@@ -250,6 +258,10 @@ if plotResults
     switch yname
         case 'p'
             yLabel = '$$p$$';
+        case 'p_Re'
+            yLabel = 'Real part of pressure';
+        case 'p_Im'
+            yLabel = 'Imaginary part of pressure';
         case 'TS'
             yLabel = '$$\mathrm{TS}$$';
         case 'abs_p'

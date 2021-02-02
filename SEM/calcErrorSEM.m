@@ -1,4 +1,4 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(varCol, UU)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(varCol)
 
 %% Preallocation and initiallizations
 patches = varCol.patches;
@@ -10,6 +10,7 @@ Nzeta = nurbs.number(3);
 nxi = Nxi+5;
 neta = Neta+5;
 nzeta = Nzeta+5;
+U = varCol{1}.U;
 
 noComponents = 1;
 noComponentsDeriv = 3;
@@ -25,7 +26,7 @@ du_hs = zeros(nxi*neta*nzeta,noPatches,3);
 parfor patch = 1:noPatches
 % for patch = 1:noPatches
     nurbs = patches{patch}.nurbs;
-    U = UU((1:Nxi*Neta*Nzeta) + (patch-1)*Nxi*Neta*Nzeta,:);
+    U_sctr = U((1:Nxi*Neta*Nzeta) + (patch-1)*Nxi*Neta*Nzeta,:);
 
     c = nurbs.coeffs;
     Bxi = zeros(Nxi,nxi);
@@ -54,10 +55,10 @@ parfor patch = 1:noPatches
     du_ht = zeros(nxi,neta,nzeta,noComponentsDeriv);
     JJ = zeros(nxi,neta,nzeta,3,3);
     idx = [2,3,1];
-    u_h =           permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U,Nxi,Neta*Nzeta)), nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
-    du_ht(:,:,:,1) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((dBxi.'*reshape(U,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
-    du_ht(:,:,:,2) = permute(reshape(Bzeta.'*reshape(permute(reshape(dBeta.'*reshape(permute(reshape((Bxi.'*reshape(U,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
-    du_ht(:,:,:,3) = permute(reshape(dBzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
+    u_h =           permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)), nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
+    du_ht(:,:,:,1) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((dBxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
+    du_ht(:,:,:,2) = permute(reshape(Bzeta.'*reshape(permute(reshape(dBeta.'*reshape(permute(reshape((Bxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
+    du_ht(:,:,:,3) = permute(reshape(dBzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
     for i = 1:3
         XX(:,:,:,i) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(c(i,:,:,:),Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
         JJ(:,:,:,i,1) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((dBxi.'*reshape(c(i,:,:,:),Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        

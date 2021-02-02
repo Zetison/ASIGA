@@ -34,7 +34,9 @@ for i_col = 1:numel(studiesCol)
 
         runTasksInParallel = studies(i_study).runTasksInParallel;
         if runTasksInParallel
+            ppm = ParforProgMon('Simulating tasks: ', length(tasks));
             parfor i_task = 1:length(tasks)
+                ppm.increment();
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,runTasksInParallel,resultsFolder);
                 fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studies)) 
             end

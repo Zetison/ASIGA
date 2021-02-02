@@ -25,6 +25,7 @@ for i = 1:numel(varCol)
     varCol{i}.extraGP = task.extraGP;
     varCol{i}.extraGPBEM = task.extraGPBEM;
     varCol{i}.buildMassMatrix = true;
+    varCol{i}.buildStiffnessMatrix = ~strcmp(task.method,'BA');
     varCol{i}.applyBodyLoading = false;
     varCol{i}.extraGP = task.extraGP;
     varCol{i}.coreMethod = task.coreMethod;

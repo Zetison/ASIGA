@@ -48,12 +48,12 @@ if varCol{1}.boundaryMethod
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
     end
-    if varCol{1}.refineThetaOnly
-        if parm ~= 1
-            error('Must have parm = 1 for pure theta refinement')
+    if isfield(varCol{1},'refinement')
+        if numel(varCol) > 1
+            solid = insertKnotsInNURBS(solid,varCol{2}.refinement(M));
+        else
+            solid = insertKnotsInNURBS(solid,varCol{1}.refinement(M));
         end
-        solid = makeUniformNURBSDegree(solid,[2,degree,degree]);
-        solid = insertKnotsInNURBS(solid,[0,2^(M-1)-1,0]);
     else
         solid = makeUniformNURBSDegree(solid,degree);
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0);
@@ -136,19 +136,11 @@ else
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
     end
-    if varCol{1}.refineThetaOnly
-        if parm ~= 1
-            error('Must have parm = 1 for pure theta refinement')
-        end
-        fluid = makeUniformNURBSDegree(fluid,[2,degree,degree]);
-        fluid = insertKnotsInNURBS(fluid,[0,2^(M-1)-1,max(2^(M-4)-1,0)]);
+    fluid = makeUniformNURBSDegree(fluid,degree);
+    if isfield(varCol{1},'refinement')
+        fluid = insertKnotsInNURBS(fluid,varCol{1}.refinement(M));
     else
-        fluid = makeUniformNURBSDegree(fluid,degree);
-        if isfield(varCol{1},'refinement')
-            fluid = insertKnotsInNURBS(fluid,varCol{1}.refinement(M));
-        else
-            [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
-        end
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
     end
     
     varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);

@@ -33,8 +33,8 @@ postPlot(1).xScale          = 180/pi;
 % postPlot(1).addCommands  = @(study,i_study,studies) addCommands_(i_study,studies);
 warning('off','NURBS:weights')
 M_0 = 4; % 4
-for ii = 1:length(coreMethods)
-    coreMethod = coreMethods(ii);
+for i_coreM = 1:length(coreMethods)
+    coreMethod = coreMethods(i_coreM);
     for BC = BCs
         switch BC{1}
             case 'SHBC'
@@ -51,7 +51,7 @@ for ii = 1:length(coreMethods)
 
         switch coreMethod{1}
             case 'IGA'
-                if ii == 1
+                if i_coreM == 1
                     M = M_0; % 4
                     degree = 3; %3
                 else

@@ -51,7 +51,7 @@ prePlot.plotArtificialBndry = false;        % Plot the artificial boundary for t
 computeCondNumber = 0;
 calculateSurfaceError = 1;
 calculateFarFieldPattern = false;     % Calculate far field pattern
-refineThetaOnly = true;
+varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
 
 degree = 5;
 

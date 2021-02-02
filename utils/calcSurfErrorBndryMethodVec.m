@@ -1,4 +1,4 @@
-function relError = calcSurfErrorBndryMethodVec(varCol, U, LpOrder)
+function relError = calcSurfErrorBndryMethodVec(varCol, LpOrder)
 
 i = 1;
 degree = varCol{i}.degree; % assume degree is equal in all patches
@@ -13,7 +13,7 @@ controlPts = varCol{i}.controlPts;
 knotVecs = varCol{i}.knotVecs;
 pIndex = varCol{i}.pIndex;
 d_p = varCol{i}.patches{1}.nurbs.d_p;
-
+U = varCol{i}.U;
 k = varCol{i}.k;
 
 if strcmp(varCol{1}.coreMethod, 'XI')
@@ -57,7 +57,7 @@ parfor e = 1:noElems
         R{1} = R{1}*repmat(exp(1i*k*(y*d_vec)),1,size(R{1},2));
     end
     if ~isMFS
-        U_sctr = U{i}(sctr);
+        U_sctr = U(sctr);
         p_h(:,e) = R{1}*U_sctr;
     end
     fact(:,e) = J_1 * J_2 .* W;
@@ -67,21 +67,21 @@ fact = reshape(fact, size(fact,1)*size(fact,2),1);
 points = reshape(points, size(points,1)*size(points,2),3);
 if isMFS
     Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
-    n_cp = numel(U{i});
+    n_cp = numel(U);
     y_s = varCol{i}.y_s;
     r = zeros(size(points));
     for j = 1:n_cp
         r(:,j) = norm2(elementAddition(-y_s(j,:), points));
     end
-    p_h = Phi_k(r)*U{i};
+    p_h = Phi_k(r)*U;
 else
     p_h = reshape(p_h, size(p_h,1)*size(p_h,2),1);
 end
 
 if varCol{i}.solveForPtot && varCol{i}.exteriorProblem
-    analytic = @(x) varCol{i}.p(x) + varCol{i}.p_inc(x);
+    analytic = @(x) varCol{i}.p_(x) + varCol{i}.p_inc(x);
 else
-    analytic = varCol{i}.p;
+    analytic = varCol{i}.p_;
 end
 p = analytic(points);
 if isinf(LpOrder)

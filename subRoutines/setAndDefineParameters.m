@@ -46,7 +46,7 @@ varCol{1}.isSphericalShell = isSphericalShell;
 varCol{1}.alpha          = task.alpha;
 varCol{1}.beta           = task.beta;
 switch task.scatteringCase
-    case {'MS','Sweep'}
+    case {'MS'}
         varCol{1}.alpha_s = task.alpha;
         varCol{1}.beta_s  = task.beta;
     otherwise

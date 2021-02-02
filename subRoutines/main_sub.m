@@ -81,17 +81,12 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         varCol = getAnalyticSolutions(varCol);
         switch task.method
             case {'IE','ABC'}
-                tic  
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
-                end
                 varCol{1}.timeBuildSystem = 0;
                 if strcmp(varCol{1}.coreMethod,'SEM')
                     varCol{1} = buildSEMMatrices(varCol{1});
                 else
                     for i = 1:noDomains
-                        tic        
-                        % Inner fluid   
+                        tic          
                         if ~runTasksInParallel
                             fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i) ' ... '])
                         end
@@ -263,18 +258,22 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                     varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
                 end  
             case 'BA'
-                tic
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building outer fluid matrix ... ')
+                varCol{1}.timeBuildSystem = 0;
+                for i = 1:noDomains
+                    tic          
+                    if ~runTasksInParallel
+                        fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i) ' ... '])
+                    end
+                    varCol{i} = buildMatrices(varCol{i});
+                    varCol{i} = buildBAmatrix(varCol{i},i);
+                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                    if ~runTasksInParallel
+                        fprintf('using %12f seconds.', toc)
+                    end
                 end
-                varCol{1} = buildBAmatrix(varCol{1});
-                varCol{1}.timeBuildSystem = toc;
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', varCol{1}.timeBuildSystem)
-                end
-                if noDomains > 1 
-                    error('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
-                end
+%                 if noDomains > 1 
+%                     warning('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
+%                 end
                 varCol{1}.timeBuildSystem = toc;
             case 'MFS'
                 tic
@@ -290,7 +289,11 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         switch task.method
             case {'IE','IENSG','BEM','BA','ABC','MFS'}
                 [varCol,FF,A0,A1,A2,A4] = collectMatrices(varCol,task);
-                A = A0 + omega*A1 + omega^2*A2 + omega^4*A4;
+                if strcmp(task.method,'BA')
+                    A = A2;
+                else
+                    A = A0 + omega*A1 + omega^2*A2 + omega^4*A4;
+                end
                 
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Total time building system ... ')
@@ -402,24 +405,31 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         end
         varCol{1}.dofs = dofs;
         if task.useROM && strcmp(task.scatteringCase,'Sweep')
-            [varCol,Uc] = postProcessSolution(varCol,task,UU);
-            U_sweep{i_f} = Uc{1}(1:varCol{1}.noDofs,:);
-            U_sweep2{i_f} = Uc{1};
-            if strcmp(task.BC,'SSBC') || strcmp(task.BC,'NNBC')
-                error('not implemented due to noDofs')
-            end
+            [varCol,U] = postProcessSolution(varCol,UU);
+            U_sweep{i_f} = U;
         end
         if strcmp(task.scatteringCase,'Sweep') && numel(f) > 1
-            fprintf('\nTotal time spent on frequency: %12f\n', toc(t_freq))  
+            fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_f, numel(f), toc(t_freq))  
         end
     end
-    if ~task.useROM
-        [varCol,Uc] = postProcessSolution(varCol,task,UU);
-        if varCol{1}.boundaryMethod
-            varCol{1}.tau = computeTau(varCol{1});
+    if numel(f) > 1
+        tic
+        fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
+        progressBars = numel(f) > 1;
+        nProgressStepSize = ceil(numel(f)/10);
+        if progressBars
+            ppm = ParforProgMon('Calculating surface error: ', numel(f));
+        else
+            ppm = NaN;
         end
+    else
+        progressBars = false;
     end
+
     for i_f = 1:numel(f)
+        if progressBars
+            ppm.increment();
+        end
         f_i = f(i_f);
         omega = 2*pi*f_i;
         for m = 1:noDomains
@@ -442,12 +452,11 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 task.results.H1sError = zeros(1,size(f,2));
                 task.results.surfaceError = zeros(1,size(f,2));
             end
-            Uctemp = cell(1,noDomains);
-            for i = 1:noDomains
-                Uctemp{i} = Uc{i}(:,i_f);
-            end
+            varCol = postProcessSolution(varCol,UU(:,i_f));
+            printLog = numel(f) == 1 && ~runTasksInParallel;
+            printLog = true && ~runTasksInParallel;
             [L2Error, H1Error, H1sError, energyError, surfaceError] ...
-                = calculateErrors(task, varCol, Uctemp, runTasksInParallel, stringShift);
+                = calculateErrors(task, varCol, printLog, stringShift);
             task.results.surfaceError(i_f) = surfaceError;
             task.results.energyError(i_f) = energyError;
             task.results.L2Error(i_f) = L2Error;
@@ -455,12 +464,15 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
             task.results.H1sError(i_f) = H1sError;
         end
     end
+    if numel(f) > 1
+        fprintf('using %12f seconds.', toc)   
+    end
     if task.clearGlobalMatrices
         varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
         clear A FF
     end
 else
-    Uc = cell(1);
+    varCol{1}.U = [];
 end  
 
 %% Compute scattered pressure   
@@ -471,7 +483,8 @@ if task.calculateFarFieldPattern && ~task.useROM
     varCol{1}.lambda = 2*pi./varCol{1}.k;
     varCol{1}.f = f;
     varCol = getAnalyticSolutions(varCol);
-    task = calculateTS(varCol,task,Uc,runTasksInParallel,stringShift);
+    varCol = postProcessSolution(varCol,UU);
+    task = calculateTS(varCol,task,runTasksInParallel,stringShift);
 end
 if ~task.useROM
     varCol{1}.k = (2*pi*f)/varCol{1}.c_f;
@@ -487,7 +500,7 @@ if ~task.useROM && ~strcmp(task.method,'RT')
             if task.plotResidualError && varCol{1}.analyticSolutionExist && strcmp(task.formulation,'GCBIE')
 %                 close all
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting zeros of residual ... ')
-                plotGalerkinResidual(varCol{1},Uc);
+                plotGalerkinResidual(varCol{1});
                 fprintf('using %12f seconds.', toc)
                 axis equal
                 axis off
@@ -554,13 +567,13 @@ if ~task.useROM && ~strcmp(task.method,'RT')
                 testFun = @(v) -analytic(v) - P_inc(v);
                 varCol{1}.testFun = testFun;
                 if strcmp(task.method, 'KDT')
-                    Uc{1} = zeros(varCol{1}.noDofs,1);
+                    varCol{1}.U = zeros(varCol{1}.noDofs,1);
                 end
         
-                createParaviewFiles(varCol, 'U', Uc, 'para_options', para, 'e3Dss_options', varCol{1}.e3Dss_options);
+                createParaviewFiles(varCol, 'para_options', para, 'e3Dss_options', varCol{1}.e3Dss_options);
 
                 if para.plotMesh
-                    createVTKmeshFiles(varCol, 'U', Uc, 'para_options', para)
+                    createVTKmeshFiles(varCol, 'para_options', para)
                 end
                 % plot artificial boundary
 %                 if para.plotArtificialBoundary
@@ -579,18 +592,20 @@ fprintf('\nTotal time spent on task: %12f', varCol{1}.tot_time)
 if task.storeFullVarCol
     varColTemp = varCol;
     if task.useROM
-        varColTemp{1}.allDofsToRemove = varCol{1}.allDofsToRemove;
         varColTemp{1}.U_sweep = U_sweep;
-        varColTemp{1}.U_sweep2 = U_sweep2;
         if task.useDGP
             varColTemp{1}.A0 = A0;
             varColTemp{1}.A1 = A1;
             varColTemp{1}.A2 = A2;
         end
-    elseif task.storeSolution
-        varColTemp{1}.U = varCol{1}.Uc;
     end
     task.varCol = varColTemp;
 else
     task.varCol = extractVarColFields(task,varCol);
 end
+
+
+
+
+
+

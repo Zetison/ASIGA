@@ -1,4 +1,4 @@
-function plotGalerkinResidual(varCol,Uc)
+function plotGalerkinResidual(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -28,6 +28,7 @@ colMethod = varCol.colMethod;
 quadMethodBEM = varCol.quadMethodBEM;
 
 Eps = 1e4*eps;
+U = varCol{1}.U;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -160,7 +161,7 @@ for e_x = 1:noElems
     sctr = element(e_x,:);
     pts = controlPts(sctr,:);
     wgts = weights(element2(e_x,:)); % New      
-    U_sctr = Uc{1}(sctr,:); % New      
+    U_sctr = U(sctr,:); % New      
     npts = 512/noElemsXi;
 %     npts = 256/noElemsXi;
 %     npts = 32/noElemsXi;
@@ -193,7 +194,7 @@ for e_x = 1:noElems
                     p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
                     patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
             integrals_temp = integrals_temp + integrals_temp2;
-            U_sctr = Uc{1}(sctr_y,:); % New      
+            U_sctr = U(sctr_y,:); % New      
             residual_temp = residual_temp + BIE*U_sctr;
         end
         residual(i) = residual(i) + residual_temp - integrals_temp*u_x(i);

@@ -1,36 +1,35 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(varColCell, U_cell)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(varCol)
 
-noDomains = length(varColCell);
+noDomains = length(varCol);
 nodes = cell(noDomains,1);
 factors = cell(noDomains,1);
 u_hs = cell(noDomains,1);
 du_hs = cell(noDomains,1);
 for i = 1:noDomains
-    U = U_cell{i};
-    varCol = varColCell{i};
+    U = varCol{i}.U;
     %% Extract all needed data from varCol
-    index = varCol.index;
-    noElems = varCol.noElems;
-    elRange = varCol.elRange;
-    element = varCol.element;
-    element2 = varCol.element2;
-    weights = varCol.weights;
-    controlPts = varCol.controlPts;
-    knotVecs = varCol.knotVecs;
-    pIndex = varCol.pIndex;
-    d_p = varCol.patches{1}.nurbs.d_p;
+    index = varCol{i}.index;
+    noElems = varCol{i}.noElems;
+    elRange = varCol{i}.elRange;
+    element = varCol{i}.element;
+    element2 = varCol{i}.element2;
+    weights = varCol{i}.weights;
+    controlPts = varCol{i}.controlPts;
+    knotVecs = varCol{i}.knotVecs;
+    pIndex = varCol{i}.pIndex;
+    d_p = varCol{i}.patches{1}.nurbs.d_p;
 
-    degree = varCol.degree; % assume degree is equal in all patches
+    degree = varCol{i}.degree; % assume degree is equal in all patches
 
 
-    noCtrlPts = varCol.noCtrlPts;
+    noCtrlPts = varCol{i}.noCtrlPts;
 
     %% Preallocation and initiallizations
     if false
         noQuadPts = 6;
         [W,Q] = gaussianQuadNURBS(noQuadPts,noQuadPts,noQuadPts); 
     else
-        extraGP = varCol.extraGP;
+        extraGP = varCol{i}.extraGP;
         [Q, W] = gaussTensorQuad(degree+3+extraGP);
     end
     if mod(i,2) == 0
@@ -119,9 +118,9 @@ for i = 1:noDomains
     nodes{i} = reshape(points, size(points,1)*size(points,2),3);
 end
 
-layer = varColCell{1}.analyticFunctions(nodes);
+layer = varCol{1}.analyticFunctions(nodes);
 
-omega = varColCell{1}.omega;
+omega = varCol{1}.omega;
 
 H1Error = 0;
 H1sError = 0;
@@ -131,7 +130,7 @@ normalizationEnergy = 0;
 normalizationH1 = 0;
 normalizationH1s = 0;
 normalizationL2 = 0;
-parfor i = 1:noDomains  
+for i = 1:noDomains  
     switch layer{i}.media
         case 'solid'
             u = [layer{i}.u_x,layer{i}.u_y,layer{i}.u_z];
@@ -140,7 +139,7 @@ parfor i = 1:noDomains
                   layer{i}.du_zdx,layer{i}.du_zdy,layer{i}.du_zdz];
             sigma = [layer{i}.sigma_xx,layer{i}.sigma_yy,layer{i}.sigma_zz,layer{i}.sigma_yz,layer{i}.sigma_xz,layer{i}.sigma_xy];
 
-            C = varColCell{i}.C;
+            C = varCol{i}.C;
             strain_vec = (C\sigma.').';
             strain_h = [du_hs{i}(:,1),du_hs{i}(:,5),du_hs{i}(:,9),du_hs{i}(:,6)+du_hs{i}(:,8),du_hs{i}(:,7)+du_hs{i}(:,3),du_hs{i}(:,2)+du_hs{i}(:,4)];
             strain_e = strain_vec-strain_h;
@@ -161,8 +160,8 @@ parfor i = 1:noDomains
             normalizationH1 = normalizationH1 + sum((u2 + du2).*factors{i});
             normalizationH1s = normalizationH1s + sum(du2.*factors{i});
 
-            EnergyError = EnergyError + sum((eCe + varColCell{i}.rho*omega^2*u_e2).*factors{i});
-            normalizationEnergy = normalizationEnergy + sum((uCu + varColCell{i}.rho*omega^2*u2).*factors{i});
+            EnergyError = EnergyError + sum((eCe + varCol{i}.rho*omega^2*u_e2).*factors{i});
+            normalizationEnergy = normalizationEnergy + sum((uCu + varCol{i}.rho*omega^2*u2).*factors{i});
 
             L2Error = L2Error + sum(u_e2.*factors{i});
             normalizationL2 = normalizationL2 + sum(u2.*factors{i});
@@ -182,8 +181,8 @@ parfor i = 1:noDomains
             normalizationH1 = normalizationH1 + sum((p2 + dp2).*factors{i});
             normalizationH1s = normalizationH1s + sum(dp2.*factors{i});
 
-            EnergyError = EnergyError + 1/(varColCell{i}.rho*omega^2)*sum((dp_e2 + varColCell{i}.k^2*p_e2).*factors{i});
-            normalizationEnergy = normalizationEnergy + 1/(varColCell{i}.rho*omega^2)*sum((dp2 + varColCell{i}.k^2*p2).*factors{i});
+            EnergyError = EnergyError + 1/(varCol{i}.rho*omega^2)*sum((dp_e2 + varCol{i}.k^2*p_e2).*factors{i});
+            normalizationEnergy = normalizationEnergy + 1/(varCol{i}.rho*omega^2)*sum((dp2 + varCol{i}.k^2*p2).*factors{i});
 
             L2Error = L2Error + sum(p_e2.*factors{i});
             normalizationL2 = normalizationL2 + sum(p2.*factors{i});

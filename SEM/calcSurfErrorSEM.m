@@ -1,8 +1,9 @@
-function relError = calcSurfErrorSEM(varCol, UU, LpOrder)
+function relError = calcSurfErrorSEM(varCol, LpOrder)
 % error('Implementation not complete')
 %% Preallocation and initiallizations
 patches = varCol.patches;
 nurbs = patches{1}.nurbs;
+U = varCol{1}.U;
 
 Nxi = nurbs.number(1);
 Neta = nurbs.number(2);
@@ -22,7 +23,7 @@ u_hs = zeros(nxi*neta*nzeta,1,noPatches);
 parfor patch = 1:noPatches
 % for patch = 1:noPatches
     nurbs = patches{patch}.nurbs;
-    U = UU((1:Nxi*Neta*Nzeta) + (patch-1)*Nxi*Neta*Nzeta,:);
+    U_sctr = U((1:Nxi*Neta*Nzeta) + (patch-1)*Nxi*Neta*Nzeta,:);
 
     c = nurbs.coeffs;
     Bxi = zeros(Nxi,nxi);
@@ -46,7 +47,7 @@ parfor patch = 1:noPatches
     XX = zeros(nxi,neta,1,3);
     JJ = zeros(nxi,neta,1,3,2);
     idx = [2,3,1];
-    u_h =           permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U,Nxi,Neta*Nzeta)), nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
+    u_h =           permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)), nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
     for i = 1:3
         XX(:,:,:,i) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(c(i,:,:,:),Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
         JJ(:,:,:,i,1) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((dBxi.'*reshape(c(i,:,:,:),Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        

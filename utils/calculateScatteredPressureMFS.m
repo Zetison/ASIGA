@@ -1,6 +1,7 @@
-function p_h = calculateScatteredPressureMFS(varCol, U, P_far, plotFarField)
+function p_h = calculateScatteredPressureMFS(varCol, P_far, plotFarField)
 
 k = varCol.k;
+U = varCol{1}.U;
 
 switch varCol.formulation
     case 'SS'

@@ -284,8 +284,8 @@ parfor e_x = 1:noElems
 end
 varCol.A_K = matrixAssembly(Avalues, idxRow, n_en, noDofs, noElems, 2);
 if useSolidDomain
-    varCol.C = matrixAssembly(Cvalues(:,:,noElemsInner+1:end), idxRow2(:,noElemsInner+1:end), n_en, noDofs-noDofsInner, noElems-noElemsInner, 4);
-    varCol.C2 = matrixAssembly(C2values, idxRow3, n_en, noDofsInner, noElemsInner, 4);
+    varCol.A_C = matrixAssembly(Cvalues(:,:,noElemsInner+1:end), idxRow2(:,noElemsInner+1:end), n_en, noDofs-noDofsInner, noElems-noElemsInner, 4);
+    varCol.A_C2 = matrixAssembly(C2values, idxRow3, n_en, noDofsInner, noElemsInner, 4);
 end
 FF = zeros(noDofs,no_angles);
 parfor i = 1:no_angles

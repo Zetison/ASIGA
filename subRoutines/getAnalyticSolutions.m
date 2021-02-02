@@ -1,6 +1,7 @@
 function varCol = getAnalyticSolutions(varCol)
 k = varCol{1}.k;
 omega = varCol{1}.omega;
+noDomains = numel(varCol);
 if ~isfield(varCol{1},'P_inc')
     P_inc = 1;
 else
@@ -35,30 +36,30 @@ switch applyLoad
         varCol{1}.e3Dss_options = e3Dss_options;
         if strcmp(applyLoad,'planeWave')
             if isinf(N_max)
-                p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k);
-                gp_inc = @(v) 1i*elementProd(p_inc(v),d_vec.')*k;
-                dp_inc = @(v,n) 1i*(n*d_vec)*k.*p_inc(v);
+                p_inc = @(v) P_inc*exp(1i*(v*d_vec).*k);
+                gp_inc = @(v) 1i*elementProd(p_inc(v),d_vec.').*k;
+                dp_inc = @(v,n) 1i*(n*d_vec).*k.*p_inc(v);
             else
                 p_inc = @(v) P_inc*exp(1i*(v*d_vec)*k);
                 gp_inc = @(X) -analytic({X},varCol,NaN,'dp',1);
                 dp_inc = @(X,n) -analytic({X},varCol,n,'dpdn',1);
             end
         elseif strcmp(applyLoad,'radialPulsation')
-            p_inc = @(v) P_inc*R_o(1).*exp(-1i*k*(norm2(v)-R_o(1)))./norm2(v);
+            p_inc = @(v) P_inc*R_o(1).*exp(-1i*k.*(norm2(v)-R_o(1)))./norm2(v);
             gp_inc = @(v)   -p_inc(v).*(1./norm2(v)+1i*k).*v./norm2(v);
             dp_inc = @(v,n) -p_inc(v).*(1./norm2(v)+1i*k).*sum(v.*n,2)./norm2(v);
         elseif strcmp(applyLoad,'pointCharge')
             r_s = varCol{1}.r_s;
             x_s = d_vec*r_s;
-            p_inc = @(v) P_inc*r_s.*exp(1i*k*norm2(v-x_s))./norm2(v-x_s);
+            p_inc = @(v) P_inc*r_s.*exp(1i*k.*norm2(v-x_s))./norm2(v-x_s);
             gp_inc = @(v)   p_inc(v).*(-1./norm2(v-x_s)+1i*k).*v./norm2(v-x_s);
             dp_inc = @(v,n) p_inc(v).*(-1./norm2(v-x_s)+1i*k).*sum((v-x_s).*n,2)./norm2(v-x_s);
         end
         dpdn = @(v,n) zeros(size(v,1),1);
         varCol{1}.d_vec = d_vec;
 end
-Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
-dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k*r - 1).*sum(xmy.*ny,2);
+Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
+dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
 varCol{1}.Phi_k = Phi_k;
 varCol{1}.dPhi_kdny = dPhi_kdny;
 if varCol{1}.analyticSolutionExist
@@ -72,12 +73,24 @@ varCol{1}.p_inc_ROM = @(X) p_inc_ROM(X,c_f,d_vec,noRHSs,p_inc);
 varCol{1}.dp_inc_ROM = @(X,n) dp_inc_ROM(X,n,omega,c_f,d_vec,noRHSs,p_inc);
 varCol{1}.gp_inc = gp_inc;
 varCol{1}.dpdn = dpdn;
-varCol{1}.p = @(X) analytic({X},varCol,NaN,'p',1);
-varCol{1}.p_0 = @(X) analytic({X},varCol,NaN,'p_0',1);
+for i = 1:noDomains
+    switch varCol{i}.media
+        case 'fluid'
+            varCol{i}.p_ = @(X) analytic({X},varCol,NaN,'p',i);
+        case 'solid'
+            varCol{i}.u_x_ = @(X) analytic({X},varCol,NaN,'u_x',i);
+            varCol{i}.u_y_ = @(X) analytic({X},varCol,NaN,'u_y',i);
+            varCol{i}.u_z_ = @(X) analytic({X},varCol,NaN,'u_z',i);
+    end
+end
+varCol{1}.p_0_ = @(X) analytic({X},varCol,NaN,'p_0',1);
 
 
 
 function analyticFunctions = analytic(X,layers,n,func,m_func)
+if iscell(X{1})
+    X = X{1};
+end
 M = numel(X);
 switch layers{1}.applyLoad
     case 'Safjan'
@@ -163,26 +176,29 @@ switch layers{1}.applyLoad
         layers{1}.dpdz = dp(:,3);
         
     case {'planeWave','radialPulsation'}
-        layers{1}.calc_p_0       = true;      % Toggle calculation of the far field pattern
+        layers{1}.calc_p_0 = ~isempty(X{1});      % Toggle calculation of the far field pattern
         for m = 1:M
             layers{m}.X = X{m};
 
             % Parameters in layer m for options{i}.media = 'fluid'
-            layers{m}.calc_p       	= true;      % Toggle calculation of the scattered pressure
-            layers{m}.calc_dp      	= true(1,3); % Toggle calculation of the three components of the gradient of the pressure
-            layers{m}.calc_p_laplace	= true;      % Toggle calculation of the Laplace operator of the scattered pressure fields
-            layers{m}.calc_errHelm	= true;      % Toggle calculation of the errors for the Helmholtz equation
-
-            % Parameters in layer m for options{i}.media = 'solid' or 'viscoelastic'
-            layers{m}.calc_u       = true(1,3); % Toggle calculation of the three components of the displacement
-            layers{m}.calc_du      = true(3,3); % Toggle calculation of the three cartesian derivatives of the three components of the displacement [du_xdx du_xdy du_xdz; 
-                                                %                                                                                                    du_ydx du_ydy du_ydz; 
-                                                %                                                                                                    du_zdx du_zdy du_zdz]
-            layers{m}.calc_sigma   = true(1,6); % Toggle calculation of the six components of the stress field (cartesian coordinates) [sigma_xx sigma_yy sigma_zz sigma_yz sigma_xz sigma_xy]
+            switch layers{m}.media
+                case 'fluid'
+                    layers{m}.calc_p       	= true;      % Toggle calculation of the scattered pressure
+                    layers{m}.calc_dp      	= true(1,3); % Toggle calculation of the three components of the gradient of the pressure
+                    layers{m}.calc_p_laplace = true;      % Toggle calculation of the Laplace operator of the scattered pressure fields
+                    layers{m}.calc_errHelm	= true;      % Toggle calculation of the errors for the Helmholtz equation
+                case 'solid'
+                    % Parameters in layer m for options{i}.media = 'solid' or 'viscoelastic'
+                    layers{m}.calc_u       = true(1,3); % Toggle calculation of the three components of the displacement
+                    layers{m}.calc_du      = true(3,3); % Toggle calculation of the three cartesian derivatives of the three components of the displacement [du_xdx du_xdy du_xdz; 
+                                                        %                                                                                                    du_ydx du_ydy du_ydz; 
+                                                        %                                                                                                    du_zdx du_zdy du_zdz]
+                    layers{m}.calc_sigma   = true(1,6); % Toggle calculation of the six components of the stress field (cartesian coordinates) [sigma_xx sigma_yy sigma_zz sigma_yz sigma_xz sigma_xy]
+            end
         end
         layers = e3Dss(layers, layers{1}.e3Dss_options);
         if nargin > 2
-            layers{1}.dp = [layers{m}.dpdx,layers{m}.dpdy,layers{m}.dpdz];
+            layers{1}.dp = [layers{1}.dpdx,layers{1}.dpdy,layers{1}.dpdz];
         end
     case 'Cartesian'
         k = layers{1}.c_f/layers{m}.e3Dss_options.omega;

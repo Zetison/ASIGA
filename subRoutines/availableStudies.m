@@ -16,7 +16,7 @@
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
 % studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
-studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'FreeCAD'; %getTask_FreeCAD
 % studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
 % studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
@@ -54,7 +54,7 @@ studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'articleIGA_Ihlenburg2'; %getTask_articleIGA_Ihlenburg2 %time
 % studyName = 'articleIGA_Ihlenburg3'; %getTask_articleIGA_Ihlenburg3 %para
 % studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
-% studyName = 'articleIGA_IL_sweep'; %getTask_articleIGA_IL_sweep % sweep
+studyName = 'articleIGA_IL_sweep'; %getTask_articleIGA_IL_sweep % sweep
 % studyName = 'articleIGA_MockShell_P_convergence'; %getTask_articleIGA_MockShell_P_convergence
 % studyName = 'BC'; %getTask_BC
 

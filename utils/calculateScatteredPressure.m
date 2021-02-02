@@ -1,14 +1,15 @@
-function p_h = calculateScatteredPressure(varCol, Uc, P_far, useExtraQuadPts, computeFarField)
+function p_h = calculateScatteredPressure(varCol, P_far, useExtraQuadPts, computeFarField)
 
 d_p = varCol{1}.patches{1}.nurbs.d_p;
 d = varCol{1}.patches{1}.nurbs.d;
-U = Uc{1};
-if numel(varCol) > 1 && d_p == 2
+U = varCol{1}.U;
+solidBasedDerivs = false;
+if numel(varCol) > 1 && (d_p == 2 || solidBasedDerivs)
     [~, ~, elementSolid] = meshBoundary(varCol{2},1);
     noDofs = varCol{2}.noDofs;
-    Ux = Uc{2}(1:d:noDofs,:);
-    Uy = Uc{2}(2:d:noDofs,:);
-    Uz = Uc{2}(3:d:noDofs,:);
+    Ux = varCol{2}.U(1:d:noDofs,:);
+    Uy = varCol{2}.U(2:d:noDofs,:);
+    Uz = varCol{2}.U(3:d:noDofs,:);
 else
     elementSolid = NaN;
     Ux = NaN;
@@ -44,7 +45,6 @@ else
     D = NaN;
     N = NaN;
 end
-
 dp_inc = varCol{1}.dp_inc;
 
 Phi_k = varCol{1}.Phi_k;
@@ -89,8 +89,8 @@ if numel(k) > 1 && size(P_far,1) > 1
 end
 p_h = zeros(max([size(P_far,1),numel(k)]),1);
 
-% for i = 1:length(surfaceElements) %
-parfor i = 1:length(surfaceElements)
+for i = 1:length(surfaceElements) %
+% parfor i = 1:length(surfaceElements)
     if d_p == 3
         e = surfaceElements(i);
     else
@@ -138,8 +138,8 @@ parfor i = 1:length(surfaceElements)
     if exteriorSHBC
         dp_h_gp = -dp_inc(Y,normals); 
     else
-        if d_p == 2
-            dp_h_gp = rho*omega^2*( normals(:,1).*(R{1}*Ux(elementSolid(e,:),:)) ...
+        if d_p == 2 %|| solidBasedDerivs
+            dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*Ux(elementSolid(e,:),:)) ...
                                    +normals(:,2).*(R{1}*Uy(elementSolid(e,:),:)) ...
                                    +normals(:,3).*(R{1}*Uz(elementSolid(e,:),:)));
             if ~solveForPtot

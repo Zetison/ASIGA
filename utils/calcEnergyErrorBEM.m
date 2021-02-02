@@ -1,4 +1,4 @@
-function relError = calcEnergyErrorBEM(varCol, U)
+function relError = calcEnergyErrorBEM(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -22,6 +22,7 @@ analytic = varCol.analytic;
 solveForPtot = varCol.solveForPtot;
 
 quadMethodBEM = varCol.quadMethodBEM;
+U = varCol{1}.U;
 
 Eps = 10*eps;
 

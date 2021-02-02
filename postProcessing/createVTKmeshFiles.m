@@ -1,7 +1,6 @@
 function createVTKmeshFiles(varargin)
 varCol = varargin{1};
-options = struct('U', NaN, ... 
-                 'para_options', []);
+options = struct('para_options', []);
 if nargin > 1
     if numel(varargin) > 2
         newOptions = varargin(2:end);
@@ -12,7 +11,7 @@ if nargin > 1
 end
 for i_v = 1:numel(varCol)
     para = options.para_options;
-    U = options.U{i_v};
+    U = varCol{i_v}.U;
 
     extraXiPts = para.extraXiPts;
     extraEtaPts = para.extraEtaPts;

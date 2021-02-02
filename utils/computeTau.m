@@ -1,7 +1,7 @@
 function tau = computeTau(varCol)
 patches = varCol.patches;
 dofsToRemove = varCol.dofsToRemove;
-lambda = 2*pi/varCol.k;
+lambda = 2*pi./varCol.k;
 noDofs = varCol.noDofs;
 dofsToRemove(dofsToRemove > noDofs) = [];
 n_cp = noDofs - length(dofsToRemove);
@@ -64,4 +64,4 @@ d_min = zeros(n_cp,1);
 for i = 1:n_cp
     d_min(i) = min(norm2(repmat(cp(i,:),n_cp-1,1)-cp(setdiff(1:end,i),:)));
 end
-tau = lambda(1)/max(d_min);
+tau = lambda/max(d_min);

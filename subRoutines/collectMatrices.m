@@ -4,14 +4,23 @@ noDomains = numel(varCol);
 Aindices = cell(noDomains,2);
 noCols_tot = 0;
 noRows_tot = 0;
-if isfield(varCol{1},'A_K')
+if isfield(varCol{1},'A_K') || isfield(varCol{1},'A_M')
     allDofsToRemove = [];
     for i = noDomains:-1:1
-        Aindices{i,1} = noRows_tot+(1:size(varCol{i}.A_K,1));
-        Aindices{i,2} = noCols_tot+(1:size(varCol{i}.A_K,2));
+        if isfield(varCol{i},'A_K')
+            noRows = size(varCol{i}.A_K,1);
+            noCols = size(varCol{i}.A_K,2);
+        elseif isfield(varCol{i},'A_M')
+            noRows = size(varCol{i}.A_M,1);
+            noCols = size(varCol{i}.A_M,2);
+        else
+            error('No matrix found for this domain')
+        end
+        Aindices{i,1} = noRows_tot+(1:noRows);
+        Aindices{i,2} = noCols_tot+(1:noCols);
         allDofsToRemove = [allDofsToRemove (varCol{i}.dofsToRemove+noCols_tot)];
-        noRows_tot = noRows_tot + size(varCol{i}.A_K,1);
-        noCols_tot = noCols_tot + size(varCol{i}.A_K,2);
+        noRows_tot = noRows_tot + noRows;
+        noCols_tot = noCols_tot + noCols;
     end
     if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
         AindicesInf = noCols_tot - varCol{1}.noDofs+(1:varCol{1}.noDofs_new);
@@ -38,10 +47,18 @@ for i = 1:noDomains
     switch varCol{i}.media
         case 'fluid'
             eqScale = 1/varCol{i}.rho;
-            massMatrixScale = -eqScale/varCol{i}.c_f^2;
+            if strcmp(task.method,'BA')
+                massMatrixScale = eqScale;
+            else
+                massMatrixScale = -eqScale/varCol{i}.c_f^2;
+            end
         case 'solid'
             eqScale = 1;
-            massMatrixScale = -eqScale*varCol{i}.rho;
+            if strcmp(task.method,'BA')
+                massMatrixScale = eqScale;
+            else
+                massMatrixScale = -eqScale*varCol{i}.rho;
+            end
     end
     if isfield(varCol{i},'A_K')
         A0(Aindices{i,1},Aindices{i,2}) = eqScale*varCol{i}.A_K; 
@@ -71,11 +88,11 @@ for i = 1:noDomains
     end
 end
 if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
-    if isfield(varCol{i},'Ainf')
+    if isfield(varCol{1},'Ainf')
     	A0(AindicesInf,AindicesInf) = A0(AindicesInf,AindicesInf) + varCol{1}.Ainf/varCol{1}.rho; 
         if task.useROM
-            A1(AindicesInf,AindicesInf) = A1(AindicesInf,AindicesInf) + varCol{1}.Ainf1/varCol{1}.rho/varCol{i}.c_f; 
-            A2(AindicesInf,AindicesInf) = A2(AindicesInf,AindicesInf) + varCol{1}.Ainf2/varCol{1}.rho/varCol{i}.c_f^2; 
+            A1(AindicesInf,AindicesInf) = A1(AindicesInf,AindicesInf) + varCol{1}.Ainf1/varCol{1}.rho/varCol{1}.c_f; 
+            A2(AindicesInf,AindicesInf) = A2(AindicesInf,AindicesInf) + varCol{1}.Ainf2/varCol{1}.rho/varCol{1}.c_f^2; 
         end  
     end
 end

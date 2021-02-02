@@ -1,7 +1,6 @@
 function maxU = createParaviewFiles(varargin)
 varCol = varargin{1};
-options = struct('U', NaN, ... 
-                 'para_options', 0,...
+options = struct('para_options', 0,...
                  'rho',NaN);
 if nargin > 1
     if numel(varargin) > 2
@@ -48,7 +47,7 @@ for i_v = 1:noDomains
     para{i_v}.plotErrorGrad = para{i_v}.plotError; 
     para{i_v}.plotErrorEnergy = para{i_v}.plotError; 
 
-    U = options.U{i_v};
+    U = varCol{i_v}.U;
     rho = options.rho;
     if isnan(options.rho)
         rho = zeros(size(U,1),1);
