@@ -274,7 +274,8 @@ for i_b = 1:numel(basisROMcell)
                 for i_f = 1:numel(omega_ROM)
                     omega = omega_ROM(i_f);
                     Am = A0_am + omega*A1_am + omega^2*A2_am;
-                    U_fluid_oArr(freeDofs,i_f) = V*(Am\FF(:,i_f));
+                    Pinv = diag(1./max(abs(Am)));
+                    U_fluid_oArr(freeDofs,i_f) = V*(Pinv*((Am*Pinv)\FF(:,i_f)));
                 end
             case 'Hermite'
                 U_fluid_oArr = zeros(noDofs,numel(omega_ROM));
@@ -339,6 +340,8 @@ for i_b = 1:numel(basisROMcell)
             tasks(i_task,taskROM,i_b).task.results.H1Error = H1Error;
             tasks(i_task,taskROM,i_b).task.results.H1sError = H1sError;
             tasks(i_task,taskROM,i_b).task.results.surfaceError = surfaceError;
+
+            fprintf('using %12f seconds.', toc(t_startROM))
         end
         if task.calculateFarFieldPattern
             varCol{1}.omega = omega_ROM;
@@ -366,8 +369,6 @@ for i_b = 1:numel(basisROMcell)
         tasks(i_task,taskROM,i_b).task.varCol{1}.f_ROM = temp_omega_ROM/(2*pi);
         tasks(i_task,taskROM,i_b).task.noVecs = noVecs;
         tasks(i_task,taskROM,i_b).task.basisROM = basisROM;
-
-        fprintf('using %12f seconds.', toc(t_startROM))
     end
 end
 

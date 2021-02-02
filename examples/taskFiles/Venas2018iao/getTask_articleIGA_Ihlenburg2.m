@@ -11,14 +11,14 @@ prePlot.plot2Dgeometry = 0;
 prePlot.abortAfterPlotting = 1;
 scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 model = 'IL';
-formulation = 'BGU';
-method = 'IE';
+formulation = {'BGU'};
+method = {'IE'};
 parm = 1;
 coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
 coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 BCs = {'SHBC','SSBC','NNBC'};
-BCs = {'NNBC'};
-% BCs = {'SHBC'};
+% BCs = {'NNBC'};
+BCs = {'SHBC'};
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
@@ -26,7 +26,7 @@ postPlot(1).printResults 	= 0;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','f','formulation','M'};
+postPlot(1).legendEntries 	= {'method','formulation','M','degree','coreMethod','BC','f'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
@@ -80,8 +80,14 @@ for i_coreM = 1:length(coreMethods)
         calculateFarFieldPattern = 1;
         calculateVolumeError = 1;
         calculateSurfaceError = 0;
-        loopParameters = {'M','degree','coreMethod','BC','f'};
+        loopParameters = {'method','formulation','M','degree','coreMethod','BC','f'};
 
+        formulation = {'BGU'};
+        method = {'IE'};    
+        collectIntoTasks
+        
+        formulation = {'VL2E'};
+        method = {'BA'};
         collectIntoTasks
     end
 end

@@ -35,7 +35,7 @@ prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometry
 prePlot.plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 
-runTasksInParallel = 1;
+runTasksInParallel = 0;
 
 postPlot(1).xname        	= 'k';
 postPlot(1).yname        	= 'TS';
@@ -58,9 +58,11 @@ if runTasksInParallel
     loopParameters = {'M','degree','coreMethod','BC','f'};
 else
     loopParameters = {'M','degree','coreMethod','BC'};
+%     loopParameters = {'M','degree','coreMethod','BC','f'};
 end
 BCs = {'SHBC','SSBC','NNBC'};
 BCs = {'NNBC'};
+BCs = {'SHBC'};
 coreMethods = {'IGA','IGA','linear_FEM','hp_FEM'}; % [5, 4, 2, 1, 3]
 % coreMethods = {'linear_FEM'}; % [5, 4, 2, 1, 3]
 M_0 = 4;
@@ -69,7 +71,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
     for BC = BCs %
         npts = 1500;
-%         npts = 15;
+        npts = 150;
 %         npts = 2;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;
@@ -148,7 +150,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
         switch coreMethod{1}
             case 'IGA'
                 if i_coreM == 1
-                    M = M_0; % 4
+                    M = (M_0-1):M_0; % 4
                     degree = 3; %3
                 else
                     M = M_0+1;

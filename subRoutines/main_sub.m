@@ -344,7 +344,8 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                                 varCol{1}.A2 = A2;
                             end
                             UU = zeros(size(FF));
-                            dA = decomposition(A,'lu');
+                            Pinv = diag(1./max(abs(A)));
+                            dA = decomposition(A*Pinv,'lu');
                             fprintf('using %12f seconds.', toc)
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
                             for i = 1:varCol{1}.noRHSs
@@ -356,26 +357,17 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                                 if j > 1
                                     b = b - j*(j-1)/2*d2Adomega2*UU(:,i-2);
                                 end
-                                UU(:,i) = dA\b;
+                                UU(:,i) = diag(Pinv).*(dA\b);
                             end
                         else
                             if i_f == 1 && strcmp(task.formulation,'Sweep')
                                 UU = zeros(size(A,1),numel(f));
                             end
-%                             A = varCol{1}.A_K - varCol{1}.k^2*varCol{1}.A_M + varCol{1}.Ainf;
-                            if strcmp(task.method,'MFS') && strcmp(formulation,'SS')
-                                Pinv = diag(1./max(abs(A)));
-                                if strcmp(task.scatteringCase,'Sweep')
-                                    UU(:,i_f) = diag(Pinv).*((A*Pinv)\FF);
-                                else
-                                    UU = diag(Pinv).*((A*Pinv)\FF);
-                                end
+                            Pinv = diag(1./max(abs(A)));
+                            if strcmp(task.scatteringCase,'Sweep')
+                                UU(:,i_f) = diag(Pinv).*((A*Pinv)\FF);
                             else
-                                if strcmp(task.scatteringCase,'Sweep')
-                                    UU(:,i_f) = A\FF;
-                                else
-                                    UU = A\FF;
-                                end
+                                UU = diag(Pinv).*((A*Pinv)\FF);
                             end
                         end
                     otherwise
@@ -412,7 +404,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
             fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_f, numel(f), toc(t_freq))  
         end
     end
-    if numel(f) > 1
+    if numel(f) > 1 && ~task.useROM
         tic
         fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         progressBars = numel(f) > 1;
@@ -426,25 +418,25 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         progressBars = false;
     end
 
-    for i_f = 1:numel(f)
-        if progressBars
-            ppm.increment();
-        end
-        f_i = f(i_f);
-        omega = 2*pi*f_i;
-        for m = 1:noDomains
-            varCol{m}.omega = omega;
-            switch varCol{m}.media
-                case 'fluid'
-                    varCol{m}.f = f_i;
-                    varCol{m}.k = omega/varCol{m}.c_f;
-                    varCol{m}.lambda = 2*pi/varCol{m}.k;
-                case 'solid'
-                    varCol{m}.k = NaN;
+    if ~task.useROM
+        for i_f = 1:numel(f)
+            if progressBars
+                ppm.increment();
             end
-        end
-        varCol = getAnalyticSolutions(varCol);
-        if ~task.useROM
+            f_i = f(i_f);
+            omega = 2*pi*f_i;
+            for m = 1:noDomains
+                varCol{m}.omega = omega;
+                switch varCol{m}.media
+                    case 'fluid'
+                        varCol{m}.f = f_i;
+                        varCol{m}.k = omega/varCol{m}.c_f;
+                        varCol{m}.lambda = 2*pi/varCol{m}.k;
+                    case 'solid'
+                        varCol{m}.k = NaN;
+                end
+            end
+            varCol = getAnalyticSolutions(varCol);
             if i_f == 1
                 task.results.energyError = zeros(1,size(f,2));
                 task.results.L2Error = zeros(1,size(f,2));
@@ -464,7 +456,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
             task.results.H1sError(i_f) = H1sError;
         end
     end
-    if numel(f) > 1
+    if numel(f) > 1 && ~task.useROM
         fprintf('using %12f seconds.', toc)   
     end
     if task.clearGlobalMatrices

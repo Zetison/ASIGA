@@ -9,7 +9,7 @@ getDefaultTaskValues
 
 %% IE simulation
 scatteringCase = 'Sweep';
-% BC = 'NNBC';
+BC = 'SSBC';
 model = 'IMS';  % Spherical shell
 
 coreMethod = {'IGA','hp_FEM'};
@@ -33,7 +33,7 @@ varCol{2} = struct('media', 'solid', ...
 varCol{1}.meshFile = 'createNURBSmesh_M3';
 warning('off','NURBS:weights')
 
-k = linspace(2.5, 20, 3)/varCol{1}.R1;
+k = linspace(2.5, 20, 5)/varCol{1}.R1;
 % k = [9, 22.5, 36]/5;
 
 alpha = 0;

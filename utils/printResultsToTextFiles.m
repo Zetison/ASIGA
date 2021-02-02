@@ -44,46 +44,15 @@ end
 if ~exist(subFolderName, 'dir')
     mkdir(subFolderName);
 end
-analyticSolutionExist = study.tasks(1).task.varCol{1}.analyticSolutionExist;
-% analyticSolutionExist = true;
 
 if isempty(options.fileDataHeaderX)
     fileDataHeaderX = xname;
 else
     fileDataHeaderX = options.fileDataHeaderX;
 end
-prevGrafs = get(gca, 'Children');
-if ~isempty(prevGrafs)
-    legendPrev = legend;
-    legendArr = legendPrev.String;
-    analyticPlotted = false;
-    for i = 1:numel(legendArr)
-        if strcmp(legendArr{i},'Analytic solution')
-            
-            y_ref = study.tasks(1).task.results.([yname '_ref']);
-            x = study.tasks(1).task.varCol{1}.(xname);
-            x = x*options.xScale;
-            y_ref = y_ref*options.yScale;
-            if all(size(y_ref) == size(prevGrafs(i).YData)) && all(y_ref == prevGrafs(i).YData)
-                analyticPlotted = true;
-            end
-        end
-    end
-else
-    analyticPlotted = false;
-end
 
-plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p')) && ~analyticPlotted;
 switch options.noXLoopPrms
     case 0
-        if plotAnalyticSolution
-            y_ref = study.tasks(1).task.results.([yname '_ref']);
-            x = study.tasks(1).task.varCol{1}.(xname);
-            x = x*options.xScale;
-            y_ref = y_ref*options.yScale;
-            plotXY(x,y_ref,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
-            hold on
-        end
         col = LaTeXcolorMap(noTasks);
         for i = 1:noTasks
             if isfield(study.tasks(i).task.varCol{1},xname)
@@ -109,7 +78,32 @@ switch options.noXLoopPrms
                                                                                                             'task', study.tasks(i).task});
             end
             if plotResults
-%                 legendName(legendName == '_') = [];
+                analyticSolutionExist = study.tasks(i).task.varCol{1}.analyticSolutionExist;
+                plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
+                if plotAnalyticSolution
+                    prevGrafs = get(gca, 'Children');
+                    analyticPlotted = false;
+                    if ~isempty(prevGrafs)
+                        for j = 1:numel(prevGrafs)
+                            y_ref = study.tasks(i).task.results.([yname '_ref']);
+                            x = study.tasks(i).task.varCol{1}.(xname);
+                            x = x*options.xScale;
+                            y_ref = y_ref*options.yScale;
+                            if numel(y_ref) == numel(prevGrafs(j).YData) && all(y_ref(:) == prevGrafs(j).YData(:))
+                                analyticPlotted = true;
+                            end
+                        end
+                    end
+                    if ~analyticPlotted
+                        y_ref = study.tasks(i).task.results.([yname '_ref']);
+                        x = study.tasks(i).task.varCol{1}.(xname);
+                        x = x*options.xScale;
+                        y_ref = y_ref*options.yScale;
+                        plotXY(x,y_ref,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
+                        hold on
+                    end
+                end
+                
                 plotXY(x,y,options.axisType,options.lineStyle,col(i,:),legendName);
                 hold on
             end
@@ -131,6 +125,8 @@ switch options.noXLoopPrms
         end
         x = zeros(sizes); % x axis data
         y = zeros(sizes); % y axis data 
+        analyticSolutionExist = study.tasks(1).task.varCol{1}.analyticSolutionExist;
+        plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
         if plotAnalyticSolution
             y_ref = zeros(sizes); % y axis data
         end
@@ -185,9 +181,20 @@ switch options.noXLoopPrms
                 x_temp = x_temp(:);
                 y_temp = y_temp(:);
                 if plotAnalyticSolution
-                    y_ref_temp = y_ref_temp(:);
-                    plotXY(x_temp,y_ref_temp,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
-                    hold on
+                    prevGrafs = get(gca, 'Children');
+                    analyticPlotted = false;
+                    if ~isempty(prevGrafs)
+                        for j = 1:numel(prevGrafs)
+                            if numel(y_ref_temp) == numel(prevGrafs(j).YData) && all(y_ref_temp(:) == prevGrafs(j).YData(:))
+                                analyticPlotted = true;
+                            end
+                        end
+                    end
+                    if ~analyticPlotted
+                        y_ref_temp = y_ref_temp(:);
+                        plotXY(x_temp,y_ref_temp,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
+                        hold on
+                    end
                 end
 %                 legendName(legendName == '_') = [];
                 plotXY(x_temp,y_temp,options.axisType,options.lineStyle,col(i,:),legendName);

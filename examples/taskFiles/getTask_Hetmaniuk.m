@@ -19,7 +19,8 @@ method = {'IE'};
 % formulation = {'PGC'};
 formulation = {'BGC'};
 % BCs = {'SHBC'};
-BCs = {'SSBC'};
+% BCs = {'SSBC'};
+BCs = {'NNBC'};
 % BCs = {'SHBC','SSBC'};
 plotFarField = ~hetmaniukCase;
 
@@ -34,7 +35,7 @@ r_a = 1.2;
 
 parm = 1;
 calculateSurfaceError = 0;
-calculateVolumeError  = 0;
+calculateVolumeError  = 1;
 calculateFarFieldPattern = 1;
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
@@ -64,14 +65,21 @@ else
 end
 postPlot(2).axisType      	= 'plot';
 
-postPlot(3) = postPlot(1);
-postPlot(4) = postPlot(2);
+postPlot(3) = postPlot(2);
+postPlot(3).axisType = 'semilogy';
+postPlot(3).yname = 'error_p';
+
+postPlot(4) = postPlot(1);
+postPlot(5) = postPlot(2);
+postPlot(6) = postPlot(3);
 
 for BC = BCs
     postPlot(1).xname = 'k_ROM';
     postPlot(2).xname = 'k_ROM';
-    postPlot(3).xname = 'f_ROM';
+    postPlot(3).xname = 'k_ROM';
     postPlot(4).xname = 'f_ROM';
+    postPlot(5).xname = 'f_ROM';
+    postPlot(6).xname = 'f_ROM';
     switch BC{1}
         case 'SHBC'
             noDomains = 1;
@@ -87,10 +95,13 @@ for BC = BCs
     if noDomains > 1
         varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
     end
+    if noDomains > 2
+        varCol{3}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)-1,0)];
+    end
     switch BC{1}
         case 'SHBC'
             k = linspace(9, 36, 3);
-%             k = linspace(9, 36, 3)/10;
+            k = linspace(9, 36, 3)/10;
             k_ROM = k(1):0.05:k(end);
 %             k_ROM = k(1):0.5:k(end);
             c_f = varCol{1}.c_f;
@@ -102,8 +113,10 @@ for BC = BCs
             end
             postPlot(1).plotResults = true;
             postPlot(2).plotResults = true;
-            postPlot(3).plotResults = false;
+            postPlot(3).plotResults = true;
             postPlot(4).plotResults = false;
+            postPlot(5).plotResults = false;
+            postPlot(6).plotResults = false;
         case {'SSBC','NNBC'}
             f = linspace(1430, 4290, 5);
             f = linspace(143, 429, 5);
@@ -117,9 +130,12 @@ for BC = BCs
             end
             postPlot(1).plotResults = false;
             postPlot(2).plotResults = false;
-            postPlot(3).plotResults = true;
+            postPlot(3).plotResults = false;
             postPlot(4).plotResults = true;
+            postPlot(5).plotResults = true;
+            postPlot(6).plotResults = true;
     end
+    omega = 2*pi*f;
 
 
 
@@ -145,7 +161,7 @@ for BC = BCs
     % k = k_arr(round(linspace(1,n,P)));
     degree = 4;
     % degree = 2:5;
-    M = 1:3; % 5
+    M = 3:5; % 5
     N = 7; % 9
     % M = 1; 
     % N = 2;
@@ -163,7 +179,7 @@ for BC = BCs
 
     storeFullVarCol = false;
     loopParameters = {'M','method','BC'};
-    % collectIntoTasks
+    collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     useROM = false;
@@ -171,11 +187,18 @@ for BC = BCs
     postPlot(2).xname = postPlot(2).xname(1);
     postPlot(3).xname = postPlot(3).xname(1);
     postPlot(4).xname = postPlot(4).xname(1);
+    postPlot(5).xname = postPlot(5).xname(1);
+    postPlot(6).xname = postPlot(6).xname(1);
     omega = omega_ROM;
     f = omega/(2*pi);
     coreMethod = {'IGA'};
     method = {'BA'};
-    formulation = {'SL2E'};
+%     formulation = {'SL2E'};
     formulation = {'VL2E'};
+    collectIntoTasks
+    
+    coreMethod = {'IGA'};
+    method = {'IE'};
+    formulation = {'BGU'};
     collectIntoTasks
 end
