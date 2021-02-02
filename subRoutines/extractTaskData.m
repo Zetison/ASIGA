@@ -37,6 +37,9 @@ end
 if isfield(task,'c_y')
     varCol{1}.c_y = task.c_y;
 end
+if isfield(task,'c_xy')
+    varCol{1}.c_xy = task.c_xy;
+end
 if isfield(task,'c_z')
     varCol{1}.c_z = task.c_z;
 end

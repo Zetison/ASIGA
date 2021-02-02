@@ -22,7 +22,11 @@ for patch = 1:noPatches
         if uniformRef
             newKnotsPatch = insertUniform2(nurbs.knots{i}, newKnots(i));
         else
-            newKnotsPatch = newKnots{patch}{i};
+            if isempty(newKnots{patch})
+                newKnotsPatch = [];
+            else
+                newKnotsPatch = newKnots{patch}{i};
+            end
         end
         if isempty(newKnotsPatch)
             knots{i} = nurbs.knots{i};

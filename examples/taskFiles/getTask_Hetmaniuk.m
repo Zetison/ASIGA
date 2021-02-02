@@ -137,42 +137,13 @@ for BC = BCs
     end
     omega = 2*pi*f;
 
-
-
-    % noVecsArr = [4,8,16];        % do not put noVecsArr in loopParameters (this is done automatically)
-    % basisROMcell = {'Bernstein','Hermite','Pade','Taylor','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    % basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    % basisROMcell = {'Taylor'};  % do not put basisROMcell in loopParameters (this is done automatically)
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    % basisROMcell = {'Hermite'};  % do not put basisROMcell in loopParameters (this is done automatically)
     noVecsArr = 64;
-    % noVecsArr = [2,4,8,16,32,64];
-    % noVecsArr = 8;
-    % k_start = 9/10;
-    % k_end = 36/10;
-    % P = 3;
-    % n = P*noVecs;
-    % temp = cos(pi/(2*n));
-    % a = ((k_start+k_end)*temp-(k_end-k_start))/(2*temp);
-    % b = ((k_start+k_end)*temp+(k_end-k_start))/(2*temp);
-    % j = 1:n;
-    % k_arr = 1/2*(a+b)+1/2*(b-a)*cos((2*n-2*j+1)*pi/(2*n));
-    % k = k_arr(round(linspace(1,n,P)));
     degree = 4;
-    % degree = 2:5;
     M = 3:5; % 5
     N = 7; % 9
-    % M = 1; 
-    % N = 2;
     useROM = true;
-    % 
-    % useROM = false;
-    % postPlot(1).xname = 'k';
-    % k = k_ROM;
-    % c_f = 1500;
-    % f = k*c_f/(2*pi);
-    % refineThetaOnly = 0;
     p_ie = 5;
     s_ie = 2;
     IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support

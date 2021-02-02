@@ -407,7 +407,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
     if numel(f) > 1 && ~task.useROM
         tic
         fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
-        progressBars = numel(f) > 1;
+        progressBars = numel(f) > 1 && task.progressBars;
         nProgressStepSize = ceil(numel(f)/10);
         if progressBars
             ppm = ParforProgMon('Calculating surface error: ', numel(f));
@@ -416,6 +416,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         end
     else
         progressBars = false;
+        ppm = NaN;
     end
 
     if ~task.useROM

@@ -6,7 +6,11 @@ else
     R1 = varCol{1}.R;
     R2 = varCol{1}.R;
 end
-Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+if isfield(varCol{1}, 'Xi')
+    Xi = varCol{1}.Xi;
+else
+    Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+end
 t = varCol{1}.t;
 L = varCol{1}.L;
 parm = varCol{1}.parm;
@@ -62,6 +66,7 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
+    R_max = max(R1,R2);
     if strcmp(varCol{1}.model,'MS')
         Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
         c_z = 1.2*(L+2*R1)/2; % 30
@@ -71,8 +76,15 @@ else
         eta2 = 1-eta1;
         noNewZetaKnots = max(2^(M-1)/4-1,0);
         nn = 2^(M-1)-1;
+    elseif strcmp(varCol{1}.model,'IMS')
+        c_z = varCol{1}.c_z;
+        c_xy = varCol{1}.c_xy;
+        Upsilon = sqrt(c_z^2-c_xy^2);
+        eta1 = 0.2;
+        eta2 = 1-eta1;
+        noNewZetaKnots = max(2^(M-1)/4-1,0);
+        nn = 2^(M-1)-1;
     else
-        R_max = max(R1,R2);
         s = 0.25 + 0.05*(L-R_max)/R_max;
         c_z = (L+R1+R2)/2 + s*R_max;
         c_xy = R_max + s*R_max;
@@ -103,12 +115,22 @@ else
     
     ellipsoid = getEllipsoidData('C',[c_z,c_xy,c_xy],'alignWithAxis',alignWithAxis,'x_0',x_0, 'alpha', 0, ...
                                  'Xi', Xi, 'Eta', [0,0,0,eta1,eta1,eta2,eta2,1,1,1]);
-	
+
+    refLength = R_max*pi/2;
     if strcmp(varCol{1}.model,'MS')
         fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),explodeNURBS(ellipsoid,2)});
         fluid = makeUniformNURBSDegree(fluid,degree);
         fluid = glueNURBS([glueNURBS(fluid(1:4),1),glueNURBS(fluid(5:8),1),glueNURBS(fluid(9:12),1)],2);
         fluid = insertKnotsInNURBS(fluid,[nn,nn,noNewZetaKnots]);
+    elseif strcmp(varCol{1}.model,'IMS')
+        fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),explodeNURBS(ellipsoid,2)});
+        fluid = makeUniformNURBSDegree(fluid,degree);
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{[],[],[c_z-L/2-R_max, 4.781073898979603]},0,2:3); %c_z-L/2-R_max, 
+        solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,3);
+        for i = 1:numel(newKnotsIns)
+            newKnotsIns{i}{3} = {};
+        end
+        solid = insertKnotsInNURBS(solid,newKnotsIns);
     else
         ellipsoid = makeUniformNURBSDegree(ellipsoid,degreeVec(1:2));
 
