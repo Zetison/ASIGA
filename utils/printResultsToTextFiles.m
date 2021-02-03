@@ -226,7 +226,11 @@ if plotResults
         case {'f','f_ROM'}
             xLabel = '$$f$$';
         case {'k','k_ROM'}
-            xLabel = '$$k$$';
+            if options.xScale == 1
+                xLabel = '$$k$$';
+            else
+                xLabel = '$$ka$$';
+            end
         case 'beta'
             xLabel = '$$\beta$$';
         case 's_ie'
@@ -390,6 +394,7 @@ if ~isempty(legendName)
 end
 switch legendEntries{j}
     case {'formulation','IEbasis','method','coreMethod','BC'}
+        temp = insertBefore(temp,'_','\');
         legendName = [legendName temp];
         saveName = [saveName '_' temp];
     otherwise

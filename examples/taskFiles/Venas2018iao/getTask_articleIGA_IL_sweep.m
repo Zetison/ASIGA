@@ -9,8 +9,8 @@ getDefaultTaskValues
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-scatteringCase = 'Sweep'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+% scatteringCase = 'Sweep'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 model = 'IL';
 formulation = 'BGU';
@@ -40,7 +40,7 @@ runTasksInParallel = 0;
 postPlot(1).xname        	= 'k';
 postPlot(1).yname        	= 'TS';
 postPlot(1).lineStyle    	= '-';
-if runTasksInParallel
+if runTasksInParallel || strcmp(scatteringCase,'BI')
     postPlot(1).xLoopName     	= 'f';
     postPlot(1).noXLoopPrms   	= 1;
 end
@@ -57,21 +57,21 @@ calculateSurfaceError = 0;
 if runTasksInParallel
     loopParameters = {'M','degree','coreMethod','BC','f'};
 else
-    loopParameters = {'M','degree','coreMethod','BC'};
-%     loopParameters = {'M','degree','coreMethod','BC','f'};
+%     loopParameters = {'M','degree','coreMethod','BC'};
+    loopParameters = {'M','degree','coreMethod','BC','f'};
 end
 BCs = {'SHBC','SSBC','NNBC'};
-BCs = {'NNBC'};
-BCs = {'SHBC'};
+% BCs = {'NNBC'};
+% BCs = {'SHBC'};
 coreMethods = {'IGA','IGA','linear_FEM','hp_FEM'}; % [5, 4, 2, 1, 3]
 % coreMethods = {'linear_FEM'}; % [5, 4, 2, 1, 3]
 M_0 = 4;
-coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+% coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
     for BC = BCs %
         npts = 1500;
-        npts = 150;
+        npts = 15;
 %         npts = 2;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;
@@ -140,6 +140,8 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
                 varCol{3}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, max(2^(M-2)-1,0)];
             end
         end
+        postPlot(1).xScale = varCol{1}.R_i;
+        postPlot(2).xScale = varCol{1}.R_i;
 %         specialValues = [];
         k = linspace(0.001, 2, npts);
         k = unique(sort([k'; specialValues; 1]'));
