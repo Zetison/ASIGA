@@ -301,29 +301,30 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 end
                 
                 %% SOLVE SYSTEM
-                if ~strcmp(task.solver,'LU')
-                    tic
-                    if ~runTasksInParallel
-                        fprintf(['\n%-' num2str(stringShift) 's'], ['Creating preconditioner (' task.preconditioner ') ... '])
-                    end
-                    switch task.preconditioner
-                        case 'ilu'
-        %                     [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-4));
-                %             [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-3));
-                            [L_A,U_A] = ilu(A,struct('type','nofill'));
-                        %     [L_A,U_A] = lu(A);
-                        case 'SSOR'
-                            D_SSOR = spdiags(spdiags(A,0),0,size(A,1),size(A,2));
-                            D_SSORinv = spdiags(1./spdiags(A,0),0,size(A,1),size(A,2));
-                            F_SSOR = -triu(A);
-                            E_SSOR = -tril(A);
-                            omega_SSOR = 1.5;
-                            L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
-                            U_A = D_SSOR-omega_SSOR*F_SSOR;
-                    end
-                    if ~runTasksInParallel
-                        fprintf('using %12f seconds.', toc)
-                    end
+                tic
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], ['Creating preconditioner (' task.preconditioner ') ... '])
+                end
+                switch task.preconditioner
+                    case 'ilu'
+    %                     [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-4));
+            %             [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-3));
+                        [L_A,U_A] = ilu(A,struct('type','nofill'));
+                    %     [L_A,U_A] = lu(A);
+                    case 'SSOR'
+                        D_SSOR = spdiags(spdiags(A,0),0,size(A,1),size(A,2));
+                        D_SSORinv = spdiags(1./spdiags(A,0),0,size(A,1),size(A,2));
+                        F_SSOR = -triu(A);
+                        E_SSOR = -tril(A);
+                        omega_SSOR = 1.5;
+                        L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
+                        U_A = D_SSOR-omega_SSOR*F_SSOR;
+%                         P = L_A*U_A;
+                    case 'diag'
+                        Pinv = spdiags(1./diag(A),0,size(A,1),size(A,2));
+                end
+                if ~runTasksInParallel
+                    fprintf('using %12f seconds.', toc)
                 end
                 tic
                 if ~runTasksInParallel
@@ -335,6 +336,9 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                         % noRestarts = 2;
                         [UU,~,~,it1,rv1] = gmres(A,FF,noRestarts,1e-20,1000,L_A,U_A);
                     case 'LU'
+                        if ~strcmp(task.preconditioner,'diag')
+                            error('not implemented')
+                        end
                         if task.useROM
                             dAdomega = A1 + 2*omega*A2 + 4*omega^3*A4;
                             d2Adomega2 = 2*A2 + 12*omega^2*A4;
@@ -344,7 +348,6 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                                 varCol{1}.A2 = A2;
                             end
                             UU = zeros(size(FF));
-                            Pinv = diag(1./max(abs(A)));
                             dA = decomposition(A*Pinv,'lu');
                             fprintf('using %12f seconds.', toc)
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
@@ -357,17 +360,16 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                                 if j > 1
                                     b = b - j*(j-1)/2*d2Adomega2*UU(:,i-2);
                                 end
-                                UU(:,i) = diag(Pinv).*(dA\b);
+                                UU(:,i) = Pinv*(dA\b);
                             end
                         else
                             if i_f == 1 && strcmp(task.formulation,'Sweep')
                                 UU = zeros(size(A,1),numel(f));
                             end
-                            Pinv = diag(1./max(abs(A)));
                             if strcmp(task.scatteringCase,'Sweep')
-                                UU(:,i_f) = diag(Pinv).*((A*Pinv)\FF);
+                                UU(:,i_f) = Pinv*((A*Pinv)\FF);
                             else
-                                UU = diag(Pinv).*((A*Pinv)\FF);
+                                UU = Pinv*((A*Pinv)\FF);
                             end
                         end
                     otherwise
@@ -397,14 +399,13 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         end
         varCol{1}.dofs = dofs;
         if task.useROM && strcmp(task.scatteringCase,'Sweep')
-            [varCol,U] = postProcessSolution(varCol,UU);
-            U_sweep{i_f} = U;
+            [varCol,U_sweep{i_f}] = postProcessSolution(varCol,UU);
         end
         if strcmp(task.scatteringCase,'Sweep') && numel(f) > 1
             fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_f, numel(f), toc(t_freq))  
         end
     end
-    if numel(f) > 1 && ~task.useROM
+    if numel(f) > 1 && ~task.useROM && (task.calculateSurfaceError || task.calculateVolumeError)
         tic
         fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         progressBars = numel(f) > 1 && task.progressBars;
@@ -419,7 +420,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         ppm = NaN;
     end
 
-    if ~task.useROM
+    if ~task.useROM && (task.calculateSurfaceError || task.calculateVolumeError)
         for i_f = 1:numel(f)
             if progressBars
                 ppm.increment();
@@ -457,12 +458,12 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
             task.results.H1sError(i_f) = H1sError;
         end
     end
-    if numel(f) > 1 && ~task.useROM
+    if numel(f) > 1 && ~task.useROM && (task.calculateSurfaceError || task.calculateVolumeError)
         fprintf('using %12f seconds.', toc)   
     end
     if task.clearGlobalMatrices
-        varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
-        clear A FF
+        varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2','Pinv'});
+        clear A FF A0 A1 A2 A4 Pinv
     end
 else
     varCol{1}.U = [];
@@ -483,6 +484,9 @@ if ~task.useROM
     varCol{1}.k = (2*pi*f)/varCol{1}.c_f;
     varCol{1}.f = f;
     varCol{1}.omega = f/(2*pi);
+end
+if task.clearGlobalMatrices
+    clear UU U
 end
 
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview

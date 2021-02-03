@@ -46,6 +46,14 @@ for i_v = 1:noDomains
     para{i_v}.plotError = options.para_options.plotError && (analyticSolutionExist && ~options.para_options.plotTimeOscillation); 
     para{i_v}.plotErrorGrad = para{i_v}.plotError; 
     para{i_v}.plotErrorEnergy = para{i_v}.plotError; 
+    
+    para{i_v}.plotVonMisesStress = options.para_options.plotVonMisesStress && isSolid;
+    para{i_v}.plotStressXX = options.para_options.plotStressXX && isSolid;
+    para{i_v}.plotStressYY = options.para_options.plotStressYY && isSolid;
+    para{i_v}.plotStressZZ = options.para_options.plotStressZZ && isSolid;
+    para{i_v}.plotStressYZ = options.para_options.plotStressYZ && isSolid;
+    para{i_v}.plotStressXZ = options.para_options.plotStressXZ && isSolid;
+    para{i_v}.plotStressXY = options.para_options.plotStressXY && isSolid;
 
     U = varCol{i_v}.U;
     rho = options.rho;

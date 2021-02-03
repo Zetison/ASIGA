@@ -196,7 +196,6 @@ switch options.noXLoopPrms
                         hold on
                     end
                 end
-%                 legendName(legendName == '_') = [];
                 plotXY(x_temp,y_temp,options.axisType,options.lineStyle,col(i,:),legendName);
                 hold on
             end

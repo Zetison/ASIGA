@@ -274,7 +274,7 @@ for i_b = 1:numel(basisROMcell)
                 for i_f = 1:numel(omega_ROM)
                     omega = omega_ROM(i_f);
                     Am = A0_am + omega*A1_am + omega^2*A2_am;
-                    Pinv = diag(1./max(abs(Am)));
+                    Pinv = spdiags(1./diag(Am),0,size(Am,1),size(Am,2));
                     U_fluid_oArr(freeDofs,i_f) = V*(Pinv*((Am*Pinv)\FF(:,i_f)));
                 end
             case 'Hermite'
@@ -300,8 +300,7 @@ for i_b = 1:numel(basisROMcell)
         end
         fprintf('using %12f seconds.', toc(t_startROM))
 
-        calculateSurfaceError = 1;
-        if calculateSurfaceError
+        if task.calculateSurfaceError || task.calculateVolumeError
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
             t_startROM = tic;
             energyError = zeros(1,size(omega_ROM,2));
@@ -358,9 +357,10 @@ for i_b = 1:numel(basisROMcell)
             for field = fieldCell
                 switch basisROM
                     case {'Taylor','Pade'}
-                        tasks(i_task,taskROM,i_b).task.results.(field{1}) = insertNaN(omega_ROM,task.results.(field{1}),omega_P);
+                        [tasks(i_task,taskROM,i_b).task.results.(field{1}),temp_omega_ROM] = insertNaN(omega_ROM,task.results.(field{1}),omega_P);
                     otherwise
                         tasks(i_task,taskROM,i_b).task.results.(field{1}) = task.results.(field{1});
+                        temp_omega_ROM = omega_ROM;
                 end
             end
         end

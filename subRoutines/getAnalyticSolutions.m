@@ -18,12 +18,16 @@ switch applyLoad
         if ~strcmp(BC,'NBC')
             error('This exact solution is not a solution to coupled problems')
         end        
-    case {'planeWave','radialPulsation'}
+    case {'planeWave','radialPulsation','pointCharge'}
         alpha_s = varCol{1}.alpha_s;
         beta_s = varCol{1}.beta_s;
         d_vec = -[cos(beta_s(1))*cos(alpha_s);
                   cos(beta_s(1))*sin(alpha_s);
                   sin(beta_s(1))*ones(1,length(alpha_s))];
+        if strcmp(applyLoad,'pointCharge')
+            r_s = varCol{1}.r_s;
+            d_vec = -d_vec; 
+        end
         varCol{1}.d_vec = d_vec;
         N_max = varCol{1}.N_max;
         e3Dss_options.BC = BC;
@@ -49,14 +53,12 @@ switch applyLoad
             gp_inc = @(v)   -p_inc(v).*(1./norm2(v)+1i*k).*v./norm2(v);
             dp_inc = @(v,n) -p_inc(v).*(1./norm2(v)+1i*k).*sum(v.*n,2)./norm2(v);
         elseif strcmp(applyLoad,'pointCharge')
-            r_s = varCol{1}.r_s;
-            x_s = d_vec*r_s;
+            x_s = r_s*d_vec.';
             p_inc = @(v) P_inc*r_s.*exp(1i*k.*norm2(v-x_s))./norm2(v-x_s);
             gp_inc = @(v)   p_inc(v).*(-1./norm2(v-x_s)+1i*k).*v./norm2(v-x_s);
             dp_inc = @(v,n) p_inc(v).*(-1./norm2(v-x_s)+1i*k).*sum((v-x_s).*n,2)./norm2(v-x_s);
         end
         dpdn = @(v,n) zeros(size(v,1),1);
-        varCol{1}.d_vec = d_vec;
 end
 Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
 dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);

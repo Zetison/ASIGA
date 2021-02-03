@@ -63,8 +63,8 @@ prePlot.zlabel              = 'z';         % Set z-axis label
 
 
 %% Solver settings
-solver = 'LU';	        % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
-preconditioner = 'ilu';	% 'ilu', 'SSOR'
+solver = 'LU';              % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
+preconditioner = 'diag';	% 'ilu', 'SSOR', 'diag'
 
 %% Error computations
 calculateSurfaceError       = false;	% Only if scatteringCase == 'Bi'
@@ -107,10 +107,18 @@ para.plotTotField            = true;
 para.plotTotFieldAbs         = true; 
 para.plotAnalytic            = true; 
 para.plotTimeOscillation     = false;
-para.plotDisplacementVectors = true;
 para.computeGrad             = true;
 para.plotError               = true; 
 para.plotArtificialBoundary  = true;
+para.plotDisplacementVectors = true;
+para.plotVonMisesStress      = true;
+para.plotStressXX            = false;
+para.plotStressYY            = false;
+para.plotStressZZ            = false;
+para.plotStressYZ            = false;
+para.plotStressXZ            = false;
+para.plotStressXY            = false;
+    
 para.extraXiPts              = 'round(20/2^(M-1))';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
 para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element

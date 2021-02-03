@@ -9,17 +9,17 @@ getDefaultTaskValues
 
 %% IE simulation
 scatteringCase = 'Sweep';
-BC = 'SSBC';
+% scatteringCase = 'BI';
 model = 'IMS';  % Spherical shell
 
 coreMethod = {'IGA','hp_FEM'};
 coreMethod = {'IGA'};
 method = {'IE'};
-applyLoad = 'pointSource';
-applyLoad = 'planeWave';
+applyLoad = 'pointCharge';
+% applyLoad = 'planeWave';
 formulation = {'BGC'};
-BCs = {'SSBC'};
 % BCs = {'SHBC','SSBC'};
+BCs = {'SSBC'};
 % BCs = {'SHBC'};
 
 warning('off','NURBS:weights')
@@ -35,8 +35,7 @@ prePlot.plot2Dgeometry = 0;
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [20,20,0];
 
-postPlot(1).yname        	= 'abs_p';
-% postPlot(1).yname        	= 'surfaceError';
+postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= false;
 postPlot(1).axisType      	= 'plot';
@@ -45,7 +44,12 @@ postPlot(1).xScale       	= 1;
 postPlot(1).legendEntries 	= {};
 postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
-postPlot(1).noXLoopPrms   	= 0;
+if strcmp(scatteringCase,'Sweep')
+    postPlot(1).noXLoopPrms   	= 0;
+else
+    postPlot(1).noXLoopPrms   	= 1;
+    postPlot(1).xLoopName   	= 'f';
+end
 
 for BC = BCs
     postPlot(1).xname = 'k_ROM';
@@ -67,10 +71,13 @@ for BC = BCs
                        'nu', 0.29, ...
                        'rho', 7908.5);
 
+    varCol = varCol(1:noDomains);
     varCol{1}.meshFile = 'createNURBSmesh_M3';
     k = linspace(2.5, 20, 5)/varCol{1}.R1;
+    k = linspace(0.5, 4.29, 5);
 
     k_ROM = k(1):0.005:k(end);
+    k_ROM = k(1):0.05:k(end);
     c_f = varCol{1}.c_f;
     omega_ROM = k_ROM*c_f;
     f = k*c_f/(2*pi);
@@ -91,8 +98,8 @@ for BC = BCs
     basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     noVecsArr = 64;
-    degree = 2;
-    M = 4:5; % 5
+    degree = 3;
+    M = 5; % 5
     N = 7; % 9
     useROM = true;
     p_ie = 5;
@@ -100,13 +107,28 @@ for BC = BCs
     IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
 
     storeFullVarCol = false;
-    loopParameters = {'M','method','BC'};
-    collectIntoTasks
+    if strcmp(scatteringCase, 'Sweep')
+        loopParameters = {'M','method','BC'};
+    else
+        loopParameters = {'M','method','BC','f'};
+    end
+%     collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    useROM = false;
     postPlot(1).xname = postPlot(1).xname(1);
     omega = omega_ROM;
+    useROM = false;
+    if 0 %strcmp(scatteringCase, 'BI')
+        para.plotResultsInParaview	 = true;	% Only if scatteringCase == 'Bi'
+        para.extraXiPts              = '20';  % Extra visualization points in the xi-direction per element
+        para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
+        para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element
+        omega = omega_ROM(1);
+    else
+        omega = omega_ROM;
+    end
     f = omega/(2*pi);
+    formulation = {'PGU'};
+    N = 4;
     collectIntoTasks
 end
