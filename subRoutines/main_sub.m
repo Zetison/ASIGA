@@ -375,6 +375,12 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                     otherwise
                         eval(['[UU,~,~,it1,rv1] = cgs' task.solver '(A,FF,1e-20,1000,L_A,U_A);'])
                 end
+                dofs = size(A,1);
+                varCol{1}.dofs = dofs;
+                if task.clearGlobalMatrices
+                    varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
+                    clear A FF A0 A1 A2 A4 Pinv
+                end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
@@ -391,13 +397,11 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 end
                 task.results.cond_number = condNumber;
 
-                dofs = size(A,1);
                 if ~runTasksInParallel
                     fprintf('\nNumber of degrees of freedom = %d', dofs)
                 end
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*varCol{1}.noElems)/nnz(A_fluid_o))
         end
-        varCol{1}.dofs = dofs;
         if task.useROM && strcmp(task.scatteringCase,'Sweep')
             [varCol,U_sweep{i_f}] = postProcessSolution(varCol,UU);
         end
@@ -460,10 +464,6 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
     end
     if numel(f) > 1 && ~task.useROM && (task.calculateSurfaceError || task.calculateVolumeError)
         fprintf('using %12f seconds.', toc)   
-    end
-    if task.clearGlobalMatrices
-        varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2','Pinv'});
-        clear A FF A0 A1 A2 A4 Pinv
     end
 else
     varCol{1}.U = [];
@@ -567,11 +567,8 @@ if ~task.useROM && ~strcmp(task.method,'RT')
                     varCol{1}.U = zeros(varCol{1}.noDofs,1);
                 end
         
-                createParaviewFiles(varCol, 'para_options', para, 'e3Dss_options', varCol{1}.e3Dss_options);
+                createParaviewFiles(varCol, 'para_options', para);
 
-                if para.plotMesh
-                    createVTKmeshFiles(varCol, 'para_options', para)
-                end
                 % plot artificial boundary
 %                 if para.plotArtificialBoundary
 %                     plotModelInParaview(subNURBS(varCol{1}.nurbs,'at',[0,0;0,0;0,1]), para, 0, 'artificialBoundary')

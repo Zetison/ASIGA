@@ -12,12 +12,13 @@ applyLoad = varCol{1}.applyLoad;
 switch applyLoad
     case {'pointPulsation','SimpsonTorus','Safjan'}        
         p_inc = @(v) zeros(size(v,1),1);
-        gp_inc = @(v) zeros(size(v,1),1);
+        gp_inc = @(v) zeros(size(v,1),3);
         dpdn = @(X,n) analytic({X},varCol,n,'dpdn',1);
         dp_inc = @(v,n) -dpdn(v,n);
         if ~strcmp(BC,'NBC')
-            error('This exact solution is not a solution to coupled problems')
-        end        
+            error('This exact solution requires BC = ''NBC''')
+        end       
+        splitExteriorFields = false;
     case {'planeWave','radialPulsation','pointCharge'}
         alpha_s = varCol{1}.alpha_s;
         beta_s = varCol{1}.beta_s;
@@ -59,7 +60,9 @@ switch applyLoad
             dp_inc = @(v,n) p_inc(v).*(-1./norm2(v-x_s)+1i*k).*sum((v-x_s).*n,2)./norm2(v-x_s);
         end
         dpdn = @(v,n) zeros(size(v,1),1);
+        splitExteriorFields = true;
 end
+varCol{1}.splitExteriorFields = splitExteriorFields;
 Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
 dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
 varCol{1}.Phi_k = Phi_k;

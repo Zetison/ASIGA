@@ -125,7 +125,8 @@ else
     elseif strcmp(varCol{1}.model,'IMS')
         fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),explodeNURBS(ellipsoid,2)});
         fluid = makeUniformNURBSDegree(fluid,degree);
-        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{[],[],[c_z-L/2-R_max, 4.781073898979603]},0,2:3); %c_z-L/2-R_max, 
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{[],[],[c_z-L/2-R_max, 3.154251830015168]},0,2:3); %c_z-L/2-R_max, 
+        solid = makeUniformNURBSDegree(solid,degree);
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,3);
         for i = 1:numel(newKnotsIns)
             newKnotsIns{i}{3} = {};

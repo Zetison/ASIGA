@@ -15,12 +15,13 @@ model = 'IMS';  % Spherical shell
 coreMethod = {'IGA','hp_FEM'};
 coreMethod = {'IGA'};
 method = {'IE'};
-applyLoad = 'pointCharge';
+applyLoad = 'pointPulsation';
+% applyLoad = 'pointCharge';
 % applyLoad = 'planeWave';
 formulation = {'BGC'};
 % BCs = {'SHBC','SSBC'};
-BCs = {'SSBC'};
-% BCs = {'SHBC'};
+% BCs = {'SSBC'};
+BCs = {'SHBC'};
 
 warning('off','NURBS:weights')
 
@@ -28,10 +29,16 @@ alpha_s = 0;
 beta_s = 0;   
 alpha   = alpha_s;                            % Aspect angles of observation points
 beta = beta_s;   
-
-prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
+if strcmp(applyLoad,'pointPulsation')
+    calculateSurfaceError = 1;
+    calculateVolumeError  = 1;
+    BCs = {'NBC'};
+end
+    
+prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;
+prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [20,20,0];
 
@@ -54,7 +61,7 @@ end
 for BC = BCs
     postPlot(1).xname = 'k_ROM';
     switch BC{1}
-        case 'SHBC'
+        case {'SHBC','NBC'}
             noDomains = 1;
         case 'SSBC'
             noDomains = 2;
@@ -70,10 +77,21 @@ for BC = BCs
                        'E', 2.0e11, ...
                        'nu', 0.29, ...
                        'rho', 7908.5);
+%     varCol{1} = struct('media', 'fluid', ...
+%                        't', [0.121979301545535,0.056298757842532], ...
+%                        'R1', 4.689073447525605, ...
+%                        'R2', 4.689073447525605, ...
+%                        'L', 33.96095231541791*2, ...
+%                        'c_f', 1482, ...
+%                        'rho', 1000);
+%     varCol{2} = struct('media', 'solid', ...
+%                        'E', 2.0e11, ...
+%                        'nu', 0.29, ...
+%                        'rho', 7908.5);
 
     varCol = varCol(1:noDomains);
     varCol{1}.meshFile = 'createNURBSmesh_M3';
-    k = linspace(2.5, 20, 5)/varCol{1}.R1;
+%     k = linspace(2.5, 20, 5)/varCol{1}.R1;
     k = linspace(0.5, 4.29, 5);
 
     k_ROM = k(1):0.005:k(end);
@@ -93,13 +111,15 @@ for BC = BCs
     sdfmsc = 3*(varCol{1}.R1+varCol{1}.L+varCol{1}.R2)/1.36;
     r_s = sdfmsc - varCol{1}.L/2;
     c_z = 45;
-    c_xy = 15;
+%     c_xy = 15;
+%     c_z = 44.45920956623927;
+    c_xy = 11.439247597213537;
 
     basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     noVecsArr = 64;
-    degree = 3;
-    M = 5; % 5
+    degree = 4;
+    M = 5:6; % 5
     N = 7; % 9
     useROM = true;
     p_ie = 5;
@@ -118,17 +138,17 @@ for BC = BCs
     postPlot(1).xname = postPlot(1).xname(1);
     omega = omega_ROM;
     useROM = false;
-    if 0 %strcmp(scatteringCase, 'BI')
+    if 1 %strcmp(scatteringCase, 'BI')
         para.plotResultsInParaview	 = true;	% Only if scatteringCase == 'Bi'
         para.extraXiPts              = '20';  % Extra visualization points in the xi-direction per element
         para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
         para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element
-        omega = omega_ROM(1);
+        omega = omega_ROM(end);
     else
         omega = omega_ROM;
     end
     f = omega/(2*pi);
-    formulation = {'PGU'};
+    formulation = {'BGU'};
     N = 4;
     collectIntoTasks
 end

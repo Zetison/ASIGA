@@ -11,7 +11,7 @@ if nargin > 1
     options = updateOptions(options,newOptions);
 end
 analyticSolutionExist = varCol{1}.analyticSolutionExist;
-isPointPulsation = strcmp(varCol{1}.applyLoad,'pointPulsation');
+splitExteriorFields = varCol{1}.splitExteriorFields;
 noDomains = numel(varCol);
 nodes = cell(1,noDomains);
 visElements = cell(1,noDomains);
@@ -37,10 +37,10 @@ for i_v = 1:noDomains
     isSolid = d == 3;
 
     para{i_v}.celltype = celltype;
-    para{i_v}.plotP_inc = options.para_options.plotP_inc && ~isSolid && ~isPointPulsation && isOuterDomain;
+    para{i_v}.plotP_inc = options.para_options.plotP_inc && ~isSolid && splitExteriorFields && isOuterDomain;
     para{i_v}.plotScalarField = options.para_options.plotScalarField && ~isSolid && isOuterDomain;
-    para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && ~isPointPulsation; 
-    para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && ~isPointPulsation; 
+    para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && splitExteriorFields; 
+    para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && splitExteriorFields; 
     para{i_v}.plotAnalytic = options.para_options.plotAnalytic && analyticSolutionExist; 
     para{i_v}.computeGrad = options.para_options.computeGrad && ~(varCol{i_v}.boundaryMethod && ~isSolid);
     para{i_v}.plotError = options.para_options.plotError && (analyticSolutionExist && ~options.para_options.plotTimeOscillation); 
@@ -91,23 +91,6 @@ for i_v = 1:noDomains
     end
     isOuterDomain = varCol{i_v}.isOuterDomain;
 
-    if d == 1
-        if isfield(varCol{i_v}, 'analytic')
-            analytic = varCol{i_v}.analytic;
-        else
-            analytic = 0;
-        end
-        if isfield(varCol{i_v}, 'gAnalytic')
-            gAnalytic = varCol{i_v}.gAnalytic;
-        else
-            gAnalytic = 0;
-        end
-
-        if isOuterDomain && ~strcmp(varCol{i_v}.applyLoad,'pointPulsation')
-            p_inc = varCol{i_v}.p_inc;
-            gp_inc = varCol{i_v}.gp_inc;
-        end
-    end
     if d == 3
         C = varCol{i_v}.C;
         Ux = U(1:d:noDofs);
@@ -360,24 +343,28 @@ for i_v = 1:numel(varCol)
         case 'fluid'
             if isOuterDomain
                 if para{i_v}.plotP_inc
-                    data.P_inc = real(makeDynamic(p_inc(nodes{i_v}), para{i_v}, omega)); 
+                    data.P_inc = real(makeDynamic(varCol{i_v}.p_inc(nodes{i_v}), para{i_v}, omega)); 
                 end
                 if varCol{i_v}.solveForPtot
                     totField = scalarField{i_v};
-                    if isOuterDomain && ~isPointPulsation
-                        scalarField{i_v} = scalarField{i_v} - p_inc(nodes{i_v});
+                    if isOuterDomain && splitExteriorFields
+                        scalarField{i_v} = scalarField{i_v} - varCol{i_v}.p_inc(nodes{i_v});
                     end
                 else   
-                    if isPointPulsation
-                        totField = scalarField{i_v};
+                    if splitExteriorFields
+                        totField = scalarField{i_v} + varCol{i_v}.p_inc(nodes{i_v});
                     else
-                        totField = scalarField{i_v} + p_inc(nodes{i_v});
+                        totField = scalarField{i_v};
                     end
                 end
                 data.scalarField = real(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
                 if d_p == 3
                     rho_f = varCol{i_v}.rho;
-                    displacement{i_v} = (gScalarField_p{i_v}+gp_inc(nodes{i_v}))/(rho_f*omega^2);
+                    if splitExteriorFields
+                        displacement{i_v} = (gScalarField_p{i_v}+varCol{i_v}.gp_inc(nodes{i_v}))/(rho_f*omega^2);
+                    else
+                        displacement{i_v} = gScalarField_p{i_v}/(rho_f*omega^2);
+                    end
                 end
             else
                 totField = scalarField{i_v};
@@ -449,4 +436,8 @@ for i_v = 1:numel(varCol)
     tic
     makeVTKfile(data, para{i_v});
     fprintf('using %12f seconds.', toc)
+end
+
+if options.para_options.plotMesh
+    createVTKmeshFiles(varCol, 'para_options', options.para_options)
 end
