@@ -11,22 +11,22 @@ media = varCol.media;
 useROM = varCol.useROM;
 noRHSs = varCol.noRHSs;
 if useROM
-    dp_inc_ROM = varCol.dp_inc_ROM;
-    p_inc_ROM = varCol.p_inc_ROM;
+    dp_inc_ROM_ = varCol.dp_inc_ROM_;
+    p_inc_ROM_ = varCol.p_inc_ROM_;
 end
 switch media
     case 'fluid' 
         if useROM
-            dp_inc = @(X,n) dp_inc_ROM(X,n);  
+            dp_inc = @(X,n) dp_inc_ROM_(X,n);  
         else
-            dp_inc = @(X,n) varCol.dp_inc(X,n);  
+            dp_inc = @(X,n) varCol.dp_inc_(X,n);  
         end
         p_inc = NaN; % for for-loop transparency
     case 'solid'
         if useROM
-            p_inc = @(X) p_inc_ROM(X);  
+            p_inc = @(X) p_inc_ROM_(X);  
         else
-            p_inc = @(X) varCol.p_inc(X);  
+            p_inc = @(X) varCol.p_inc_(X);  
         end
         dp_inc = NaN; % for for-loop transparency
 end
@@ -49,8 +49,8 @@ indices = zeros(d_f*n_en,noElems);
 
 [Q, W] = gaussTensorQuad(degree+1);
 
-% parfor e = 1:noElems
-for e = 1:noElems
+parfor e = 1:noElems
+% for e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch}(1:2);
     Xi_e = zeros(d_p-1,2);

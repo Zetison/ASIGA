@@ -71,7 +71,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
     coreMethod = {coreMethods{i_coreM}};
     for BC = BCs %
         npts = 1500;
-        npts = 15;
+%         npts = 15;
 %         npts = 2;
         if strcmp(BC{1},'SSBC')
             npts = npts*2;

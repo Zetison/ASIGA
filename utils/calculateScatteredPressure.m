@@ -45,7 +45,7 @@ else
     D = NaN;
     N = NaN;
 end
-dp_inc = varCol{1}.dp_inc;
+dp_inc = varCol{1}.dp_inc_;
 
 Phi_k = varCol{1}.Phi_k;
 if d_p == 3
@@ -68,11 +68,11 @@ if exteriorSHBC
         dpdn = @(x,n) 0;
     else
         homNeumanCond = false;
-        dpdn = @(x,n) -varCol{1}.dp_inc(x,n);
+        dpdn = @(x,n) -varCol{1}.dp_inc_(x,n);
     end
 else
     homNeumanCond = false;
-    dpdn = varCol{1}.dpdn;
+    dpdn = varCol{1}.dpdn_;
 end
 
 extraGP = varCol{1}.extraGP;
@@ -89,8 +89,8 @@ if numel(k) > 1 && size(P_far,1) > 1
 end
 p_h = zeros(max([size(P_far,1),numel(k)]),1);
 
-for i = 1:length(surfaceElements) %
-% parfor i = 1:length(surfaceElements)
+% for i = 1:length(surfaceElements) %
+parfor i = 1:length(surfaceElements)
     if d_p == 3
         e = surfaceElements(i);
     else

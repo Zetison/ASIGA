@@ -89,7 +89,6 @@ for i_v = 1:noDomains
     else
         omega = NaN;
     end
-    isOuterDomain = varCol{i_v}.isOuterDomain;
 
     if d == 3
         C = varCol{i_v}.C;
@@ -198,6 +197,7 @@ for i_v = 1:noDomains
                 count_vis = count_vis + container{e}.noVisElems;
             end
         case 3
+            Eps = 1e-6;
             noXiKnots = 2+extraXiPts;
             noEtaKnots = 2+extraEtaPts;
             noZetaKnots = 2+extraZetaPts;
@@ -215,8 +215,8 @@ for i_v = 1:noDomains
                 container{e}.visElements = zeros(noVisElems,8);
                 container{e}.strain = zeros(noNodes,6);
             end
-            for e = 1:noElems
-%             parfor e = 1:noElems
+%             for e = 1:noElems
+            parfor e = 1:noElems
                 patch = pIndex(e);
                 knots = knotVecs{patch};
 
@@ -281,18 +281,22 @@ for i_v = 1:noDomains
 
                 container{e}.nodes = R{1}*pts;
                 container{e}.visElements = visElements_e;
-                if withDensity
-                    container{e}.density{i_v} = R{1}*rho(sctr);
-                end
                 dudx = dRdx*Usctr;
                 dudy = dRdy*Usctr;
                 dudz = dRdz*Usctr;
+                singularJ = abs(J_1) < Eps;
+                dudx(or(singularJ, isnan(dudx))) = 0;
+                dudy(or(singularJ, isnan(dudy))) = 0;
+                dudz(or(singularJ, isnan(dudz))) = 0;
                 if d == 3
                     container{e}.strain = calculateStrainVectorVec(dudx, dudy, dudz);
                     container{e}.displacement{i_v} = R{1}*Usctr;
                 else
                     container{e}.scalarField{i_v} = R{1}*Usctr;
                     container{e}.gScalarField_p{i_v} = [dudx,dudy,dudz];
+                end
+                if withDensity
+                    container{e}.density{i_v} = R{1}*rho(sctr);
                 end
             end
             noNodes = 0;
@@ -343,16 +347,16 @@ for i_v = 1:numel(varCol)
         case 'fluid'
             if isOuterDomain
                 if para{i_v}.plotP_inc
-                    data.P_inc = real(makeDynamic(varCol{i_v}.p_inc(nodes{i_v}), para{i_v}, omega)); 
+                    data.P_inc = real(makeDynamic(varCol{i_v}.p_inc_(nodes{i_v}), para{i_v}, omega)); 
                 end
                 if varCol{i_v}.solveForPtot
                     totField = scalarField{i_v};
                     if isOuterDomain && splitExteriorFields
-                        scalarField{i_v} = scalarField{i_v} - varCol{i_v}.p_inc(nodes{i_v});
+                        scalarField{i_v} = scalarField{i_v} - varCol{i_v}.p_inc_(nodes{i_v});
                     end
                 else   
                     if splitExteriorFields
-                        totField = scalarField{i_v} + varCol{i_v}.p_inc(nodes{i_v});
+                        totField = scalarField{i_v} + varCol{i_v}.p_inc_(nodes{i_v});
                     else
                         totField = scalarField{i_v};
                     end
@@ -361,7 +365,8 @@ for i_v = 1:numel(varCol)
                 if d_p == 3
                     rho_f = varCol{i_v}.rho;
                     if splitExteriorFields
-                        displacement{i_v} = (gScalarField_p{i_v}+varCol{i_v}.gp_inc(nodes{i_v}))/(rho_f*omega^2);
+                        gp_inc = [varCol{i_v}.dp_incdx_(nodes{i_v}),varCol{i_v}.dp_incdy_(nodes{i_v}),varCol{i_v}.dp_incdz_(nodes{i_v})];
+                        displacement{i_v} = (gScalarField_p{i_v}+gp_inc)/(rho_f*omega^2);
                     else
                         displacement{i_v} = gScalarField_p{i_v}/(rho_f*omega^2);
                     end
@@ -439,5 +444,8 @@ for i_v = 1:numel(varCol)
 end
 
 if options.para_options.plotMesh
+    fprintf(['\n%-' num2str(stringShift) 's'], '    Creating mesh-files ... ')
+    tic
     createVTKmeshFiles(varCol, 'para_options', options.para_options)
+    fprintf('using %12f seconds.', toc)
 end

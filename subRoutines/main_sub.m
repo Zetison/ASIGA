@@ -125,8 +125,6 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
 
                 % Apply coupling conditions  
                 if noDomains > 1 
-                    varCol{2}.p_inc = varCol{1}.p_inc;
-                    varCol{2}.dp_inc = varCol{1}.dp_inc;
                     tic
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
@@ -146,8 +144,12 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building RHS vector ... ')
                 end
                 if task.useROM && noDomains > 1
-                    varCol{2}.p_inc_ROM = varCol{1}.p_inc_ROM;
-                    varCol{2}.dp_inc_ROM = varCol{1}.dp_inc_ROM;
+                    varCol{2}.p_inc_ROM_ = varCol{1}.p_inc_ROM_;
+                    varCol{2}.dp_inc_ROM_ = varCol{1}.dp_inc_ROM_;
+                end
+                if noDomains > 1 
+                    varCol{2}.p_inc_ = varCol{1}.p_inc_;
+                    varCol{2}.dp_inc_ = varCol{1}.dp_inc_;
                 end
                 for i = 1:min(noDomains,2)
                     varCol{i} = applyNeumannCondition(varCol{i},i==2);
@@ -342,7 +344,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                         if task.useROM
                             dAdomega = A1 + 2*omega*A2 + 4*omega^3*A4;
                             d2Adomega2 = 2*A2 + 12*omega^2*A4;
-                            if task.useDGP
+                            if task.useDGP && i_f == numel(f)
                                 varCol{1}.A0 = A0;
                                 varCol{1}.A1 = A1;
                                 varCol{1}.A2 = A2;
@@ -379,7 +381,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 varCol{1}.dofs = dofs;
                 if task.clearGlobalMatrices
                     varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
-                    clear A FF A0 A1 A2 A4 Pinv
+                    clear A FF A0 A1 A2 A4 Pinv dA dAdomega d2Adomega2 b
                 end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
@@ -483,7 +485,7 @@ end
 if ~task.useROM
     varCol{1}.k = (2*pi*f)/varCol{1}.c_f;
     varCol{1}.f = f;
-    varCol{1}.omega = f/(2*pi);
+    varCol{1}.omega = 2*pi*f;
 end
 if task.clearGlobalMatrices
     clear UU U
@@ -587,11 +589,6 @@ if task.storeFullVarCol
     varColTemp = varCol;
     if task.useROM
         varColTemp{1}.U_sweep = U_sweep;
-        if task.useDGP
-            varColTemp{1}.A0 = A0;
-            varColTemp{1}.A1 = A1;
-            varColTemp{1}.A2 = A2;
-        end
     end
     task.varCol = varColTemp;
 else

@@ -36,7 +36,7 @@ noDofs = varCol.noDofs;
 weights = varCol.weights;
 controlPts = varCol.controlPts;
 
-k = varCol.k(1);
+k = varCol.k;
 Upsilon = varCol.Upsilon;
 if varCol.boundaryMethod
     noElems = varCol.noElems;

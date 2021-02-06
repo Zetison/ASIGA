@@ -8,20 +8,18 @@ getDefaultTaskValues
 
 
 %% IE simulation
-scatteringCase = 'Sweep';
-% scatteringCase = 'BI';
 model = 'IMS';  % Spherical shell
 
 coreMethod = {'IGA','hp_FEM'};
 coreMethod = {'IGA'};
 method = {'IE'};
-applyLoad = 'pointPulsation';
+% applyLoad = 'pointPulsation';
 % applyLoad = 'pointCharge';
-% applyLoad = 'planeWave';
+applyLoad = 'planeWave';
 formulation = {'BGC'};
 % BCs = {'SHBC','SSBC'};
-% BCs = {'SSBC'};
-BCs = {'SHBC'};
+BCs = {'SSBC'};
+% BCs = {'SHBC'};
 
 warning('off','NURBS:weights')
 
@@ -51,14 +49,10 @@ postPlot(1).xScale       	= 1;
 postPlot(1).legendEntries 	= {};
 postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
-if strcmp(scatteringCase,'Sweep')
-    postPlot(1).noXLoopPrms   	= 0;
-else
-    postPlot(1).noXLoopPrms   	= 1;
-    postPlot(1).xLoopName   	= 'f';
-end
 
 for BC = BCs
+    scatteringCase = 'Sweep';
+    postPlot(1).noXLoopPrms = 0;
     postPlot(1).xname = 'k_ROM';
     switch BC{1}
         case {'SHBC','NBC'}
@@ -95,7 +89,7 @@ for BC = BCs
     k = linspace(0.5, 4.29, 5);
 
     k_ROM = k(1):0.005:k(end);
-    k_ROM = k(1):0.05:k(end);
+%     k_ROM = k(1):0.05:k(end);
     c_f = varCol{1}.c_f;
     omega_ROM = k_ROM*c_f;
     f = k*c_f/(2*pi);
@@ -118,8 +112,8 @@ for BC = BCs
     basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     noVecsArr = 64;
-    degree = 4;
-    M = 5:6; % 5
+    degree = 2;
+    M = 5; % 5
     N = 7; % 9
     useROM = true;
     p_ie = 5;
@@ -135,15 +129,25 @@ for BC = BCs
 %     collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     scatteringCase = 'Sweep';
+    scatteringCase = 'BI';
+    if strcmp(scatteringCase,'Sweep')
+        postPlot(1).noXLoopPrms   	= 0;
+        loopParameters = {'M','method','BC'};
+    else
+        loopParameters = {'M','method','BC','f'};
+        postPlot(1).noXLoopPrms   	= 1;
+        postPlot(1).xLoopName   	= 'f';
+    end
     postPlot(1).xname = postPlot(1).xname(1);
     omega = omega_ROM;
     useROM = false;
-    if 1 %strcmp(scatteringCase, 'BI')
+    if 0 %strcmp(scatteringCase, 'BI')
         para.plotResultsInParaview	 = true;	% Only if scatteringCase == 'Bi'
         para.extraXiPts              = '20';  % Extra visualization points in the xi-direction per element
         para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
         para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element
-        omega = omega_ROM(end);
+        omega = omega_ROM(1);
     else
         omega = omega_ROM;
     end

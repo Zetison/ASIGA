@@ -16,12 +16,19 @@ model = 'S1';  % Spherical shell
 coreMethod = {'IGA','hp_FEM'};
 coreMethod = {'IGA'};
 method = {'IE'};
+% applyLoad = 'pointPulsation';
+% applyLoad = 'pointCharge';
+applyLoad = 'planeWave';
+
 % formulation = {'PGC'};
 formulation = {'BGC'};
 % BCs = {'SHBC'};
-% BCs = {'SSBC'};
-BCs = {'NNBC'};
+BCs = {'SSBC'};
+% BCs = {'NNBC'};
 % BCs = {'SHBC','SSBC'};
+if strcmp(applyLoad,'pointPulsation')
+    BCs = {'NBC'};
+end
 plotFarField = ~hetmaniukCase;
 
 calculateFarFieldPattern    = true;     % Calculate far field pattern
@@ -32,6 +39,7 @@ beta = -pi/2;
 r = 1;                            % radii for near-field evaluation.
 
 r_a = 1.2;
+r_s = 3;
 
 parm = 1;
 calculateSurfaceError = 0;
@@ -81,7 +89,7 @@ for BC = BCs
     postPlot(5).xname = 'f_ROM';
     postPlot(6).xname = 'f_ROM';
     switch BC{1}
-        case 'SHBC'
+        case {'SHBC','NBC'}
             noDomains = 1;
         case 'SSBC'
             noDomains = 2;
@@ -99,9 +107,9 @@ for BC = BCs
         varCol{3}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)-1,0)];
     end
     switch BC{1}
-        case 'SHBC'
+        case {'SHBC','NBC'}
             k = linspace(9, 36, 3);
-            k = linspace(9, 36, 3)/10;
+            k = linspace(9, 36, 3)/5;
             k_ROM = k(1):0.05:k(end);
 %             k_ROM = k(1):0.5:k(end);
             c_f = varCol{1}.c_f;
@@ -123,7 +131,6 @@ for BC = BCs
             f_ROM = f(1):12:f(end);
 %             f_ROM = f(1):120:f(end);
             omega_ROM = 2*pi*f_ROM;
-            postPlot(1).xname = 'f_ROM';
             if hetmaniukCase
                 P_inc = 1;
                 beta = -pi/2;   
@@ -141,7 +148,7 @@ for BC = BCs
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     noVecsArr = 64;
     degree = 4;
-    M = 3:5; % 5
+    M = 3:4; % 5
     N = 7; % 9
     useROM = true;
     p_ie = 5;
@@ -150,7 +157,7 @@ for BC = BCs
 
     storeFullVarCol = false;
     loopParameters = {'M','method','BC'};
-    collectIntoTasks
+%     collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     useROM = false;

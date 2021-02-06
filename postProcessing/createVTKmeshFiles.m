@@ -12,12 +12,14 @@ end
 for i_v = 1:numel(varCol)
     para = options.para_options;
     U = varCol{i_v}.U;
+    isOuterDomain = i_v == 1;
 
     extraXiPts = para.extraXiPts;
     extraEtaPts = para.extraEtaPts;
     extraZetaPts = para.extraZetaPts;
     degree = varCol{i_v}.degree; % assume p_xi is equal in all patches
-    Eps = 1e4*eps;
+    n_en = prod(degree+1);
+    
     index = varCol{i_v}.index;
     noElems = varCol{i_v}.noElems;
     elRange = varCol{i_v}.elRange;
@@ -30,7 +32,7 @@ for i_v = 1:numel(varCol)
     noDofs = varCol{i_v}.noDofs;
     patches = varCol{i_v}.patches;
     d = varCol{i_v}.dimension;
-    if isfield('varCol{i_v}','omega')
+    if isfield(varCol{i_v},'omega')
         omega = varCol{i_v}.omega;
     else
         omega = NaN;
@@ -40,12 +42,6 @@ for i_v = 1:numel(varCol)
         Uy = U(2:d:noDofs);
         Uz = U(3:d:noDofs);
         U = [Ux, Uy, Uz];
-    end
-    if strcmp(varCol{i_v}.media,'fluid') && para.plotDisplacementVectors
-        warning('displacement (based on grad(p)) is not yet implemented for fluids meshes')
-        plotDisplacementVectors = false;
-    else
-        plotDisplacementVectors = para.plotDisplacementVectors;
     end
     d_p = patches{1}.nurbs.d_p;
     switch d_p
@@ -124,6 +120,7 @@ for i_v = 1:numel(varCol)
 
             makeVTKfile(data, 'name', [para.name '_' num2str(i_v) '_mesh'], 'celltype', 'VTK_POLY_LINE');
         case 3
+            Eps = 1e-6;
             container = cell(1,noElems);
 %             for e = 1:noElems
             parfor e = 1:noElems
@@ -157,7 +154,39 @@ for i_v = 1:numel(varCol)
                     for j = 1:2
                         R = NURBSbasis(I,[Xi_e(1,i)*ones(noZetaKnots,1), Xi_e(2,j)*ones(noZetaKnots,1), zeta], degree, knots, wgts);
                         container_e{counter}.nodes = R{1}*pts;
-                        container_e{counter}.displacement = R{1}*Usctr;
+                        if d == 3
+                            container_e{counter}.displacement = R{1}*Usctr;
+                        else
+                            dXdxi = R{2}*pts;
+                            dXdeta = R{3}*pts;
+                            dXdzeta = R{4}*pts;
+                            J_1 = dot(dXdxi,cross(dXdeta,dXdzeta,2),2);
+
+                            a11 = dXdxi(:,1);
+                            a21 = dXdxi(:,2);
+                            a31 = dXdxi(:,3);
+                            a12 = dXdeta(:,1);
+                            a22 = dXdeta(:,2);
+                            a32 = dXdeta(:,3);
+                            a13 = dXdzeta(:,1);
+                            a23 = dXdzeta(:,2);
+                            a33 = dXdzeta(:,3);
+                            Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
+                            Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
+                            Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
+                            dRdx = repmat(Jinv1(:,1),1,n_en).*R{2} + repmat(Jinv1(:,2),1,n_en).*R{3} + repmat(Jinv1(:,3),1,n_en).*R{4};
+                            dRdy = repmat(Jinv2(:,1),1,n_en).*R{2} + repmat(Jinv2(:,2),1,n_en).*R{3} + repmat(Jinv2(:,3),1,n_en).*R{4};
+                            dRdz = repmat(Jinv3(:,1),1,n_en).*R{2} + repmat(Jinv3(:,2),1,n_en).*R{3} + repmat(Jinv3(:,3),1,n_en).*R{4};
+                            
+                            dudx = dRdx*Usctr;
+                            dudy = dRdy*Usctr;
+                            dudz = dRdz*Usctr;
+                            singularJ = abs(J_1) < Eps;
+                            dudx(or(singularJ, isnan(dudx))) = 0;
+                            dudy(or(singularJ, isnan(dudy))) = 0;
+                            dudz(or(singularJ, isnan(dudz))) = 0;
+                            container_e{counter}.gScalarField_p = [dudx,dudy,dudz];
+                        end
                         container_e{counter}.noNodes = noZetaKnots;
                         container_e{counter}.visElements = 1:noZetaKnots;
                         container_e{counter}.noVisElems = noZetaKnots;
@@ -168,7 +197,39 @@ for i_v = 1:numel(varCol)
                     for j = 1:2
                         R = NURBSbasis(I,[Xi_e(1,i)*ones(noEtaKnots,1), eta, Xi_e(3,j)*ones(noEtaKnots,1)], degree, knots, wgts);
                         container_e{counter}.nodes = R{1}*pts;
-                        container_e{counter}.displacement = R{1}*Usctr;
+                        if d == 3
+                            container_e{counter}.displacement = R{1}*Usctr;
+                        else
+                            dXdxi = R{2}*pts;
+                            dXdeta = R{3}*pts;
+                            dXdzeta = R{4}*pts;
+                            J_1 = dot(dXdxi,cross(dXdeta,dXdzeta,2),2);
+
+                            a11 = dXdxi(:,1);
+                            a21 = dXdxi(:,2);
+                            a31 = dXdxi(:,3);
+                            a12 = dXdeta(:,1);
+                            a22 = dXdeta(:,2);
+                            a32 = dXdeta(:,3);
+                            a13 = dXdzeta(:,1);
+                            a23 = dXdzeta(:,2);
+                            a33 = dXdzeta(:,3);
+                            Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
+                            Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
+                            Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
+                            dRdx = repmat(Jinv1(:,1),1,n_en).*R{2} + repmat(Jinv1(:,2),1,n_en).*R{3} + repmat(Jinv1(:,3),1,n_en).*R{4};
+                            dRdy = repmat(Jinv2(:,1),1,n_en).*R{2} + repmat(Jinv2(:,2),1,n_en).*R{3} + repmat(Jinv2(:,3),1,n_en).*R{4};
+                            dRdz = repmat(Jinv3(:,1),1,n_en).*R{2} + repmat(Jinv3(:,2),1,n_en).*R{3} + repmat(Jinv3(:,3),1,n_en).*R{4};
+                            
+                            dudx = dRdx*Usctr;
+                            dudy = dRdy*Usctr;
+                            dudz = dRdz*Usctr;
+                            singularJ = abs(J_1) < Eps;
+                            dudx(or(singularJ, isnan(dudx))) = 0;
+                            dudy(or(singularJ, isnan(dudy))) = 0;
+                            dudz(or(singularJ, isnan(dudz))) = 0;
+                            container_e{counter}.gScalarField_p = [dudx,dudy,dudz];
+                        end
                         container_e{counter}.noNodes = noEtaKnots;
                         container_e{counter}.visElements = 1:noEtaKnots;
                         container_e{counter}.noVisElems = noEtaKnots;
@@ -178,8 +239,41 @@ for i_v = 1:numel(varCol)
                 for i = 1:2
                     for j = 1:2
                         R = NURBSbasis(I,[xi, Xi_e(2,i)*ones(noXiKnots,1), Xi_e(3,j)*ones(noXiKnots,1)], degree, knots, wgts);
+                        
                         container_e{counter}.nodes = R{1}*pts;
-                        container_e{counter}.displacement = R{1}*Usctr;
+                        if d == 3
+                            container_e{counter}.displacement = R{1}*Usctr;
+                        else
+                            dXdxi = R{2}*pts;
+                            dXdeta = R{3}*pts;
+                            dXdzeta = R{4}*pts;
+                            J_1 = dot(dXdxi,cross(dXdeta,dXdzeta,2),2);
+
+                            a11 = dXdxi(:,1);
+                            a21 = dXdxi(:,2);
+                            a31 = dXdxi(:,3);
+                            a12 = dXdeta(:,1);
+                            a22 = dXdeta(:,2);
+                            a32 = dXdeta(:,3);
+                            a13 = dXdzeta(:,1);
+                            a23 = dXdzeta(:,2);
+                            a33 = dXdzeta(:,3);
+                            Jinv1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1];
+                            Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
+                            Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
+                            dRdx = repmat(Jinv1(:,1),1,n_en).*R{2} + repmat(Jinv1(:,2),1,n_en).*R{3} + repmat(Jinv1(:,3),1,n_en).*R{4};
+                            dRdy = repmat(Jinv2(:,1),1,n_en).*R{2} + repmat(Jinv2(:,2),1,n_en).*R{3} + repmat(Jinv2(:,3),1,n_en).*R{4};
+                            dRdz = repmat(Jinv3(:,1),1,n_en).*R{2} + repmat(Jinv3(:,2),1,n_en).*R{3} + repmat(Jinv3(:,3),1,n_en).*R{4};
+                            
+                            dudx = dRdx*Usctr;
+                            dudy = dRdy*Usctr;
+                            dudz = dRdz*Usctr;
+                            singularJ = abs(J_1) < Eps;
+                            dudx(or(singularJ, isnan(dudx))) = 0;
+                            dudy(or(singularJ, isnan(dudy))) = 0;
+                            dudz(or(singularJ, isnan(dudz))) = 0;
+                            container_e{counter}.gScalarField_p = [dudx,dudy,dudz];
+                        end
                         container_e{counter}.noNodes = noXiKnots;
                         container_e{counter}.visElements = 1:noXiKnots;
                         container_e{counter}.noVisElems = noXiKnots;
@@ -202,11 +296,33 @@ for i_v = 1:numel(varCol)
                 for i = 1:12
                     visElements{12*(e-1)+i} = nodesCount + container{e}.container_e{i}.visElements;
                     nodes(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.nodes;
-                    if d == 3
-                        displacement(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.displacement;
+                    switch varCol{i_v}.media
+                        case 'fluid'
+                            displacement(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.gScalarField_p;
+                        case 'solid'
+                            displacement(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.displacement;
                     end
                     nodesCount = nodesCount + container{e}.container_e{i}.noNodes;
                 end
+            end
+            switch varCol{i_v}.media
+                case 'fluid'
+                    if isOuterDomain
+                        if d_p == 3
+                            rho_f = varCol{i_v}.rho;
+                            if varCol{1}.splitExteriorFields
+                                gp_inc = [varCol{i_v}.dp_incdx_(nodes),varCol{i_v}.dp_incdy_(nodes),varCol{i_v}.dp_incdz_(nodes)];
+                                displacement = (displacement+gp_inc)/(rho_f*omega^2);
+                            else
+                                displacement = displacement/(rho_f*omega^2);
+                            end
+                        end
+                    else
+                        if d_p == 3
+                            rho_f = varCol{i_v}.rho; 
+                            displacement = displacement/(rho_f*omega^2);  
+                        end
+                    end
             end
             
             data.nodes = nodes;
@@ -214,6 +330,6 @@ for i_v = 1:numel(varCol)
             data.visElements = visElements;
 
             makeVTKfile(data, 'name',[para.name '_' num2str(i_v) '_mesh'], 'celltype', 'VTK_POLY_LINE', ...
-                'plotDisplacementVectors', plotDisplacementVectors,'plotTimeOscillation', para.plotTimeOscillation);
+                'plotDisplacementVectors', para.plotDisplacementVectors,'plotTimeOscillation', para.plotTimeOscillation);
     end
 end

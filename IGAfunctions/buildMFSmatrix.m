@@ -13,8 +13,8 @@ k = varCol.k;
 SHBC = strcmp(varCol.BC, 'SHBC');
 if SHBC
     no_angles = length(varCol.alpha_s);
-    p_inc = varCol.p_inc;
-    dp_inc = varCol.dp_inc;
+    p_inc = varCol.p_inc_;
+    dp_inc = varCol.dp_inc_;
 else
     no_angles = 1;
     p_inc = NaN;

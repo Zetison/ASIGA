@@ -74,16 +74,16 @@ if useSolidDomain && ~exteriorProblem
     dpdn = @(x,n) 0;
 else
     if solveForPtot
-        p_inc = varCol.p_inc;
-        dp_inc = varCol.dp_inc;
+        p_inc = varCol.p_inc_;
+        dp_inc = varCol.dp_inc_;
         dpdn = @(x,n) 0;
     else
         p_inc = NaN;
         dp_inc = NaN;
         if strcmp(varCol.BC, 'SHBC')
-            dpdn = @(x,n) -varCol.dp_inc(x,n);
+            dpdn = @(x,n) -varCol.dp_inc_(x,n);
         else
-            dpdn = varCol.dpdn;
+            dpdn = varCol.dpdn_;
         end
     end
 end

@@ -258,8 +258,8 @@ for i_b = 1:numel(basisROMcell)
                 varCol{1}.noRHSs = numel(omega_ROM);
                 varCol = getAnalyticSolutions(varCol);
                 if noDomains > 1
-                    varCol{2}.p_inc = varCol{1}.p_inc;
-                    varCol{2}.dp_in = varCol{1}.dp_inc;
+                    varCol{2}.p_inc_ = varCol{1}.p_inc_;
+                    varCol{2}.dp_inc_ = varCol{1}.dp_inc_;
                     varCol{2}.noRHSs = varCol{1}.noRHSs;
                 end
                 for i = 1:min(noDomains,2)
@@ -367,6 +367,7 @@ for i_b = 1:numel(basisROMcell)
         tasks(i_task,taskROM,i_b).task.varCol = extractVarColFields(task,varCol);
         tasks(i_task,taskROM,i_b).task.varCol{1}.omega_ROM = temp_omega_ROM;
         tasks(i_task,taskROM,i_b).task.varCol{1}.f_ROM = temp_omega_ROM/(2*pi);
+        tasks(i_task,taskROM,i_b).task.varCol{1}.k_ROM = temp_omega_ROM/varCol{1}.c_f;
         tasks(i_task,taskROM,i_b).task.noVecs = noVecs;
         tasks(i_task,taskROM,i_b).task.basisROM = basisROM;
     end

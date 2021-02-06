@@ -70,16 +70,16 @@ else
 end
 solveForPtot = varCol.solveForPtot;
 if solveForPtot
-    p_inc = varCol.p_inc;
-    dp_inc = varCol.dp_inc;
+    p_inc = varCol.p_inc_;
+    dp_inc = varCol.dp_inc_;
     dpdn = @(x,n) 0;
 else
     p_inc = NaN;
-    dp_inc = varCol.dp_inc;
+    dp_inc = varCol.dp_inc_;
     if SHBC
-        dpdn = @(x,n) -dp_inc(x,n);
+        dpdn = @(x,n) -dp_inc_(x,n);
     else
-        dpdn = varCol.dpdn;
+        dpdn = varCol.dpdn_;
     end
 end
 

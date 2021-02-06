@@ -86,7 +86,13 @@ end
 v_values = reshape(v_values, size(W,1)*noElems, 3);
 n_values = reshape(n_values, size(W,1)*noElems, 3);
 X = cell(1,i_varCol);
-X{i_varCol} = v_values;
+for i = 1:i_varCol
+    if i == i_varCol
+        X{i} = v_values;
+    else
+        X{i} = zeros(0,3);
+    end
+end
 if nargin(analytic) == 2
     analytic_values = analytic(X,n_values);
 else
