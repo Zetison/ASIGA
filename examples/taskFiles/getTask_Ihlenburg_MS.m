@@ -16,7 +16,6 @@ method = {'IE'};
 % applyLoad = 'pointPulsation';
 % applyLoad = 'pointCharge';
 applyLoad = 'planeWave';
-formulation = {'BGC'};
 % BCs = {'SHBC','SSBC'};
 BCs = {'SSBC'};
 % BCs = {'SHBC'};
@@ -111,9 +110,10 @@ for BC = BCs
 
     basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    formulation = {'BGC'};
     noVecsArr = 64;
     degree = 2;
-    M = 5; % 5
+    M = 5:6; % 5
     N = 7; % 9
     useROM = true;
     p_ie = 5;
@@ -126,7 +126,7 @@ for BC = BCs
     else
         loopParameters = {'M','method','BC','f'};
     end
-%     collectIntoTasks
+    collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     scatteringCase = 'Sweep';
