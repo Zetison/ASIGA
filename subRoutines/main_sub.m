@@ -405,7 +405,8 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*varCol{1}.noElems)/nnz(A_fluid_o))
         end
         if task.useROM && strcmp(task.scatteringCase,'Sweep')
-            [varCol,U_sweep{i_f}] = postProcessSolution(varCol,UU);
+            U_sweep{i_f} = UU;
+            varCol = postProcessSolution(varCol,UU);
         end
         if strcmp(task.scatteringCase,'Sweep') && numel(f) > 1
             fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_f, numel(f), toc(t_freq))  

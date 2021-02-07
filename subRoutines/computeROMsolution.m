@@ -41,8 +41,6 @@ for i_b = 1:numel(basisROMcell)
                         counter = counter + 1;
                     end
                 end
-                allDofsToRemove = varCol{1}.allDofsToRemove;
-                V(allDofsToRemove,:) = [];
                 U = zeros(size(V));
                 U(:,1) = V(:,1)/sqrt(V(:,1)'*V(:,1));
                 for i = 2:size(V,2)
@@ -252,7 +250,7 @@ for i_b = 1:numel(basisROMcell)
         t_startROM = tic;
         switch basisROM
             case 'DGP'
-                U_fluid_oArr = zeros(noDofs,numel(omega_ROM));
+                UU = zeros(noDofs,numel(omega_ROM));
                 varCol{1}.omega = omega_ROM;
                 varCol{1}.k = omega_ROM/varCol{1}.c_f;
                 varCol{1}.noRHSs = numel(omega_ROM);
@@ -268,35 +266,34 @@ for i_b = 1:numel(basisROMcell)
                     varCol{i}.useROM = true;
                 end
                 [varCol,FF] = collectMatrices(varCol,task);
-                FF = V'*FF;  
-                freeDofs = setdiff(1:noDofs,allDofsToRemove);
+                FFm = V'*FF;  
 
                 for i_f = 1:numel(omega_ROM)
                     omega = omega_ROM(i_f);
                     Am = A0_am + omega*A1_am + omega^2*A2_am;
                     Pinv = spdiags(1./diag(Am),0,size(Am,1),size(Am,2));
-                    U_fluid_oArr(freeDofs,i_f) = V*(Pinv*((Am*Pinv)\FF(:,i_f)));
+                    UU(:,i_f) = V*(Pinv*((Am*Pinv)\FFm(:,i_f)));
                 end
             case 'Hermite'
-                U_fluid_oArr = zeros(noDofs,numel(omega_ROM));
+                UU = zeros(noDofs,numel(omega_ROM));
                 counter = 1;
                 for i = 1:P
                     for n = 1:noVecs
-                        U_fluid_oArr = U_fluid_oArr + U_sweep{i}(:,n)*Y(counter,:);
+                        UU = UU + U_sweep{i}(:,n)*Y(counter,:);
                         counter = counter + 1;
                     end
                 end
             case 'Pade'
                 if useHP
-                    U_fluid_oArr = double(interPade(mp(omega_ROM),mp(omega_P),p,q));
+                    UU = double(interPade(mp(omega_ROM),mp(omega_P),p,q));
                 else
-                    U_fluid_oArr = interPade(omega_ROM,omega_P,p,q);
+                    UU = interPade(omega_ROM,omega_P,p,q);
                 end
             case 'Bernstein'
                 B = bernsteinBasis(double((omega_ROM-omega_start)/(omega_end - omega_start)),double(p_ROM),0);
-                U_fluid_oArr = (B*a).';
+                UU = (B*a).';
             case 'Taylor'
-                U_fluid_oArr = interTaylor(omega_ROM,omega_P,U_sweep,noVecs-1);
+                UU = interTaylor(omega_ROM,omega_P,U_sweep,noVecs-1);
         end
         fprintf('using %12f seconds.', toc(t_startROM))
 
@@ -316,7 +313,7 @@ for i_b = 1:numel(basisROMcell)
                 varCol_temp{1}.k = k;
                 varCol_temp{1}.f = omega_ROM(i_f)/(2*pi);
                 varCol_temp = getAnalyticSolutions(varCol_temp);
-                varCol_temp = postProcessSolution(varCol_temp,U_fluid_oArr(freeDofs,i_f));
+                varCol_temp = postProcessSolution(varCol_temp,UU(:,i_f));
                 [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] ...
                                 = calculateErrors(task, varCol_temp, 1, stringShift);
             end
@@ -347,7 +344,7 @@ for i_b = 1:numel(basisROMcell)
             varCol{1}.k = omega_ROM/varCol{1}.c_f;
             varCol{1}.lambda = 2*pi./varCol{1}.k;
             varCol{1}.f = omega_ROM/(2*pi);
-            varCol = postProcessSolution(varCol,U_fluid_oArr(freeDofs,:));
+            varCol = postProcessSolution(varCol,UU);
             varCol = getAnalyticSolutions(varCol);
             task = calculateTS(varCol,task,runTasksInParallel,stringShift);
             fieldCell = {'p','p_Re','p_Im','abs_p','TS'};
