@@ -46,10 +46,10 @@ alpha   = alpha_s;                            % Aspect angles of observation poi
 beta = beta_s;   
 if strcmp(applyLoad,'pointPulsation')
     calculateSurfaceError = 1;
-    calculateVolumeError  = 1;
+    calculateVolumeError  = 0;
     BCs = {'NBC'};
 	postPlot(2) = postPlot(1);
-    postPlot(2).yname        	= 'energyError';
+    postPlot(2).yname        	= 'surfaceError';
     postPlot(2).axisType      	= 'semilogy';
     postPlot(2).addCommands   	= [];
 end
@@ -93,7 +93,7 @@ for BC = BCs
     varCol = varCol(1:noDomains);
     varCol{1}.meshFile = 'createNURBSmesh_M3';
 %     k = linspace(2.5, 20, 5)/varCol{1}.R1;
-    k = linspace(0.5, 4.29, 5);
+    k = linspace(0.5, 4.29, 10);
 
     k_ROM = k(1):0.005:k(end);
 %     k_ROM = k(1):0.05:k(end);
@@ -121,8 +121,8 @@ for BC = BCs
     formulation = {'BGC'};
     noVecsArr = 64;
     degree = 2;
-    M = 4; % 5
-    N = 20; % 9
+    M = 5; % 5
+    N = 50; % 9
     useROM = true;
     p_ie = 4;
     s_ie = 2;
@@ -165,17 +165,18 @@ for BC = BCs
         para.extraXiPts              = '20';  % Extra visualization points in the xi-direction per element
         para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
         para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element
-        omega = omega_ROM(1);
+        omega = omega_ROM(end);
     else
         omega = omega_ROM;
+        omega = omega_ROM(end);
     end
     f = omega/(2*pi);
     formulation = {'BGU'};
     IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
-    N = 4;
+    N = 5;
 %     collectIntoTasks
     formulation = {'BGC'};
-    N = 20;
+    N = 50;
     p_ie = 4;
     s_ie = 2;
     IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support

@@ -300,26 +300,31 @@ for i_b = 1:numel(basisROMcell)
         if task.calculateSurfaceError || task.calculateVolumeError
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
             t_startROM = tic;
-            energyError = zeros(1,size(omega_ROM,2));
-            L2Error = zeros(1,size(omega_ROM,2));
-            H1Error = zeros(1,size(omega_ROM,2));
-            H1sError = zeros(1,size(omega_ROM,2));
-            surfaceError = zeros(1,size(omega_ROM,2));
-            for i_f = 1:numel(omega_ROM)
-%             parfor i_f = 1:numel(omega_ROM)
-                varCol_temp = varCol;
-                varCol_temp{1}.omega = omega_ROM(i_f);
-                k = omega_ROM(i_f)/varCol_temp{1}.c_f;
-                varCol_temp{1}.k = k;
-                varCol_temp{1}.f = omega_ROM(i_f)/(2*pi);
-                varCol_temp = getAnalyticSolutions(varCol_temp);
-                varCol_temp = postProcessSolution(varCol_temp,UU(:,i_f));
-                [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] ...
-                                = calculateErrors(task, varCol_temp, 1, stringShift);
+            if task.calculateVolumeError
+                energyError = zeros(1,size(omega_ROM,2));
+                L2Error = zeros(1,size(omega_ROM,2));
+                H1Error = zeros(1,size(omega_ROM,2));
+                H1sError = zeros(1,size(omega_ROM,2));
+                surfaceError = zeros(1,size(omega_ROM,2));
+                for i_f = 1:numel(omega_ROM)
+    %             parfor i_f = 1:numel(omega_ROM)
+                    varCol_temp = varCol;
+                    varCol_temp{1}.omega = omega_ROM(i_f);
+                    k = omega_ROM(i_f)/varCol_temp{1}.c_f;
+                    varCol_temp{1}.k = k;
+                    varCol_temp{1}.f = omega_ROM(i_f)/(2*pi);
+                    varCol_temp = getAnalyticSolutions(varCol_temp);
+                    varCol_temp = postProcessSolution(varCol_temp,UU(:,i_f));
+                    [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] ...
+                                    = calculateErrors(task, varCol_temp, 1, stringShift);
+                end
             end
-%             varCol = getAnalyticSolutions(varCol);
-%             varCol = postProcessSolution(varCol,UU);
-%             [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, 1, stringShift);
+            
+            if task.calculateSurfaceError
+                varCol = getAnalyticSolutions(varCol);
+                varCol = postProcessSolution(varCol,UU);
+                [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, 1, stringShift);
+            end
             switch basisROM
                 case {'Taylor','Pade'}
                     if task.calculateSurfaceError
