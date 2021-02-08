@@ -25,16 +25,10 @@ for e = 1:noElems
     end
 end
 
-% if noElems < 600
-%     noQuadPts = 16;
-% else
-%     noQuadPts = 10;
-% end
-
 extraGP = varCol.extraGP;
 [Q, W] = gaussTensorQuad(degree(1:2)+3+extraGP);
 
-p_h = zeros(size(W,1),length(surfaceElements));
+p_h = complex(zeros(size(W,1),length(surfaceElements),size(U,2)));
 fact = zeros(size(W,1),length(surfaceElements));
 points = zeros(size(W,1), length(surfaceElements),3);
 
@@ -60,11 +54,11 @@ parfor i = 1:length(surfaceElements)
     R = NURBSbasis(I, xi, degree, knots, wgts);
     J_1 = getJacobian(R,pts,2);
     
-    p_h(:,i) = R{1}*U_sctr;
+    p_h(:,i,:) = R{1}*U_sctr;
     fact(:,i) = J_1 * J_2 .* W;
     points(:,i,:) = R{1}*pts;
 end
-p_h = reshape(p_h, size(p_h,1)*size(p_h,2),1);
+p_h = reshape(p_h, size(p_h,1)*size(p_h,2),size(U,2));
 fact = reshape(fact, size(fact,1)*size(fact,2),1);
 points = reshape(points, size(points,1)*size(points,2),3);
 analyticFunctions = varCol.analyticFunctions({points});
@@ -74,10 +68,10 @@ if isinf(LpOrder)
     Error = max(abs(p - p_h));
     normalization = max(abs(p));
 else
-    Error = (sum((abs(p - p_h).^LpOrder).*fact))^(1/LpOrder);
-    normalization = (sum((abs(p).^LpOrder).*fact))^(1/LpOrder);
+    Error = (sum((abs(p - p_h).^LpOrder).*fact)).^(1/LpOrder);
+    normalization = (sum((abs(p).^LpOrder).*fact)).^(1/LpOrder);
 end
 
-relError = 100*Error/normalization;
+relError = 100*Error./normalization;
 
 

@@ -13,24 +13,14 @@ model = 'IMS';  % Spherical shell
 coreMethod = {'IGA','hp_FEM'};
 coreMethod = {'IGA'};
 method = {'IE'};
-% applyLoad = 'pointPulsation';
+applyLoad = 'pointPulsation';
 % applyLoad = 'pointCharge';
-applyLoad = 'planeWave';
+% applyLoad = 'planeWave';
 % BCs = {'SHBC','SSBC'};
 BCs = {'SSBC'};
 % BCs = {'SHBC'};
 
 warning('off','NURBS:weights')
-
-alpha_s = 0;
-beta_s = 0;   
-alpha   = alpha_s;                            % Aspect angles of observation points
-beta = beta_s;   
-if strcmp(applyLoad,'pointPulsation')
-    calculateSurfaceError = 1;
-    calculateVolumeError  = 1;
-    BCs = {'NBC'};
-end
     
 prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
@@ -48,11 +38,29 @@ postPlot(1).xScale       	= 1;
 postPlot(1).legendEntries 	= {};
 postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
+postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
+
+alpha_s = 0;
+beta_s = 0;   
+alpha   = alpha_s;                            % Aspect angles of observation points
+beta = beta_s;   
+if strcmp(applyLoad,'pointPulsation')
+    calculateSurfaceError = 1;
+    calculateVolumeError  = 1;
+    BCs = {'NBC'};
+	postPlot(2) = postPlot(1);
+    postPlot(2).yname        	= 'energyError';
+    postPlot(2).axisType      	= 'semilogy';
+    postPlot(2).addCommands   	= [];
+end
 
 for BC = BCs
     scatteringCase = 'Sweep';
     postPlot(1).noXLoopPrms = 0;
     postPlot(1).xname = 'k_ROM';
+    if strcmp(applyLoad,'pointPulsation')
+        postPlot(2).xname = 'k_ROM';
+    end
     switch BC{1}
         case {'SHBC','NBC'}
             noDomains = 1;
@@ -113,12 +121,12 @@ for BC = BCs
     formulation = {'BGC'};
     noVecsArr = 64;
     degree = 2;
-    M = 5:6; % 5
-    N = 7; % 9
+    M = 4; % 5
+    N = 20; % 9
     useROM = true;
-    p_ie = 5;
+    p_ie = 4;
     s_ie = 2;
-    IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
+    IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
 
     storeFullVarCol = false;
     if strcmp(scatteringCase, 'Sweep')
@@ -133,13 +141,23 @@ for BC = BCs
     scatteringCase = 'BI';
     if strcmp(scatteringCase,'Sweep')
         postPlot(1).noXLoopPrms   	= 0;
+        if strcmp(applyLoad,'pointPulsation')
+            postPlot(2).noXLoopPrms = 0;
+        end
         loopParameters = {'M','method','BC'};
     else
         loopParameters = {'M','method','BC','f'};
         postPlot(1).noXLoopPrms   	= 1;
         postPlot(1).xLoopName   	= 'f';
+        if strcmp(applyLoad,'pointPulsation')
+            postPlot(2).noXLoopPrms = 1;
+            postPlot(2).xLoopName = 'f';
+        end
     end
     postPlot(1).xname = postPlot(1).xname(1);
+    if strcmp(applyLoad,'pointPulsation')
+        postPlot(2).xname = postPlot(2).xname(1);
+    end
     omega = omega_ROM;
     useROM = false;
     if 0 %strcmp(scatteringCase, 'BI')
@@ -153,6 +171,25 @@ for BC = BCs
     end
     f = omega/(2*pi);
     formulation = {'BGU'};
+    IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
     N = 4;
-    collectIntoTasks
+%     collectIntoTasks
+    formulation = {'BGC'};
+    N = 20;
+    p_ie = 4;
+    s_ie = 2;
+    IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
+%     collectIntoTasks
 end
+
+function addCommands_(i_study)
+if i_study == 1
+    T = readtable('miscellaneous/refSolutions/IMS.csv','FileType','text', 'HeaderLines',1);
+    x = T.Var1;
+    y = T.Var2;
+    plot(x,y,'DisplayName','Experiment')
+    legend('off');
+    legend('show');
+    hold on
+end
+

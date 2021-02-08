@@ -27,7 +27,7 @@ end
 extraGP = varCol{1}.extraGP;
 [Q, W] = gaussTensorQuad(degree+3+extraGP);
 
-p_h = zeros(size(W,1), noElems);
+p_h = complex(zeros(size(W,1), noElems, size(U,2)));
 fact = zeros(size(W,1), noElems);
 points = zeros(size(W,1), noElems,3);
 isMFS = strcmp(varCol{1}.method,'MFS');
@@ -57,8 +57,8 @@ parfor e = 1:noElems
         R{1} = R{1}*repmat(exp(1i*k*(y*d_vec)),1,size(R{1},2));
     end
     if ~isMFS
-        U_sctr = U(sctr);
-        p_h(:,e) = R{1}*U_sctr;
+        U_sctr = U(sctr,:);
+        p_h(:,e,:) = R{1}*U_sctr;
     end
     fact(:,e) = J_1 * J_2 .* W;
     points(:,e,:) = y;
@@ -67,7 +67,7 @@ fact = reshape(fact, size(fact,1)*size(fact,2),1);
 points = reshape(points, size(points,1)*size(points,2),3);
 if isMFS
     Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
-    n_cp = numel(U);
+    n_cp = size(U,1);
     y_s = varCol{i}.y_s;
     r = zeros(size(points));
     for j = 1:n_cp
@@ -75,7 +75,7 @@ if isMFS
     end
     p_h = Phi_k(r)*U;
 else
-    p_h = reshape(p_h, size(p_h,1)*size(p_h,2),1);
+    p_h = reshape(p_h, size(p_h,1)*size(p_h,2),size(U,2));
 end
 
 if varCol{i}.solveForPtot && varCol{i}.exteriorProblem
@@ -88,9 +88,9 @@ if isinf(LpOrder)
     Error = max(abs(p - p_h));
     normalization = max(abs(p));
 else
-    Error = (sum((abs(p - p_h).^LpOrder).*fact))^(1/LpOrder);
-    normalization = (sum((abs(p).^LpOrder).*fact))^(1/LpOrder);
+    Error = (sum((abs(p - p_h).^LpOrder).*fact)).^(1/LpOrder);
+    normalization = (sum((abs(p).^LpOrder).*fact)).^(1/LpOrder);
 end
-relError = 100*Error/normalization;
+relError = 100*Error./normalization;
 
 
