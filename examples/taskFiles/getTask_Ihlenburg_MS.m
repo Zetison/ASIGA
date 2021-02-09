@@ -41,11 +41,11 @@ for i = 1:numel(applyLoads)
     postPlot(1).legendEntries 	= {};
     postPlot(1).subFolderName 	= '';
     postPlot(1).fileDataHeaderX	= [];
-    postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
+    postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_();
 
     alpha_s = 0;
     beta_s = 0;   
-    alpha   = alpha_s;                            % Aspect angles of observation points
+    alpha = alpha_s;                            % Aspect angles of observation points
     beta = beta_s;   
     if strcmp(applyLoad,'pointPulsation')
         calculateSurfaceError = 1;
@@ -101,7 +101,7 @@ for i = 1:numel(applyLoads)
         varCol = varCol(1:noDomains);
         varCol{1}.meshFile = 'createNURBSmesh_M3';
     %     k = linspace(2.5, 20, 5)/varCol{1}.R1;
-        k = linspace(0.5, 4.29, 5);
+        k = linspace(0.5, 4.29, 10);
 
         k_ROM = k(1):0.005:k(end);
     %     k_ROM = k(1):0.05:k(end);
@@ -128,10 +128,10 @@ for i = 1:numel(applyLoads)
         basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
         basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
         formulation = {'BGC'};
-        noVecsArr = 128;
+        noVecsArr = 32;
         degree = 2;
         M = 5; % 5
-        N = 50; % 9
+        N = 20; % 9
         useROM = true;
         p_ie = 4;
         s_ie = 2;
@@ -192,14 +192,12 @@ for i = 1:numel(applyLoads)
     %     collectIntoTasks
     end
 end
-function addCommands_(i_study)
-if i_study == 1
-    T = readtable('miscellaneous/refSolutions/IMS.csv','FileType','text', 'HeaderLines',1);
-    x = T.Var1;
-    y = T.Var2;
-    plot(x,y,'DisplayName','Experiment')
-    legend('off');
-    legend('show');
-    hold on
-end
+function addCommands_()
+T = readtable('miscellaneous/refSolutions/IMS.csv','FileType','text', 'HeaderLines',1);
+x = T.Var1;
+y = T.Var2;
+plot(x,y,'DisplayName','Experiment')
+legend('off');
+legend('show');
+hold on
 
