@@ -142,7 +142,7 @@ else
 end
 n_en = (p_xi+1)*(p_eta+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEM);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP(1:2),extraGPBEM,quadMethodBEM);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));

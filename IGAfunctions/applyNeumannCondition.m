@@ -47,7 +47,8 @@ end
 Fvalues = zeros(d_f*n_en,noElems,noRHSs);
 indices = zeros(d_f*n_en,noElems);
 
-[Q, W] = gaussTensorQuad(degree+1);
+extraGP = varCol.extraGP;
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
 parfor e = 1:noElems
 % for e = 1:noElems

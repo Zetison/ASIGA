@@ -15,7 +15,7 @@ knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
 patches = varCol.patches;
 
-extraGP = varCol.extraGP;
+extraGP = varCol.extraGP(1:2);
 extraGPBEM = varCol.extraGPBEM;
 agpBEM = varCol.agpBEM;
 analytic = varCol.analytic;

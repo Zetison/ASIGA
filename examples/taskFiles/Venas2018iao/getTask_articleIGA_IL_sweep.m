@@ -18,6 +18,7 @@ method = 'IE';
 
 axisymmetric = 1;
 if axisymmetric
+    extraGP = [7,0,0];    % extra quadrature points
     alpha_s = 0;
     beta_s = -pi/2;
     Xi = [0,0,0,1,1,2,2,3,3,3]/3;

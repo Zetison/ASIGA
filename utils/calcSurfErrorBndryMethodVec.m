@@ -25,7 +25,7 @@ else
 end
 
 extraGP = varCol{1}.extraGP;
-[Q, W] = gaussTensorQuad(degree+3+extraGP);
+[Q, W] = gaussTensorQuad(degree+3+extraGP(1:2));
 
 p_h = complex(zeros(size(W,1), noElems, size(U,2)));
 fact = zeros(size(W,1), noElems);
@@ -79,7 +79,7 @@ else
 end
 
 if varCol{i}.solveForPtot && varCol{i}.exteriorProblem
-    analytic = @(x) varCol{i}.p_(x) + varCol{i}.p_inc(x);
+    analytic = @(x) varCol{i}.p_(x) + varCol{i}.p_inc_(x);
 else
     analytic = varCol{i}.p_;
 end

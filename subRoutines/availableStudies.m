@@ -20,6 +20,7 @@
 % studyName = 'FreeCAD'; %getTask_FreeCAD
 % studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
 studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
+% studyName = 'test'; %getTask_Ihlenburg_MS
 
 %% Venas2020ibe
 % studyName = 'articleBEM_S1_quadVis'; %getTask_articleBEM_S1_quadVis

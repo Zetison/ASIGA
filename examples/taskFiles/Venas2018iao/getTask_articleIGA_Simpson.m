@@ -26,13 +26,14 @@ k = 2;                 % Wave number for Simpson2014aib
 omega = c_f*k;         % Angular frequency
 f = omega/(2*pi);      % Frequency
 
-M = 3;
+M = 3:4;
 
 alpha_s = pi;
 beta_s = 0;  
 alpha = (0:0.5:360)*pi/180;
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
+prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 % prePlot.resolution = [20,20,0];
 
 plotFarField = false; 
@@ -74,7 +75,7 @@ postPlot(3).axisType	= 'plot';
 postPlot(3).yScale      = 1;
 postPlot(3).addCommands = [];
 
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
@@ -94,7 +95,7 @@ formulation = {'CCBIE'};
 % formulation = {'CCBIE','GBM'};
 colBEM_C0 = 0;
 solveForPtot = true;
-collectIntoTasks
+% collectIntoTasks
 
 function addCommands_()
     

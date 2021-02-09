@@ -23,7 +23,7 @@ extraGP = varCol.extraGP;
 d_p = varCol.patches{1}.nurbs.d_p;
 
 if varCol.solveForPtot && varCol.exteriorProblem
-    analytic = @(x) varCol.p(x) + varCol.p_inc(x);
+    analytic = @(x) varCol.p_(x) + varCol.p_inc_(x);
 else
     switch varCol.media
         case 'fluid'
@@ -41,7 +41,7 @@ else
     d_vec = NaN;
 end
 k = varCol.k;
-[Q, W] = gaussTensorQuad(degree+1+extraGP);
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 n_en = prod(degree+1);
 
 %% Preallocation and initiallizations

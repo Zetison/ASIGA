@@ -60,7 +60,7 @@ else
 end
 
 extraGP = varCol.extraGP;
-[Q, W] = gaussTensorQuad(degree+1+extraGP);
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 
 progressBars = varCol.progressBars;
 nProgressStepSize = ceil(noElems/1000);

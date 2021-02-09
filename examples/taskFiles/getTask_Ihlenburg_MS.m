@@ -15,6 +15,7 @@ coreMethod = {'IGA'};
 method = {'IE'};
 applyLoads = {'pointPulsation','pointCharge'};
 % applyLoads = {'pointCharge'};
+% applyLoads = {'pointPulsation'};
 for i = 1:numel(applyLoads)
     applyLoad = applyLoads{i};
     % applyLoad = 'pointCharge';
@@ -100,7 +101,7 @@ for i = 1:numel(applyLoads)
         varCol = varCol(1:noDomains);
         varCol{1}.meshFile = 'createNURBSmesh_M3';
     %     k = linspace(2.5, 20, 5)/varCol{1}.R1;
-        k = linspace(0.5, 4.29, 10);
+        k = linspace(0.5, 4.29, 5);
 
         k_ROM = k(1):0.005:k(end);
     %     k_ROM = k(1):0.05:k(end);
@@ -111,6 +112,7 @@ for i = 1:numel(applyLoads)
         postPlot(1).xScale = varCol{1}.R1;
 
         Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+        extraGP = [7,0,0];    % extra quadrature points
         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
         if noDomains > 1
             varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
@@ -126,9 +128,9 @@ for i = 1:numel(applyLoads)
         basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
         basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
         formulation = {'BGC'};
-        noVecsArr = 64;
+        noVecsArr = 128;
         degree = 2;
-        M = 2; % 5
+        M = 5; % 5
         N = 50; % 9
         useROM = true;
         p_ie = 4;

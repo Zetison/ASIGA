@@ -300,7 +300,12 @@ for i_b = 1:numel(basisROMcell)
         if task.calculateSurfaceError || task.calculateVolumeError
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
             t_startROM = tic;
-            if task.calculateVolumeError
+            
+            if task.calculateSurfaceError && ~task.calculateVolumeError
+                varCol = getAnalyticSolutions(varCol);
+                varCol = postProcessSolution(varCol,UU);
+                [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, 1, stringShift);
+            else
                 energyError = zeros(1,size(omega_ROM,2));
                 L2Error = zeros(1,size(omega_ROM,2));
                 H1Error = zeros(1,size(omega_ROM,2));
@@ -318,12 +323,6 @@ for i_b = 1:numel(basisROMcell)
                     [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] ...
                                     = calculateErrors(task, varCol_temp, 1, stringShift);
                 end
-            end
-            
-            if task.calculateSurfaceError
-                varCol = getAnalyticSolutions(varCol);
-                varCol = postProcessSolution(varCol,UU);
-                [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, 1, stringShift);
             end
             switch basisROM
                 case {'Taylor','Pade'}

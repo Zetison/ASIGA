@@ -107,8 +107,8 @@ centerPts = findCenterPoints(patches);
 
 n_en = prod(degree+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP,extraGPBEM,quadMethodBEM);
-[Q2D,W2D] = gaussTensorQuad(degree+1+extraGP);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:d_p),extraGPBEM,quadMethodBEM);
+[Q2D,W2D] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_GP = 0;

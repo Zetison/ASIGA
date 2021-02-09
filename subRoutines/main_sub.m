@@ -158,7 +158,6 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                     fprintf('using %12f seconds.', toc)
                 end
                 varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                
             case 'IENSG'
                 tic
                 if ~runTasksInParallel

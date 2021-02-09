@@ -25,7 +25,7 @@ for e = 1:noElems
     end
 end
 
-extraGP = varCol.extraGP;
+extraGP = varCol.extraGP(1:2);
 [Q, W] = gaussTensorQuad(degree(1:2)+3+extraGP);
 
 p_h = complex(zeros(size(W,1),length(surfaceElements),size(U,2)));

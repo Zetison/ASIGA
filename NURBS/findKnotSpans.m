@@ -1,5 +1,5 @@
 function I = findKnotSpans(degree, pt, knots)
-d_p = numel(knots);
+d_p = numel(degree);
 I = zeros(1,3);
 for i = 1:d_p
     n = numel(knots{i})-(degree(i)+1);

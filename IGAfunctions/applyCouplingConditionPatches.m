@@ -24,7 +24,8 @@ spIdxRow1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 spIdxCol1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
 
-[Q, W] = gaussTensorQuad(degree+1);
+extraGP = varColOuter.extraGP;
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 parfor e = 1:innerNoElemsXiEta
 % for e = 1:innerNoElemsXiEta    
     patch = pIndex(e); % New

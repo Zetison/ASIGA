@@ -30,6 +30,7 @@ if strcmp(applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
 plotFarField = ~hetmaniukCase;
+% plotFarField = true;     % If false, plots the near field instead
 
 calculateFarFieldPattern    = true;     % Calculate far field pattern
 alpha_s = 0;                            % Aspect angle of incident wave
@@ -37,13 +38,14 @@ beta_s  = -pi/2;                        % Elevation angle of incident wave
 alpha   = 0;                            % Aspect angles of observation points
 beta = -pi/2;   
 r = 1;                            % radii for near-field evaluation.
+extraGP = [3,0,0];    % extra quadrature points
 
 r_a = 1.2;
 r_s = 3;
 
 parm = 1;
-calculateSurfaceError = 0;
-calculateVolumeError  = 1;
+calculateSurfaceError = 1;
+calculateVolumeError  = 0;
 calculateFarFieldPattern = 1;
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
@@ -52,8 +54,8 @@ prePlot.plot2Dgeometry = 0;
 prePlot.resolution = [20,20,0];
 computeCondNumber = 0;
 
-postPlot(1).yname        	= 'energyError';
-% postPlot(1).yname        	= 'surfaceError';
+% postPlot(1).yname        	= 'energyError';
+postPlot(1).yname        	= 'surfaceError';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= false;
 postPlot(1).axisType      	= 'semilogy';
@@ -100,6 +102,7 @@ for BC = BCs
     varCol{1}.meshFile = 'createNURBSmesh_EL';
     Xi = [0,0,0,1,1,2,2,3,3,3]/3;
     varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
+    extraGP = [7,0,0];    % extra quadrature points
     if noDomains > 1
         varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
     end
@@ -111,7 +114,7 @@ for BC = BCs
             k = linspace(9, 36, 3);
             k = linspace(9, 36, 3)/5;
             k_ROM = k(1):0.05:k(end);
-%             k_ROM = k(1):0.5:k(end);
+            k_ROM = k(1):0.5:k(end);
             c_f = varCol{1}.c_f;
             omega_ROM = k_ROM*c_f;
             f = k*c_f/(2*pi);
@@ -127,7 +130,7 @@ for BC = BCs
             postPlot(6).plotResults = false;
         case {'SSBC','NNBC'}
             f = linspace(1430, 4290, 5);
-            f = linspace(143, 429, 5);
+%             f = linspace(143, 429, 5);
             f_ROM = f(1):12:f(end);
 %             f_ROM = f(1):120:f(end);
             omega_ROM = 2*pi*f_ROM;
@@ -148,16 +151,16 @@ for BC = BCs
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     noVecsArr = 64;
     degree = 4;
-    M = 3:4; % 5
-    N = 7; % 9
+    M = 6; % 6
+    N = 16; % 9
     useROM = true;
     p_ie = 5;
     s_ie = 2;
-    IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
+    IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
 
     storeFullVarCol = false;
     loopParameters = {'M','method','BC'};
-%     collectIntoTasks
+    collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     useROM = false;
@@ -173,10 +176,10 @@ for BC = BCs
     method = {'BA'};
 %     formulation = {'SL2E'};
     formulation = {'VL2E'};
-    collectIntoTasks
+%     collectIntoTasks
     
     coreMethod = {'IGA'};
     method = {'IE'};
     formulation = {'BGU'};
-    collectIntoTasks
+%     collectIntoTasks
 end

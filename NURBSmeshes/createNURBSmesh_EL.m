@@ -40,6 +40,7 @@ end
 parm = varCol{1}.parm(1);
 if varCol{1}.boundaryMethod
     solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
+    solid = makeUniformNURBSDegree(solid,degree);
 %     solid = explodeNURBS(solid,'eta');
 %     solid = explodeNURBS(solid,'xi');
     if parm == 1
@@ -47,15 +48,15 @@ if varCol{1}.boundaryMethod
     else
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
-    end
+    end    
     if isfield(varCol{1},'refinement')
         if numel(varCol) > 1
-            solid = insertKnotsInNURBS(solid,varCol{2}.refinement(M));
+            t_fluid = c_z*2*pi/(32-pi);
+            solid = insertKnotsInNURBS(solid,varCol{2}.refinement(M,t,t_fluid));
         else
             solid = insertKnotsInNURBS(solid,varCol{1}.refinement(M));
         end
     else
-        solid = makeUniformNURBSDegree(solid,degree);
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0);
     end
     L_gamma = 2*c_z;

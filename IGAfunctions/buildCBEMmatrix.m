@@ -186,7 +186,7 @@ createElementTopology
 
 n_en = prod(degree+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP,extraGPBEM,quadMethodBEM);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:d_p),extraGPBEM,quadMethodBEM);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -253,8 +253,8 @@ parfor i = 1:n_cp
                 xi_x = parent2ParametricSpace(Xi_e_x, Q(1,1));
                 eta_x = parent2ParametricSpace(Eta_e_x, Q(1,1));
             else
-                xi_x = parent2ParametricSpace(Xi_e_x, Q{degree(1)+1+extraGP}(1,1));
-                eta_x = parent2ParametricSpace(Eta_e_x, Q{degree(1)+1+extraGP}(1,1));
+                xi_x = parent2ParametricSpace(Xi_e_x, Q{degree(1)+1+extraGP(1)}(1,1));
+                eta_x = parent2ParametricSpace(Eta_e_x, Q{degree(1)+1+extraGP(1)}(1,1));
             end
         end
     end

@@ -26,9 +26,9 @@ M                   = 1;	% Mesh number
 initMeshFactXi      = 1;	% initial number of knots in xi direction
 initMeshFactEta 	= 1;	% initial number of knots in eta direction
 initMeshFactZeta    = 1;	% initial number of knots in zeta direction
-extraGP             = 0;    % extra quadrature points
 parm                = 1;    % Toggle different parameterizations of a geometric model
 refineThetaOnly     = 0;    % For the ellipsoidal/spherical geometries, refine in the theta direction only
+extraGP             = zeros(1,3);    % extra quadrature points
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plot2Dgeometry      = false;       % Plot cross section of mesh and geometry
@@ -73,8 +73,9 @@ calculateVolumeError        = false;	% Only if scatteringCase == 'Bi'
 LpOrder                     = 2;        % Sets p for the L^p-norm
 
 %% Settings for 1D far field evaluations
-plotFarField                = true;     % If false, plots the near field instead
-calculateFarFieldPattern    = true;     % Calculate far field pattern
+plotFarField                 = true;     % If false, plots the near field instead
+calculateFarFieldPattern     = true;     % Calculate far field pattern
+farFieldNormalPressFromSolid = true;
 alpha_s = NaN;                          % Aspect angle of incident wave
 beta_s  = NaN;                          % Elevation angle of incident wave
 alpha   = (0:0.5:360)*pi/180;           % Aspect angles of observation points

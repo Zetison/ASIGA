@@ -3,31 +3,39 @@ function p_h = calculateScatteredPressure(varCol, P_far, useExtraQuadPts, comput
 d_p = varCol{1}.patches{1}.nurbs.d_p;
 d = varCol{1}.patches{1}.nurbs.d;
 U = varCol{1}.U;
-solidBasedDerivs = false;
-if numel(varCol) > 1 && (d_p == 2 || solidBasedDerivs)
-    [~, ~, elementSolid] = meshBoundary(varCol{2},1);
+farFieldNormalPressFromSolid = varCol{1}.farFieldNormalPressFromSolid;
+if numel(varCol) > 1 && (d_p == 2 || farFieldNormalPressFromSolid)
+    [nodesSolid, ~, elementSolid] = meshBoundary(varCol{2},1);
     noDofs = varCol{2}.noDofs;
     Ux = varCol{2}.U(1:d:noDofs,:);
     Uy = varCol{2}.U(2:d:noDofs,:);
     Uz = varCol{2}.U(3:d:noDofs,:);
 else
+    nodesSolid = NaN;
     elementSolid = NaN;
     Ux = NaN;
     Uy = NaN;
     Uz = NaN;
 end
-rho = varCol{1}.rho;
-degree = varCol{1}.degree; % assume p_xi is equal in all patches
-noDofs = varCol{1}.noDofs;
-index = varCol{1}.index;
-noElems = varCol{1}.noElems;
-elRange = varCol{1}.elRange;
-element = varCol{1}.element;
-element2 = varCol{1}.element2;
+knotVecs = varCol{1}.knotVecs;
 weights = varCol{1}.weights;
 controlPts = varCol{1}.controlPts;
-knotVecs = varCol{1}.knotVecs;
-pIndex = varCol{1}.pIndex;
+elRange = varCol{1}.elRange;
+noDofs = varCol{1}.noDofs;
+rho = varCol{1}.rho;
+if farFieldNormalPressFromSolid && d_p == 3
+    degree = varCol{1}.degree(1:2); % assume p_xi is equal in all patches
+    [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(varCol{1},0);
+else
+    degree = varCol{1}.degree; % assume p_xi is equal in all patches
+    index = varCol{1}.index;
+    noElems = varCol{1}.noElems;
+    element = varCol{1}.element;
+    element2 = varCol{1}.element2;
+    pIndex = varCol{1}.pIndex;
+    zeta0Nodes = 1:noDofs;
+end
+
 BC = varCol{1}.BC;
 k = varCol{1}.k;
 omega = varCol{1}.omega;
@@ -48,7 +56,7 @@ end
 dp_inc = varCol{1}.dp_inc_;
 
 Phi_k = varCol{1}.Phi_k;
-if d_p == 3
+if d_p == 3 && ~farFieldNormalPressFromSolid
     surfaceElements = [];
     for e = 1:noElems
         idZeta = index(e,3);
@@ -62,28 +70,14 @@ else
 end
 solveForPtot = varCol{1}.solveForPtot;
 exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(varCol) == 1;
-if exteriorSHBC
-    if solveForPtot
-        homNeumanCond = true;
-        dpdn = @(x,n) 0;
-    else
-        homNeumanCond = false;
-        dpdn = @(x,n) -varCol{1}.dp_inc_(x,n);
-    end
-else
-    homNeumanCond = false;
-    dpdn = varCol{1}.dpdn_;
-end
 
 extraGP = varCol{1}.extraGP;
 if useExtraQuadPts
-    noGpXi = degree(1)+1+5;
-    noGpEta = degree(2)+1+5;
+    noGp = degree+1+5;
 else
-    noGpXi = degree(1)+3+extraGP;
-    noGpEta = degree(2)+3+extraGP;
+    noGp = degree+3+extraGP(1:numel(degree));
 end
-[Q, W] = gaussTensorQuad([noGpXi,noGpEta]); 
+[Q, W] = gaussTensorQuad(noGp); 
 if numel(k) > 1 && size(P_far,1) > 1
     error('not implemented')
 end
@@ -91,21 +85,17 @@ p_h = zeros(max([size(P_far,1),numel(k)]),1);
 
 % for i = 1:length(surfaceElements) %
 parfor i = 1:length(surfaceElements)
-    if d_p == 3
-        e = surfaceElements(i);
-    else
-        e = i;
-    end
+    e = surfaceElements(i);
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(2,2);
     for ii = 1:2
         Xi_e(ii,:) = elRange{ii}(index(e,ii),:);
     end
-
-    sctr = element(e,:);
+    
+    sctr = zeta0Nodes(element(e,:));
     pts = controlPts(sctr,:);
-    wgts = weights(element2(e,:),:);
+    wgts = weights(zeta0Nodes(element2(e,:)),:);
 
     J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
 
@@ -138,10 +128,11 @@ parfor i = 1:length(surfaceElements)
     if exteriorSHBC
         dp_h_gp = -dp_inc(Y,normals); 
     else
-        if d_p == 2 %|| solidBasedDerivs
-            dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*Ux(elementSolid(e,:),:)) ...
-                                   +normals(:,2).*(R{1}*Uy(elementSolid(e,:),:)) ...
-                                   +normals(:,3).*(R{1}*Uz(elementSolid(e,:),:)));
+        if d_p == 2 || farFieldNormalPressFromSolid
+            sctrSolid = nodesSolid(elementSolid(e,:));
+            dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*Ux(sctrSolid,:)) ...
+                                     +normals(:,2).*(R{1}*Uy(sctrSolid,:)) ...
+                                     +normals(:,3).*(R{1}*Uz(sctrSolid,:)));
             if ~solveForPtot
                 dp_h_gp = dp_h_gp - dp_inc(Y,normals);
             end

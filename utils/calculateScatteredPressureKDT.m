@@ -30,8 +30,8 @@ p_inc = varCol.p_inc;
 
 extraGP = varCol.extraGP;
 % [~,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,'adaptive');
-[~,W2D_2,Q,W] = getBEMquadData(degree,extraGP,extraGPBEM,'adaptive2');
-[Q2D,W2D] = gaussTensorQuad(degree+1+extraGP);
+[~,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:2),extraGPBEM,'adaptive2');
+[Q2D,W2D] = gaussTensorQuad(degree+1+extraGP(1:2));
 
 p_h = zeros(size(P_far,1),length(k));
 switch formulation

@@ -17,7 +17,7 @@ function vargout = NURBSbasis(I,xi,degree,knots,weights,n)
 if nargin < 6
     n = 1;
 end
-d_p = numel(knots);
+d_p = numel(degree);
 prec = class(xi);
 noxi = numel(xi(:,1));
 nen = prod(degree+1);

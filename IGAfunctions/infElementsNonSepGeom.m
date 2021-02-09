@@ -66,7 +66,7 @@ end
 spIdxRow = zeros((N*n_en)^2,noElems);
 spIdxCol = zeros((N*n_en)^2,noElems);
 Avalues = zeros((N*n_en)^2,noElems);
-[Q, W] = gaussTensorQuad(degree+1+extraGP);
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
 % max_r_a_recorded = -inf;
 % min_r_a_recorded = inf;

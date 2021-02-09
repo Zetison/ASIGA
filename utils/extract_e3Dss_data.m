@@ -17,7 +17,7 @@ for m = 1:M
     switch varCol{m}.media
         case 'fluid'
             layer{m}.c_f          	= varCol{m}.c_f;       % Speed of sound
-            layer{m}.calc_p_0       = true;      % Toggle calculation of the far field pattern
+            layer{m}.calc_p_0       = m == 1;      % Toggle calculation of the far field pattern
             layer{m}.calc_p       	= true;      % Toggle calculation of the scattered pressure
             layer{m}.calc_dp      	= true(1,3); % Toggle calculation of the three components of the gradient of the pressure
             layer{m}.calc_p_inc     = true;      % Toggle calculation of the incident pressure

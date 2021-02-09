@@ -64,7 +64,8 @@ A3values = zeros(n_en^2,noElems);
 A4values = zeros(n_en^2,noElems);
 A5values = zeros(n_en^2,noElems);
 
-[Q, W] = gaussTensorQuad(degree+1);
+extraGP = varCol.extraGP;
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
 progressBars = varCol.progressBars;
 nProgressStepSize = ceil(noElems/1000);
@@ -393,8 +394,7 @@ if IElocSup
     K4values = zeros(sizeKe,noElems); 
     K5values = zeros(sizeKe,noElems); 
 
-    extraGP = varCol.extraGP;
-%     [Q, W] = gaussTensorQuad(degree+1+extraGP);
+%     [Q, W] = gaussTensorQuad(degree+1+extraGP(1));
     [Q, W] = gaussTensorQuad(50);
     %% Build global matrices
     
