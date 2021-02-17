@@ -8,7 +8,7 @@ tic
 v = getFarFieldPoints(task.alpha,task.beta,task.r);
 
 switch task.method
-    case {'IE','ABC','IENSG','BA','BEM'}
+    case {'IE','ABC','IENSG','BA','BEM','PML'}
         p_h = calculateScatteredPressure(varCol, v, 0, plotFarField);
     case 'MFS'
         p_h = calculateScatteredPressureMFS(varCol{1}, v, plotFarField);

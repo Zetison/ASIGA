@@ -16,10 +16,11 @@ method = {'IE'};
 parm = 1;
 coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
 coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+coreMethods = {'hp_FEM'}; % [5, 4, 2, 1, 3]
 BCs = {'SHBC','SSBC','NNBC'};
 % BCs = {'NNBC'};
-% BCs = {'SHBC'};
-BCs = {'SSBC'};
+BCs = {'SHBC'};
+% BCs = {'SSBC'};
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
@@ -34,7 +35,6 @@ postPlot(1).xScale          = 180/pi;
 postPlot(2) = postPlot(1);
 postPlot(2).yname = 'error_p';
 postPlot(2).axisType = 'semilogy';
-farFieldNormalPressFromSolid = [0,1];
 warning('off','NURBS:weights')
 M_0 = 4; % 4
 for i_coreM = 1:length(coreMethods)
@@ -80,17 +80,17 @@ for i_coreM = 1:length(coreMethods)
         end
         alpha_s = pi;
         beta_s = 0;
-        plotResultsInParaview = 0;
+        para.plotResultsInParaview = 0;
         calculateFarFieldPattern = 1;
         calculateVolumeError = 1;
         calculateSurfaceError = 0;
-        loopParameters = {'method','formulation','M','degree','coreMethod','BC','f','farFieldNormalPressFromSolid'};
+        loopParameters = {'method','formulation','M','degree','coreMethod','BC','f'};
 
         formulation = {'BGU'};
         method = {'IE'};    
         collectIntoTasks
         
-        formulation = {'SL2E'};
+        formulation = {'VL2E'};
         method = {'BA'};
         collectIntoTasks
     end

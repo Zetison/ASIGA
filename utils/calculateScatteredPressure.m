@@ -40,18 +40,8 @@ BC = varCol{1}.BC;
 k = varCol{1}.k;
 omega = varCol{1}.omega;
 method = varCol{1}.method;
-if strcmp(method,'IENSG')
-    A_2 = varCol{1}.A_2;
-    x_0 = varCol{1}.x_0;
-    Upsilon = varCol{1}.Upsilon;
-    D = varCol{1}.D;
-    N = varCol{1}.N;
-else
-    A_2 = NaN;
-    x_0 = NaN;
-    Upsilon = NaN;
-    D = NaN;
-    N = NaN;
+if strcmp(method,'IENSG') && ~farFieldNormalPressFromSolid
+    error('Not implemented')
 end
 dp_inc = varCol{1}.dp_inc_;
 
@@ -106,24 +96,8 @@ parfor i = 1:length(surfaceElements)
     normals = crossProd./repmat(J_1,1,3);
 
     Y = R{1}*pts;  
-    if strcmp(method,'IENSG')
-        Yt = (Y-x_0)*A_2.';
-
-        r_a = evaluateProlateCoords(Yt,Upsilon);
-        p_h_gp = zeros(size(W,1),size(U,2));
-        for m = 1:N
-            temp = 0;
-            temp2 = 0;
-            for mt = 1:N
-                temp = temp + (1i*k - mt/r_a)*D(m,mt);
-                temp2 = temp2 + D(m,mt);
-            end
-            p_h_gp = p_h_gp + temp2*R{1}*U(sctr + noDofs*(m-1),:);
-        end    
-    else
-        U_sctr = U(sctr,:);
-        p_h_gp = R{1}*U_sctr;
-    end
+    U_sctr = U(sctr,:);
+    p_h_gp = R{1}*U_sctr;
 
     if exteriorSHBC
         dp_h_gp = -dp_inc(Y,normals); 

@@ -10,20 +10,20 @@ getDefaultTaskValues
 %% IE simulation
 hetmaniukCase = false; % evaluating solution at boundary not implemented
 
-scatteringCase = 'Sweep';
+% scatteringCase = 'Sweep';
+scatteringCase = 'BI';
 % BC = 'NNBC';
 model = 'S1';  % Spherical shell
 coreMethod = {'IGA','hp_FEM'};
 coreMethod = {'IGA'};
-method = {'IE'};
 % applyLoad = 'pointPulsation';
 % applyLoad = 'pointCharge';
 applyLoad = 'planeWave';
 
 % formulation = {'PGC'};
 formulation = {'BGC'};
-% BCs = {'SHBC'};
-BCs = {'SSBC'};
+BCs = {'SHBC'};
+% BCs = {'SSBC'};
 % BCs = {'NNBC'};
 % BCs = {'SHBC','SSBC'};
 if strcmp(applyLoad,'pointPulsation')
@@ -84,6 +84,9 @@ postPlot(5) = postPlot(2);
 postPlot(6) = postPlot(3);
 
 for BC = BCs
+%     method = {'IENSG'};
+%     method = {'IE'};
+    method = {'PML'};
     postPlot(1).xname = 'k_ROM';
     postPlot(2).xname = 'k_ROM';
     postPlot(3).xname = 'k_ROM';
@@ -101,7 +104,13 @@ for BC = BCs
     varCol = setHetmaniukParameters(noDomains);
     varCol{1}.meshFile = 'createNURBSmesh_EL';
     Xi = [0,0,0,1,1,2,2,3,3,3]/3;
-    varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
+    if strcmp(method{1},'PML')
+        formulation = {'GSB'};
+        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,8)];
+    else
+        formulation = {'BGU'};
+        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
+    end
     extraGP = [7,0,0];    % extra quadrature points
     if noDomains > 1
         varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
@@ -130,7 +139,7 @@ for BC = BCs
             postPlot(6).plotResults = false;
         case {'SSBC','NNBC'}
             f = linspace(1430, 4290, 5);
-%             f = linspace(143, 429, 5);
+            f = linspace(143, 429, 5);
             f_ROM = f(1):12:f(end);
 %             f_ROM = f(1):120:f(end);
             omega_ROM = 2*pi*f_ROM;
@@ -151,7 +160,7 @@ for BC = BCs
     basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     noVecsArr = 64;
     degree = 4;
-    M = 6; % 6
+    M = 4; % 6
     N = 16; % 9
     useROM = true;
     p_ie = 5;
@@ -159,8 +168,12 @@ for BC = BCs
     IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
 
     storeFullVarCol = false;
-    loopParameters = {'M','method','BC'};
-    collectIntoTasks
+    if strcmp(scatteringCase,'BI')
+        loopParameters = {'M','method','BC','f'};
+    else
+        loopParameters = {'M','method','BC'};
+    end
+%     collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     useROM = false;
@@ -171,15 +184,20 @@ for BC = BCs
     postPlot(5).xname = postPlot(5).xname(1);
     postPlot(6).xname = postPlot(6).xname(1);
     omega = omega_ROM;
+%     omega = omega_ROM(1);
     f = omega/(2*pi);
+    
+    coreMethod = {'IGA'};
+    IElocSup = 0;       
+    N = 4; % 9
+%     method = {'IE'};
+%     method = {'IE','IENSG'};
+    
+    collectIntoTasks
+    
     coreMethod = {'IGA'};
     method = {'BA'};
 %     formulation = {'SL2E'};
     formulation = {'VL2E'};
-%     collectIntoTasks
-    
-    coreMethod = {'IGA'};
-    method = {'IE'};
-    formulation = {'BGU'};
 %     collectIntoTasks
 end

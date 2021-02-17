@@ -26,7 +26,7 @@ end
 
 
 switch task.method
-    case {'IE','ABC'}
+    case {'IE','ABC','PML'}
         boundaryMethod = false;
     case {'IENSG','BEM','KDT','MFS','RT'}
         boundaryMethod = true;

@@ -534,7 +534,7 @@ else
         + kron(K4,A4values) ...
         + kron(K5,A5values);
 end
-  
+
 dofsToRemove = setdiff(1:noSurfDofs,unique(spIdx(:,1)));
 noDofsToRemove = numel(dofsToRemove);
 newDofsToRemove = zeros(1,noDofsToRemove*Ntot);
@@ -544,8 +544,8 @@ for n = 1:Ntot
     i = i + noDofsToRemove;
 end
 
+[i,j,Avalues] = find(A);    
 if noDofs > 0
-    [i,j,Avalues] = find(A);    
     [i,j,newDofsToRemove] = modifyIndices(i,j,noSurfDofs,noDofs,nodes,newDofsToRemove);    
     varCol.Ainf = sparse(i,j,Avalues,noDofs_new,noDofs_new);
     
@@ -558,6 +558,8 @@ if noDofs > 0
         [i,j] = modifyIndices(i,j,noSurfDofs,noDofs,nodes);
         varCol.Ainf2 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
     end
+else
+    varCol.Ainf = sparse(i,j,Avalues,noDofs_new,noDofs_new);
 end
 dofsToRemove_old = varCol.dofsToRemove;
 varCol.dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));

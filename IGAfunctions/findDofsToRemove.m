@@ -17,10 +17,10 @@ for i = 1:noPatches
     end
 end
 
-
 noCtrlPts = sum(noCtrlPtsPatch);
 noElems = sum(noElemsPatch);
 pIndex = zeros(noElems,1);
+decayDirs = zeros(noElems,3,'logical');
 element = zeros(noElems,size(patches{1}.element,2));
 controlPts = zeros(noCtrlPts,size(patches{1}.controlPts,2));
 weights = zeros(noCtrlPts,1);
@@ -35,6 +35,9 @@ maxDof = 0;
 jEl = zeros(1,noParams);
 knotVecs = cell(1,noPatches);
 for i = 1:noPatches
+    if isfield(varCol.nurbs{i},'decayDirs')
+        decayDirs(e:e+noElemsPatch(i)-1,:) = repmat(varCol.nurbs{i}.decayDirs,noElemsPatch(i),1);
+    end
     pIndex(e:e+noElemsPatch(i)-1) = i;
     element(e:e+noElemsPatch(i)-1,:) = maxDof + patches{i}.element;
     controlPts(jC:jC+noCtrlPtsPatch(i)-1,:) = patches{i}.controlPts;
@@ -122,4 +125,5 @@ varCol.noCtrlPts = noCtrlPts;
 varCol.noElems = noElems;
 varCol.pIndex = pIndex;
 varCol.noPatches = noPatches;
+varCol.decayDirs = decayDirs;
 

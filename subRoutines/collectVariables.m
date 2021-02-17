@@ -34,7 +34,7 @@ for i = 1:numel(varCol)
         case 'fluid'
             varCol{i}.dimension = 1;   
             varCol{i}.agpBEM = task.agpBEM;
-            varCol{i}.quadMethodBEM =task.quadMethodBEM;
+            varCol{i}.quadMethodBEM = task.quadMethodBEM;
             varCol{i}.exteriorProblem = false;
             varCol{i}.model = task.model;
             varCol{i}.BC = task.BC;
@@ -43,6 +43,9 @@ for i = 1:numel(varCol)
             varCol{i}.colMethod = task.colMethod;
             
             varCol{i}.solveForPtot = task.solveForPtot;
+            if i == 1 && strcmp(task.method,'PML')
+                varCol{i}.operator = 'PML';
+            end
             varCol{i}.operator = 'Laplace';
             varCol{i}.fieldDimension = 1;
         case 'solid'

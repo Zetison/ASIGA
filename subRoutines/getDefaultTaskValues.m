@@ -145,6 +145,10 @@ IElocSup = false;        % Toggle usage of radial shape functions in IE with loc
 p_ie     = NaN;          % Set polynomial order for radial shape functions
 s_ie     = NaN;          % Distrubution order for radial shape functions
 
+%% Settings for the MPL (perfectly matched layers)
+gamma = 5;
+sigmaType = 1; % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi)
+
 %% Settings for the MFS (method of fundamental solution)
 delta = 0.1;            % Distance from the boundary to the internal source points
 

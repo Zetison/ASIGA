@@ -80,7 +80,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         t_freq = tic;
         varCol = getAnalyticSolutions(varCol);
         switch task.method
-            case {'IE','ABC'}
+            case {'IE','ABC','IENSG','PML'}
                 varCol{1}.timeBuildSystem = 0;
                 if strcmp(varCol{1}.coreMethod,'SEM')
                     varCol{1} = buildSEMMatrices(varCol{1});
@@ -90,38 +90,50 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                         if ~runTasksInParallel
                             fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i) ' ... '])
                         end
-                        varCol{i} = buildMatrices(varCol{i});
+                        if ~(strcmp(task.method,'IENSG') && i == 1)
+                            varCol{i} = buildMatrices(varCol{i});
+                        end
                         varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
                         if ~runTasksInParallel
                             fprintf('using %12f seconds.', toc)
                         end
                     end
                 end
+                if ~strcmp(varCol{1}.coreMethod,'SEM')
+                    if strcmp(task.method,'IE')
+                        % Add contribution from infinite elements
+                        tic
+                        if ~runTasksInParallel
+                            fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
+                        end
+                        varCol{1} = buildIEmatrix(varCol{1});
+                        varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                        if ~runTasksInParallel
+                            fprintf('using %12f seconds.', toc)
+                        end
+                    elseif strcmp(task.method,'IENSG')
+                        chimax = varCol{1}.chimax;
+                        chimin = varCol{1}.chimin;
+                        if abs(chimax - chimin)/abs(chimax) < 100*eps
+                            varCol{1}.r_a = mean([chimax,chimin]);
+                            varCol{1} = buildIEmatrix(varCol{1});
+                        else
+                            varCol{1} = infElementsNonSepGeom(varCol{1});  
+                        end
+                    elseif strcmp(task.method,'ABC')
+                        % Add contribution from infinite elements
+                        tic
+                        if ~runTasksInParallel
+                            fprintf(['\n%-' num2str(stringShift) 's'], 'Building ABC matrix ... ')
+                        end
+                        varCol{1} = addABC(varCol{1}); 
 
-                if strcmp(task.method,'IE') && ~strcmp(varCol{1}.coreMethod,'SEM')
-                    % Add contribution from infinite elements
-                    tic
-                    if ~runTasksInParallel
-                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
-                    end
-                    varCol{1} = buildIEmatrix(varCol{1});
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                    if ~runTasksInParallel
-                        fprintf('using %12f seconds.', toc)
-                    end
-                elseif strcmp(task.method,'ABC')
-                    % Add contribution from infinite elements
-                    tic
-                    if ~runTasksInParallel
-                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building ABC matrix ... ')
-                    end
-                    varCol{1} = addABC(varCol{1}); 
-
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                    if ~runTasksInParallel
-                        fprintf('using %12f seconds.', toc)
-                    end
-                end  
+                        varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                        if ~runTasksInParallel
+                            fprintf('using %12f seconds.', toc)
+                        end
+                    end  
+                end
 
                 % Apply coupling conditions  
                 if noDomains > 1 
@@ -158,38 +170,6 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                     fprintf('using %12f seconds.', toc)
                 end
                 varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-            case 'IENSG'
-                tic
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
-                end
-                chimax = varCol{1}.chimax;
-                chimin = varCol{1}.chimin;
-                if abs(chimax - chimin)/abs(chimax) < 100*eps
-                    varCol{1}.r_a = mean([chimax,chimin]);
-                    varCol{1} = buildIEmatrix(varCol{1});
-                else
-                    varCol{1} = infElementsNonSepGeom(varCol{1});  
-                end
-                varCol{1}.A_K = varCol{1}.Ainf;
-                varCol{1} = rmfield(varCol{1},'Ainf');
-                varCol{1}.timeBuildSystem = toc;
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
-                end
-
-                % Apply Neumann conditions
-                tic
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building right hand side vector ... ')
-                end
-
-                varCol{1} = applyNeumannCondition(varCol{1});
-
-                varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                if ~runTasksInParallel
-                    fprintf('using %12f seconds.', toc)
-                end
             case 'BEM'
                 tic
                 if ~runTasksInParallel
@@ -288,7 +268,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 end
         end
         switch task.method
-            case {'IE','IENSG','BEM','BA','ABC','MFS'}
+            case {'IE','IENSG','BEM','BA','ABC','MFS','PML'}
                 [varCol,FF,A0,A1,A2,A4] = collectMatrices(varCol,task);
                 if strcmp(task.method,'BA')
                     A = A2;
@@ -494,7 +474,7 @@ end
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
 if ~task.useROM && ~strcmp(task.method,'RT')
     switch task.scatteringCase
-        case {'BI', 'Sweep','Ray'}    
+        case {'BI','Sweep','Ray'}
             tic
             if task.plotResidualError && varCol{1}.analyticSolutionExist && strcmp(task.formulation,'GCBIE')
 %                 close all

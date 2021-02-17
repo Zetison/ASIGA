@@ -4,7 +4,7 @@ noDomains = numel(varCol);
 Aindices = cell(noDomains,2);
 noCols_tot = 0;
 noRows_tot = 0;
-if isfield(varCol{1},'A_K') || isfield(varCol{1},'A_M')
+if isfield(varCol{1},'A_K') || isfield(varCol{1},'A_M') || strcmp(task.method,'IENSG')
     allDofsToRemove = [];
     for i = noDomains:-1:1
         if isfield(varCol{i},'A_K')
@@ -13,6 +13,9 @@ if isfield(varCol{1},'A_K') || isfield(varCol{1},'A_M')
         elseif isfield(varCol{i},'A_M')
             noRows = size(varCol{i}.A_M,1);
             noCols = size(varCol{i}.A_M,2);
+        elseif strcmp(task.method,'IENSG')
+            noRows = varCol{i}.noDofs;
+            noCols = varCol{i}.noDofs;
         else
             error('No matrix found for this domain')
         end

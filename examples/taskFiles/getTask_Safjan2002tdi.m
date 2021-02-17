@@ -120,7 +120,7 @@ N = 1:9;
 p_ie = NaN;
 IEbasis	= 'Chebyshev';
 IEbasis	= 'Lagrange';
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
@@ -130,7 +130,7 @@ solveForPtot = 0;
 N = [1,maxN];
 formulation = {'SL2E'};
 postPlot(1).lineStyle = '--';
-collectIntoTasks
+% collectIntoTasks
 
 function addCommands_error()
 for ar = [3,7]

@@ -6,6 +6,8 @@ method = task.method;
 varCol                  = task.varCol;
 varCol{1}.parm          = task.parm;
 varCol{1}.r_a           = task.r_a;
+varCol{1}.gamma         = task.gamma;
+varCol{1}.sigmaType     = task.sigmaType;
 varCol{1}.N             = task.N;
 varCol{1}.method        = method;
 varCol{1}.model         = task.model;
@@ -19,6 +21,8 @@ varCol{1}.initMeshFactZeta = task.initMeshFactZeta;
 varCol{1}.refineThetaOnly  = task.refineThetaOnly;
 varCol{1}.coreMethod       = task.coreMethod;
 varCol{1}.farFieldNormalPressFromSolid = task.farFieldNormalPressFromSolid;
+
+
 for i = 1:numel(varCol)
     varCol{i}.progressBars = task.progressBars;
     varCol{i}.useROM       = task.useROM;

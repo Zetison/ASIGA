@@ -179,6 +179,11 @@ end
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
+if strcmp(varCol{1}.method,'PML')
+    for i = 1:numel(fluid)
+        fluid{i}.decayDirs = [false,false,true];
+    end
+end
 varCol{1}.nurbs = fluid;
 if numel(varCol) > 1
     varCol{2}.nurbs = solid;

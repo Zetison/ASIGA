@@ -4,7 +4,6 @@ weights = varCol.weights;
 controlPts = varCol.controlPts;
 degree = varCol.degree(1:2);
 elRange = varCol.elRange;
-d_p = varCol.patches{1}.nurbs.d_p;
 knotVecs = varCol.knotVecs;
 d_f = varCol.fieldDimension;
 media = varCol.media;
@@ -38,9 +37,7 @@ if varCol.boundaryMethod
     index = varCol.index;
     pIndex = varCol.pIndex;
     n_en = prod(degree+1);
-    noSurfDofs = noDofs;
-    noDofs = 0;
-    zeta0Nodes = 1:noSurfDofs;
+    zeta0Nodes = 1:noDofs;
 else
     [zeta0Nodes, noElems, element, element2, index, pIndex, n_en] = meshBoundary(varCol,outerBoundary);
 end
@@ -54,8 +51,8 @@ parfor e = 1:noElems
 % for e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch}(1:2);
-    Xi_e = zeros(d_p-1,2);
-    for i = 1:d_p-1
+    Xi_e = zeros(2,2);
+    for i = 1:2
         Xi_e(i,:) = elRange{i}(index(e,i),:);
     end
 
@@ -68,12 +65,12 @@ parfor e = 1:noElems
     pts = controlPts(sctr,:);
     wgts = weights(zeta0Nodes(element2(e,:)),:); % New
     
-    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^(d_p-1);
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
     
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     R = NURBSbasis(I, xi, degree, knots, wgts);
-    [J_1, crossProd] = getJacobian(R,pts,d_p-1);
+    [J_1, crossProd] = getJacobian(R,pts,2);
     fact = J_1 * J_2 .* W;
     X = R{1}*pts;
     n = crossProd./repmat(J_1,1,3);

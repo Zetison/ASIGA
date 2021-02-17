@@ -18,6 +18,15 @@ controlPts = varCol.controlPts;
 pIndex = varCol.pIndex;
 noDofs = varCol.noDofs;
 noCtrlPts = varCol.noCtrlPts;
+if isfield(varCol,'gamma')
+    gamma = varCol.gamma;
+    sigmaType = varCol.sigmaType;
+    decayDirs = varCol.decayDirs;
+else
+    gamma = 0;
+    sigmaType = 0;
+    decayDirs = zeros(noElems,3,'logical');
+end
 
 d_f = varCol.fieldDimension;
 d_p = varCol.patches{1}.nurbs.d_p;
@@ -50,6 +59,10 @@ if buildMassMatrix
     Mvalues = zeros(sizeMe,noElems); 
 else
     Mvalues = NaN;
+end
+if any(decayDirs(:))
+    Kvalues = complex(Kvalues);
+    Mvalues = complex(Mvalues);
 end
 if applyBodyLoading
     F_indices = zeros(d_f*n_en,noElems); 
@@ -98,13 +111,14 @@ parfor e = 1:noElems
     I = findKnotSpans(degree, xi(1,:), knots);
     R = NURBSbasis(I, xi, degree, knots, wgts);
     J_1 = getJacobian(R,pts,d_p);
-    fact = J_1 * J_2 .* W;
+    D = 1 + 1i*sigmaPML(xi,gamma,decayDirs(e,:),sigmaType);
+    fact = J_1 * J_2 .* prod(D,2).* W;
 
     if buildStiffnessMatrix
         dXdxi = R{2}*pts;
         dXdeta = R{3}*pts;
         dXdzeta = R{4}*pts;
-
+        
         a11 = dXdxi(:,1);
         a21 = dXdxi(:,2);
         a31 = dXdxi(:,3);
@@ -118,9 +132,9 @@ parfor e = 1:noElems
         Jinv2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1];
         Jinv3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1];
         dRdX = cell(d_f,1);
-        dRdX{1} = repmat(Jinv1(:,1),1,n_en).*R{2} + repmat(Jinv1(:,2),1,n_en).*R{3} + repmat(Jinv1(:,3),1,n_en).*R{4};
-        dRdX{2} = repmat(Jinv2(:,1),1,n_en).*R{2} + repmat(Jinv2(:,2),1,n_en).*R{3} + repmat(Jinv2(:,3),1,n_en).*R{4};
-        dRdX{3} = repmat(Jinv3(:,1),1,n_en).*R{2} + repmat(Jinv3(:,2),1,n_en).*R{3} + repmat(Jinv3(:,3),1,n_en).*R{4};
+        dRdX{1} = Jinv1(:,1)./D(:,1).*R{2} + Jinv1(:,2)./D(:,2).*R{3} + Jinv1(:,3)./D(:,3).*R{4};
+        dRdX{2} = Jinv2(:,1)./D(:,1).*R{2} + Jinv2(:,2)./D(:,2).*R{3} + Jinv2(:,3)./D(:,3).*R{4};
+        dRdX{3} = Jinv3(:,1)./D(:,1).*R{2} + Jinv3(:,2)./D(:,2).*R{3} + Jinv3(:,3)./D(:,3).*R{4};
 
         Kvalues(:,e) = stiffnessElementMatrix(dRdX,fact,d_f,n_en,operator,C);
     end
@@ -155,4 +169,23 @@ end
 if buildMassMatrix
     varCol.A_M = kron(sparse(double(spIdxRowM),double(spIdxColM),Mvalues,noCtrlPts,noCtrlPts,numel(Mvalues)),eye(d_f));
 end
+
+function sigma = sigmaPML(XI,gamma,decayDirs,sigmaType)
+sigma = zeros(size(XI));
+xi = XI(:,decayDirs);
+switch sigmaType
+    case 0
+        return
+    case 1
+        sigma(:,decayDirs) = xi.*exp(gamma*xi);
+    case 2
+        sigma(:,decayDirs) = xi.^2.*exp(gamma*xi);
+    otherwise
+        error('Not implemented')
+end
+
+
+
+
+
 
