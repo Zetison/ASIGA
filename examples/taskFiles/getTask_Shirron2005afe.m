@@ -41,7 +41,8 @@ N = 4; % 9
 varCol{1}.meshFile = 'createNURBSmesh_EL';
 Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 if strcmp(method{1},'PML')
-    formulation = {'GSB'};
+%     formulation = {'GSB'};
+    formulation = {'STD'};
     varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,10)];
 else
     formulation = {'BGU'};
@@ -56,9 +57,9 @@ k = 10/a;
 lambda = 2*pi/k;
 f = k*varCol{1}.c_f/(2*pi);
 omega = 2*pi*f;
-r_a = 1.25*a;
-r_b = 1.5*a;
-r_a = r_b;
+r_PML = 1.25*a;
+r_PML = a;
+r_a = 1.5*a;
 gamma = 5;
 % gamma = 10;
 
