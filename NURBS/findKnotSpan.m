@@ -15,6 +15,7 @@ function i = findKnotSpan(n, p, xi, Xi)
 % if xi < 0 || xi > 1
 %     keyboard
 % end
+xi = real(xi);
 if xi == Xi(end)
     i = n;
     return;

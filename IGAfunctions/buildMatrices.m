@@ -112,7 +112,6 @@ for e = 1:noElems
     for i = 1:d_f
         sctr_k_e(i:d_f:end) = d_f*(sctr-1)+i;
     end
-
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     R = NURBSbasis(I, xi, degree, knots, wgts);
@@ -139,7 +138,8 @@ for e = 1:noElems
         dRdX = cell(d_f,1);
         switch formulation
             case 'GSB'
-                D = 1 + 1i*sigmaPML(xi,gamma,decayDirs(e,:),sigmaType);
+                s = r_a-r_PML;
+                D = 1 + 1i*sigmaPML(xi(:,3),gamma,s,sigmaType);
                 dRdX{1} = JinvT1(:,1)./D(:,1).*R{2} + JinvT1(:,2)./D(:,2).*R{3} + JinvT1(:,3)./D(:,3).*R{4};
                 dRdX{2} = JinvT2(:,1)./D(:,1).*R{2} + JinvT2(:,2)./D(:,2).*R{3} + JinvT2(:,3)./D(:,3).*R{4};
                 dRdX{3} = JinvT3(:,1)./D(:,1).*R{2} + JinvT3(:,2)./D(:,2).*R{3} + JinvT3(:,3)./D(:,3).*R{4};
@@ -147,7 +147,7 @@ for e = 1:noElems
                 X = R{1}*pts;
                 [r, theta, phi] = evaluateProlateCoords(X,0);
                 rs = (r-r_PML)/(r_a-r_PML);
-                intSigma = (-r.^2/2 + ((r_PML - r_a)*exp(gamma*rs).*(-gamma*r + (gamma - 1)*r_PML + r_a))/gamma^2 + r*r_PML - r_PML^2/2 + (r_PML - r_a)^2/gamma^2)/(r_a - r_PML);
+                intSigma = (r_a-r_PML)*intSigmaPML(rs,gamma,sigmaType);
                 D = 1 + 1i*[rs.*exp(gamma*rs), intSigma./r, intSigma./r];
                 sint = sin(theta);
                 cost = cos(theta);
@@ -205,14 +205,25 @@ if buildMassMatrix
     varCol.A_M = kron(sparse(double(spIdxRowM),double(spIdxColM),Mvalues,noCtrlPts,noCtrlPts,numel(Mvalues)),eye(d_f));
 end
 
-function sigma = sigmaPML(XI,gamma,decayDirs,sigmaType)
-sigma = zeros(size(XI));
-xi = XI(:,decayDirs);
+function sigma = sigmaPML(zeta,gamma,s,sigmaType)
+sigma = zeros(numel(zeta),3);
 switch sigmaType
     case 0
         return
     case 1
-        sigma(:,decayDirs) = xi.*exp(gamma*xi);
+        intSigma = s*intSigmaPML(zeta,gamma,sigmaType)./(1+s*zeta);
+        sigma = [intSigma,intSigma,zeta.*exp(gamma*zeta)];
+    otherwise
+        error('Not implemented')
+end
+
+function I = intSigmaPML(zeta,gamma,sigmaType)
+I = zeros(size(zeta));
+switch sigmaType
+    case 0
+        return
+    case 1
+        I = (exp(gamma*zeta).*(gamma*zeta-1)+1)/gamma^2-zeta.^2/2;
     otherwise
         error('Not implemented')
 end

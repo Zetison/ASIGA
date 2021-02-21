@@ -9,6 +9,7 @@ function ders = BsplineBasis(i, xi, p, Xi, n)
 %       p:      the degree of the B-Spline
 %       xi:     the value for which we want to evaluate the Bspline
 %       Xi:     an open knot vector of size n+p+1
+%       n:      number of derivatives to compute
 
 % Output
 %       ders: 	array of the p+1 B-spline functions and its derivatives 
