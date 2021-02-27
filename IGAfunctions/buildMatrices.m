@@ -18,21 +18,6 @@ controlPts = varCol.controlPts;
 pIndex = varCol.pIndex;
 noDofs = varCol.noDofs;
 noCtrlPts = varCol.noCtrlPts;
-if isfield(varCol,'gamma')
-    gamma = varCol.gamma;
-    sigmaType = varCol.sigmaType;
-    decayDirs = varCol.decayDirs;
-    formulation = varCol.formulation;
-    r_PML = varCol.r_PML;
-    r_a = varCol.r_a;
-else
-    r_PML = NaN;
-    r_a = NaN;
-    gamma = 0;
-    sigmaType = 0;
-    decayDirs = zeros(noElems,3,'logical');
-    formulation = 'GSB';
-end
 
 d_f = varCol.fieldDimension;
 d_p = varCol.patches{1}.nurbs.d_p;
@@ -45,6 +30,46 @@ if strcmp(operator,'linearElasticity')
     C = varCol.C;
 else
     C = NaN; % Will not be used
+end
+
+extraGP = varCol.extraGP;
+Q = gaussTensorQuad(degree(1:2)+1+extraGP(1:d_p-1));
+
+if isfield(varCol,'gamma')
+    gamma = varCol.gamma;
+    sigmaType = varCol.sigmaType;
+    formulation = varCol.formulation;
+    r_PML = varCol.r_PML;
+    r_a = varCol.r_a;
+    [zeta0Nodes_a, noElems_a, element_a, element2_a, index_a, pIndex_a] = meshBoundary(varCol,false);
+    J_a = zeros(size(Q,1),3,3,noElems_a);
+    for e = 1:noElems_a
+    % parfor e = 1:noElems
+        patch = pIndex_a(e);
+        knots = knotVecs{patch}(1:2);
+        Xi_e = zeros(2,2);
+        for i = 1:2
+            Xi_e(i,:) = elRange{i}(index_a(e,i),:);
+        end
+
+        sctr = zeta0Nodes_a(element_a(e,:));
+        pts = controlPts(sctr,:);
+        wgts = weights(element2_a(e,:),:);
+        
+        xi = parent2ParametricSpace(Xi_e, Q);
+        I = findKnotSpans(degree(1:2), xi(1,:), knots);
+        R = NURBSbasis(I, xi, degree(1:2), knots, wgts);
+        J_a(:,:,1,e) = R{2}*pts;
+        J_a(:,:,2,e) = R{3}*pts;
+    end
+%     J_a = permute(J_a,[1,3,2,4]);
+else
+    r_PML = NaN;
+    r_a = NaN;
+    gamma = 0;
+    sigmaType = 0;
+    decayDirs = zeros(noElems,3,'logical');
+    formulation = 'GSB';
 end
 
 %% Preallocation and initiallizations
@@ -66,7 +91,7 @@ if buildMassMatrix
 else
     Mvalues = NaN;
 end
-if any(decayDirs(:))
+if strcmp(varCol.method,'PML')
     Kvalues = complex(Kvalues);
     Mvalues = complex(Mvalues);
 end
@@ -78,7 +103,6 @@ else
     force = NaN;
 end
 
-extraGP = varCol.extraGP;
 [Q, W] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 
 progressBars = varCol.progressBars;
@@ -115,34 +139,40 @@ for e = 1:noElems
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     R = NURBSbasis(I, xi, degree, knots, wgts);
-    J_1 = getJacobian(R,pts,d_p);
+    J1 = R{2}*pts;
+    J2 = R{3}*pts;
+    J3 = R{4}*pts;
+    if strcmp(formulation,'GSB')
+        D = sigmaPML(xi(:,3),gamma,sigmaType);
+        e_a = mod(e-1,noElems_a)+1;
+        J1 = J1 + 1i*(J1 - repmat(J_a(:,:,1,e_a),degree(3)+1+extraGP(3),1)).*D(:,1);
+        J2 = J2 + 1i*(J2 - repmat(J_a(:,:,2,e_a),degree(3)+1+extraGP(3),1)).*D(:,2);
+        J3 = J3 + 1i*(J3 - repmat(J_a(:,:,3,e_a),degree(3)+1+extraGP(3),1)).*D(:,3);
+        J_1 = sum(J1.*cross(J2,J3,2),2);
+    else
+        J_1 = getJacobian(R,pts,d_p);
+    end
     fact = J_1 * J_2.* W;
 
-    if buildStiffnessMatrix
-        dXdxi = R{2}*pts;
-        dXdeta = R{3}*pts;
-        dXdzeta = R{4}*pts;
-        
-        a11 = dXdxi(:,1);
-        a21 = dXdxi(:,2);
-        a31 = dXdxi(:,3);
-        a12 = dXdeta(:,1);
-        a22 = dXdeta(:,2);
-        a32 = dXdeta(:,3);
-        a13 = dXdzeta(:,1);
-        a23 = dXdzeta(:,2);
-        a33 = dXdzeta(:,3);
+    if buildStiffnessMatrix        
+        a11 = J1(:,1);
+        a21 = J1(:,2);
+        a31 = J1(:,3);
+        a12 = J2(:,1);
+        a22 = J2(:,2);
+        a32 = J2(:,3);
+        a13 = J3(:,1);
+        a23 = J3(:,2);
+        a33 = J3(:,3);
         JinvT1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1]; % First row of transpose of Jinv
         JinvT2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1]; % Second row of transpose of Jinv
         JinvT3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1]; % Third row of transpose of Jinv
         dRdX = cell(d_f,1);
         switch formulation
             case 'GSB'
-                s = r_a-r_PML;
-                D = 1 + 1i*sigmaPML(xi(:,3),gamma,s,sigmaType);
-                dRdX{1} = JinvT1(:,1)./D(:,1).*R{2} + JinvT1(:,2)./D(:,2).*R{3} + JinvT1(:,3)./D(:,3).*R{4};
-                dRdX{2} = JinvT2(:,1)./D(:,1).*R{2} + JinvT2(:,2)./D(:,2).*R{3} + JinvT2(:,3)./D(:,3).*R{4};
-                dRdX{3} = JinvT3(:,1)./D(:,1).*R{2} + JinvT3(:,2)./D(:,2).*R{3} + JinvT3(:,3)./D(:,3).*R{4};
+                dRdX{1} = JinvT1(:,1).*R{2} + JinvT1(:,2).*R{3} + JinvT1(:,3).*R{4};
+                dRdX{2} = JinvT2(:,1).*R{2} + JinvT2(:,2).*R{3} + JinvT2(:,3).*R{4};
+                dRdX{3} = JinvT3(:,1).*R{2} + JinvT3(:,2).*R{3} + JinvT3(:,3).*R{4};
             case 'STD'
                 X = R{1}*pts;
                 [r, theta, phi] = evaluateProlateCoords(X,0);
@@ -168,8 +198,8 @@ for e = 1:noElems
                 dRdX{1} = JinvJsDinvJsJinv1(:,1).*R{2} + JinvJsDinvJsJinv2(:,1).*R{3} + JinvJsDinvJsJinv3(:,1).*R{4};
                 dRdX{2} = JinvJsDinvJsJinv1(:,2).*R{2} + JinvJsDinvJsJinv2(:,2).*R{3} + JinvJsDinvJsJinv3(:,2).*R{4};
                 dRdX{3} = JinvJsDinvJsJinv1(:,3).*R{2} + JinvJsDinvJsJinv2(:,3).*R{3} + JinvJsDinvJsJinv3(:,3).*R{4};
+                fact =  fact.*prod(D,2);
         end
-        fact =  fact.*prod(D,2);
 
         Kvalues(:,e) = stiffnessElementMatrix(dRdX,fact,d_f,n_en,operator,C);
     end
@@ -205,13 +235,14 @@ if buildMassMatrix
     varCol.A_M = kron(sparse(double(spIdxRowM),double(spIdxColM),Mvalues,noCtrlPts,noCtrlPts,numel(Mvalues)),eye(d_f));
 end
 
-function sigma = sigmaPML(zeta,gamma,s,sigmaType)
+function sigma = sigmaPML(zeta,gamma,sigmaType)
 sigma = zeros(numel(zeta),3);
 switch sigmaType
     case 0
         return
     case 1
-        intSigma = s*intSigmaPML(zeta,gamma,sigmaType)./(1+s*zeta);
+%         intSigma = s*intSigmaPML(zeta,gamma,sigmaType)./(1+s*zeta);
+        intSigma = intSigmaPML(zeta,gamma,sigmaType)./zeta;
         sigma = [intSigma,intSigma,zeta.*exp(gamma*zeta)];
     otherwise
         error('Not implemented')
