@@ -9,7 +9,7 @@
 startup
 startMatlabPool
 availableStudies
-plotNURBS
+
 %% Extract tasks
 if ~iscell(studyName)
     studyName = {studyName};
