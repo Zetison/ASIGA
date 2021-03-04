@@ -33,6 +33,6 @@ nurbs = translateNURBS(nurbs,[-sqrt(R2^2-R1^2),0,0]);
 nurbs = [translateNURBS(mirrorNURBS(nurbs,'x'), [-L,0,0]), ...
          translateNURBS(getLineData('x',[-L,0]), [0,R1,0]), ...
          flipNURBSparametrization(nurbs,1)];
-nurbs = glueNURBS(nurbs,'xi');
+nurbs = glueNURBS(nurbs,1);
 nurbs = revolveNURBS(nurbs,'rotAxis',[1,0,0],'Xi',options.Xi);
 nurbs = permuteNURBS(nurbs,[2,1]);

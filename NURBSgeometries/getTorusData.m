@@ -20,3 +20,4 @@ nurbs = getDiskData(diskOptions);
 nurbs = translateNURBS(nurbs,[options.R,0,0]);
 nurbs = rotateNURBS(nurbs,'theta',pi/2,'rotAxis','Xaxis');
 nurbs = revolveNURBS(nurbs,'Xi',options.Eta,'theta',options.theta_eta);
+nurbs = permuteNURBS(nurbs,[2,3,1]);

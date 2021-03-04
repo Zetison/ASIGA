@@ -1,5 +1,5 @@
 function solid = getModel1Data(R_i, R_o, L, eta1, eta2)
-error('Depricated use getModelBeTSSiM1Data')
+error('Depricated use getBeTSSiM1Data')
 
 if nargin < 4
     eta1 = 0.327581905944480;

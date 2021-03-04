@@ -1,4 +1,7 @@
 function layer = setPHParameters(noDomains)
+if nargin < 1
+    noDomains = 1;
+end
 
 layer{1} = struct('media', 'fluid', ...
                   'R_1', 3.5, ...
