@@ -143,7 +143,11 @@ for e = 1:noElems
     J2 = R{3}*pts;
     J3 = R{4}*pts;
     if strcmp(formulation,'GSB')
-        D = sigmaPML(xi(:,3),gamma,sigmaType);
+        if isPML(e)
+            D = sigmaPML(xi(:,3),gamma,sigmaType);
+        else
+            D = ones(size(xi));
+        end
         e_a = mod(e-1,noElems_a)+1;
         J1 = J1 + 1i*(J1 - repmat(J_a(:,:,1,e_a),degree(3)+1+extraGP(3),1)).*D(:,1);
         J2 = J2 + 1i*(J2 - repmat(J_a(:,:,2,e_a),degree(3)+1+extraGP(3),1)).*D(:,2);
@@ -178,7 +182,11 @@ for e = 1:noElems
                 [r, theta, phi] = evaluateProlateCoords(X,0);
                 rs = (r-r_PML)/(r_a-r_PML);
                 intSigma = (r_a-r_PML)*intSigmaPML(rs,gamma,sigmaType);
-                D = 1 + 1i*[rs.*exp(gamma*rs), intSigma./r, intSigma./r];
+                if isPML(e)
+                    D = 1 + 1i*[rs.*exp(gamma*rs), intSigma./r, intSigma./r];
+                else
+                    D = ones(size(xi));
+                end
                 sint = sin(theta);
                 cost = cos(theta);
                 sinp = sin(phi);

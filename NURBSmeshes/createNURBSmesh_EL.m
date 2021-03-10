@@ -124,7 +124,6 @@ else
     c_y = c_x;
     L_gamma = 2*c_z_g;
 
-
     fluid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi);
     explodeNURBSpatches = 0;
     if explodeNURBSpatches
@@ -137,6 +136,8 @@ else
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
     end
+    varCol{1}.geometry.topologysets.set{1}.Attributes.name = 'Gamma';
+    varCol{1}.geometry.topologysets.set{1}.Attributes.type = 'face';
     fluid = makeUniformNURBSDegree(fluid,degree);
     if isfield(varCol{1},'refinement')
         fluid = insertKnotsInNURBS(fluid,varCol{1}.refinement(M));

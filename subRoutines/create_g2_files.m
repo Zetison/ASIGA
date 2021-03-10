@@ -1,4 +1,4 @@
-% Create g2 files from available matlab geometries
+% Create g2 files from available MATLAB geometries
 close all
 model = {'S1','S1patched','M1','M2','M3','M4','M5A','M5B','PH','Torus','Cube','Shirron','Barrel','BCA'};
 model = {'Cube'};
