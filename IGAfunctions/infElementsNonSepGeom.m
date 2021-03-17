@@ -309,4 +309,5 @@ Avalues = accumarray(IuniqueIdx,Avalues);
 varCol.Ainf = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
 
 varCol.newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
+varCol.noDofs_new = noDofs_new;
 

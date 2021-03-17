@@ -4,11 +4,11 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'M31';
+misc.model = 'M31';
 
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = {'GCBIE'};
 
 varCol = setM31Parameters(3);
@@ -25,7 +25,7 @@ beta_s = 0;
 solveForPtot = true;
 
 warning('off','NURBS:weights')
-loopParameters = {'M','parm','f','method','formulation'};
+loopParameters = {'M','parm','f','misc.method','formulation'};
 
 prePlot.plot3Dgeometry = 1;
 % prePlot.resolution = [100,100,0];
@@ -43,7 +43,7 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','parm','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;

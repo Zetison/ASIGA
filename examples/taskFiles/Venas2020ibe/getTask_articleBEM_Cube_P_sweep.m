@@ -1,10 +1,10 @@
-scatteringCase = 'MS';
+misc.scatteringCase = 'MS';
 
-model = 'Cube_P';  % Spherical shell
+misc.model = 'Cube_P';  % Spherical shell
 BC = 'NBC';
-coreMethod = 'IGA';
-% coreMethod = {'IGA'};
-method = {'BEM'};
+misc.coreMethod = 'IGA';
+% misc.coreMethod = {'IGA'};
+misc.method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'CCBIEC'};
 % formulation = {'CCBIEC'};
 
@@ -35,18 +35,18 @@ f = k*1500/(2*pi);
 alpha = 240*pi/180;
 beta = 30*pi/180;   
 
-applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
+misc.applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
 degree = 4;
 M = 4;
 prePlot.plot3Dgeometry = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 
 runTasksInParallel = 1;
 solveForPtot = false;
-loopParameters = {'f','method','formulation'};
+loopParameters = {'f','misc.method','formulation'};
 
 collectIntoTasks
 
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks

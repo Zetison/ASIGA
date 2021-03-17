@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_BC(varCol, M, degree)
+function task = createNURBSmesh_BC(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 x_0 = [-(L+a+g2+g3)/2+a+1.5, 0, 0]; % The origin of the model
 alignWithAxis = 'Xaxis';
@@ -162,3 +165,4 @@ varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
 varCol{1}.Upsilon = Upsilon;
+task.varCol = varCol;

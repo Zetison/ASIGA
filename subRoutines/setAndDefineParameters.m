@@ -1,5 +1,5 @@
-function varCol = setAndDefineParameters(varCol,task)
-switch task.model
+function task = setAndDefineParameters(task)
+switch task.misc.model
     case {'SS', 'PS', 'S1', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL', 'FreeCADsphere'}
         analyticSolutionExist = true;
         isSphericalShell = true;
@@ -10,28 +10,28 @@ switch task.model
         analyticSolutionExist = false;
         isSphericalShell = false;
 end
-applyLoad = task.applyLoad;
+applyLoad = task.misc.applyLoad;
 if strcmp(applyLoad,'pointPulsation') || strcmp(applyLoad,'SimpsonTorus') || strcmp(applyLoad,'radialPulsation')
     analyticSolutionExist = true;
 end    
-if (task.calculateSurfaceError || task.calculateVolumeError) && ~analyticSolutionExist
+if (task.err.calculateSurfaceError || task.err.calculateVolumeError) && ~analyticSolutionExist
     error('The errors cannot be computed without an analytic solution')
 end
 
-for m = 1:numel(varCol)
-    if strcmp(varCol{m}.media,'solid')
-        varCol{m}.C = elasticityMatrix(varCol{m}.E,varCol{m}.nu);
+for m = 1:numel(task.varCol)
+    if strcmp(task.varCol{m}.media,'solid')
+        task.varCol{m}.C = elasticityMatrix(task.varCol{m}.E,task.varCol{m}.nu);
     end
 end
 
 
-switch task.method
+switch task.misc.method
     case {'IE','ABC','PML'}
         boundaryMethod = false;
     case {'IENSG','BEM','KDT','MFS','RT'}
         boundaryMethod = true;
     case 'BA'
-        switch task.formulation
+        switch task.misc.formulation
             case {'SL2E','SL2Etot'}
                 boundaryMethod = true;
             case {'VL2E','VL2Etot'}
@@ -41,29 +41,19 @@ switch task.method
         end
 end
 
-varCol{1}.analyticSolutionExist = analyticSolutionExist;
-varCol{1}.isSphericalShell = isSphericalShell;
-varCol{1}.alpha          = task.alpha;
-varCol{1}.beta           = task.beta;
-switch task.scatteringCase
-    case {'MS'}
-        varCol{1}.alpha_s = task.alpha;
-        varCol{1}.beta_s  = task.beta;
-    otherwise
-        varCol{1}.alpha_s = task.alpha_s;
-        varCol{1}.beta_s  = task.beta_s;
-end
+task.analyticSolutionExist = analyticSolutionExist;
+task.isSphericalShell = isSphericalShell;
 
-for i = 1:numel(varCol)
+for i = 1:numel(task.varCol)
     if mod(i,2)
-        varCol{i}.boundaryMethod = boundaryMethod; % Assume only 3D elasticity is implemented
+        task.varCol{i}.boundaryMethod = boundaryMethod; % Assume only 3D elasticity is implemented
     else
-        varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
+        task.varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
     end
-    if varCol{i}.useROM
-        varCol{i}.noRHSs = max(task.noVecsArr);
+    if task.rom.useROM
+        task.noRHSs = max(task.noVecsArr);
     else
-        varCol{i}.noRHSs = numel(varCol{1}.alpha_s);
+        task.noRHSs = numel(task.ffp.alpha_s);
     end
 end
     

@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_M5(varCol, M, degree)
+function task = createNURBSmesh_M5(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 R = varCol{1}.R;
 l = varCol{1}.l;
@@ -21,3 +24,4 @@ end
 varCol{1}.nurbs = fluid;
 
 varCol{1}.L_gamma = L;
+task.varCol = varCol;

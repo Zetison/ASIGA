@@ -4,11 +4,11 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'Barrel';
+misc.model = 'Barrel';
 BC = 'SHBC';
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = {'CCBIE'};
 formulation = {'CCBIE','GBM'};
 
@@ -26,7 +26,7 @@ alpha = (0:0.5:360)*pi/180;
 solveForPtot = true;
 
 warning('off','NURBS:weights')
-loopParameters = {'M','parm','f','method','formulation'};
+loopParameters = {'M','parm','f','misc.method','formulation'};
 
 prePlot.plot3Dgeometry = 1;
 % prePlot.resolution = [100,100,0];
@@ -44,7 +44,7 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','parm','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
@@ -52,7 +52,7 @@ postPlot(1).xScale          = 180/pi;
 collectIntoTasks
 
 
-method = {'KDT'};
+misc.method = {'KDT'};
 solveForPtot = false;
 formulation = {'MS1'};
 

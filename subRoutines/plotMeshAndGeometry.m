@@ -21,6 +21,24 @@ if prePlot.plot3Dgeometry
         nurbs = varCol{j}.nurbs;
         prePlot.displayName = ['Domain ' num2str(j)];
         plotNURBS(nurbs, prePlot);
+        if isfield(varCol{1},'geometry')
+            topset = varCol{1}.geometry.topologysets.set;
+            patchIdx = [];
+            for i = 1:numel(topset)
+                noPatches = numel(topset{i}.item);
+                nurbs = cell(1,noPatches);
+                for ii = 1:numel(topset{i}.item)
+                    at = zeros(2,3,'logical');
+                    patch = topset{i}.item{ii}.Attributes.patch;
+                    patchIdx = [patchIdx, patch];
+                    midx = topset{i}.item{ii}.Text;
+                    at(midx) = true;
+                    nurbs(ii) = subNURBS(varCol{j}.nurbs(patch),'at',at.');
+                end
+                prePlot.displayName = ['Domain ' num2str(j) ', ' topset{i}.Attributes.name];
+                plotNURBS(nurbs, prePlot);
+            end
+        end
     end
     axis equal
     axis(prePlot.axis)
@@ -53,16 +71,6 @@ if prePlot.plot3Dgeometry
     end
     savefig([figName, '.fig'])
 end   
-for j = 1:numel(varCol)
-    nurbs = varCol{j}.nurbs;
-    equalWeights = checkNURBSweightsCompatibility(nurbs,prePlot.plot3Dgeometry);
-    if ~equalWeights
-        warning('NURBS:weights','Some weights in the geometry are not equal. For geometries containing singularities this might be ok (this warning may then be supressed using the key NURBS:weights).')
-        % supress the following warning with warning('off','NURBS:weights')
-        % in your getTask_<model> script if the model contains
-        % singularities
-    end
-end
 if prePlot.plot2Dgeometry
     figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(task.M)])
     for j = 1:numel(varCol)
@@ -74,7 +82,7 @@ if prePlot.plot2Dgeometry
         end
         nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
         switch task.model
-            case {'PH', 'M3', 'MS', 'IMS'}
+            case {'PH', 'M3', 'MS', 'IMS', 'SMS'}
                 prePlot.view = [0,90];
             otherwise
                 prePlot.view = [0,0];

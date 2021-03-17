@@ -1,36 +1,47 @@
-variables = whos;
-protectedVariables = {'variables','i','j','counter','studyName','studies','studiesCol','loopParameters'};
-for i = 1:length(variables)
-    if ~any(ismember(variables(i).name,protectedVariables))
-        task.(variables(i).name) = eval(variables(i).name);
-    end
+
+structs = {'varCol','misc','msh','prePlot','postPlot','sol','err','ffp','para','iem','pml','mfs','rom'};
+for i = 1:numel(structs)
+    task.(structs{i}) = eval(structs{i});
 end
-if task.useROM
-    task.storeSolution = true;
+if task.rom.useROM
+    task.misc.storeSolution = true;
 end
-if (~isnan(alpha_s(1)) || ~isnan(beta_s(1))) && (strcmp(scatteringCase,'MS'))
+if (~isnan(ffp.alpha_s(1)) || ~isnan(ffp.beta_s(1))) && (strcmp(misc.scatteringCase,'MS'))
     error(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
            'Note that alpha_s = alpha and beta_s = beta.'])
 end
-if (isnan(alpha_s(1)) || isnan(beta_s(1))) && strcmp(scatteringCase,'BI') && strcmp(applyLoad,'planeWave')
+if (isnan(ffp.alpha_s(1)) || isnan(ffp.beta_s(1))) && strcmp(misc.scatteringCase,'BI') && strcmp(misc.applyLoad,'planeWave')
     error('Incident direction is not set: alpha_s = NaN and/or beta_s = NaN')
 end
-if solveForPtot && ~(strcmp(method,'BEM') || strcmp(method,'BA'))
+if misc.solveForPtot && ~(strcmp(misc.method,'BEM') || strcmp(misc.method,'BA'))
     error('solveForPtot should can only be used with method = BEM or method = BA')
 end
 loopParametersArr = cell(length(loopParameters),1);
 
 taskNames = fieldnames(task);
+allTaskNames = cell(0,0);
 for j = 1:numel(taskNames)
-    idx = find(strcmp(taskNames{j},loopParameters));
+    taskName_j = task.(taskNames{j});
+    if isstruct(taskName_j)
+        subTaskNames = fieldnames(taskName_j);
+        for i = 1:numel(subTaskNames)
+            allTaskNames{end+1,1} = [taskNames{j} '.' subTaskNames{i}];
+        end
+    else
+        allTaskNames(end+1,1) = taskNames(j);
+    end
+end
+for j = 1:numel(allTaskNames)
+    idx = find(strcmp(allTaskNames{j},loopParameters));
     if ~isempty(idx)
-        loopParametersArr{idx} = task.(taskNames{j});
+        loopParametersArr{idx} = eval(['task.' allTaskNames{j}]);
         if ischar(loopParametersArr{idx}) % ensure cell type
             loopParametersArr{idx} = loopParametersArr(idx);
         end
-    elseif iscell(task.(taskNames{j})) && ~strcmp(taskNames{j},'varCol') % remove redundant cell type
-        temp = task.(taskNames{j});
-        task.(taskNames{j}) = temp{1};
+    elseif iscell(eval(['task.' allTaskNames{j}])) && isempty(strfind(allTaskNames{j},'postPlot')) && isempty(strfind(allTaskNames{j},'prePlot')) ...
+            && ~strcmp(allTaskNames{j},'varCol') % remove redundant cell type
+        temp = eval(['task.' allTaskNames{j}]);
+        eval(['task.' allTaskNames{j} ' = temp{1};'])
     end
 end
 
@@ -46,7 +57,7 @@ end
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);
 studies(counter).postPlot = postPlot;
 if isempty(subFolderName)
-    subFolderName = model;
+    subFolderName = misc.model;
 end
 studies(counter).subFolderName = subFolderName;
 

@@ -1,4 +1,4 @@
-function varCol = buildBAmatrix(varCol,i_varCol)
+function task = buildBAmatrix(task,i_varCol)
 % Create IGA global matrices
 % Implemented for linear elasticity operator and the laplace operator, with
 % possibility of computing the mass matrix and loading vector from body
@@ -7,40 +7,40 @@ function varCol = buildBAmatrix(varCol,i_varCol)
 
 
 %% Extract all needed data from options and varCol
-degree = varCol.degree; % assume degree is equal in all patches
+degree = task.varCol{i_domain}.degree; % assume degree is equal in all patches
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
-noDofs = varCol.noDofs;
-extraGP = varCol.extraGP;
-d_p = varCol.patches{1}.nurbs.d_p;
+index = task.varCol{i_domain}.index;
+noElems = task.varCol{i_domain}.noElems;
+elRange = task.varCol{i_domain}.elRange;
+element = task.varCol{i_domain}.element;
+element2 = task.varCol{i_domain}.element2;
+weights = task.varCol{i_domain}.weights;
+controlPts = task.varCol{i_domain}.controlPts;
+knotVecs = task.varCol{i_domain}.knotVecs;
+pIndex = task.varCol{i_domain}.pIndex;
+noDofs = task.varCol{i_domain}.noDofs;
+extraGP = task.varCol{i_domain}.extraGP;
+d_p = task.varCol{i_domain}.patches{1}.nurbs.d_p;
 
-if varCol.solveForPtot && varCol.exteriorProblem
-    analytic = @(x) varCol.p_(x) + varCol.p_inc_(x);
+if task.misc.solveForPtot && task.misc.exteriorProblem
+    analytic = @(x) task.varCol{i_domain}.p_(x) + task.varCol{i_domain}.p_inc_(x);
 else
-    switch varCol.media
+    switch task.varCol{i_domain}.media
         case 'fluid'
-            analytic = varCol.p_;
+            analytic = task.varCol{i_domain}.p_;
         case 'solid'
-            analytic = @(X) reshape([varCol.u_x_(X).'; varCol.u_y_(X).'; varCol.u_z_(X).'],3*size(X{i_varCol},1),1);
+            analytic = @(X) reshape([task.varCol{i_domain}.u_x_(X).'; task.varCol{i_domain}.u_y_(X).'; task.varCol{i_domain}.u_z_(X).'],3*size(X{i_varCol},1),1);
     end
 end
 
-if strcmp(varCol.coreMethod, 'XI')
+if strcmp(task.varCol{i_domain}.coreMethod, 'XI')
     useEnrichedBfuns = true;
-    d_vec = varCol.d_vec;
+    d_vec = task.varCol{i_domain}.d_vec;
 else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
-k = varCol.k;
+k = task.varCol{i_domain}.k;
 [Q, W] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 n_en = prod(degree+1);
 
@@ -49,7 +49,7 @@ v_values   = zeros(size(W,1),noElems,3);
 n_values   = zeros(size(W,1),noElems,3); 
 J_1_values   = zeros(size(W,1),noElems,1); 
 
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
     ppm = ParforProgMon('Building BA matrix (1/2): ', noElems, nProgressStepSize);
@@ -99,7 +99,7 @@ else
     analytic_values = analytic(X);
 end
 
-d_f = varCol.dimension;
+d_f = task.varCol{i_domain}.dimension;
 analytic_values = reshape(analytic_values, d_f, size(W,1), noElems);
 
 
@@ -153,5 +153,5 @@ end
         
 
 %% Collect data into global matrices (and load vector)
-varCol.FF = vectorAssembly(Fvalues,F_indices,noDofs);
+task.varCol{i_domain}.FF = vectorAssembly(Fvalues,F_indices,noDofs);
 

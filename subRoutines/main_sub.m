@@ -1,22 +1,22 @@
 function task = main_sub(task,loopParameters,runTasksInParallel,resultsFolder)
 
 stringShift = 40;
-[varCol,task] = extractTaskData(task);
+task = controlTask(task);
 task.saveName = defineFolderAndFilenames(task,loopParameters);
 task.resultsFolder = resultsFolder;
 if ~runTasksInParallel
     fprintf('\n\nRunning the case: %s', task.saveName)
 end
 
-varCol = setAndDefineParameters(varCol,task);
+task = setAndDefineParameters(task);
 
 if ~runTasksInParallel
     fprintf(['\n%-' num2str(stringShift) 's'], 'Extracting CAD data ... ')
     tic
 end
-varCol = createNURBSmesh(varCol, task.model, task.M, task.degree);
-varCol = collectVariables(varCol,task);
-noDomains = numel(varCol);
+task = createNURBSmesh(task);
+task = collectVariables(task);
+noDomains = numel(task.varCol);
 if ~runTasksInParallel
     fprintf('using %12f seconds.', toc)
 end
@@ -27,8 +27,21 @@ end
 if task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
-    plotMeshAndGeometry(varCol,task);
+    plotMeshAndGeometry(task.varCol,task);
     fprintf('using %12f seconds.', toc)
+    
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Check NURBS compatibility
+for j = 1:numel(task.varCol)
+    nurbs = task.varCol{j}.nurbs;
+    equalWeights = checkNURBSweightsCompatibility(nurbs,task.prePlot.plot3Dgeometry);
+    if ~equalWeights
+        warning('NURBS:weights','Some weights in the geometry are not equal. For geometries containing singularities this might be ok (this warning may then be supressed using the key NURBS:weights).')
+        % supress the following warning with warning('off','NURBS:weights')
+        % in your getTask_<model> script if the model contains
+        % singularities
+    end
 end
 
 %% Build connectivity
@@ -37,98 +50,105 @@ if ~runTasksInParallel
     fprintf(['\n%-' num2str(stringShift) 's'], 'Generating IGA mesh ... ')
 end
 for i = 1:noDomains
-    varCol{i} = generateIGAmesh(varCol{i});
+    task.varCol{i} = generateIGAmesh(task.varCol{i});
 end
 
 %% Find nodes to remove due to gluing and homogeneous dirichlet conditions
 totNoElems = 0;
 for i = 1:noDomains
-    varCol{i} = findDofsToRemove(varCol{i});
-    totNoElems = totNoElems + varCol{i}.noElems;
+    task.varCol{i} = findDofsToRemove(task.varCol{i});
+    totNoElems = totNoElems + task.varCol{i}.noElems;
 end
 
 if ~runTasksInParallel
     fprintf('using %12f seconds.', toc)
     fprintf('\nTotal number of elements = %d', totNoElems)
 end
-varCol{1}.totNoElems = totNoElems;
+task.varCol{1}.totNoElems = totNoElems;
 if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry) && task.prePlot.abortAfterPlotting
     return
 end
 
 %% Build stiffness matrix
 t_start = tic;
-f = task.f;
-if task.useROM && strcmp(task.scatteringCase,'Sweep')
+f = task.misc.omega/(2*pi);
+if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
     U_sweep = cell(1,numel(f));
 end
-if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
+if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
     for i_f = 1:numel(f)
         f_i = f(i_f);
         omega = 2*pi*f_i;
         for m = 1:noDomains
-            varCol{m}.omega = omega;
-            switch varCol{m}.media
+            task.varCol{m}.omega = omega;
+            switch task.varCol{m}.media
                 case 'fluid'
-                    varCol{m}.f = f_i;
-                    varCol{m}.k = omega/varCol{m}.c_f;
-                    varCol{m}.lambda = 2*pi/varCol{m}.k;
+                    task.varCol{m}.f = f_i;
+                    task.varCol{m}.k = omega/task.varCol{m}.c_f;
+                    task.varCol{m}.lambda = 2*pi/task.varCol{m}.k;
                 case 'solid'
-                    varCol{m}.k = NaN;
+                    task.varCol{m}.k = NaN;
             end
         end
         t_freq = tic;
-        varCol = getAnalyticSolutions(varCol);
-        switch task.method
+        task = getAnalyticSolutions(task);
+        switch task.misc.method
             case {'IE','ABC','IENSG','PML'}
-                varCol{1}.timeBuildSystem = 0;
-                if strcmp(varCol{1}.coreMethod,'SEM')
-                    varCol{1} = buildSEMMatrices(varCol{1});
+                task.varCol{1}.timeBuildSystem = 0;
+                if strcmp(task.misc.coreMethod,'SEM')
+                    task.varCol{1} = buildSEMMatrices(task.varCol{1});
                 else
-                    for i = 1:noDomains
-                        tic          
-                        if ~runTasksInParallel
-                            fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i) ' ... '])
-                        end
-                        if ~(strcmp(task.method,'IENSG') && i == 1)
-                            varCol{i} = buildMatrices(varCol{i});
-                        end
-                        varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
-                        if ~runTasksInParallel
-                            fprintf('using %12f seconds.', toc)
+                    for i_domain = 1:noDomains
+                        if ~(strcmp(task.misc.method,'IENSG') && i_domain == 1)
+                            tic          
+                            if ~runTasksInParallel
+                                fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i_domain) ' ... '])
+                            end
+                            task = buildMatrices(task,i_domain);
+                            task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                            if ~runTasksInParallel
+                                fprintf('using %12f seconds.', toc)
+                            end
                         end
                     end
                 end
-                if ~strcmp(varCol{1}.coreMethod,'SEM')
-                    if strcmp(task.method,'IE')
+                if ~strcmp(task.misc.coreMethod,'SEM')
+                    if strcmp(task.misc.method,'IE')
                         % Add contribution from infinite elements
                         tic
                         if ~runTasksInParallel
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
                         end
-                        varCol{1} = buildIEmatrix(varCol{1});
-                        varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                        task.varCol{1} = buildIEmatrix(task.varCol{1});
+                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                         if ~runTasksInParallel
                             fprintf('using %12f seconds.', toc)
                         end
-                    elseif strcmp(task.method,'IENSG')
-                        chimax = varCol{1}.chimax;
-                        chimin = varCol{1}.chimin;
-                        if abs(chimax - chimin)/abs(chimax) < 100*eps
-                            varCol{1}.r_a = mean([chimax,chimin]);
-                            varCol{1} = buildIEmatrix(varCol{1});
-                        else
-                            varCol{1} = infElementsNonSepGeom(varCol{1});  
+                    elseif strcmp(task.misc.method,'IENSG')
+                        tic
+                        if ~runTasksInParallel
+                            fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
                         end
-                    elseif strcmp(task.method,'ABC')
+                        chimax = task.varCol{1}.chimax;
+                        chimin = task.varCol{1}.chimin;
+                        if abs(chimax - chimin)/abs(chimax) < 100*eps
+                            task.varCol{1}.r_a = mean([chimax,chimin]);
+                            task.varCol{1} = buildIEmatrix(task.varCol{1});
+                        else
+                            task.varCol{1} = infElementsNonSepGeom(task.varCol{1});  
+                        end
+                        if ~runTasksInParallel
+                            fprintf('using %12f seconds.', toc)
+                        end
+                    elseif strcmp(task.misc.method,'ABC')
                         % Add contribution from infinite elements
                         tic
                         if ~runTasksInParallel
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Building ABC matrix ... ')
                         end
-                        varCol{1} = addABC(varCol{1}); 
+                        task.varCol{1} = addABC(task.varCol{1}); 
 
-                        varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                         if ~runTasksInParallel
                             fprintf('using %12f seconds.', toc)
                         end
@@ -142,12 +162,12 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
                     end  
                     for i = 2:noDomains
-                        varCol{i} = applyCouplingConditionPatches(varCol{i},varCol{i-1});
+                        task.varCol{i} = applyCouplingConditionPatches(task.varCol{i},task.varCol{i-1});
                     end
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                 end  
 
                 % Apply Neumann conditions
@@ -155,53 +175,45 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building RHS vector ... ')
                 end
-                if task.useROM && noDomains > 1
-                    varCol{2}.p_inc_ROM_ = varCol{1}.p_inc_ROM_;
-                    varCol{2}.dp_inc_ROM_ = varCol{1}.dp_inc_ROM_;
-                end
-                if noDomains > 1 
-                    varCol{2}.p_inc_ = varCol{1}.p_inc_;
-                    varCol{2}.dp_inc_ = varCol{1}.dp_inc_;
-                end
-                for i = 1:min(noDomains,2)
-                    varCol{i} = applyNeumannCondition(varCol{i},i==2);
+                for i_domain = 1:min(noDomains,2)
+                    task = applyNeumannCondition(task,i_domain);
                 end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
-                varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
             case 'BEM'
                 tic
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building BEM matrix ... ')
                 end
-                switch task.formulation(1)
+                switch task.misc.formulation(1)
                     case 'G' % Galerkin
-                        varCol{1} = buildGBEMmatrix(varCol{1},noDomains > 1);  
+                        task.varCol{1} = buildGBEMmatrix(task.varCol{1},noDomains > 1);  
                     case 'C' % Collocation
-                        varCol{1} = buildCBEMmatrix(varCol{1});  
+                        task.varCol{1} = buildCBEMmatrix(task.varCol{1});  
                 end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
-                if strcmp(task.formulation(end),'C')
+                if strcmp(task.misc.formulation(end),'C')
                     tic
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
-                    varCol{1} = buildCHIEFmatrix(varCol{1});
+                    task.varCol{1} = buildCHIEFmatrix(task.varCol{1});
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
                 end
-                varCol{1}.timeBuildSystem = toc(t_start);
+                task.varCol{1}.timeBuildSystem = toc(t_start);
                 if noDomains > 1 
                     tic
                     % Solid matrices
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building solid matrix ... ')
                     end
-                    varCol{2} = buildMatrices(varCol{2});
+                    task = buildMatrices(task,2);
                     
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
@@ -213,7 +225,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                     
                     switch formulation(1)
                         case 'G' % Galerkin
-                            varCol{3} = buildGBEMmatrix(varCol{3},noDomains > 1);  
+                            task.varCol{3} = buildGBEMmatrix(task.varCol{3},noDomains > 1);  
                         case 'C' % Collocation
                             error('Not implemented')
                     end
@@ -229,25 +241,25 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
                     end  
                     for i = 2:noDomains
-                        if strcmp(varCol{i}.media,'fluid')
-                            varCol{i} = applyCouplingCondition_FEBE(varCol{i});
+                        if strcmp(task.varCol{i}.media,'fluid')
+                            task.varCol{i} = applyCouplingCondition_FEBE(task.varCol{i});
                         end
                     end
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                 end  
             case 'BA'
-                varCol{1}.timeBuildSystem = 0;
+                task.varCol{1}.timeBuildSystem = 0;
                 for i = 1:noDomains
                     tic          
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i) ' ... '])
                     end
-                    varCol{i} = buildMatrices(varCol{i});
-                    varCol{i} = buildBAmatrix(varCol{i},i);
-                    varCol{1}.timeBuildSystem = varCol{1}.timeBuildSystem + toc;
+                    task = buildMatrices(task,i);
+                    task = buildBAmatrix(task,i);
+                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
@@ -255,22 +267,22 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
 %                 if noDomains > 1 
 %                     warning('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
 %                 end
-                varCol{1}.timeBuildSystem = toc;
+                task.varCol{1}.timeBuildSystem = toc;
             case 'MFS'
                 tic
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building MFS matrix ... ')
                 end
-                varCol{1} = buildMFSmatrix(varCol{1});  
-                varCol{1}.timeBuildSystem = toc;
+                task.varCol{1} = buildMFSmatrix(task.varCol{1});  
+                task.varCol{1}.timeBuildSystem = toc;
                 if ~runTasksInParallel
-                    fprintf('using %12f seconds.', varCol{1}.timeBuildSystem)
+                    fprintf('using %12f seconds.', task.varCol{1}.timeBuildSystem)
                 end
         end
-        switch task.method
+        switch task.misc.method
             case {'IE','IENSG','BEM','BA','ABC','MFS','PML'}
-                [varCol,FF,A0,A1,A2,A4] = collectMatrices(varCol,task);
-                if strcmp(task.method,'BA')
+                [task,FF,A0,A1,A2,A4] = collectMatrices(task);
+                if strcmp(task.misc.method,'BA')
                     A = A2;
                 else
                     A = A0 + omega*A1 + omega^2*A2 + omega^4*A4;
@@ -278,15 +290,15 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Total time building system ... ')
-                    fprintf(' was  %12f seconds.', varCol{1}.timeBuildSystem)
+                    fprintf(' was  %12f seconds.', task.varCol{1}.timeBuildSystem)
                 end
                 
                 %% SOLVE SYSTEM
                 tic
                 if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], ['Creating preconditioner (' task.preconditioner ') ... '])
+                    fprintf(['\n%-' num2str(stringShift) 's'], ['Creating preconditioner (' task.sol.preconditioner ') ... '])
                 end
-                switch task.preconditioner
+                switch task.sol.preconditioner
                     case 'ilu'
     %                     [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-4));
             %             [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-3));
@@ -311,28 +323,28 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Solving system of equations ... ')
                 end
-                switch task.solver
+                switch task.sol.solver
                     case 'gmres'
                         noRestarts = []; % change this to save memory
                         % noRestarts = 2;
                         [UU,~,~,it1,rv1] = gmres(A,FF,noRestarts,1e-20,1000,L_A,U_A);
                     case 'LU'
-                        if ~strcmp(task.preconditioner,'diag')
+                        if ~strcmp(task.sol.preconditioner,'diag')
                             error('not implemented')
                         end
-                        if task.useROM
+                        if task.rom.useROM
                             dAdomega = A1 + 2*omega*A2 + 4*omega^3*A4;
                             d2Adomega2 = 2*A2 + 12*omega^2*A4;
-                            if task.useDGP && i_f == numel(f)
-                                varCol{1}.A0 = A0;
-                                varCol{1}.A1 = A1;
-                                varCol{1}.A2 = A2;
+                            if task.rom.useDGP && i_f == numel(f)
+                                task.varCol{1}.A0 = A0;
+                                task.varCol{1}.A1 = A1;
+                                task.varCol{1}.A2 = A2;
                             end
                             UU = zeros(size(FF));
                             dA = decomposition(A*Pinv,'lu');
                             fprintf('using %12f seconds.', toc)
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
-                            for i = 1:varCol{1}.noRHSs
+                            for i = 1:task.noRHSs
                                 j = i-1;
                                 b = FF(:,i);
                                 if j > 0
@@ -344,29 +356,29 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                                 UU(:,i) = Pinv*(dA\b);
                             end
                         else
-                            if i_f == 1 && strcmp(task.formulation,'Sweep')
+                            if i_f == 1 && strcmp(task.misc.formulation,'Sweep')
                                 UU = zeros(size(A,1),numel(f));
                             end
-                            if strcmp(task.scatteringCase,'Sweep')
+                            if strcmp(task.misc.scatteringCase,'Sweep')
                                 UU(:,i_f) = Pinv*((A*Pinv)\FF);
                             else
                                 UU = Pinv*((A*Pinv)\FF);
                             end
                         end
                     otherwise
-                        eval(['[UU,~,~,it1,rv1] = cgs' task.solver '(A,FF,1e-20,1000,L_A,U_A);'])
+                        eval(['[UU,~,~,it1,rv1] = cgs' task.sol.solver '(A,FF,1e-20,1000,L_A,U_A);'])
                 end
                 dofs = size(A,1);
-                varCol{1}.dofs = dofs;
-                if task.clearGlobalMatrices
-                    varCol = rmfields(varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
+                task.varCol{1}.dofs = dofs;
+                if task.misc.clearGlobalMatrices
+                    task.varCol = rmfields(task.varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
                     clear A FF A0 A1 A2 A4 Pinv dA dAdomega d2Adomega2 b
                 end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
                 end
-                varCol{1}.timeSolveSystem = toc;
-                if task.computeCondNumber && (size(A,1) == size(A,2))
+                task.varCol{1}.timeSolveSystem = toc;
+                if task.misc.computeCondNumber && (size(A,1) == size(A,2))
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating condition number ... ')
                     rng('default') % for reproducibility in condest
                     condNumber = condest(A);
@@ -381,17 +393,17 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 if ~runTasksInParallel
                     fprintf('\nNumber of degrees of freedom = %d', dofs)
                 end
-                % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*varCol{1}.noElems)/nnz(A_fluid_o))
+                % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
         end
-        if task.useROM && strcmp(task.scatteringCase,'Sweep')
+        if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
             U_sweep{i_f} = UU;
-            varCol = postProcessSolution(varCol,UU);
+            task.varCol = postProcessSolution(task.varCol,UU);
         end
-        if strcmp(task.scatteringCase,'Sweep') && numel(f) > 1
+        if strcmp(task.misc.scatteringCase,'Sweep') && numel(f) > 1
             fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_f, numel(f), toc(t_freq))  
         end
     end
-    if numel(f) > 1 && ~task.useROM && (task.calculateSurfaceError || task.calculateVolumeError)
+    if numel(f) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         tic
         fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         progressBars = numel(f) > 1 && task.progressBars;
@@ -406,7 +418,7 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
         ppm = NaN;
     end
 
-    if ~task.useROM && (task.calculateSurfaceError || task.calculateVolumeError)
+    if ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         for i_f = 1:numel(f)
             if progressBars
                 ppm.increment();
@@ -414,17 +426,17 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
             f_i = f(i_f);
             omega = 2*pi*f_i;
             for m = 1:noDomains
-                varCol{m}.omega = omega;
-                switch varCol{m}.media
+                task.varCol{m}.omega = omega;
+                switch task.varCol{m}.media
                     case 'fluid'
-                        varCol{m}.f = f_i;
-                        varCol{m}.k = omega/varCol{m}.c_f;
-                        varCol{m}.lambda = 2*pi/varCol{m}.k;
+                        task.varCol{m}.f = f_i;
+                        task.varCol{m}.k = omega/task.varCol{m}.c_f;
+                        task.varCol{m}.lambda = 2*pi/task.varCol{m}.k;
                     case 'solid'
-                        varCol{m}.k = NaN;
+                        task.varCol{m}.k = NaN;
                 end
             end
-            varCol = getAnalyticSolutions(varCol);
+            task = getAnalyticSolutions(task);
             if i_f == 1
                 task.results.energyError = zeros(1,size(f,2));
                 task.results.L2Error = zeros(1,size(f,2));
@@ -432,11 +444,11 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
                 task.results.H1sError = zeros(1,size(f,2));
                 task.results.surfaceError = zeros(1,size(f,2));
             end
-            varCol = postProcessSolution(varCol,UU(:,i_f));
+            task.varCol = postProcessSolution(task.varCol,UU(:,i_f));
             printLog = numel(f) == 1 && ~runTasksInParallel;
             printLog = true && ~runTasksInParallel;
             [L2Error, H1Error, H1sError, energyError, surfaceError] ...
-                = calculateErrors(task, varCol, printLog, stringShift);
+                = calculateErrors(task, task.varCol, printLog, stringShift);
             task.results.surfaceError(i_f) = surfaceError;
             task.results.energyError(i_f) = energyError;
             task.results.L2Error(i_f) = L2Error;
@@ -444,42 +456,42 @@ if ~(strcmp(task.method,'RT') || strcmp(task.method,'KDT'))
             task.results.H1sError(i_f) = H1sError;
         end
     end
-    if numel(f) > 1 && ~task.useROM && (task.calculateSurfaceError || task.calculateVolumeError)
+    if numel(f) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         fprintf('using %12f seconds.', toc)   
     end
 else
-    varCol{1}.U = [];
+    task.varCol{1}.U = [];
 end  
 
 %% Compute scattered pressure   
-if task.calculateFarFieldPattern && ~task.useROM
+if task.ffp.calculateFarFieldPattern && ~task.rom.useROM
     omega = 2*pi*f;
-    varCol{1}.omega = omega;
-    varCol{1}.k = omega/varCol{1}.c_f;
-    varCol{1}.lambda = 2*pi./varCol{1}.k;
-    varCol{1}.f = f;
-    varCol = getAnalyticSolutions(varCol);
-    varCol = postProcessSolution(varCol,UU);
-    task = calculateTS(varCol,task,runTasksInParallel,stringShift);
+    task.omega = omega;
+    task.varCol{1}.k = omega/task.varCol{1}.c_f;
+    task.varCol{1}.lambda = 2*pi./task.varCol{1}.k;
+    task.varCol{1}.f = f;
+    task = getAnalyticSolutions(task);
+    task.varCol = postProcessSolution(task.varCol,UU);
+    task = calculateTS(task,runTasksInParallel,stringShift);
 end
-if ~task.useROM
-    varCol{1}.k = (2*pi*f)/varCol{1}.c_f;
-    varCol{1}.f = f;
-    varCol{1}.omega = 2*pi*f;
+if ~task.rom.useROM
+    task.varCol{1}.k = (2*pi*f)/task.varCol{1}.c_f;
+    task.varCol{1}.f = f;
+    task.varCol{1}.omega = 2*pi*f;
 end
-if task.clearGlobalMatrices
+if task.misc.clearGlobalMatrices
     clear UU U
 end
 
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
-if ~task.useROM && ~strcmp(task.method,'RT')
-    switch task.scatteringCase
+if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
+    switch task.misc.scatteringCase
         case {'BI','Sweep','Ray'}
             tic
-            if task.plotResidualError && varCol{1}.analyticSolutionExist && strcmp(task.formulation,'GCBIE')
+            if task.misc.plotResidualError && task.analyticSolutionExist && strcmp(task.misc.formulation,'GCBIE')
 %                 close all
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting zeros of residual ... ')
-                plotGalerkinResidual(varCol{1});
+                plotGalerkinResidual(task.varCol{1});
                 fprintf('using %12f seconds.', toc)
                 axis equal
                 axis off
@@ -495,7 +507,7 @@ if ~task.useROM && ~strcmp(task.method,'RT')
     %             [cg_xi, grev_xi] = CauchyGalerkin(fluid.degree(1), n_xi, fluid.knots{1});
     %             [cg_eta, grev_eta] = CauchyGalerkin(fluid.degree(2), n_eta, fluid.knots{2});
     %             % keyboard
-    %             n_cp = varCol{1}.noDofs - length(dofsToRemove);
+    %             n_cp = task.varCol{1}.noDofs - length(dofsToRemove);
     %             
     %             cp_cg = zeros(n_cp,3);
     %             cp_grev = zeros(n_cp,3);
@@ -538,41 +550,41 @@ if ~task.useROM && ~strcmp(task.method,'RT')
                 end
 
 
-                para.plotArtificialBoundary = para.plotArtificialBoundary && (strcmp(task.method,'IE') || strcmp(task.method,'ABC') || strcmp(task.method,'PML'));
+                para.plotArtificialBoundary = para.plotArtificialBoundary && (strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'ABC') || strcmp(task.misc.method,'PML'));
                 M = task.M;
                 para.extraXiPts = eval(para.extraXiPts);
                 para.extraEtaPts = eval(para.extraEtaPts);
                 para.extraZetaPts = eval(para.extraZetaPts);
                 testFun = @(v) -analytic(v) - P_inc(v);
-                varCol{1}.testFun = testFun;
-                if strcmp(task.method, 'KDT')
-                    varCol{1}.U = zeros(varCol{1}.noDofs,1);
+                task.varCol{1}.testFun = testFun;
+                if strcmp(task.misc.method, 'KDT')
+                    task.varCol{1}.U = zeros(task.varCol{1}.noDofs,1);
                 end
         
-                createParaviewFiles(varCol, 'para_options', para);
+                createParaviewFiles(task.varCol, 'para_options', para);
 
                 % plot artificial boundary
 %                 if para.plotArtificialBoundary
-%                     plotModelInParaview(subNURBS(varCol{1}.nurbs,'at',[0,0;0,0;0,1]), para, 0, 'artificialBoundary')
+%                     plotModelInParaview(subNURBS(task.varCol{1}.nurbs,'at',[0,0;0,0;0,1]), para, 0, 'artificialBoundary')
 %                     if strcmp(BC,'SHBC')
-%                         createParaviewFiles(subNURBS(varCol{1}.nurbs,'at',[0,0;0,0;1,0]), para, 1, 'scatterer')
+%                         createParaviewFiles(subNURBS(task.varCol{1}.nurbs,'at',[0,0;0,0;1,0]), para, 1, 'scatterer')
 %                     end
 %                 end
             end
     end
 end
-varCol{1}.tot_time = toc(t_start);
+task.varCol{1}.tot_time = toc(t_start);
 
-fprintf('\nTotal time spent on task: %12f', varCol{1}.tot_time)  
+fprintf('\nTotal time spent on task: %12f', task.varCol{1}.tot_time)  
 
-if task.storeFullVarCol
-    varColTemp = varCol;
-    if task.useROM
+if task.misc.storeFullVarCol
+    varColTemp = task.varCol;
+    if task.rom.useROM
         varColTemp{1}.U_sweep = U_sweep;
     end
     task.varCol = varColTemp;
 else
-    task.varCol = extractVarColFields(task,varCol);
+    task.varCol = extractVarColFields(task,task.varCol);
 end
 
 

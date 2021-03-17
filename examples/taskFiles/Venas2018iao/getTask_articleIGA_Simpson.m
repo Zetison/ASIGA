@@ -8,13 +8,13 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 %% IE simulation
-scatteringCase = 'BI';
-model = 'SS'; % Simpson sphere
-method = {'IE'};
+misc.scatteringCase = 'BI';
+misc.model = 'SS'; % Simpson sphere
+misc.method = {'IE'};
 BC = 'SHBC';
 formulation = {'PGU','PGC','BGU','BGC'};
 % formulation = {'BGU'};
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 computeCondNumber = 0;
 runTasksInParallel = 0;
 progressBars = false;        % Show progress bars for building system matrices
@@ -42,8 +42,8 @@ degree = 3;
 
 N = 4;
 
-loopParameters = {'M','method','formulation'};
-calculateSurfaceError = 1;
+loopParameters = {'M','misc.method','formulation'};
+err.calculateSurfaceError = 1;
 parm = 1;
 
 postPlot(1).xname       	= 'dofs';
@@ -53,14 +53,14 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType    	= 'loglog';
 postPlot(1).lineStyle   	= '*-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).addCommands   	= [];
 
 postPlot(2) = postPlot(1);
 postPlot(2).noXLoopPrms     = 0;
-postPlot(2).legendEntries   = {'method','M','formulation'};
+postPlot(2).legendEntries   = {'misc.method','M','formulation'};
 postPlot(2).lineStyle       = '-';
 postPlot(2).xname           = 'alpha';
 postPlot(2).yname           = 'error_pAbs';
@@ -79,7 +79,7 @@ postPlot(3).addCommands = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
-method = {'BA'};
+misc.method = {'BA'};
 useNeumanProj = 0;
 solveForPtot = 1;
 % formulation = {'SL2E','VL2E'};
@@ -88,7 +88,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-method = {'BEM'};
+misc.method = {'BEM'};
 M = 1:3;
 % formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 formulation = {'CCBIE'};

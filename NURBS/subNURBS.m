@@ -28,8 +28,8 @@ for patch = 1:noPatches
     else
         at = true(d_p,2);
     end
-    for j = 1:2
-        for i = 1:d_p
+    for i = 1:d_p
+        for j = 1:2
             if at(i,j)
                 if j == 1
                     J = 1;

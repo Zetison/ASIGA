@@ -1,9 +1,9 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'S1';
+misc.model = 'S1';
 
-coreMethod = 'IGA';
-method = {'BEM'};
+misc.coreMethod = 'IGA';
+misc.method = {'BEM'};
 formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CBM','CRCBIE1','CRCBIE2','CRCBIE3','GCBIE','GBM','GRCBIE1','GRCBIE2','GRCBIE3'};
 formulation = {'CCBIE','CBM','GCBIE','GBM'};
@@ -26,11 +26,11 @@ degree = [2,5];
 runTasksInParallel = 0;
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
 solveForPtot = true;
-loopParameters = {'extraGPBEM','agpBEM','M','degree','formulation','method','quadMethodBEM'};
+loopParameters = {'extraGPBEM','agpBEM','M','degree','formulation','misc.method','quadMethodBEM'};
 
 agpBEM = 0.2:0.1:0.7;
 extraGPBEM = 100; % extra quadrature points
@@ -43,9 +43,9 @@ agpBEM = 0.7;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-method = {'BA'};
+misc.method = {'BA'};
 extraGPBEM = [extraGPBEM(1),extraGPBEM(end)];
 agpBEM = [0.2,0.7];
 formulation = {'SL2E'};
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 collectIntoTasks

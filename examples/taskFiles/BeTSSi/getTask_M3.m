@@ -6,11 +6,11 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'M3';
+misc.model = 'M3';
 BC = 'SHBC';
-method = {'IENSG'};
+misc.method = {'IENSG'};
 formulation = 'BGU';
 
 varCol = setM3Parameters(1);
@@ -20,13 +20,13 @@ f = 1e3;             % Frequency
 M = 4:5;
 % M = 1;
 degree = 2;
-% degree = 5; % use and odd degree > 4 if parm = 2 and method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
+% degree = 5; % use and odd degree > 4 if parm = 2 and misc.method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
 parm = 1;
 beta = 0;
 alpha = (0:0.1:360)*pi/180;
 
 warning('off','NURBS:weights')
-loopParameters = {'M','parm','f','method','formulation'};
+loopParameters = {'M','parm','f','misc.method','formulation'};
 prePlot.plot3Dgeometry = 1;
 % prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
@@ -45,7 +45,7 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','f','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','parm','f','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
@@ -57,7 +57,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
-method = {'KDT'};
+misc.method = {'KDT'};
 formulation = {'MS1'};
 
 collectIntoTasks
@@ -65,29 +65,29 @@ collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 solveForPtot = true;
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = {'CCBIE','CBM'};
 formulation = {'CCBIE'};
 formulation = {'CCBIE','GBM'};
 BC = 'SHBC';
-loopParameters = {'formulation','M','method','f'};
+loopParameters = {'formulation','M','misc.method','f'};
 collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
-method = {'RT'};
+misc.method = {'RT'};
 solveForPtot = false;
 formulation = '';
-calculateSurfaceError = 0;
+err.err.calculateSurfaceError = 0;
 computeCondNumber = false;
 plotFarField = 1;
 M = 2;
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 N = 4:6;
 r = 10;
 
-loopParameters = {'parm','M','method','N'};
+loopParameters = {'parm','M','misc.method','N'};
 collectIntoTasks
 
 

@@ -8,18 +8,18 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 %% IE simulation
-scatteringCase = 'BI';
-model = 'Safjan2002tdi'; % Simpson sphere
-method = {'IENSG'};
-% method = {'IE'};
+misc.scatteringCase = 'BI';
+misc.model = 'Safjan2002tdi'; % Simpson sphere
+misc.method = {'IENSG'};
+% misc.method = {'IE'};
 IEbasis	= 'Chebyshev';
 % IEbasis	= 'Lagrange';
 % IEbasis	= {'Chebyshev','Bernstein','Lagrange'};
 BC = 'NBC';
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 runTasksInParallel = 0;
 progressBars = false;        % Show progress bars for building system matrices
-applyLoad = 'Safjan';
+misc.applyLoad = 'Safjan';
 
 Upsilon = [22*sqrt(2)/3, 44*sqrt(3)/7]; % 3:1, 7:1
 Upsilon = 22*sqrt(2)/3; % 3:1
@@ -47,16 +47,16 @@ alpha = 0;
 beta = (-90:0.5:90)*pi/180;
 prePlot.plot3Dgeometry = 0;
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plotArtificialBndry = false;        % Plot the artificial boundary for the IENSG method
+prePlot.plotArtificialBndry = false;        % Plot the artificial boundary for the IENSG misc.method
 computeCondNumber = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 calculateFarFieldPattern = false;     % Calculate far field pattern
 varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
 
 degree = 5;
 
 warning('off','NURBS:weights')
-loopParameters = {'N','p_ie','s_ie','IElocSup', 'IEbasis','method', 'formulation', 'c_x'};
+loopParameters = {'N','p_ie','s_ie','IElocSup', 'IEbasis','misc.method', 'formulation', 'c_x'};
 
 postPlot(1).xname       	= 'N';
 postPlot(1).yname        	= 'surfaceError';
@@ -66,7 +66,7 @@ postPlot(1).axisType    	= 'loglog';
 postPlot(1).lineStyle   	= '*-';
 postPlot(1).xLoopName     	= 'N';
 postPlot(1).yScale          = 1/100;
-% postPlot(1).legendEntries 	= {'method','formulation','M'};
+% postPlot(1).legendEntries 	= {'misc.method','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_error();
@@ -124,7 +124,7 @@ IEbasis	= 'Lagrange';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
-method = {'BA'};
+misc.method = {'BA'};
 useNeumanProj = 0;
 solveForPtot = 0;
 N = [1,maxN];
@@ -138,13 +138,13 @@ for ar = [3,7]
         for s_ie = 1:2
             for p_ie = 1:5
                 try
-                    error_safjan = importdata(['miscellaneous/refSolutions/Safjan2002tdi_IElocSup1_' formulation{1} '_s_ie' num2str(s_ie) '_p_ie' num2str(p_ie) '_ar' num2str(ar) ':1_surfaceError.csv']);
-                    loglog(error_safjan(:,1),error_safjan(:,2),'-','DisplayName',['Safjan, s = ' num2str(s_ie) ', p = ' num2str(p_ie) ', ' formulation{1} ' IE, ' num2str(ar) ':1']);
+                    error_safjan = importdata(['miscellaneous/refSolutions/Safjan2002tdi_IElocSup1_' formulation{1} '_s_ie' num2str(s_ie) '_p_ie' num2str(p_ie) '_ar' num2str(ar) '_1_surfaceError.csv']);
+                    loglog(error_safjan(:,1),error_safjan(:,2),'-','DisplayName',['Safjan, s = ' num2str(s_ie) ', p = ' num2str(p_ie) ', ' formulation{1} ' IE, ' num2str(ar) '_1']);
                 end
             end
         end
-        error_safjan = importdata(['miscellaneous/refSolutions/Safjan2002tdi_IElocSup0_' formulation{1} '_s_ieNaN_p_ieNaN_ar' num2str(ar) ':1_surfaceError.csv']);
-        loglog(error_safjan(:,1),error_safjan(:,2),'-','DisplayName',['Safjan, Global multipole ' formulation{1} ' IE, ' num2str(ar) ':1']);
+        error_safjan = importdata(['miscellaneous/refSolutions/Safjan2002tdi_IElocSup0_' formulation{1} '_s_ieNaN_p_ieNaN_ar' num2str(ar) '_1_surfaceError.csv']);
+        loglog(error_safjan(:,1),error_safjan(:,2),'-','DisplayName',['Safjan, Global multipole ' formulation{1} ' IE, ' num2str(ar) '_1']);
     end
 end
 legend('off');

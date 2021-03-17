@@ -1,8 +1,8 @@
-scatteringCase = 'BI';
+misc.scatteringCase = 'BI';
 
-model = 'S1';  % Spherical shell
+misc.model = 'S1';  % Spherical shell
 
-coreMethod = {'IGA'};
+misc.coreMethod = {'IGA'};
 
 varCol = setS1Parameters('double',1);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
@@ -18,12 +18,12 @@ prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
 degree = 4;
 % calculateVolumeError = 1;
-calculateSurfaceError = 1;
+err.err.calculateSurfaceError = 1;
 computeCondNumber = false;
 calculateFarFieldPattern = 0;
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 
-loopParameters = {'M','degree','formulation','coreMethod','method'};
+loopParameters = {'M','degree','formulation','misc.coreMethod','misc.method'};
 
 postPlot(1).xname        	= 'dofs';
 postPlot(1).yname        	= 'surfaceError';
@@ -42,7 +42,7 @@ postPlot(1).noXLoopPrms   	= 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 M = 1:6;
 collectIntoTasks
@@ -50,7 +50,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MFS simulation
-method = {'MFS'};
+misc.method = {'MFS'};
 formulation = {'PS'};
 M = 1:4;
 delta = 0.5;

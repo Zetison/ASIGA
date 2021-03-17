@@ -1,6 +1,6 @@
 function studies = getTask_FreeCADsphere()
 % This study imports .g2 files from FreeCAD (.g2 file obtained from a iges
-% files, see README.md). Remember that ASIGA assumes the model to be in
+% files, see README.md). Remember that ASIGA assumes the misc.model to be in
 % meters, so make sure to export as such (alternatively use the scaleNURBS()-function).
 
 counter = 1;
@@ -9,12 +9,12 @@ getDefaultTaskValues
 
 
 %% IE simulation
-scatteringCase = 'BI';
+misc.scatteringCase = 'BI';
 % BC = 'NNBC';
-model = 'FreeCADsphere';  % Spherical shell
+misc.model = 'FreeCADsphere';  % Spherical shell
 
-coreMethod = {'IGA'};
-method = {'BEM'};
+misc.coreMethod = {'IGA'};
+misc.method = {'BEM'};
 formulation = {'CCBIE'};
 noDomains = 1;
 varCol = setS1Parameters('double',1);
@@ -27,7 +27,7 @@ beta = 30*pi/180;
 f = 1000;
 
  
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 calculateFarFieldPattern = 1;
 prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 1;
@@ -62,10 +62,10 @@ postPlot(3).axisType      	= 'loglog';
 degree = 3; % FreeCAD exports to p = 3
 M = 1:2; % 5
 solveForPtot = true;
-loopParameters = {'M','method'};
+loopParameters = {'M','misc.method'};
 % collectIntoTasks
 
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 M = 1:4; % 5
 collectIntoTasks

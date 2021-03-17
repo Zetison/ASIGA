@@ -1,7 +1,7 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 BC = 'SHBC';
-model = 'Cube';
-method = {'BEM'};
+misc.model = 'Cube';
+misc.method = {'BEM'};
 formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 % formulation = {'GCBIE','GBM'};
 % formulation = {'GCBIE'};
@@ -16,7 +16,7 @@ M = 1:3;
 M = 1; 
 % degree = 2:5;
 degree = 2;
-calculateSurfaceError = strcmp(BC,'NBC');
+err.calculateSurfaceError = strcmp(BC,'NBC');
 calculateFarFieldPattern = strcmp(BC,'SHBC');
 alpha = (0:0.5:360)*pi/180;
 beta = 0;
@@ -30,9 +30,9 @@ extraGPBEM = 32;
 extraGP = 0;
 prePlot.plot3Dgeometry = 1;  % Plot visualization of mesh and geometry in 3D
 if strcmp(BC,'SHBC')
-    applyLoad = 'planeWave';
+    misc.applyLoad = 'planeWave';
 else
-    applyLoad = 'pointPulsation';
+    misc.applyLoad = 'pointPulsation';
 end
 % beta = 0;
 exteriorProblem = true;
@@ -44,12 +44,12 @@ computeCondNumber = 0;
 runTasksInParallel = false;
 
 solveForPtot = true;
-loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','agpBEM'};
+loopParameters = {'M','degree','misc.method','formulation','extraGP','extraGPBEM','agpBEM'};
 % colBEM_C0 = 0;
 colBEM_C0 = 1/2;
 quadMethodBEM = 'New';
 
-% applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
+% misc.applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -60,14 +60,14 @@ extraGPBEM = NaN;
 extraGP = 1;
 agpBEM = NaN; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 % M = 1:7;
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 % collectIntoTasks
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MFS simulation
-method = {'MFS'};
+misc.method = {'MFS'};
 formulation = 'PS'; % PS = point solution, SS = spherical solution
 M = 1;
 % parm = linspace(0.1,0.4,8);
@@ -77,6 +77,6 @@ solveForPtot = false;
 % delta = 0.1;
 delta = [0.1,0.2,0.4,0.6,1]/10;
 extraGP = [1,2,4,8,16,32];
-loopParameters = {'delta','M','extraGP','method'};
+loopParameters = {'delta','M','extraGP','misc.method'};
 
 % collectIntoTasks

@@ -1,8 +1,8 @@
 
 
-scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'TAP'; % The TAP model (Mock shell) described in Richard Hodges book "Underwater acoustics: analysis, design and performance of sonar"
+misc.model = 'TAP'; % The TAP misc.model (Mock shell) described in Richard Hodges book "Underwater acoustics: analysis, design and performance of sonar"
 
 calculateFarFieldPattern = 1;
 
@@ -19,24 +19,24 @@ prePlot.plot3Dgeometry = 0;
 %% Plot result in paraview
 if 0
     if true
-        coreMethod = 'IGA';
+        misc.coreMethod = 'IGA';
         M = 4;
         degree = 2:3;
         loopParameters = {'M','degree','BC'};
     else
-        coreMethod = 'SEM';
+        misc.coreMethod = 'SEM';
         M = 1;
         degree = 2:5;
         loopParameters = {'degree','BC'};
     end
     N = 4;
     formulation = 'BGU';
-    method = 'IE';
+    misc.method = 'IE';
 else
     M = 1:4;
     parm = linspace(0.1,3,10); % max ~5
     parm = 0.2;
-    method = 'MFS';
+    misc.method = 'MFS';
     formulation = '';
     degree = 2;
     loopParameters = {'M','BC','parm'};

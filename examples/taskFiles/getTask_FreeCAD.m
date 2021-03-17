@@ -1,6 +1,6 @@
 function studies = getTask_FreeCAD()
 % This study imports .g2 files from FreeCAD (.g2 file obtained from a iges
-% files, see README.md). Remember that ASIGA assumes the model to be in
+% files, see README.md). Remember that ASIGA assumes the misc.model to be in
 % meters, so make sure to export as such (alternatively use the scaleNURBS()-function).
 
 counter = 1;
@@ -9,19 +9,19 @@ getDefaultTaskValues
 
 
 %% IE simulation
-scatteringCase = 'BI';
+misc.scatteringCase = 'BI';
 % BC = 'NNBC';
-model = 'FreeCAD';  % Spherical shell
+misc.model = 'FreeCAD';  % Spherical shell
 
-coreMethod = {'IGA'};
-method = {'BEM'};
+misc.coreMethod = {'IGA'};
+misc.method = {'BEM'};
 formulation = {'CCBIE'};
 noDomains = 1;
 varCol = setS1Parameters('double',1);
 varCol{1}.meshFile = 'createNURBSmesh_FreeCAD';
 
 
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 BC = 'SHBC';
 alpha_s = 240*pi/180;
 beta_s = 0;
@@ -51,16 +51,16 @@ postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 
 para.name                    = '';
-para.plotResultsInParaview	 = 1;	% Only if scatteringCase == 'Bi'
+para.plotResultsInParaview	 = 1;	% Only if misc.scatteringCase == 'Bi'
 
 degree = 3; % FreeCAD exports to p = 3
 M = 2:3; % 5
 solveForPtot = true;
-loopParameters = {'M','method'};
+loopParameters = {'M','misc.method'};
 % collectIntoTasks
 
-method = {'KDT'};
+misc.method = {'KDT'};
 formulation = {'MS1'};
 solveForPtot = false;
-para.plotResultsInParaview = 0;	% Only if scatteringCase == 'Bi'
+para.plotResultsInParaview = 0;	% Only if misc.scatteringCase == 'Bi'
 collectIntoTasks

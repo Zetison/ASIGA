@@ -4,11 +4,11 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'S15';
+misc.model = 'S15';
 BC = 'SHBC';
-method = {'IE'};
+misc.method = {'IE'};
 formulation = {'BGU'};
 
 varCol = setS15Parameters();
@@ -27,9 +27,9 @@ alpha = (0:0.1:360)*pi/180;
 beta = 30*pi/180;
 
 warning('off','NURBS:weights')
-loopParameters = {'M','parm','f','method','formulation'};
-calculateSurfaceError       = 1;	% Only if scatteringCase == 'Bi'
-calculateVolumeError        = 0;	% Only if scatteringCase == 'Bi'
+loopParameters = {'M','parm','f','misc.method','formulation'};
+err.calculateSurfaceError       = 1;	% Only if misc.scatteringCase == 'Bi'
+calculateVolumeError        = 0;	% Only if misc.scatteringCase == 'Bi'
 progressBars                = false;        % Show progress bars for building system matrices
 
 prePlot.plot3Dgeometry = 1;
@@ -53,14 +53,14 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','parm','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 
 % collectIntoTasks
 
-method = {'BEM'};
+misc.method = {'BEM'};
 solveForPtot = true;
 formulation = {'GBM','CCBIE'};
 formulation = {'GCBIE'};

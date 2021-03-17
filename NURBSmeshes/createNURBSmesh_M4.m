@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_M4(varCol, M, degree)
+function task = createNURBSmesh_M4(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 x_0 = [0, 0, 0];
 switch varCol{1}.method
@@ -41,3 +44,4 @@ if numel(varCol) > 1
 end
 
 varCol{1}.L_gamma = L_gamma;
+task.varCol = varCol;

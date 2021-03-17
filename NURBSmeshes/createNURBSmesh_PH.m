@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_PH(varCol, M, degree)
+function task = createNURBSmesh_PH(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 L = varCol{1}.gd;
 R_1 = varCol{1}.R_1;
@@ -85,4 +88,5 @@ varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
 varCol{1}.Upsilon = Upsilon;
+task.varCol = varCol;
 

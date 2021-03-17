@@ -39,6 +39,7 @@ for i_v = 1:noDomains
     para{i_v}.celltype = celltype;
     para{i_v}.plotP_inc = options.para_options.plotP_inc && ~isSolid && splitExteriorFields && isOuterDomain;
     para{i_v}.plotScalarField = options.para_options.plotScalarField && ~isSolid && isOuterDomain;
+    para{i_v}.plotScalarFieldAbs = options.para_options.plotScalarField && ~isSolid && isOuterDomain;
     para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && splitExteriorFields; 
     para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && splitExteriorFields; 
     para{i_v}.plotAnalytic = options.para_options.plotAnalytic && analyticSolutionExist; 
@@ -362,6 +363,7 @@ for i_v = 1:numel(varCol)
                     end
                 end
                 data.scalarField = real(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
+                data.scalarFieldAbs = abs(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
                 if d_p == 3
                     rho_f = varCol{i_v}.rho;
                     if splitExteriorFields

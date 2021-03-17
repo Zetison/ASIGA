@@ -7,13 +7,13 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 %% IE simulation
-scatteringCase = 'MS';
-model = 'PH'; % Simpson sphere
+misc.scatteringCase = 'MS';
+misc.model = 'PH'; % Simpson sphere
 BC = 'SHBC';
-method = {'IENSG','IE'};
-% method = {'IE'};
+misc.method = {'IENSG','IE'};
+% misc.method = {'IE'};
 formulation = 'BGU';
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 computeCondNumber = 0;
 runTasksInParallel = 0;
 
@@ -38,7 +38,7 @@ degree = 2;
 
 N = 3;
 
-loopParameters = {'M','formulation','method'};
+loopParameters = {'M','formulation','misc.method'};
 parm = 1;
 
 postPlot(1).xname       	= 'alpha';
@@ -48,7 +48,7 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
@@ -58,13 +58,13 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
-method = {'KDT'};
+misc.method = {'KDT'};
 formulation = 'MS1';
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-method = {'BEM'};
+misc.method = {'BEM'};
 % formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 formulation = {'CCBIE'};
 formulation = {'CCBIE','GBM'};

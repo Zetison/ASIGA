@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_S15(varCol, M, degree)
+function task = createNURBSmesh_S15(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -131,3 +134,4 @@ if numel(varCol) > 2
 end
 
 varCol{1}.L_gamma = L_gamma;
+task.varCol = varCol;

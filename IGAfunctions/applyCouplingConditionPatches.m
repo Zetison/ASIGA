@@ -14,10 +14,9 @@ controlPts = varColInner.controlPts;
 d_inner = varColInner.dimension;
 d_outer = varColOuter.dimension;
 
-[innerNodes,outerNodes,innerXiEtaMesh,innerIndexXiEta,innerNoElemsXiEta,pIndex,innerNodes2] ...
-                    = createSurfaceMesh(varColInner,varColOuter);
+[innerNodes, innerNoElemsXiEta, innerXiEtaMesh, innerXiEtaMesh2, innerIndexXiEta, pIndex, n_en] = meshBoundary(varColInner,'outerCoupling');
+outerNodes = meshBoundary(varColOuter,'innerCoupling');
 
-n_en = prod(degree+1);
 Avalues = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
 spIdxRow1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
@@ -50,7 +49,7 @@ parfor e = 1:innerNoElemsXiEta
     end
 
     pts = controlPts(innerSctrXiEta,:);
-    wgts = weights(innerNodes2(innerXiEtaMesh(e,:)));
+    wgts = weights(innerNodes(innerXiEtaMesh2(e,:)));
         
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);

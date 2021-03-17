@@ -7,11 +7,11 @@ getDefaultTaskValues
 
 
 %% IE simulation
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'IL';
+misc.model = 'IL';
 
-method = {'IE'};
+misc.method = {'IE'};
 formulation = 'BGU';
 
 BC = 'NNBC';
@@ -24,11 +24,11 @@ switch BC
     case 'NNBC'
         noDomains = 3;
 end
-applyLoad = 'planeWave';
-% applyLoad = 'pointCharge';
+misc.applyLoad = 'planeWave';
+% misc.applyLoad = 'pointCharge';
 r_s = 6;
 
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 
 varCol = setIhlenburgParameters(noDomains);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
@@ -53,7 +53,7 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','formulation','M'};
 postPlot(1).subFolderName 	= '../results/Ihlenburg3';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
@@ -69,7 +69,7 @@ beta_s = 0;
 degree = 2;
 calculateFarFieldPattern = 1;
 calculateVolumeError = 1;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
 prePlot.plotControlPolygon = 0;
@@ -83,6 +83,6 @@ para.extraZetaPts            = '3';
 
 scaleForErrorPlot = 0;
 plotMesh = 1;
-loopParameters = {'M','method'};
+loopParameters = {'M','misc.method'};
 
 collectIntoTasks

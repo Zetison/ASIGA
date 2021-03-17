@@ -1,30 +1,34 @@
-function layer = extract_e3Dss_data(varCol)
-M = numel(varCol);
+function layer = extract_e3Dss_data(task)
+M = numel(task.varCol);
 layer = cell(1,M);
 copyFields = {'P_inc','k','applyLoad','r_s','d_vec','isSphericalShell','N_max','omega','BC','a','noRHSs','model','splitExteriorFields'};
 
 for i = 1:numel(copyFields)
-    if isfield(varCol{1},copyFields{i})
-        layer{1}.(copyFields{i}) = varCol{1}.(copyFields{i});
+    if isfield(task.varCol{1},copyFields{i})
+        layer{1}.(copyFields{i}) = task.varCol{1}.(copyFields{i});
+    elseif isfield(task,copyFields{i})
+        layer{1}.(copyFields{i}) = task.(copyFields{i});
+    elseif isfield(task.misc,copyFields{i})
+        layer{1}.(copyFields{i}) = task.misc.(copyFields{i});
     end
 end
 for m = 1:M
-    if isfield(varCol{m},'R_i')
-        layer{m}.R_i = varCol{m}.R_i; % Inner radius of layer
+    if isfield(task.varCol{m},'R_i')
+        layer{m}.R_i = task.varCol{m}.R_i; % Inner radius of layer
     end
-    layer{m}.rho              = varCol{m}.rho;    % Mass density
-    layer{m}.media = varCol{m}.media;
-    switch varCol{m}.media
+    layer{m}.rho   = task.varCol{m}.rho;    % Mass density
+    layer{m}.media = task.varCol{m}.media;
+    switch task.varCol{m}.media
         case 'fluid'
-            layer{m}.c_f          	= varCol{m}.c_f;       % Speed of sound
+            layer{m}.c_f          	= task.varCol{m}.c_f;       % Speed of sound
             layer{m}.calc_p_0       = m == 1;      % Toggle calculation of the far field pattern
             layer{m}.calc_p       	= true;      % Toggle calculation of the scattered pressure
             layer{m}.calc_dp      	= true(1,3); % Toggle calculation of the three components of the gradient of the pressure
             layer{m}.calc_p_inc     = true;      % Toggle calculation of the incident pressure
             layer{m}.calc_dp_inc    = true(1,3); % Toggle calculation of the three components of the gradient of the incident pressure
         case {'solid','viscoelastic'}
-            layer{m}.E            = varCol{m}.E;      % Youngs modulus for solid layers
-            layer{m}.nu           = varCol{m}.nu;        % Poisson ratio for solid layers
+            layer{m}.E            = task.varCol{m}.E;      % Youngs modulus for solid layers
+            layer{m}.nu           = task.varCol{m}.nu;        % Poisson ratio for solid layers
             layer{m}.calc_u       = true(1,3); % Toggle calculation of the three components of the displacement
             layer{m}.calc_du      = true(3,3); % Toggle calculation of the three cartesian derivatives of the three components of the displacement [du_xdx du_xdy du_xdz; 
                                                 %                                                                                                    du_ydx du_ydy du_ydz; 

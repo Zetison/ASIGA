@@ -8,9 +8,9 @@ else
     temp = loopParametersArr{noParms-i+1};
     for j = 1:length(temp)
         if iscell(temp)
-            task.(fieldName) = temp{j};
+            eval(['task.' fieldName '= temp{j};'])
         else
-            task.(fieldName) = temp(j);
+            eval(['task.' fieldName ' = temp(j);'])
         end
             
         [tasks, counter, task] = createTasks(tasks, counter, task, i+1, loopParameters, loopParametersArr);        

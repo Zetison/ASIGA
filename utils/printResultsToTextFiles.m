@@ -29,7 +29,7 @@ end
 loopParametersArr = study.loopParametersArr;
 loopParameters = study.loopParameters;
 noParms = numel(loopParameters);
-model = study.tasks(1).task.model;
+model = study.tasks(1).task.misc.model;
 sizes = zeros(1,length(loopParametersArr));
 for i = 1:length(loopParametersArr)
     sizes(i) = numel(loopParametersArr{i});
@@ -78,7 +78,7 @@ switch options.noXLoopPrms
                                                                                                             'task', study.tasks(i).task});
             end
             if plotResults
-                analyticSolutionExist = study.tasks(i).task.varCol{1}.analyticSolutionExist;
+                analyticSolutionExist = study.tasks(i).task.analyticSolutionExist;
                 plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
                 if plotAnalyticSolution
                     prevGrafs = get(gca, 'Children');
@@ -125,7 +125,7 @@ switch options.noXLoopPrms
         end
         x = zeros(sizes); % x axis data
         y = zeros(sizes); % y axis data 
-        analyticSolutionExist = study.tasks(1).task.varCol{1}.analyticSolutionExist;
+        analyticSolutionExist = study.tasks(1).task.analyticSolutionExist;
         plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
         if plotAnalyticSolution
             y_ref = zeros(sizes); % y axis data
@@ -214,7 +214,7 @@ switch options.noXLoopPrms
 end
 
 if plotResults
-    title(['Results for model ' study.tasks(1).task.model],'interpreter','none')
+    title(['Results for model ' study.tasks(1).task.misc.model],'interpreter','none')
     intrprtrX = 'latex';
     intrprtrY = 'latex';
     switch xname
@@ -334,7 +334,7 @@ if isempty(legendEntries)
     if nargin > 9
         for j = otherInd
             temp2 = loopParameters{j};
-            temp = study.tasks(idxMap(i)).task.(loopParameters{j});
+            temp = eval(['study.tasks(idxMap(i)).task.' loopParameters{j}]);
             if isnumeric(temp) || islogical(temp)
                 temp = num2str(temp);
             end
@@ -350,7 +350,7 @@ if isempty(legendEntries)
         for j = 1:noParms
             temp2 = loopParameters{j};
 
-            temp = study.tasks(i).task.(loopParameters{j});
+            temp = eval(['study.tasks(i).task.' loopParameters{j}]);
             if ~ischar(temp)
                 temp = num2str(temp);
             end
@@ -403,6 +403,8 @@ switch legendEntries{j}
         else
             legendEntry = legendEntries{j};
             legendEntry = insertBefore(legendEntry,'_','\');
+            
+            legendEntry = legendEntry(find(legendEntry == '.',1,'last')+1:end);
             legendName = [legendName legendEntry '=' temp];
         end
 end
@@ -416,6 +418,9 @@ switch legendEntry
     case 'extraGP'
         mathematicalLegend = true;
         legendEntriesMath = 'n_{\mathrm{eq}}^{(1)}';
+    case 'gamma'
+        mathematicalLegend = true;
+        legendEntriesMath = '\gamma';
     case 'extraGPBEM'
         mathematicalLegend = true;
         legendEntriesMath = 'n_{\mathrm{eq}}^{(2)}';

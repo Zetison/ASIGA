@@ -17,7 +17,7 @@ end
 studiesCol = getTasks(studyName);
 
 %% Perform studies
-diary(['output_' datestr(datetime('now')) '.log'])
+diary(['output_' datestr(datetime('now'),'dd-mmm-yyyy_HH-MM-SS') '.log'])
 for i_col = 1:numel(studiesCol)
     t_start_study = tic;
     studies = studiesCol{i_col};
@@ -48,7 +48,7 @@ for i_col = 1:numel(studiesCol)
                 if (tasks(i_task).task.prePlot.plot3Dgeometry || tasks(i_task).task.prePlot.plot2Dgeometry) && tasks(i_task).task.prePlot.abortAfterPlotting
                     return
                 end
-                if tasks(i_task).task.useROM
+                if tasks(i_task).task.rom.useROM
                     basisROMcell = studies(i_study).basisROMcell;
                     omega_ROM = studies(i_study).omega_ROM;
                     noVecsArr = studies(i_study).noVecsArr;
@@ -57,7 +57,7 @@ for i_col = 1:numel(studiesCol)
                 fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studies)) 
             end
             studies(i_study).tasks = tasks;
-            if tasks(i_task).task.useROM
+            if tasks(i_task).task.rom.useROM
                 studies(i_study).loopParameters{end+1} = 'noVecs';
                 studies(i_study).loopParametersArr{end+1} = noVecsArr;
                 studies(i_study).loopParameters{end+1} = 'basisROM';
@@ -72,11 +72,13 @@ for i_col = 1:numel(studiesCol)
     for i_study = 1:numel(studies)  
         study = studies(i_study);
         for i = 1:numel(study.postPlot)
-            figure(i)
-            printResultsToTextFiles(study,study.postPlot(i))
-            if isa(study.postPlot(i).addCommands,'function_handle') && i_study == numel(studies) 
+            if study.postPlot(i).plotResults || study.postPlot(i).printResults
                 figure(i)
-                study.postPlot(i).addCommands(study,i_study,studies)
+                printResultsToTextFiles(study,study.postPlot(i))
+                if isa(study.postPlot(i).addCommands,'function_handle') && i_study == numel(studies) 
+                    figure(i)
+                    study.postPlot(i).addCommands(study,i_study,studies)
+                end
             end
         end
     end 

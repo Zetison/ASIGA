@@ -1,14 +1,12 @@
 function [varCol,task] = extractTaskData(task)
-
+error('depricated')
 formulation = task.formulation;
 scatteringCase = task.scatteringCase;
 method = task.method;
 varCol                  = task.varCol;
 varCol{1}.parm          = task.parm;
 varCol{1}.r_a           = task.r_a;
-varCol{1}.r_PML         = task.r_PML;
-varCol{1}.gamma         = task.gamma;
-varCol{1}.sigmaType     = task.sigmaType;
+varCol{1}.pml           = task.pml;
 varCol{1}.N             = task.N;
 varCol{1}.method        = method;
 varCol{1}.model         = task.model;
@@ -54,6 +52,9 @@ if isfield(task,'P_inc')
 else
     varCol{1}.P_inc = 1;
 end
+if strcmp(method,'PML') && isnan(task.pml.t)
+    error('The PML thickness pml.t must be set')
+end
 if strcmp(task.method,'BEM') && ~task.solveForPtot && ~strcmp(task.BC,'NBC')...
         && ~strcmp(task.applyLoad,'radialPulsation')
     warning('It is reccomended to use solveForPtot = true for BEM')
@@ -85,6 +86,9 @@ if (strcmp(method, 'IE') || strcmp(method, 'IENSG')) && ~(strcmp(formulation, 'P
                              strcmp(formulation, 'WBGC') || ...
                              strcmp(formulation, 'WBGU'))
 	error('The only "formulation"s available for "method = IE" or method = IENSG are PGU, BGU, PGC, BGC, WBGC and WBGU')
+end
+if strcmp(method, 'PML') && ~(strcmp(formulation, 'GSB') || strcmp(formulation, 'STD'))
+	error('The only "formulation"s available for "method = PML" is GSB (STD is only implemented for testing purposes)')
 end
 if strcmp(method,'BA') && strcmp(scatteringCase,'MS')
     error('This is case is not implemented. The best approximation method must be combined with "scatteringCase = BI"')

@@ -1,5 +1,7 @@
 function nurbs = ensure3DNURBS(nurbs)
-
+if ~iscell(nurbs)
+    nurbs = {nurbs};
+end
 for i = 1:numel(nurbs)
     coeffs = nurbs{i}.coeffs;
     d = nurbs{i}.d;

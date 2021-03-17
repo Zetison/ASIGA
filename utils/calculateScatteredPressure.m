@@ -5,7 +5,7 @@ d = varCol{1}.patches{1}.nurbs.d;
 U = varCol{1}.U;
 farFieldNormalPressFromSolid = varCol{1}.farFieldNormalPressFromSolid;
 if numel(varCol) > 1 && (d_p == 2 || farFieldNormalPressFromSolid)
-    [nodesSolid, ~, elementSolid] = meshBoundary(varCol{2},1);
+    [nodesSolid, ~, elementSolid] = meshBoundary(varCol{2},'Gamma');
     noDofs = varCol{2}.noDofs;
     Ux = varCol{2}.U(1:d:noDofs,:);
     Uy = varCol{2}.U(2:d:noDofs,:);
@@ -25,7 +25,7 @@ noDofs = varCol{1}.noDofs;
 rho = varCol{1}.rho;
 if farFieldNormalPressFromSolid && d_p == 3
     degree = varCol{1}.degree(1:2); % assume p_xi is equal in all patches
-    [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(varCol{1},0);
+    [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(varCol{1},'Gamma');
 else
     degree = varCol{1}.degree; % assume p_xi is equal in all patches
     index = varCol{1}.index;
@@ -47,14 +47,7 @@ dp_inc = varCol{1}.dp_inc_;
 
 Phi_k = varCol{1}.Phi_k;
 if d_p == 3 && ~farFieldNormalPressFromSolid
-    surfaceElements = [];
-    for e = 1:noElems
-        idZeta = index(e,3);
-        Zeta_e = elRange{3}(idZeta,:); % [zeta_k,zeta_k+1]                    
-        if Zeta_e(1) == 0
-            surfaceElements = [surfaceElements e];
-        end
-    end
+    error('Depricated')
 else
     surfaceElements = 1:noElems;
 end

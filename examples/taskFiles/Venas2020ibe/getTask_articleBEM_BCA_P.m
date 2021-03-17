@@ -1,7 +1,7 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'BCA_P'; % BeTSSi submarine
-coreMethod = 'IGA';
+misc.model = 'BCA_P'; % BeTSSi submarine
+misc.coreMethod = 'IGA';
     
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
@@ -12,12 +12,12 @@ f = [1e2 1e3];             % Frequency
 f = 1e2;             % Frequency
 plotResultsInParaview = 1;
 plotMesh              = 1;	% Create additional Paraview files to visualize IGA mesh
-calculateSurfaceError = true;
+err.calculateSurfaceError = true;
 calculateFarFieldPattern = true;
 plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dynamic result
 computeCondNumber = 0;
-applyLoad = 'pointPulsation';
-method = {'BEM'};
+misc.applyLoad = 'pointPulsation';
+misc.method = {'BEM'};
 formulation = {'CCBIE'};
 M = [1,2];
 % M = 1;
@@ -29,7 +29,7 @@ degree = [2,5];
 agpBEM = 0.6;
 % degree = 2;
 solveForPtot = false;
-loopParameters = {'method','degree','formulation','M','f'};
+loopParameters = {'misc.method','degree','formulation','M','f'};
 % quadMethodBEM = 'Adaptive2';
 % collectIntoTasks
 
@@ -42,7 +42,7 @@ M = 1;
 f = 1e3; 
 % collectIntoTasks
 
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 f = 1e2;             % Frequency
 collectIntoTasks

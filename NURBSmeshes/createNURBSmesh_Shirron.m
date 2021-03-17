@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_Shirron(varCol, M, degree)
+function task = createNURBSmesh_Shirron(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -111,3 +114,4 @@ varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
 varCol{1}.Upsilon = Upsilon;
+task.varCol = varCol;

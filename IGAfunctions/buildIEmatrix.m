@@ -50,7 +50,7 @@ if varCol.boundaryMethod
     nodes = 1:noSurfDofs;
     noDofs_new = noSurfDofs*N;
 else
-    [nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(varCol,1);
+    [nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(varCol,'Gamma_a');
     noDofs_new = noDofs + noSurfDofs*(N-1);
 end
 

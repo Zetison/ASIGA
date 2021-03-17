@@ -1,5 +1,7 @@
-function varCol = createNURBSmesh_CE(varCol, M, degree)
-
+function task = createNURBSmesh_CE(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 R = varCol{1}.R;
 parm = varCol{1}.parm;
 if varCol{1}.boundaryMethod
@@ -26,3 +28,4 @@ end
 varCol{1}.nurbs = fluid;
 varCol{1}.L_gamma = 2*R;
 
+task.varCol = varCol;

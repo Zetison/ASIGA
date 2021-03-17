@@ -1,106 +1,115 @@
-function [varCol,FF,A0,A1,A2,A4] = collectMatrices(varCol,task)
-
-noDomains = numel(varCol);
+function [task,FF,A0,A1,A2,A4] = collectMatrices(task)
+noDomains = numel(task.varCol);
 Aindices = cell(noDomains,2);
 noCols_tot = 0;
 noRows_tot = 0;
-if isfield(varCol{1},'A_K') || isfield(varCol{1},'A_M') || strcmp(task.method,'IENSG')
+if isfield(task.varCol{1},'A_K') || isfield(task.varCol{1},'A_M') || strcmp(task.method,'IENSG')
     allDofsToRemove = [];
     for i = noDomains:-1:1
-        if isfield(varCol{i},'A_K')
-            noRows = size(varCol{i}.A_K,1);
-            noCols = size(varCol{i}.A_K,2);
-        elseif isfield(varCol{i},'A_M')
-            noRows = size(varCol{i}.A_M,1);
-            noCols = size(varCol{i}.A_M,2);
+        if isfield(task.varCol{i},'A_K')
+            noRows = size(task.varCol{i}.A_K,1);
+            noCols = size(task.varCol{i}.A_K,2);
+        elseif isfield(task.varCol{i},'A_M')
+            noRows = size(task.varCol{i}.A_M,1);
+            noCols = size(task.varCol{i}.A_M,2);
         elseif strcmp(task.method,'IENSG')
-            noRows = varCol{i}.noDofs;
-            noCols = varCol{i}.noDofs;
+            noRows = task.varCol{i}.noDofs;
+            noCols = task.varCol{i}.noDofs;
         else
             error('No matrix found for this domain')
         end
         Aindices{i,1} = noRows_tot+(1:noRows);
         Aindices{i,2} = noCols_tot+(1:noCols);
-        allDofsToRemove = [allDofsToRemove (varCol{i}.dofsToRemove+noCols_tot)];
+        allDofsToRemove = [allDofsToRemove (task.varCol{i}.dofsToRemove+noCols_tot)];
         noRows_tot = noRows_tot + noRows;
         noCols_tot = noCols_tot + noCols;
     end
-    if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
-        AindicesInf = noCols_tot - varCol{1}.noDofs+(1:varCol{1}.noDofs_new);
-        noCols_tot = noCols_tot - varCol{1}.noDofs + varCol{1}.noDofs_new;
-        noRows_tot = noRows_tot - varCol{1}.noDofs + varCol{1}.noDofs_new;
+    if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
+        AindicesInf = noCols_tot - task.varCol{1}.noDofs+(1:task.varCol{1}.noDofs_new);
+        noCols_tot = noCols_tot - task.varCol{1}.noDofs + task.varCol{1}.noDofs_new;
+        noRows_tot = noRows_tot - task.varCol{1}.noDofs + task.varCol{1}.noDofs_new;
     end
-    varCol{1}.noCols_tot = noCols_tot;
-    varCol{1}.noRows_tot = noRows_tot;
-    varCol{1}.Aindices = Aindices;
-    varCol{1}.allDofsToRemove = allDofsToRemove;
+    task.varCol{1}.noCols_tot = noCols_tot;
+    task.varCol{1}.noRows_tot = noRows_tot;
+    task.varCol{1}.Aindices = Aindices;
+    task.varCol{1}.allDofsToRemove = allDofsToRemove;
 else
-    noCols_tot = varCol{1}.noCols_tot;
-    noRows_tot = varCol{1}.noRows_tot;
-    Aindices = varCol{1}.Aindices;
-    allDofsToRemove = varCol{1}.allDofsToRemove;
+    noCols_tot = task.varCol{1}.noCols_tot;
+    noRows_tot = task.varCol{1}.noRows_tot;
+    Aindices = task.varCol{1}.Aindices;
+    allDofsToRemove = task.varCol{1}.allDofsToRemove;
 end
 % Collect all matrices
 A0 = sparse(noRows_tot,noCols_tot);
 A1 = sparse(noRows_tot,noCols_tot);
 A2 = sparse(noRows_tot,noCols_tot);
 A4 = sparse(noRows_tot,noCols_tot);
-FF = zeros(noRows_tot,varCol{1}.noRHSs);
+FF = zeros(noRows_tot,size(task.varCol{1}.FF,2));
 for i = 1:noDomains
-    switch varCol{i}.media
+    if isfield(task.varCol{i},'rho')
+        rho = task.varCol{i}.rho;
+    else
+        rho = 1;
+    end
+    switch task.varCol{i}.media
         case 'fluid'
-            eqScale = 1/varCol{i}.rho;
-            if strcmp(task.method,'BA')
+            if isfield(task.varCol{i},'c_f')
+                c_f = task.varCol{i}.c_f;
+            else
+                c_f = 1;
+            end
+            eqScale = 1/rho;
+            if strcmp(task.misc.method,'BA')
                 massMatrixScale = eqScale;
             else
-                massMatrixScale = -eqScale/varCol{i}.c_f^2;
+                massMatrixScale = -eqScale/c_f^2;
             end
         case 'solid'
             eqScale = 1;
-            if strcmp(task.method,'BA')
+            if strcmp(task.misc.method,'BA')
                 massMatrixScale = eqScale;
             else
-                massMatrixScale = -eqScale*varCol{i}.rho;
+                massMatrixScale = -eqScale*rho;
             end
     end
-    if isfield(varCol{i},'A_K')
-        A0(Aindices{i,1},Aindices{i,2}) = eqScale*varCol{i}.A_K; 
+    if isfield(task.varCol{i},'A_K')
+        A0(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
     end
     
-    if isfield(varCol{i},'A_M')
-        A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*varCol{i}.A_M; 
+    if isfield(task.varCol{i},'A_M')
+        A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
     end
-    if isfield(varCol{i},'A_C') && i > 1
-        Cindices1 = Aindices{i,1}(end)+(1:size(varCol{i}.A_C,1));
-        Cindices2 = Aindices{i,2}(1)-1+(1:size(varCol{i}.A_C,2));
-        switch varCol{i-1}.media
+    if isfield(task.varCol{i},'A_C') && i > 1
+        Cindices1 = Aindices{i,1}(end)+(1:size(task.varCol{i}.A_C,1));
+        Cindices2 = Aindices{i,2}(1)-1+(1:size(task.varCol{i}.A_C,2));
+        switch task.varCol{i-1}.media
             case 'fluid'
-                A2(Cindices1,Cindices2) = A2(Cindices1,Cindices2) + varCol{i}.A_C;
+                A2(Cindices1,Cindices2) = A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
             case 'solid'
-                A0(Cindices1,Cindices2) = A0(Cindices1,Cindices2) + varCol{i}.A_C;
+                A0(Cindices1,Cindices2) = A0(Cindices1,Cindices2) + task.varCol{i}.A_C;
         end
-        switch varCol{i}.media
+        switch task.varCol{i}.media
             case 'fluid'
-                A2(Cindices2,Cindices1) = A2(Cindices2,Cindices1) + varCol{i}.A_C.'; 
+                A2(Cindices2,Cindices1) = A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
             case 'solid'
-                A0(Cindices2,Cindices1) = A0(Cindices2,Cindices1) + varCol{i}.A_C.'; 
+                A0(Cindices2,Cindices1) = A0(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
         end
     end
-    if isfield(varCol{i},'FF')
-        FF(Aindices{i,1},:) = eqScale*varCol{i}.FF;
+    if isfield(task.varCol{i},'FF')
+        FF(Aindices{i,1},:) = eqScale*task.varCol{i}.FF;
     end
 end
-if strcmp(task.method,'IE') || strcmp(task.method,'IENSG')
-    if isfield(varCol{1},'Ainf')
-    	A0(AindicesInf,AindicesInf) = A0(AindicesInf,AindicesInf) + varCol{1}.Ainf/varCol{1}.rho; 
-        if task.useROM
-            A1(AindicesInf,AindicesInf) = A1(AindicesInf,AindicesInf) + varCol{1}.Ainf1/varCol{1}.rho/varCol{1}.c_f; 
-            A2(AindicesInf,AindicesInf) = A2(AindicesInf,AindicesInf) + varCol{1}.Ainf2/varCol{1}.rho/varCol{1}.c_f^2; 
+if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
+    if isfield(task.varCol{1},'Ainf')
+    	A0(AindicesInf,AindicesInf) = A0(AindicesInf,AindicesInf) + task.varCol{1}.Ainf/task.varCol{1}.rho; 
+        if task.rom.useROM
+            A1(AindicesInf,AindicesInf) = A1(AindicesInf,AindicesInf) + task.varCol{1}.Ainf1/task.varCol{1}.rho/task.varCol{1}.c_f; 
+            A2(AindicesInf,AindicesInf) = A2(AindicesInf,AindicesInf) + task.varCol{1}.Ainf2/task.varCol{1}.rho/task.varCol{1}.c_f^2; 
         end  
     end
 end
 
-if ~(strcmp(task.method,'BEM') && strcmp(task.formulation(1),'C'))
+if ~(strcmp(task.misc.method,'BEM') && strcmp(task.misc.formulation(1),'C'))
     A0(allDofsToRemove,:) = [];
     A1(allDofsToRemove,:) = [];
     A2(allDofsToRemove,:) = [];

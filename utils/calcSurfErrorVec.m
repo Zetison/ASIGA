@@ -1,67 +1,55 @@
-function relError = calcSurfErrorVec(varCol, LpOrder)
+function relError = calcSurfErrorVec(task, i_domain)
 
-degree = varCol.degree;
+LpOrder = task.err.LpOrder;
+degree = task.varCol{i_domain}.degree(1:2);
+elRange = task.varCol{i_domain}.elRange;
+weights = task.varCol{i_domain}.weights;
+controlPts = task.varCol{i_domain}.controlPts;
+knotVecs = task.varCol{i_domain}.knotVecs;
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
+U = task.varCol{i_domain}.U;
 
-U = varCol.U;
+[zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(task.varCol{i_domain},'Gamma');
 
-% Find elements on the inner surface for evaluation of
-% backscattered pressure in far field
-surfaceElements = [];
-for e = 1:noElems
-    idZeta = index(e,3);
-    Zeta_e = elRange{3}(idZeta,:); % [zeta_k,zeta_k+1]                    
-    if Zeta_e(1) == 0
-        surfaceElements = [surfaceElements e];
-    end
-end
-
-extraGP = varCol.extraGP(1:2);
+extraGP = task.misc.extraGP(1:2);
 [Q, W] = gaussTensorQuad(degree(1:2)+3+extraGP);
 
-p_h = complex(zeros(size(W,1),length(surfaceElements),size(U,2)));
-fact = zeros(size(W,1),length(surfaceElements));
-points = zeros(size(W,1), length(surfaceElements),3);
+p_h = complex(zeros(size(W,1),noElems,size(U,2)));
+fact = zeros(size(W,1),noElems);
+points = zeros(size(W,1), noElems,3);
 
-% for i = 1:length(surfaceElements)
-parfor i = 1:length(surfaceElements)
-    e = surfaceElements(i);
+% for e = 1:noElems
+parfor e = 1:noElems
     patch = pIndex(e);
-    knots = knotVecs{patch};
+    knots = knotVecs{patch}(1:2);
     Xi_e = zeros(2,2);
-    for ii = 1:2
-        Xi_e(ii,:) = elRange{ii}(index(e,ii),:);
+    for i = 1:2
+        Xi_e(i,:) = elRange{i}(index(e,i),:);
     end
 
-    sctr = element(e,:);
+    sctr = zeta0Nodes(element(e,:));
+    
     pts = controlPts(sctr,:);
-    wgts = weights(element2(e,:),:);
+    wgts = weights(zeta0Nodes(element2(e,:)),:); % New
+    
     U_sctr = U(sctr,:);
 
     J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
-
-    xi = [parent2ParametricSpace(Xi_e, Q), zeros(size(Q,1),1)];
+    
+    xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     R = NURBSbasis(I, xi, degree, knots, wgts);
+    
     J_1 = getJacobian(R,pts,2);
     
-    p_h(:,i,:) = R{1}*U_sctr;
-    fact(:,i) = J_1 * J_2 .* W;
-    points(:,i,:) = R{1}*pts;
+    p_h(:,e,:) = R{1}*U_sctr;
+    fact(:,e) = J_1 * J_2 .* W;
+    points(:,e,:) = R{1}*pts;
 end
 p_h = reshape(p_h, size(p_h,1)*size(p_h,2),size(U,2));
 fact = reshape(fact, size(fact,1)*size(fact,2),1);
 points = reshape(points, size(points,1)*size(points,2),3);
-analyticFunctions = varCol.analyticFunctions({points});
+analyticFunctions = task.analyticFunctions({points});
 p = analyticFunctions{1}.p;
 
 if isinf(LpOrder)
@@ -73,5 +61,3 @@ else
 end
 
 relError = 100*Error./normalization;
-
-

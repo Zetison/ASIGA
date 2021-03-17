@@ -1,12 +1,12 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'S1';
+misc.model = 'S1';
 
 parm = 1;
-method = {'BEM'};
+misc.method = {'BEM'};
 BC = 'SHBC';
-% coreMethod = {'IGA'};
-coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
+% misc.coreMethod = {'IGA'};
+misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
 formulation = 'CCBIE';
 % formulation = 'CRCBIE1';
 c_f = 1500;
@@ -22,11 +22,11 @@ solveForPtot = true;
 
 degree = 2;
 calculateFarFieldPattern = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
 solveForPtot = true;
-loopParameters = {'M','method','degree','coreMethod','extraGPBEM','extraGP'};
+loopParameters = {'M','misc.method','degree','misc.coreMethod','extraGPBEM','extraGP'};
 % agpBEM = 2;
 colBEM_C0 = 0;
 % colBEM_C0 = 1/2;
@@ -35,12 +35,12 @@ quadMethodBEM = 'Adaptive';
 
 collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-coreMethod = {'IGA'};
+misc.coreMethod = {'IGA'};
 degree = 3:4;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-coreMethod = {'linear_FEM'};
+misc.coreMethod = {'linear_FEM'};
 degree = 1;
 M = [M, M(end)+1];
 
@@ -48,19 +48,19 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 formulation = 'SL2E';
-method = {'BA'};
-coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
+misc.method = {'BA'};
+misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
 degree = 2;
 M = M(1:end-1);
 
 collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-coreMethod = {'IGA'};
+misc.coreMethod = {'IGA'};
 degree = 3:4;
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-coreMethod = {'linear_FEM'};
+misc.coreMethod = {'linear_FEM'};
 degree = 1;
 M = [M, M(end)+1];
 

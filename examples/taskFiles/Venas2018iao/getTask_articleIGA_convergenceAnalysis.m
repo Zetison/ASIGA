@@ -2,23 +2,23 @@
 % This study correspond to Figure 9 and 10 in Venas2018iao
 % Venas2018iao is available at https://doi.org/10.1016/j.cma.2018.02.015 (open access version at http://hdl.handle.net/11250/2493754)
 
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-model = 'IL';
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.model = 'IL';
 
 varCol = setIhlenburgParameters(3);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
 parm = 1;
-% method = 'BA';
-% method = {'IENSG'};
-% method = {'BEM'};
+% misc.method = 'BA';
+% misc.method = {'IENSG'};
+% misc.method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
 % for BC = {'SHBC', 'SSBC','NNBC'}
 M_max = 5; % 7
 for BC = {'SHBC'}
-    method = {'IE'};
+    misc.method = {'IE'};
 
-%     coreMethod = {'IGA'};
-    coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
+%     misc.coreMethod = {'IGA'};
+    misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
     formulation = {'BGU'};
     c_f = 1524;
     k = 1;
@@ -38,39 +38,39 @@ for BC = {'SHBC'}
     plotResultsInParaview = 0;
     calculateFarFieldPattern = 0;
     calculateVolumeError = 1;
-    calculateSurfaceError = 1;
+    err.calculateSurfaceError = 1;
     prePlot.plot2Dgeometry = 0;
     prePlot.plot3Dgeometry = 0;
-    loopParameters = {'M','degree','method','coreMethod','formulation','BC'};
+    loopParameters = {'M','degree','misc.method','misc.coreMethod','formulation','BC'};
 
     N = 6;
     
     collectIntoTasks
     
-%     method = {'BA'};
+%     misc.method = {'BA'};
 %     formulation = {'VL2E'};
 % %     collectIntoTasks
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    method = 'IE';
-    coreMethod = 'IGA';
+    misc.method = 'IE';
+    misc.coreMethod = 'IGA';
     formulation = 'BGU';
     degree = 3:4;
     collectIntoTasks
     
-%     method = {'BA'};
+%     misc.method = {'BA'};
 %     formulation = {'VL2E'};
 % %     collectIntoTasks    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    method = 'IE';
+    misc.method = 'IE';
     formulation = 'BGU';
-    coreMethod = 'linear_FEM';
+    misc.coreMethod = 'linear_FEM';
     degree = 1;
 
     collectIntoTasks
     
-%     method = 'BA';
+%     misc.method = 'BA';
 %     formulation = 'VL2E';
 % %     collectIntoTasks    
 end

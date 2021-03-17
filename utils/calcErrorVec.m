@@ -1,35 +1,35 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(varCol)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(task)
 
-noDomains = length(varCol);
+noDomains = length(task.varCol);
 nodes = cell(noDomains,1);
 factors = cell(noDomains,1);
 u_hs = cell(noDomains,1);
 du_hs = cell(noDomains,1);
 for i = 1:noDomains
-    U = varCol{i}.U;
-    %% Extract all needed data from varCol
-    index = varCol{i}.index;
-    noElems = varCol{i}.noElems;
-    elRange = varCol{i}.elRange;
-    element = varCol{i}.element;
-    element2 = varCol{i}.element2;
-    weights = varCol{i}.weights;
-    controlPts = varCol{i}.controlPts;
-    knotVecs = varCol{i}.knotVecs;
-    pIndex = varCol{i}.pIndex;
-    d_p = varCol{i}.patches{1}.nurbs.d_p;
+    U = task.varCol{i}.U;
+    %% Extract all needed data from task.varCol
+    index = task.varCol{i}.index;
+    noElems = task.varCol{i}.noElems;
+    elRange = task.varCol{i}.elRange;
+    element = task.varCol{i}.element;
+    element2 = task.varCol{i}.element2;
+    weights = task.varCol{i}.weights;
+    controlPts = task.varCol{i}.controlPts;
+    knotVecs = task.varCol{i}.knotVecs;
+    pIndex = task.varCol{i}.pIndex;
+    d_p = task.varCol{i}.patches{1}.nurbs.d_p;
 
-    degree = varCol{i}.degree; % assume degree is equal in all patches
+    degree = task.varCol{i}.degree; % assume degree is equal in all patches
 
 
-    noCtrlPts = varCol{i}.noCtrlPts;
+    noCtrlPts = task.varCol{i}.noCtrlPts;
 
     %% Preallocation and initiallizations
     if false
         noQuadPts = 6;
         [W,Q] = gaussianQuadNURBS(noQuadPts,noQuadPts,noQuadPts); 
     else
-        extraGP = varCol{i}.extraGP;
+        extraGP = task.varCol{i}.extraGP;
         [Q, W] = gaussTensorQuad(degree+3+extraGP);
     end
     if mod(i,2) == 0
@@ -118,9 +118,9 @@ for i = 1:noDomains
     nodes{i} = reshape(points, size(points,1)*size(points,2),3);
 end
 
-layer = varCol{1}.analyticFunctions(nodes);
+layer = task.analyticFunctions(nodes);
 
-omega = varCol{1}.omega;
+omega = task.misc.omega;
 
 H1Error = 0;
 H1sError = 0;
@@ -139,7 +139,7 @@ for i = 1:noDomains
                   layer{i}.du_zdx,layer{i}.du_zdy,layer{i}.du_zdz];
             sigma = [layer{i}.sigma_xx,layer{i}.sigma_yy,layer{i}.sigma_zz,layer{i}.sigma_yz,layer{i}.sigma_xz,layer{i}.sigma_xy];
 
-            C = varCol{i}.C;
+            C = task.varCol{i}.C;
             strain_vec = (C\sigma.').';
             strain_h = [du_hs{i}(:,1),du_hs{i}(:,5),du_hs{i}(:,9),du_hs{i}(:,6)+du_hs{i}(:,8),du_hs{i}(:,7)+du_hs{i}(:,3),du_hs{i}(:,2)+du_hs{i}(:,4)];
             strain_e = strain_vec-strain_h;
@@ -160,8 +160,8 @@ for i = 1:noDomains
             normalizationH1 = normalizationH1 + sum((u2 + du2).*factors{i});
             normalizationH1s = normalizationH1s + sum(du2.*factors{i});
 
-            EnergyError = EnergyError + sum((eCe + varCol{i}.rho*omega^2*u_e2).*factors{i});
-            normalizationEnergy = normalizationEnergy + sum((uCu + varCol{i}.rho*omega^2*u2).*factors{i});
+            EnergyError = EnergyError + sum((eCe + task.varCol{i}.rho*omega^2*u_e2).*factors{i});
+            normalizationEnergy = normalizationEnergy + sum((uCu + task.varCol{i}.rho*omega^2*u2).*factors{i});
 
             L2Error = L2Error + sum(u_e2.*factors{i});
             normalizationL2 = normalizationL2 + sum(u2.*factors{i});
@@ -181,8 +181,8 @@ for i = 1:noDomains
             normalizationH1 = normalizationH1 + sum((p2 + dp2).*factors{i});
             normalizationH1s = normalizationH1s + sum(dp2.*factors{i});
 
-            EnergyError = EnergyError + 1/(varCol{i}.rho*omega^2)*sum((dp_e2 + varCol{i}.k^2*p_e2).*factors{i});
-            normalizationEnergy = normalizationEnergy + 1/(varCol{i}.rho*omega^2)*sum((dp2 + varCol{i}.k^2*p2).*factors{i});
+            EnergyError = EnergyError + 1/(task.varCol{i}.rho*omega^2)*sum((dp_e2 + task.varCol{i}.k^2*p_e2).*factors{i});
+            normalizationEnergy = normalizationEnergy + 1/(task.varCol{i}.rho*omega^2)*sum((dp2 + task.varCol{i}.k^2*p2).*factors{i});
 
             L2Error = L2Error + sum(p_e2.*factors{i});
             normalizationL2 = normalizationL2 + sum(p2.*factors{i});

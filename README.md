@@ -71,6 +71,9 @@ The following methods has been implemented (with available formulations)
 	- The Petrov--Galerkin Conjugated formulation (formulation = 'PGC')
 	- The Bubnov--Galerkin Unconjugated formulation (formulation = 'BGU')
 	- The Petrov--Galerkin Unconjugated formulation (formulation = 'PGU')
+- IGA using the PML method after Bérenger (method = 'PML')
+	- General spline based (formulation = 'GSB')
+	- Standard formulation (formulation = 'STD') (this is only implemented for spherical PML for testing purposes)
 - IGA using absorbing boundary conditions (method = 'ABC')
 	- Bayliss-Gunzburger-Turkel-operators (formulation = 'BGT')
 - IGA using best approximation (method = 'BA'). Only available when analytic solution exist
@@ -232,6 +235,11 @@ internalPts      	= zeros(1,3);   % Internal points for the CHIEF method (Combin
 r_a   	= NaN;    % Radial value for the artificial boundary
 N     	= 3;        % Number of basis function in the radial direction for the IEM
 IEbasis	= 'Chebyshev';
+
+%% Settings for the PML (perfectly matched layers)
+gamma = -log10(1e9*eps); % choosing gamma = -log10(eps) yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
+sigmaType = 2; % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = gamma*xi^2
+t_PML = NaN; % radius to the PML layer for spherical coordinates
 
 %% Settings for the MFS (method of fundamental solution)
 delta = 0.1;    % Distance from the boundary to the internal source points

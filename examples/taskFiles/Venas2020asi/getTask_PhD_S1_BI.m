@@ -1,8 +1,8 @@
-scatteringCase = 'BI';
+misc.scatteringCase = 'BI';
 
-model = 'S1';  % Spherical shell
+misc.model = 'S1';  % Spherical shell
 
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 varCol = setS1Parameters('double',1);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
 
@@ -22,7 +22,7 @@ postPlot(1).lineStyle    	= '-';
 postPlot(1).xScale       	= 1;
 postPlot(1).yScale       	= 1;
 postPlot(1).xLoopName     	= 'N';
-postPlot(1).legendEntries 	= {'coreMethod','f'};
+postPlot(1).legendEntries 	= {'misc.coreMethod','f'};
 postPlot(1).subFolderName 	= NaN;
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
@@ -40,17 +40,17 @@ postPlot(3).yname = 'error_p';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
-method = {'RT'};
+misc.method = {'RT'};
 formulation = '';
 M = 3;
 prePlot.plot3Dgeometry = 0;
 degree = 2;
-calculateSurfaceError = 0;
+err.err.calculateSurfaceError = 0;
 computeCondNumber = false;
 plotFarField = 1;
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 parm = 1;
 N = 3:4;
 
-loopParameters = {'N','M','method'};
+loopParameters = {'N','M','misc.method'};
 collectIntoTasks

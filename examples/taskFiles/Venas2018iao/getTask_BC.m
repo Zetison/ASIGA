@@ -1,10 +1,10 @@
 
 
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'BC'; % BeTSSi submarine
-coreMethod = 'IGA';
-% coreMethod = {'IGA'};
+misc.model = 'BC'; % BeTSSi submarine
+misc.coreMethod = 'IGA';
+% misc.coreMethod = {'IGA'};
 
 alpha_s = 240*pi/180;
 beta_s = 0*pi/180;        
@@ -14,7 +14,7 @@ prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
 f = [5e2, 1e3]; %[1e2 5e2 1e3];             % Frequency
 % f = 5e2; %[1e2 5e2 1e3];             % Frequency
 alpha = (0:0.05:360)*pi/180;
-method = 'IE';
+misc.method = 'IE';
 formulation = 'BGU';
 IEbasis = 'Chebyshev';
 M = 1:2;
@@ -29,13 +29,13 @@ loopParameters = {'M','degreeElev','f'};
 
 % collectIntoTasks
 
-coreMethod = 'hp_FEM';
+misc.coreMethod = 'hp_FEM';
 degreeElev = 0;
 loopParameters = {'M','f'};
 
 % collectIntoTasks
 
-coreMethod = 'linear_FEM';
+misc.coreMethod = 'linear_FEM';
 M = 1:3;
 % collectIntoTasks
 % N = 4;
@@ -43,7 +43,7 @@ M = 1:3;
 % M = 1;
 % collectIntoTasks
 
-% method = 'IENSG';
+% misc.method = 'IENSG';
 % formulation = 'PGU';
 % M = 1:4;
 % degreeElev = 0:1;
@@ -51,8 +51,8 @@ M = 1:3;
 % BC = 'SHBC';
 % collectIntoTasks
 
-method = 'BEM';
-coreMethod = 'IGA';
+misc.method = 'BEM';
+misc.coreMethod = 'IGA';
 formulation = 'CCBIE';
 M = 2:3;
 degreeElev = 0;
@@ -62,13 +62,13 @@ loopParameters = {'M','f'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MFS simulation
-% method = {'MFS'};
+% misc.method = {'MFS'};
 % f = 5e2;
 % M = 1:2;
 % degreeElev = 0;
-% calculateSurfaceError = 0;
+% err.calculateSurfaceError = 0;
 % plotResultsInParaview = 0;
 % computeCondNumber = false;
-% loopParameters = {'M','method'};
+% loopParameters = {'M','misc.method'};
 % collectIntoTasks
 

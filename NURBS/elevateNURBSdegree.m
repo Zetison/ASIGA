@@ -35,7 +35,7 @@ for patch = 1:numel(nurbsPatches)
     end
     coeffs = subasgnArr(coeffs,slc(coeffs,1:d)./repmat(slc(coeffs,d+1),[d,ones(1,d_p)]),1:d);
 
-    nurbsPatches(patch) = createNURBSobject(coeffs,knots);
+    nurbsPatches(patch) = createNURBSobject(coeffs,knots,nurbs.major,nurbs.minor,nurbs.color,nurbs.alpha);
 end
 
 

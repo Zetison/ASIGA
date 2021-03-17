@@ -254,7 +254,7 @@ for i_b = 1:numel(basisROMcell)
                 varCol{1}.omega = omega_ROM;
                 varCol{1}.k = omega_ROM/varCol{1}.c_f;
                 varCol{1}.noRHSs = numel(omega_ROM);
-                varCol = getAnalyticSolutions(varCol);
+                task = getAnalyticSolutions(task);
                 if noDomains > 1
                     varCol{2}.p_inc_ = varCol{1}.p_inc_;
                     varCol{2}.dp_inc_ = varCol{1}.dp_inc_;
@@ -262,7 +262,7 @@ for i_b = 1:numel(basisROMcell)
                 end
                 for i = 1:min(noDomains,2)
                     varCol{i}.useROM = false;
-                    varCol{i} = applyNeumannCondition(varCol{i},i==2);
+                    varCol{i} = applyNeumannCondition(varCol{i});
                     varCol{i}.useROM = true;
                 end
                 [varCol,FF] = collectMatrices(varCol,task);
@@ -302,7 +302,7 @@ for i_b = 1:numel(basisROMcell)
             t_startROM = tic;
             
             if task.calculateSurfaceError && ~task.calculateVolumeError
-                varCol = getAnalyticSolutions(varCol);
+                task = getAnalyticSolutions(task);
                 varCol = postProcessSolution(varCol,UU);
                 [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, 1, stringShift);
             else
@@ -318,7 +318,7 @@ for i_b = 1:numel(basisROMcell)
                     k = omega_ROM(i_f)/varCol_temp{1}.c_f;
                     varCol_temp{1}.k = k;
                     varCol_temp{1}.f = omega_ROM(i_f)/(2*pi);
-                    varCol_temp = getAnalyticSolutions(varCol_temp);
+                    task = getAnalyticSolutions(task);
                     varCol_temp = postProcessSolution(varCol_temp,UU(:,i_f));
                     [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] ...
                                     = calculateErrors(task, varCol_temp, 1, stringShift);
@@ -352,7 +352,7 @@ for i_b = 1:numel(basisROMcell)
             varCol{1}.lambda = 2*pi./varCol{1}.k;
             varCol{1}.f = omega_ROM/(2*pi);
             varCol = postProcessSolution(varCol,UU);
-            varCol = getAnalyticSolutions(varCol);
+            task = getAnalyticSolutions(task);
             task = calculateTS(varCol,task,runTasksInParallel,stringShift);
             fieldCell = {'p','p_Re','p_Im','abs_p','TS'};
             if varCol{1}.analyticSolutionExist

@@ -1,10 +1,10 @@
-scatteringCase = 'MS';
+misc.scatteringCase = 'MS';
 
-model = 'S1';  % Spherical shell
+misc.model = 'S1';  % Spherical shell
 
-coreMethod = 'IGA';
-% coreMethod = {'IGA'};
-method = {'BEM'};
+misc.coreMethod = 'IGA';
+% misc.coreMethod = {'IGA'};
+misc.method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'CCBIEC'};
 % formulation = {'CCBIE'};
 solveForPtot = true;
@@ -63,19 +63,19 @@ beta = 30*pi/180;
 degree = 4;
 M = 4;
 parm = 2;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 
 runTasksInParallel = 1;
 solveForPtot = true;
-loopParameters = {'f','method','formulation'};
+loopParameters = {'f','misc.method','formulation'};
 
 collectIntoTasks
 
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks
 
-method = {'IE'};
+misc.method = {'IE'};
 formulation = {'BGU'};
 N = 5;
 solveForPtot = false;

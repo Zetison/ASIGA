@@ -1,24 +1,62 @@
-function task = calculateTS(varCol,task,runTasksInParallel,stringShift)
-plotFarField = task.plotFarField;
+function task = calculateTS(task,runTasksInParallel,stringShift)
 if ~runTasksInParallel
     fprintf(['\n%-' num2str(stringShift) 's'], 'Computing far-field pattern ... ')
 end
 
 tic
-v = getFarFieldPoints(task.alpha,task.beta,task.r);
+v = getFarFieldPoints(task.ffp.alpha,task.ffp.beta,task.ffp.r);
 
-switch task.method
+switch task.misc.method
     case {'IE','ABC','IENSG','BA','BEM','PML'}
-        p_h = calculateScatteredPressure(varCol, v, 0, plotFarField);
+        if task.ffp.splineBasedNFPcalc
+            [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(task.varCol{1},'Gamma');
+            knotVecs = task.varCol{1}.knotVecs;
+            elRange = task.varCol{1}.elRange;
+            controlPts = task.varCol{1}.controlPts;
+            weights = task.varCol{1}.weights;
+            U = task.varCol{1}.U;
+            noElems = noElems/3;
+            nptsPerEl = round(3000/noElems);
+            degree = task.varCol{1}.degree(1:2);
+            p_h = complex(zeros(nptsPerEl,noElems));
+            v = complex(zeros(nptsPerEl,noElems,3));
+    %         for e1 = 1:noElems
+            parfor e1 = 1:noElems
+                e = 3*(e1-1)+1;
+                patch = pIndex(e);
+                knots = knotVecs{patch};
+
+                Xi_e = zeros(2,2);
+                for i = 1:2
+                    Xi_e(i,:) = elRange{i}(index(e,i),:);
+                end
+
+                sctr = zeta0Nodes(element(e,:));
+                pts = controlPts(sctr,:);
+                wgts = weights(zeta0Nodes(element2(e,:)),:); % New
+                eta = [Xi_e(2,1)+eps,linspace2(Xi_e(2,1),Xi_e(2,2),nptsPerEl-1)].';
+                I = findKnotSpans(degree, [0,eta(1)], knots);
+                xi = [zeros(size(eta)),eta];
+                R = NURBSbasis(I, xi, degree, knots, wgts);
+                p_h(:,e1) = R{1}*U(sctr,:);
+                v(:,e1,:) = R{1}*pts;
+            end
+            p_h = p_h(:);
+            v = reshape(v,[],3);
+            task.ffp.theta = acos(v(:,3)./norm2(v));
+            task.ffp.plotFarField = false;
+        else
+            p_h = calculateScatteredPressure(task.varCol, v, 0, task.ffp.plotFarField);
+        end
     case 'MFS'
-        p_h = calculateScatteredPressureMFS(varCol{1}, v, plotFarField);
+        p_h = calculateScatteredPressureMFS(task.varCol{1}, v, task.ffp.plotFarField);
     case 'KDT'
-        switch varCol{1}.coreMethod
+        switch task.varCol{1}.coreMethod
             case 'linear_FEM'
-                noElems = varCol{1}.noElems;
-                element = varCol{1}.element;
+                noElems = task.varCol{1}.noElems;
+                element = task.varCol{1}.element;
                 tri = NaN(size(element,1),2,3);
-                P = varCol{1}.controlPts;
+                P = task.varCol{1}.controlPts;
                 Eps = 1e2*eps;
                 for e = 1:noElems
                     sctr = element(e,:);
@@ -48,12 +86,12 @@ switch task.method
                 tri(any(isnan(tri),2),:) = [];
 
                 %% Find h_max and store results
-                varCol{1}.h_max = max([norm2(P(tri(:,1),:)-P(tri(:,2),:)); 
+                task.varCol{1}.h_max = max([norm2(P(tri(:,1),:)-P(tri(:,2),:)); 
                                     norm2(P(tri(:,1),:)-P(tri(:,3),:)); 
                                     norm2(P(tri(:,2),:)-P(tri(:,3),:))]);
-                varCol{1}.dofs = size(unique(tri,'rows','stable'),1);
-                varCol{1}.nepw = lambda(1)./varCol{1}.h_max;
-                varCol{1}.noElems = size(tri,1);
+                task.varCol{1}.dofs = size(unique(tri,'rows','stable'),1);
+                task.varCol{1}.nepw = lambda(1)./task.varCol{1}.h_max;
+                task.varCol{1}.noElems = size(tri,1);
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                     trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', getColor(1))
 %                     view(106,26) % sphere and cube
@@ -64,27 +102,27 @@ switch task.method
 %                     ax.Clipping = 'off';    % turn clipping off
 %                     figureFullScreen(gcf)
 % %                     
-%                     export_fig(['../../graphics/sphericalShell/trianglesParm2_' num2str(varCol{1}.noElems)], '-png', '-transparent', '-r300')
+%                     export_fig(['../../graphics/sphericalShell/trianglesParm2_' num2str(task.varCol{1}.noElems)], '-png', '-transparent', '-r300')
 %                     
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-                p_h = kirchApprTri(tri,P,v,varCol{1});
+                p_h = kirchApprTri(tri,P,v,task.varCol{1});
             case 'IGA'
-                varCol{1}.h_max = findMaxElementDiameter(varCol{1}.patches);
-                varCol{1}.nepw = varCol{1}.lambda./varCol{1}.h_max;
-                varCol{1}.dofs = varCol{1}.noDofs;
-%                     p = calculateScatteredPressureBA(varCol{1}, Uc{1}, v, 0, plotFarField);
-                p_h = calculateScatteredPressureKDT(varCol{1}, v, plotFarField);
+                task.varCol{1}.h_max = findMaxElementDiameter(task.varCol{1}.patches);
+                task.varCol{1}.nepw = task.varCol{1}.lambda./task.varCol{1}.h_max;
+                task.varCol{1}.dofs = task.varCol{1}.noDofs;
+%                     p = calculateScatteredPressureBA(task.varCol{1}, Uc{1}, v, 0, plotFarField);
+                p_h = calculateScatteredPressureKDT(task.varCol{1}, v, task.ffp.plotFarField);
         end
     case 'RT'
         switch scatteringCase
             case 'MS'
-                d_vec = varCol{1}.d_vec;
+                d_vec = task.varCol{1}.d_vec;
                 p_h = zeros(size(d_vec,2),1);
 %                     for i = 1:size(d_vec,2) %874%
                 noIncDir = size(d_vec,2);
-                progressBars = varCol{1}.progressBars;
+                progressBars = task.varCol{1}.progressBars;
                 nProgressStepSize = ceil(noIncDir/1000);
                 if progressBars
                     ppm = ParforProgMon('Tracing rays: ', noIncDir, nProgressStepSize);
@@ -96,7 +134,7 @@ switch task.method
                     if progressBars && mod(i,nProgressStepSize) == 0
                         ppm.increment();
                     end
-                    varColTemp2 = varCol{1};
+                    varColTemp2 = task.varCol{1};
                     varColTemp2.d_vec = d_vec(:,i);
 %                         tic
                     varColTemp2 = createRays(varColTemp2);
@@ -105,32 +143,32 @@ switch task.method
                     varColTemp2 = traceRays(varColTemp2);    
 %                         fprintf('\nTracing rays in %12f seconds.', toc)
 %                         tic        
-                    p_h(i) = calculateScatteredPressureRT(varColTemp2, v(i,:), plotFarField);
+                    p_h(i) = calculateScatteredPressureRT(varColTemp2, v(i,:), task.ffp.plotFarField);
 %                         fprintf('\nFar field in %12f seconds.', toc)
                 end
             otherwise
-                varCol{1} = createRays(varCol{1});
-                varCol{1} = traceRays(varCol{1});            
-                p_h = calculateScatteredPressureRT(varCol{1}, v, plotFarField);
+                task.varCol{1} = createRays(task.varCol{1});
+                task.varCol{1} = traceRays(task.varCol{1});            
+                p_h = calculateScatteredPressureRT(task.varCol{1}, v, task.ffp.plotFarField);
         end
 end
 task.results.p = p_h;
 task.results.p_Re = real(p_h);
 task.results.p_Im = imag(p_h);
 task.results.abs_p = abs(p_h);
-task.results.TS = 20*log10(abs(p_h/varCol{1}.P_inc));
-if varCol{1}.analyticSolutionExist
-    if task.plotFarField
-        p_ref = varCol{1}.p_0_(v);
-%             p_ref = exactKDT(varCol{1}.k,varCol{1}.P_inc,parms.R_o);
+task.results.TS = 20*log10(abs(p_h/task.misc.P_inc));
+if task.analyticSolutionExist
+    if task.ffp.plotFarField
+        p_ref = task.varCol{1}.p_0_(v);
+%             p_ref = exactKDT(task.varCol{1}.k,task.varCol{1}.P_inc,parms.R_o);
     else
-        p_ref = varCol{1}.p_(v);
+        p_ref = task.varCol{1}.p_(v);
     end
     task.results.p_ref = p_ref;
     task.results.p_Re_ref = real(p_ref);
     task.results.p_Im_ref = imag(p_ref);
     task.results.abs_p_ref = abs(p_ref);
-    task.results.TS_ref = 20*log10(abs(p_ref/varCol{1}.P_inc));
+    task.results.TS_ref = 20*log10(abs(p_ref/task.misc.P_inc));
 
     task.results.error_pAbs = 100*abs(abs(p_ref)-abs(p_h))./abs(p_ref);
     task.results.error_p = 100*abs(p_ref-p_h)./abs(p_ref);

@@ -1,14 +1,14 @@
 
 
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'S1';
+misc.model = 'S1';
 
-method = 'IE';
+misc.method = 'IE';
 formulation = 'PGU';
-coreMethod = {'SEM','IGA'};
-% coreMethod = {'SEM'};
-% coreMethod = {'IGA'};
+misc.coreMethod = {'SEM','IGA'};
+% misc.coreMethod = {'SEM'};
+% misc.coreMethod = {'IGA'};
 % f = [1e3,1e4];             % Frequency
 f = 1e3;             % Frequency
 % f = 3.98e4;             % Frequency
@@ -33,10 +33,10 @@ alpha = (0:0.5:360)*pi/180;
 % beta = 30*pi/180;
 beta = beta_s;
 calculateVolumeError = 1;
-calculateSurfaceError = 0;
+err.err.calculateSurfaceError = 0;
 computeCondNumber = true;
 clearGlobalMatrices = false;
-% applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
+% misc.applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
 
 postPlot(1).xname        	= 'dofsAlg';
 postPlot(1).yname        	= 'energyError';
@@ -47,7 +47,7 @@ postPlot(1).lineStyle    	= '*-';
 postPlot(1).xScale       	= 1;
 postPlot(1).yScale       	= 1;
 postPlot(1).xLoopName     	= 'degree';
-postPlot(1).legendEntries 	= {'coreMethod','f'};
+postPlot(1).legendEntries 	= {'misc.coreMethod','f'};
 postPlot(1).subFolderName 	= NaN;
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
@@ -73,7 +73,7 @@ degree = 4:19;
 degree = 4:10;
 parm = 2;
 
-loopParameters = {'degree','N','coreMethod','f'};
+loopParameters = {'degree','N','misc.coreMethod','f'};
 collectIntoTasks
 
 

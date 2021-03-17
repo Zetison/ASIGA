@@ -1,11 +1,11 @@
-scatteringCase = 'Sweep';
+misc.scatteringCase = 'Sweep';
 
-model = 'S1';  % Spherical shell
+misc.model = 'S1';  % Spherical shell
 
-% coreMethod = {'IGA', 'XI'};
-coreMethod = {'IGA'};
-method = {'BEM'};
-if strcmp(method, 'BEM')
+% misc.coreMethod = {'IGA', 'XI'};
+misc.coreMethod = {'IGA'};
+misc.method = {'BEM'};
+if strcmp(misc.method, 'BEM')
     formulation = {'CCBIE', 'CBM', 'CHBIE'};
 end
 
@@ -34,33 +34,33 @@ alpha = 0;
 beta = pi;   
 
 M = 1:3;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% MFS simulation
-method = {'MFS'};
-coreMethod = 'IGA';
+misc.method = {'MFS'};
+misc.coreMethod = 'IGA';
 formulation = '';
 M = 5;
 degree = 2;
-calculateSurfaceError = 0;
+err.calculateSurfaceError = 0;
 computeCondNumber = false;
-loopParameters = {'f','M','method'};
+loopParameters = {'f','M','misc.method'};
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
-method = {'KDT'};
+misc.method = {'KDT'};
 formulation = '';
 prePlot.plot3Dgeometry = 0;
 degree = 4;
-calculateSurfaceError = 0;
+err.calculateSurfaceError = 0;
 computeCondNumber = false;
-loopParameters = {'method','M','parm','coreMethod'};
-coreMethod = {'linear_FEM'};
-% coreMethod = {'IGA'};
+loopParameters = {'misc.method','M','parm','misc.coreMethod'};
+misc.coreMethod = {'linear_FEM'};
+% misc.coreMethod = {'IGA'};
 M = [6,8,10];
 M = 10;
 parm = 2;
@@ -71,24 +71,24 @@ f = k*c_f/(2*pi);
 collectIntoTasks
 
 
-% coreMethod = {'IGA'};
+% misc.coreMethod = {'IGA'};
 % % M = 3;
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
-method = {'RT'};
+misc.method = {'RT'};
 formulation = '';
 M = 3;
 prePlot.plot3Dgeometry = 0;
 degree = 2;
-calculateSurfaceError = 0;
+err.calculateSurfaceError = 0;
 computeCondNumber = false;
 plotFarField = 1;
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 N = 3:6;
 r = 1;
 parm = 1;
 
-loopParameters = {'method','M','parm','N','coreMethod'};
+loopParameters = {'misc.method','M','parm','N','misc.coreMethod'};
 % collectIntoTasks

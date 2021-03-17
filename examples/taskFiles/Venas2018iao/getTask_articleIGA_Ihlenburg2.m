@@ -9,17 +9,17 @@ getDefaultTaskValues
 
 prePlot.plot2Dgeometry = 0; 
 prePlot.abortAfterPlotting = 1;
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-model = 'IL';
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.model = 'IL';
 formulation = {'BGU'};
-method = {'IE'};
+misc.method = {'IE'};
 parm = 1;
-coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
-coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
-coreMethods = {'hp_FEM'}; % [5, 4, 2, 1, 3]
+misc.coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
+misc.coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+% misc.coreMethods = {'hp_FEM'}; % [5, 4, 2, 1, 3]
 BCs = {'SHBC','SSBC','NNBC'};
-% BCs = {'NNBC'};
-BCs = {'SHBC'};
+BCs = {'NNBC'};
+% BCs = {'SHBC'};
 % BCs = {'SSBC'};
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
@@ -37,8 +37,8 @@ postPlot(2).yname = 'error_p';
 postPlot(2).axisType = 'semilogy';
 warning('off','NURBS:weights')
 M_0 = 4; % 4
-for i_coreM = 1:length(coreMethods)
-    coreMethod = coreMethods(i_coreM);
+for i_coreM = 1:length(misc.coreMethods)
+    misc.coreMethod = misc.coreMethods(i_coreM);
     for BC = BCs
         switch BC{1}
             case 'SHBC'
@@ -53,7 +53,7 @@ for i_coreM = 1:length(coreMethods)
         omega = k*c_f;
         f = omega/(2*pi); 
 
-        switch coreMethod{1}
+        switch misc.coreMethod{1}
             case 'IGA'
                 if i_coreM == 1
                     M = M_0; % 4
@@ -83,15 +83,15 @@ for i_coreM = 1:length(coreMethods)
         para.plotResultsInParaview = 0;
         calculateFarFieldPattern = 1;
         calculateVolumeError = 1;
-        calculateSurfaceError = 0;
-        loopParameters = {'method','formulation','M','degree','coreMethod','BC','f'};
+        err.calculateSurfaceError = 0;
+        loopParameters = {'misc.method','formulation','M','degree','misc.coreMethod','BC','f'};
 
         formulation = {'BGU'};
-        method = {'IE'};    
+        misc.method = {'IE'};    
         collectIntoTasks
         
         formulation = {'VL2E'};
-        method = {'BA'};
+        misc.method = {'BA'};
         collectIntoTasks
     end
 end
@@ -117,7 +117,7 @@ if i_study == 1
             t_sol = task.varCol{1}.tot_time - t_sys;
             noElems = task.varCol{1}.totNoElems;
             dofs = task.varCol{1}.dofs;
-            switch task.coreMethod
+            switch task.misc.coreMethod
                 case 'IGA'
                     fprintf('Mesh ${\\cal M}_{%d,%d,%d}^{\\textsc{iga}}$\t\t\t & %6d\t & %6d \t & %5.2f & %6.2f & %5.2f \\cr\n', ...
                              M, degree, degree-1, noElems, dofs, t_sys, t_sol, task.results.energyError);

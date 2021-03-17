@@ -20,7 +20,7 @@ end
 noCtrlPts = sum(noCtrlPtsPatch);
 noElems = sum(noElemsPatch);
 pIndex = zeros(noElems,1);
-isPML = zeros(noElems,1,'logical');
+isPML = false(noElems,1);
 element = zeros(noElems,size(patches{1}.element,2));
 controlPts = zeros(noCtrlPts,size(patches{1}.controlPts,2));
 weights = zeros(noCtrlPts,1);
@@ -36,7 +36,7 @@ jEl = zeros(1,noParams);
 knotVecs = cell(1,noPatches);
 for i = 1:noPatches
     if isfield(varCol.nurbs{i},'isPML')
-        isPML(e:e+noElemsPatch(i)-1,:) = repmat(varCol.nurbs{i}.decayDirs,noElemsPatch(i),1);
+        isPML(e:e+noElemsPatch(i)-1) = varCol.nurbs{i}.isPML;
     end
     pIndex(e:e+noElemsPatch(i)-1) = i;
     element(e:e+noElemsPatch(i)-1,:) = maxDof + patches{i}.element;
@@ -117,7 +117,6 @@ varCol.index = index;
 varCol.nodesMap = nodesMap;
 varCol.element = element;
 varCol.element2 = element2;
-varCol.dofsToRemove = dofsToRemove;
 varCol.gluedNodes = gluedNodes;
 varCol.degree = patches{1}.nurbs.degree;  % assume polynomial orders to be equal in all patches
 varCol.knotVecs = knotVecs;
@@ -125,5 +124,11 @@ varCol.noCtrlPts = noCtrlPts;
 varCol.noElems = noElems;
 varCol.pIndex = pIndex;
 varCol.noPatches = noPatches;
-varCol.decayDirs = isPML;
+varCol.isPML = isPML;
+
+if isfield(varCol,'geometry')
+    dirichletNodes = meshBoundary(varCol,'homDirichlet');
+    dofsToRemove = sort(unique([dofsToRemove,dirichletNodes]));
+end
+varCol.dofsToRemove = dofsToRemove;
 

@@ -6,10 +6,10 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'CE';
-method = {'BEM'};
+misc.model = 'CE';
+misc.method = {'BEM'};
 formulation = {'CCBIE'};
 formulation = {'CCBIE','GBM'};
 
@@ -32,7 +32,7 @@ progressBars = false;        % Show progress bars for building system matrices
 solveForPtot = true;
 warning('off','NURBS:weights')
 
-loopParameters = {'M','parm','f','method','formulation'};
+loopParameters = {'M','parm','f','misc.method','formulation'};
 prePlot.plot3Dgeometry = 1;
 % prePlot.resolution = [20,20,0];
 prePlot.view = [135,30];
@@ -49,20 +49,20 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','f','formulation','M','alpha_s'};
+postPlot(1).legendEntries 	= {'misc.method','parm','f','formulation','M','alpha_s'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 
 collectIntoTasks
 
-method = {'KDT'};
+misc.method = {'KDT'};
 solveForPtot = false;
 formulation = {'MS1'};
 
 collectIntoTasks
 
-method = {'BEM'};
+misc.method = {'BEM'};
 solveForPtot = true;
 formulation = {'GBM'};
 M = 7;

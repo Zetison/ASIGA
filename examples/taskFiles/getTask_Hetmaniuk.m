@@ -10,15 +10,15 @@ getDefaultTaskValues
 %% IE simulation
 hetmaniukCase = false; % evaluating solution at boundary not implemented
 
-% scatteringCase = 'Sweep';
-scatteringCase = 'BI';
+% misc.scatteringCase = 'Sweep';
+misc.scatteringCase = 'BI';
 % BC = 'NNBC';
-model = 'S1';  % Spherical shell
-coreMethod = {'IGA','hp_FEM'};
-coreMethod = {'IGA'};
-% applyLoad = 'pointPulsation';
-% applyLoad = 'pointCharge';
-applyLoad = 'planeWave';
+misc.model = 'S1';  % Spherical shell
+misc.coreMethod = {'IGA','hp_FEM'};
+misc.coreMethod = {'IGA'};
+% misc.applyLoad = 'pointPulsation';
+% misc.applyLoad = 'pointCharge';
+misc.applyLoad = 'planeWave';
 
 % formulation = {'PGC'};
 formulation = {'BGC'};
@@ -26,7 +26,7 @@ BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
 % BCs = {'SHBC','SSBC'};
-if strcmp(applyLoad,'pointPulsation')
+if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
 plotFarField = ~hetmaniukCase;
@@ -44,7 +44,7 @@ r_a = 1.2;
 r_s = 3;
 
 parm = 1;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 calculateVolumeError  = 0;
 calculateFarFieldPattern = 1;
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
@@ -84,9 +84,9 @@ postPlot(5) = postPlot(2);
 postPlot(6) = postPlot(3);
 
 for BC = BCs
-%     method = {'IENSG'};
-%     method = {'IE'};
-    method = {'PML'};
+%     misc.method = {'IENSG'};
+%     misc.method = {'IE'};
+    misc.method = {'PML'};
     postPlot(1).xname = 'k_ROM';
     postPlot(2).xname = 'k_ROM';
     postPlot(3).xname = 'k_ROM';
@@ -104,7 +104,7 @@ for BC = BCs
     varCol = setHetmaniukParameters(noDomains);
     varCol{1}.meshFile = 'createNURBSmesh_EL';
     Xi = [0,0,0,1,1,2,2,3,3,3]/3;
-    if strcmp(method{1},'PML')
+    if strcmp(misc.method{1},'PML')
         formulation = {'GSB'};
         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,8)];
     else
@@ -168,10 +168,10 @@ for BC = BCs
     IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
 
     storeFullVarCol = false;
-    if strcmp(scatteringCase,'BI')
-        loopParameters = {'M','method','BC','f'};
+    if strcmp(misc.scatteringCase,'BI')
+        loopParameters = {'M','misc.method','BC','f'};
     else
-        loopParameters = {'M','method','BC'};
+        loopParameters = {'M','misc.method','BC'};
     end
 %     collectIntoTasks
 
@@ -187,16 +187,16 @@ for BC = BCs
 %     omega = omega_ROM(1);
     f = omega/(2*pi);
     
-    coreMethod = {'IGA'};
+    misc.coreMethod = {'IGA'};
     IElocSup = 0;       
     N = 4; % 9
-%     method = {'IE'};
-%     method = {'IE','IENSG'};
+%     misc.method = {'IE'};
+%     misc.method = {'IE','IENSG'};
     
     collectIntoTasks
     
-    coreMethod = {'IGA'};
-    method = {'BA'};
+    misc.coreMethod = {'IGA'};
+    misc.method = {'BA'};
 %     formulation = {'SL2E'};
     formulation = {'VL2E'};
 %     collectIntoTasks

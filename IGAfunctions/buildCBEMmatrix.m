@@ -186,7 +186,7 @@ createElementTopology
 
 n_en = prod(degree+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:d_p),extraGPBEM,quadMethodBEM);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:2),extraGPBEM,quadMethodBEM);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

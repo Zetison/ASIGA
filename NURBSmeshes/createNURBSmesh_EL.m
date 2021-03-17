@@ -1,17 +1,20 @@
-function varCol = createNURBSmesh_EL(varCol, M, degree)
+function task = createNURBSmesh_EL(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 x_0 = [0, 0, 0];
 varCol{1}.x_0 = x_0; % The origin of the model
 alignWithAxis = 'Zaxis';
-switch varCol{1}.method
+switch task.misc.method
     case {'IE','IENSG','ABC'}
         varCol{1}.A_2 = [1 0 0;
                          0 1 0;
                          0 0 1];
         varCol{1}.alignWithAxis = alignWithAxis;
 end
-if isfield(varCol{1}, 'Xi')
-    Xi = varCol{1}.Xi;
+if isfield(task.msh, 'Xi')
+    Xi = task.msh.Xi;
 else
     Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 end
@@ -37,7 +40,7 @@ if numel(varCol) == 1
 else
     t = c_z - varCol{2}.R_i;
 end
-parm = varCol{1}.parm(1);
+parm = task.msh.parm;
 if varCol{1}.boundaryMethod
     solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
     solid = makeUniformNURBSDegree(solid,degree);
@@ -112,12 +115,12 @@ else
     c_y_g = c_y; % 30
     c_z_g = c_z; % 30
     Upsilon = sqrt(c_z^2-c_x^2);
-    if isnan(varCol{1}.r_a)
+    if isnan(task.misc.r_a)
         t_fluid = c_z_g*2*pi/(32-pi);
 %         t_fluid = 10*R_o(1)*2*pi/(32-pi);
         c_z = c_z_g+t_fluid;
     else
-        c_z = varCol{1}.r_a;
+        c_z = task.misc.r_a;
         t_fluid = c_z-c_z_g;
     end
     c_x = sqrt(c_z^2-Upsilon^2);
@@ -136,8 +139,6 @@ else
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
     end
-    varCol{1}.geometry.topologysets.set{1}.Attributes.name = 'Gamma';
-    varCol{1}.geometry.topologysets.set{1}.Attributes.type = 'face';
     fluid = makeUniformNURBSDegree(fluid,degree);
     if isfield(varCol{1},'refinement')
         fluid = insertKnotsInNURBS(fluid,varCol{1}.refinement(M));
@@ -180,11 +181,6 @@ end
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
-if strcmp(varCol{1}.method,'PML')
-    for i = 1:numel(fluid)
-        fluid{i}.decayDirs = [false,false,true];
-    end
-end
 varCol{1}.nurbs = fluid;
 if numel(varCol) > 1
     varCol{2}.nurbs = solid;
@@ -197,3 +193,4 @@ varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
 varCol{1}.Upsilon = Upsilon;
+task.varCol = varCol;

@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_Barrel(varCol, M, degree)
+function task = createNURBSmesh_Barrel(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 x_0 = [0, 0, 0];
 switch varCol{1}.method
@@ -125,3 +128,4 @@ varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L;
 varCol{1}.Upsilon = Upsilon;
+task.varCol = varCol;

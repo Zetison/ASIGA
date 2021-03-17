@@ -44,6 +44,27 @@ startMatlabPool
 % end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test normalBasedSurface2volume
+% close all
+% C = 1;
+% C = [1,1,3];
+% nurbs = getEllipsoidData('C',C,'parm',2);
+% M = 4;
+% nurbs = insertKnotsInNURBS(nurbs,(2^(M-1)-1)*[1,1]);
+% t_PML = 2;
+% [nurbsVol,nurbs2] = normalBasedSurface2volume(nurbs,t_PML);
+% 
+% I = 1:6;
+% % I = 1;
+% prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
+% prePlot.resolution = [50,50,0];
+% plotNURBS(nurbs(I), prePlot);
+% C = C+t_PML;
+% prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
+% plotNURBS(nurbs2(I), prePlot);
+% camlight
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find NURBS representation of part of sphere
 % p = 4;
 % nurbs = getOctSphereData('parm',2);
@@ -146,165 +167,165 @@ startMatlabPool
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot mesh from g2-files
-close all
-% plotType = '3D';
-plotType = 'surf';
-% plotType = 'algorithm';
-% plotType = 'algorithm2';
-% plotType = 'crossSection';
-% plotType = 'none';
-
-% model = 'HuntHill/HuntHill';
-model = 'Vigra/Vigra50m';
-model = 'Vigra/VigraFree10m';
-model = 'Vigra/test';
-model = 'Sula/Sula50m';
-% model = 'test';
-% nurbs = read_g2('/home/zetison/OneDrive/work/openfoam/cylinder/cylinder.g2');
-% nurbs = read_g2('/home/zetison/temp/Re100/1/chorin/cyl2D.g2');
-% nurbs = read_g2('/home/zetison/OpenFOAM/OpenFOAM-v1912/run/cylinder/cylinder.g2');
-% nurbs = read_g2('/home/zetison/results/IFEM/cylinder/MESH7/1/chorin/cyl2D.g2');
-% resolution = 400*[1,1,1];
 % close all
-% nurbs1 = read_g2('/home/zetison/results/simra/out.g2');
-% nurbs2 = read_g2('/home/zetison/results/simra/out2.g2');
-% nurbs3 = read_g2('/home/zetison/results/simra/out3.g2');
-% nurbs4 = read_g2('/home/zetison/results/simra/out4.g2');
-% nurbsVol = read_g2('/home/zetison/results/simra/out3D.g2');
-% [h,maxC,minC] = plotNURBS(nurbsVol,'plotControlPolygon',false, 'plotObject', true, 'plotElementEdges', false, 'resolution',resolution, ...
-%     'colorFun', @(v) v(3), 'alphaValue',0.8);
+% % plotType = '3D';
+% plotType = 'surf';
+% % plotType = 'algorithm';
+% % plotType = 'algorithm2';
+% % plotType = 'crossSection';
+% % plotType = 'none';
 % 
-% plotNURBS(nurbsVol,'plotControlPolygon',false, 'plotObject', false, 'plotElementEdges', true, 'resolution',resolution);
-% 
-% [h,maxC,minC] = plotNURBS(nurbs,'plotControlPolygon',true, 'plotObject', false, 'resolution',resolution,'colorFun', @(v) v(3));
-% plotNURBS(nurbs,'plotControlPolygon',true, 'plotObject', false, 'plotElementEdges', true, 'resolution',resolution,'colorFun', @(v) v(3));
-% camlight
-% view(getView(1))
-% export_fig('/home/zetison/OneDrive/work/graphics/cylinder/M7', '-png', '-transparent', '-r200')
-% export_fig('/home/zetison/OneDrive/work/graphics/cylinder/M7_zoomed', '-png', '-transparent', '-r200')
-% nurbs = read_g2('/home/zetison/Downloads/TeslaValve/multipatch.g2');
-% plotNURBS(nurbs)
-% view(getView(1))
-% figure
-% nurbs = read_g2('/home/zetison/Downloads/TeslaValve/reparameterized.g2');
-% plotNURBS(nurbs)
-% view(getView(1))
-switch plotType
-    case 'crossSection'
-        resolution = 400*[1,1,1];
-        nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
-        nurbs = insertKnotsInNURBS(nurbs,{[], 0.5*ones(1,2), []});
-        nurbs = explodeNURBS(nurbs);
-        nurbs = subNURBS(nurbs(1),'at',[0,0;0,1;0,0]);
-        plotNURBS(nurbs,'plotControlPolygon',1, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, 'color', getColor(1))
-%         export_fig('/home/zetison/results/simra/HuntHill/HuntHill', '-png', '-transparent', '-r200')
-        view(0,0)
-    case '3D'
-        resolution = 10*[1,1,1];
-        nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
-        plotNURBS(nurbs,'plotControlPolygon',0, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, 'color', getColor(1))
-    case 'surf'
-        resolution = 8*[1,1,1];
-        nurbs = read_g2(['/home/zetison/results/simra/' model '.g2']);
-        [h,maxC,minC] = plotNURBS(nurbs,'plotControlPolygon',1, 'plotObject', 0, 'plotElementEdges', 0, 'resolution',resolution, ...
-            'colorFun', @(v) v(:,3), 'alphaValue',1);
+% % model = 'HuntHill/HuntHill';
+% model = 'Vigra/Vigra50m';
+% model = 'Vigra/VigraFree10m';
+% model = 'Vigra/test';
+% model = 'Sula/Sula50m';
+% % model = 'test';
+% % nurbs = read_g2('/home/zetison/OneDrive/work/openfoam/cylinder/cylinder.g2');
+% % nurbs = read_g2('/home/zetison/temp/Re100/1/chorin/cyl2D.g2');
+% % nurbs = read_g2('/home/zetison/OpenFOAM/OpenFOAM-v1912/run/cylinder/cylinder.g2');
+% % nurbs = read_g2('/home/zetison/results/IFEM/cylinder/MESH7/1/chorin/cyl2D.g2');
+% % resolution = 400*[1,1,1];
+% % close all
+% % nurbs1 = read_g2('/home/zetison/results/simra/out.g2');
+% % nurbs2 = read_g2('/home/zetison/results/simra/out2.g2');
+% % nurbs3 = read_g2('/home/zetison/results/simra/out3.g2');
+% % nurbs4 = read_g2('/home/zetison/results/simra/out4.g2');
+% % nurbsVol = read_g2('/home/zetison/results/simra/out3D.g2');
+% % [h,maxC,minC] = plotNURBS(nurbsVol,'plotControlPolygon',false, 'plotObject', true, 'plotElementEdges', false, 'resolution',resolution, ...
+% %     'colorFun', @(v) v(3), 'alphaValue',0.8);
+% % 
+% % plotNURBS(nurbsVol,'plotControlPolygon',false, 'plotObject', false, 'plotElementEdges', true, 'resolution',resolution);
+% % 
+% % [h,maxC,minC] = plotNURBS(nurbs,'plotControlPolygon',true, 'plotObject', false, 'resolution',resolution,'colorFun', @(v) v(3));
+% % plotNURBS(nurbs,'plotControlPolygon',true, 'plotObject', false, 'plotElementEdges', true, 'resolution',resolution,'colorFun', @(v) v(3));
+% % camlight
+% % view(getView(1))
+% % export_fig('/home/zetison/OneDrive/work/graphics/cylinder/M7', '-png', '-transparent', '-r200')
+% % export_fig('/home/zetison/OneDrive/work/graphics/cylinder/M7_zoomed', '-png', '-transparent', '-r200')
+% % nurbs = read_g2('/home/zetison/Downloads/TeslaValve/multipatch.g2');
+% % plotNURBS(nurbs)
+% % view(getView(1))
+% % figure
+% % nurbs = read_g2('/home/zetison/Downloads/TeslaValve/reparameterized.g2');
+% % plotNURBS(nurbs)
+% % view(getView(1))
+% switch plotType
+%     case 'crossSection'
+%         resolution = 400*[1,1,1];
 %         nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
-%         [h,maxC,minC] = plotNURBS(nurbs,'plotControlPolygon',1, 'plotObject', 0, 'plotElementEdges', 0, 'resolution',resolution,'alphaValue',1,'markerEdgeColor',[0,0,1]);
-        camlight
-        camproj('perspective')
-        colormap(getColorMap('MPL_terrain'))
-    case 'algorithm'
-        resolution = [3992,2726,1];
-%         resolution = [399,272,1];
+%         nurbs = insertKnotsInNURBS(nurbs,{[], 0.5*ones(1,2), []});
+%         nurbs = explodeNURBS(nurbs);
+%         nurbs = subNURBS(nurbs(1),'at',[0,0;0,1;0,0]);
+%         plotNURBS(nurbs,'plotControlPolygon',1, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, 'color', getColor(1))
+% %         export_fig('/home/zetison/results/simra/HuntHill/HuntHill', '-png', '-transparent', '-r200')
+%         view(0,0)
+%     case '3D'
+%         resolution = 10*[1,1,1];
+%         nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
+%         plotNURBS(nurbs,'plotControlPolygon',0, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, 'color', getColor(1))
+%     case 'surf'
+%         resolution = 8*[1,1,1];
+%         nurbs = read_g2(['/home/zetison/results/simra/' model '.g2']);
+%         [h,maxC,minC] = plotNURBS(nurbs,'plotControlPolygon',1, 'plotObject', 0, 'plotElementEdges', 0, 'resolution',resolution, ...
+%             'colorFun', @(v) v(:,3), 'alphaValue',1);
+% %         nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
+% %         [h,maxC,minC] = plotNURBS(nurbs,'plotControlPolygon',1, 'plotObject', 0, 'plotElementEdges', 0, 'resolution',resolution,'alphaValue',1,'markerEdgeColor',[0,0,1]);
+%         camlight
+%         camproj('perspective')
+%         colormap(getColorMap('MPL_terrain'))
+%     case 'algorithm'
+%         resolution = [3992,2726,1];
+% %         resolution = [399,272,1];
+% %         resolution = [40,27,1];
+%         nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
+%         P_sw = nurbs{1}.coeffs(1:2,1,1);
+%         P_se = nurbs{1}.coeffs(1:2,end,1);
+%         P_nw = nurbs{1}.coeffs(1:2,1,end);
+%         P_ne = nurbs{1}.coeffs(1:2,end,end);
+%         P_sw = P_sw + (P_sw-P_ne)/10;
+%         P_se = P_se + (P_se-P_nw)/10;
+%         P_nw = P_nw + (P_nw-P_se)/10;
+%         P_ne = P_ne + (P_ne-P_sw)/10;
+%         nurbs = subNURBS(nurbs(1),'at',[0,0;0,0;1,0]);
+%         nurbs = explodeNURBS(nurbs);
+%         nurbs1 = nurbs(18);
+%         nurbs2 = glueNURBS(nurbs([14,19]),1);
+%         nurbs3 = glueNURBS(nurbs([8,9]),2);
+%         nurbs4 = glueNURBS(nurbs([7,12,17]),1);
+%         nurbs5 = glueNURBS(nurbs([22,23,24]),2);
+%         nurbs6 = glueNURBS(nurbs([10,15,20,25]),1);
+%         nurbs7 = glueNURBS(nurbs([2,3,4,5]),2);
+%         nurbs8 = glueNURBS(nurbs([1,6,11,16,21]),1);
+%         viewAngle = [-20,35];
+%         figure('Color','white')
+%         [h,maxC,minC] = plotNURBS(nurbs(13),'plotControlPolygon',0, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, ...
+%             'colorFun', @(v) v(:,3), 'alphaValue',1,'view',viewAngle);
+%         caxis([0,900])
+%         plot3(P_sw(1)*[1,1+eps],P_sw(2)*[1,1+eps],-300*[1,1+eps])
+%         plot3(P_sw(1)*[1,1+eps],P_sw(2)*[1,1+eps],1000*[1,1+eps])
+%         plot3(P_se(1)*[1,1+eps],P_se(2)*[1,1+eps],-300*[1,1+eps])
+%         plot3(P_se(1)*[1,1+eps],P_se(2)*[1,1+eps],1000*[1,1+eps])
+%         plot3(P_nw(1)*[1,1+eps],P_nw(2)*[1,1+eps],-300*[1,1+eps])
+%         plot3(P_nw(1)*[1,1+eps],P_nw(2)*[1,1+eps],1000*[1,1+eps])
+%         plot3(P_ne(1)*[1,1+eps],P_ne(2)*[1,1+eps],-300*[1,1+eps])
+%         plot3(P_ne(1)*[1,1+eps],P_ne(2)*[1,1+eps],1000*[1,1+eps])
+%         cmap = jet(8);
+%         cmap([8,4]) = cmap([4,8]);
+%         camproj('perspective')
+%         colormap(getColorMap('MPL_terrain'))
+%         colorbar off
+%         
+%         frame_h = get(handle(gcf),'JavaFrame');
+%         set(frame_h,'Maximized',1);
+%         camlight
+%         cropOption = '-c300,500,200,700';
+%         export_fig('/home/zetison/OneDrive/work/graphics/simramesh/nurbs0', '-png', '-r200', cropOption)
+%         endVec = [100,resolution(2);
+%                   resolution(1),100];
+%                   
+%         nurbsCol = {nurbs1,nurbs2,nurbs3,nurbs4,nurbs5,nurbs6,nurbs7,nurbs8};
+%         for i = 1:8
+%             [h,maxC,minC] = plotNURBS(nurbsCol{i},'plotControlPolygon',0, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',endVec(mod(i-1,2)+1,:),'color',cmap(i,:),'view',viewAngle);
+%             caxis([0,900])
+%             frame_h = get(handle(gcf),'JavaFrame');
+%             set(frame_h,'Maximized',1);
+%             export_fig(['/home/zetison/OneDrive/work/graphics/simramesh/nurbs' num2str(i)], '-png', '-r200', cropOption)
+%         end
+%     case 'algorithm2'
+%         resolution = [3992,2726,1];
+% %         resolution = [399,272,1];
 %         resolution = [40,27,1];
-        nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
-        P_sw = nurbs{1}.coeffs(1:2,1,1);
-        P_se = nurbs{1}.coeffs(1:2,end,1);
-        P_nw = nurbs{1}.coeffs(1:2,1,end);
-        P_ne = nurbs{1}.coeffs(1:2,end,end);
-        P_sw = P_sw + (P_sw-P_ne)/10;
-        P_se = P_se + (P_se-P_nw)/10;
-        P_nw = P_nw + (P_nw-P_se)/10;
-        P_ne = P_ne + (P_ne-P_sw)/10;
-        nurbs = subNURBS(nurbs(1),'at',[0,0;0,0;1,0]);
-        nurbs = explodeNURBS(nurbs);
-        nurbs1 = nurbs(18);
-        nurbs2 = glueNURBS(nurbs([14,19]),1);
-        nurbs3 = glueNURBS(nurbs([8,9]),2);
-        nurbs4 = glueNURBS(nurbs([7,12,17]),1);
-        nurbs5 = glueNURBS(nurbs([22,23,24]),2);
-        nurbs6 = glueNURBS(nurbs([10,15,20,25]),1);
-        nurbs7 = glueNURBS(nurbs([2,3,4,5]),2);
-        nurbs8 = glueNURBS(nurbs([1,6,11,16,21]),1);
-        viewAngle = [-20,35];
-        figure('Color','white')
-        [h,maxC,minC] = plotNURBS(nurbs(13),'plotControlPolygon',0, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, ...
-            'colorFun', @(v) v(:,3), 'alphaValue',1,'view',viewAngle);
-        caxis([0,900])
-        plot3(P_sw(1)*[1,1+eps],P_sw(2)*[1,1+eps],-300*[1,1+eps])
-        plot3(P_sw(1)*[1,1+eps],P_sw(2)*[1,1+eps],1000*[1,1+eps])
-        plot3(P_se(1)*[1,1+eps],P_se(2)*[1,1+eps],-300*[1,1+eps])
-        plot3(P_se(1)*[1,1+eps],P_se(2)*[1,1+eps],1000*[1,1+eps])
-        plot3(P_nw(1)*[1,1+eps],P_nw(2)*[1,1+eps],-300*[1,1+eps])
-        plot3(P_nw(1)*[1,1+eps],P_nw(2)*[1,1+eps],1000*[1,1+eps])
-        plot3(P_ne(1)*[1,1+eps],P_ne(2)*[1,1+eps],-300*[1,1+eps])
-        plot3(P_ne(1)*[1,1+eps],P_ne(2)*[1,1+eps],1000*[1,1+eps])
-        cmap = jet(8);
-        cmap([8,4]) = cmap([4,8]);
-        camproj('perspective')
-        colormap(getColorMap('MPL_terrain'))
-        colorbar off
-        
-        frame_h = get(handle(gcf),'JavaFrame');
-        set(frame_h,'Maximized',1);
-        camlight
-        cropOption = '-c300,500,200,700';
-        export_fig('/home/zetison/OneDrive/work/graphics/simramesh/nurbs0', '-png', '-r200', cropOption)
-        endVec = [100,resolution(2);
-                  resolution(1),100];
-                  
-        nurbsCol = {nurbs1,nurbs2,nurbs3,nurbs4,nurbs5,nurbs6,nurbs7,nurbs8};
-        for i = 1:8
-            [h,maxC,minC] = plotNURBS(nurbsCol{i},'plotControlPolygon',0, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',endVec(mod(i-1,2)+1,:),'color',cmap(i,:),'view',viewAngle);
-            caxis([0,900])
-            frame_h = get(handle(gcf),'JavaFrame');
-            set(frame_h,'Maximized',1);
-            export_fig(['/home/zetison/OneDrive/work/graphics/simramesh/nurbs' num2str(i)], '-png', '-r200', cropOption)
-        end
-    case 'algorithm2'
-        resolution = [3992,2726,1];
-%         resolution = [399,272,1];
-        resolution = [40,27,1];
-        nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
-        nurbs = subNURBS(nurbs(1),'at',[0,0;0,0;1,0]);
-        nurbs = explodeNURBS(nurbs);
-        nurbs1 = nurbs(18);
-        nurbs2 = glueNURBS(nurbs([14,19]),1);
-        nurbs3 = glueNURBS(nurbs([8,9]),2);
-        nurbs4 = glueNURBS(nurbs([7,12,17]),1);
-        nurbs5 = glueNURBS(nurbs([22,23,24]),2);
-        nurbs6 = glueNURBS(nurbs([10,15,20,25]),1);
-        nurbs7 = glueNURBS(nurbs([2,3,4,5]),2);
-        nurbs8 = glueNURBS(nurbs([1,6,11,16,21]),1);
-        viewAngle = [-20,35];
-        figure('Color','white')
-        [h,maxC,minC] = plotNURBS(nurbs(13),'plotControlPolygon',1, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, ...
-            'colorFun', @(v) v(:,3), 'alphaValue',1,'view',viewAngle);
-        caxis([0,900])
-        camproj('perspective')
-        colormap(getColorMap('MPL_terrain'))
-        colorbar off
-        P1 = nurbs{13}.coeffs(:,end-1,12);
-        P2 = nurbs{13}.coeffs(:,end,12);
-        
-        
-        pts2 = nurbs5{1}.coeffs(:,:,12);
-        nurbs1D1 = createNURBSobject(pts,[0,0,0]);
-        frame_h = get(handle(gcf),'JavaFrame');
-        set(frame_h,'Maximized',1);
-        camlight
-%         export_fig('/home/zetison/OneDrive/work/graphics/simramesh/controlPts', '-png', '-r200')
-end
+%         nurbs = read_g2(['/home/zetison/results/simra/' model '_3D.g2']);
+%         nurbs = subNURBS(nurbs(1),'at',[0,0;0,0;1,0]);
+%         nurbs = explodeNURBS(nurbs);
+%         nurbs1 = nurbs(18);
+%         nurbs2 = glueNURBS(nurbs([14,19]),1);
+%         nurbs3 = glueNURBS(nurbs([8,9]),2);
+%         nurbs4 = glueNURBS(nurbs([7,12,17]),1);
+%         nurbs5 = glueNURBS(nurbs([22,23,24]),2);
+%         nurbs6 = glueNURBS(nurbs([10,15,20,25]),1);
+%         nurbs7 = glueNURBS(nurbs([2,3,4,5]),2);
+%         nurbs8 = glueNURBS(nurbs([1,6,11,16,21]),1);
+%         viewAngle = [-20,35];
+%         figure('Color','white')
+%         [h,maxC,minC] = plotNURBS(nurbs(13),'plotControlPolygon',1, 'plotObject', 1, 'plotElementEdges', 1, 'resolution',resolution, ...
+%             'colorFun', @(v) v(:,3), 'alphaValue',1,'view',viewAngle);
+%         caxis([0,900])
+%         camproj('perspective')
+%         colormap(getColorMap('MPL_terrain'))
+%         colorbar off
+%         P1 = nurbs{13}.coeffs(:,end-1,12);
+%         P2 = nurbs{13}.coeffs(:,end,12);
+%         
+%         
+%         pts2 = nurbs5{1}.coeffs(:,:,12);
+%         nurbs1D1 = createNURBSobject(pts,[0,0,0]);
+%         frame_h = get(handle(gcf),'JavaFrame');
+%         set(frame_h,'Maximized',1);
+%         camlight
+% %         export_fig('/home/zetison/OneDrive/work/graphics/simramesh/controlPts', '-png', '-r200')
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot Normal mesh
@@ -1102,40 +1123,40 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot Spline basis functions in complex plane
-close all
-Xi = [0 0 0 1 2 2 2];
-Xi = Xi/Xi(end);
-p = 2;
-n = length(Xi)-(p+1);
-figure(1)
-set(0, 'defaultTextInterpreter', 'latex'); 
-xlabel('$\xi$')
-% Plot basis functions of second order
-% xi = (Xi(i+2)*(Xi(i+3)-Xi(i+1))+Xi(i+1)*(Xi(i+2)-Xi(i)))/(Xi(i+3)-Xi(i+1)+Xi(i+2)-Xi(i));
-for i = 2
-%     fid = fopen(['../plotData/Bsplines/order2number' num2str(i) '.txt'],'wt+','b'); % note the 'b': not doing BigEndian does not work with MATLAB!
-%     fprintf(fid,'xi\t\t\tBspline\n');
-    figure(i)
-    hold on
-    h = plotBspline(i,p,n,Xi,100,false,1);
-%     xi = linspace(0,1,1000);
-%     xi = xi + 1i*xi.';
-%     i1 = findKnotSpan(n, p, xi, Xi);
-%     N = BsplineBasis(i1, xi, p, Xi, 0);
-%     h = plotBspline(p,n,Xi,100);
+% close all
+% Xi = [0 0 0 1 2 2 2];
+% Xi = Xi/Xi(end);
+% p = 2;
+% n = length(Xi)-(p+1);
+% figure(1)
+% set(0, 'defaultTextInterpreter', 'latex'); 
+% xlabel('$\xi$')
+% % Plot basis functions of second order
+% % xi = (Xi(i+2)*(Xi(i+3)-Xi(i+1))+Xi(i+1)*(Xi(i+2)-Xi(i)))/(Xi(i+3)-Xi(i+1)+Xi(i+2)-Xi(i));
+% for i = 2
+% %     fid = fopen(['../plotData/Bsplines/order2number' num2str(i) '.txt'],'wt+','b'); % note the 'b': not doing BigEndian does not work with MATLAB!
+% %     fprintf(fid,'xi\t\t\tBspline\n');
+%     figure(i)
 %     hold on
-%     xi = (Xi(i+2)*(Xi(i+3)-Xi(i+1))+Xi(i+1)*(Xi(i+2)-Xi(i)))/(Xi(i+3)-Xi(i+1)+Xi(i+2)-Xi(i))
-%     surf()
-%     xi = 0.32
-%     2/(Xi(i+2)-Xi(i))*(Xi(i+2)-xi)/(Xi(i+2)-Xi(i+1))-2/(Xi(i+3)-Xi(i+1))*(xi-Xi(i+1))/(Xi(i+2)-Xi(i+1))
-    
-%     xData = get(h,'XData');
-%     yData = get(h,'YData');
-%     for j = 1:length(xData)
-%         fprintf(fid,'%1.15f\t%1.15f\n',xData(j),yData(j));
-%     end
-%     fclose(fid);
-end
+%     h = plotBspline(i,p,n,Xi,100,false,1);
+% %     xi = linspace(0,1,1000);
+% %     xi = xi + 1i*xi.';
+% %     i1 = findKnotSpan(n, p, xi, Xi);
+% %     N = BsplineBasis(i1, xi, p, Xi, 0);
+% %     h = plotBspline(p,n,Xi,100);
+% %     hold on
+% %     xi = (Xi(i+2)*(Xi(i+3)-Xi(i+1))+Xi(i+1)*(Xi(i+2)-Xi(i)))/(Xi(i+3)-Xi(i+1)+Xi(i+2)-Xi(i))
+% %     surf()
+% %     xi = 0.32
+% %     2/(Xi(i+2)-Xi(i))*(Xi(i+2)-xi)/(Xi(i+2)-Xi(i+1))-2/(Xi(i+3)-Xi(i+1))*(xi-Xi(i+1))/(Xi(i+2)-Xi(i+1))
+%     
+% %     xData = get(h,'XData');
+% %     yData = get(h,'YData');
+% %     for j = 1:length(xData)
+% %         fprintf(fid,'%1.15f\t%1.15f\n',xData(j),yData(j));
+% %     end
+% %     fclose(fid);
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Solid cylinder

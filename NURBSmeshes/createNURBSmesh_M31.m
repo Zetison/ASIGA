@@ -1,4 +1,8 @@
-function varCol = createNURBSmesh_M31(varCol, M, degree)
+function task = createNURBSmesh_M31(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
+
 R1 = varCol{1}.R1;
 R2 = varCol{1}.R2;
 t = varCol{1}.t;
@@ -63,3 +67,4 @@ if numel(varCol) > 2
 end
 
 varCol{1}.L_gamma = L + R1 + R2;
+task.varCol = varCol;

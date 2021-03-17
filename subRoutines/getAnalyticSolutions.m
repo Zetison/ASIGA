@@ -1,59 +1,59 @@
-function varCol = getAnalyticSolutions(varCol)
-k = varCol{1}.k;
-noDomains = numel(varCol);
-applyLoad = varCol{1}.applyLoad;
+function task = getAnalyticSolutions(task)
+noDomains = numel(task.varCol);
+applyLoad = task.misc.applyLoad;
 splitExteriorFields = strcmp(applyLoad,'planeWave') || strcmp(applyLoad,'pointCharge') || strcmp(applyLoad,'radialPulsation');
-varCol{1}.splitExteriorFields = splitExteriorFields;
+task.splitExteriorFields = splitExteriorFields;
 
-if ~splitExteriorFields && ~strcmp(varCol{1}.BC,'NBC')
+if ~splitExteriorFields && ~strcmp(task.varCol{1}.BC,'NBC')
     error('This exact solution requires BC = ''NBC''')
 end    
 
-switch varCol{1}.applyLoad
+switch task.misc.applyLoad
     case {'planeWave','radialPulsation'}
-        alpha_s = varCol{1}.alpha_s;
-        beta_s = varCol{1}.beta_s;
+        alpha_s = task.ffp.alpha_s;
+        beta_s = task.ffp.beta_s;
         d_vec = -[cos(beta_s(1))*cos(alpha_s);
                   cos(beta_s(1))*sin(alpha_s);
                   sin(beta_s(1))*ones(1,length(alpha_s))];
-        varCol{1}.d_vec = d_vec;
+        task.varCol{1}.d_vec = d_vec;
     case 'pointCharge'
-        alpha_s = varCol{1}.alpha_s;
-        beta_s = varCol{1}.beta_s;
+        alpha_s = task.ffp.alpha_s;
+        beta_s = task.ffp.beta_s;
         d_vec =  [cos(beta_s(1))*cos(alpha_s);
                   cos(beta_s(1))*sin(alpha_s);
                   sin(beta_s(1))*ones(1,length(alpha_s))];
-        varCol{1}.d_vec = d_vec;
+        task.d_vec = d_vec;
 end
-layer = extract_e3Dss_data(varCol);
-Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
-dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
-varCol{1}.Phi_k = Phi_k;
-varCol{1}.dPhi_kdny = dPhi_kdny;
-if varCol{1}.analyticSolutionExist
-    varCol{1}.analyticFunctions = @(X) analytic(X,layer);
+layer = extract_e3Dss_data(task);
+if task.analyticSolutionExist
+    task.analyticFunctions = @(X) analytic(X,layer);
 end
-varCol{1}.p_inc_ = @(X) analytic({X},layer,NaN,'p_inc',1);
-varCol{1}.dp_inc_ = @(X,n) analytic({X},layer,n,'dp_inc',1);
+task.p_inc_ = @(X) analytic({X},layer,NaN,'p_inc',1);
+task.dp_inc_ = @(X,n) analytic({X},layer,n,'dp_inc',1);
 if splitExteriorFields
-    varCol{1}.dp_incdx_ = @(X) analytic({X},layer,NaN,'dp_incdx',1);
-    varCol{1}.dp_incdy_ = @(X) analytic({X},layer,NaN,'dp_incdy',1);
-    varCol{1}.dp_incdz_ = @(X) analytic({X},layer,NaN,'dp_incdz',1);
+    task.dp_incdx_ = @(X) analytic({X},layer,NaN,'dp_incdx',1);
+    task.dp_incdy_ = @(X) analytic({X},layer,NaN,'dp_incdy',1);
+    task.dp_incdz_ = @(X) analytic({X},layer,NaN,'dp_incdz',1);
 end
-varCol{1}.dpdn_ = @(X,n) analytic({X},layer,NaN,'dpdn',1);
+task.varCol{1}.dpdn_ = @(X,n) analytic({X},layer,NaN,'dpdn',1);
 for i = 1:noDomains
-    switch varCol{i}.media
+    k = task.varCol{i}.k;
+    Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
+    dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
+    task.varCol{i}.Phi_k = Phi_k;
+    task.varCol{i}.dPhi_kdny = dPhi_kdny;
+    switch task.varCol{i}.media
         case 'fluid'
-            varCol{i}.p_ = @(X) analytic({X},layer,NaN,'p',i);
+            task.varCol{i}.p_ = @(X) analytic({X},layer,NaN,'p',i);
         case 'solid'
-            varCol{i}.u_x_ = @(X) analytic({X},layer,NaN,'u_x',i);
-            varCol{i}.u_y_ = @(X) analytic({X},layer,NaN,'u_y',i);
-            varCol{i}.u_z_ = @(X) analytic({X},layer,NaN,'u_z',i);
+            task.varCol{i}.u_x_ = @(X) analytic({X},layer,NaN,'u_x',i);
+            task.varCol{i}.u_y_ = @(X) analytic({X},layer,NaN,'u_y',i);
+            task.varCol{i}.u_z_ = @(X) analytic({X},layer,NaN,'u_z',i);
     end
 end
-varCol{1}.p_0_ = @(X) analytic({X},layer,NaN,'p_0',1);
-varCol{1}.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,varCol{1}.p_inc_);
-varCol{1}.dp_inc_ROM_ = @(X,n) dp_inc_ROM(X,n,layer,varCol{1}.dp_inc_);
+task.p_0_ = @(X) analytic({X},layer,NaN,'p_0',1);
+task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,task.p_inc_);
+task.dp_inc_ROM_ = @(X,n) dp_inc_ROM(X,n,layer,task.dp_inc_);
 
 
 
@@ -176,14 +176,15 @@ switch applyLoad
                 varCol{1}.dp_incdy = 1i*k.*varCol{1}.p_inc.*d_vec(2,:);
                 varCol{1}.dp_incdz = 1i*k.*varCol{1}.p_inc.*d_vec(3,:);
             elseif strcmp(applyLoad,'radialPulsation')
-                varCol{1}.p_inc = P_inc*R_o(1).*exp(-1i*k.*(norm2(X{1})-R_o(1)))./norm2(X{1});
+                R_i = varCol{1}.R_i;
+                varCol{1}.p_inc = P_inc*R_i.*exp(-1i*k.*(norm2(X{1})-R_i))./norm2(X{1});
                 R = norm2(X{1});
                 if nargin > 2 && ~any(isnan(n(:)))
-                    varCol{1}.dp_inc = varCol{1}.p_inc.*(1i*k-1./R).*sum(X{1}.*n,2)./R;
+                    varCol{1}.dp_inc = -varCol{1}.p_inc.*(1i*k+1./R).*sum(X{1}.*n,2)./R;
                 end
-                varCol{1}.dp_incdx = varCol{1}.p_inc.*(1i*k-1./R).*X{1}(:,1)./R;
-                varCol{1}.dp_incdy = varCol{1}.p_inc.*(1i*k-1./R).*X{1}(:,2)./R;
-                varCol{1}.dp_incdz = varCol{1}.p_inc.*(1i*k-1./R).*X{1}(:,3)./R;
+                varCol{1}.dp_incdx = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,1)./R;
+                varCol{1}.dp_incdy = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,2)./R;
+                varCol{1}.dp_incdz = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,3)./R;
             elseif strcmp(applyLoad,'pointCharge')
                 x_s = r_s*d_vec.';
                 xms = X{1}-x_s;

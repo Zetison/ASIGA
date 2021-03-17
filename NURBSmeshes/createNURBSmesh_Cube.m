@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_Cube(varCol, M, degree)
+function task = createNURBSmesh_Cube(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 
 varCol{1}.x_0 = [0, 0, 0];
@@ -21,3 +24,4 @@ end
 varCol{1}.nurbs = fluid;
 
 varCol{1}.L_gamma = L_gamma;
+task.varCol = varCol;

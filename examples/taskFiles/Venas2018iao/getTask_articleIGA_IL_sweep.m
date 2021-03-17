@@ -9,12 +9,12 @@ getDefaultTaskValues
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-% scatteringCase = 'Sweep'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+% misc.scatteringCase = 'Sweep'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'IL';
+misc.model = 'IL';
 formulation = 'BGU';
-method = 'IE';
+misc.method = 'IE';
 
 axisymmetric = 1;
 if axisymmetric
@@ -41,7 +41,7 @@ runTasksInParallel = 0;
 postPlot(1).xname        	= 'k';
 postPlot(1).yname        	= 'TS';
 postPlot(1).lineStyle    	= '-';
-if runTasksInParallel || strcmp(scatteringCase,'BI')
+if runTasksInParallel || strcmp(misc.scatteringCase,'BI')
     postPlot(1).xLoopName     	= 'f';
     postPlot(1).noXLoopPrms   	= 1;
 end
@@ -53,23 +53,23 @@ postPlot(2).yname        	= 'energyError';
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 1;
 calculateVolumeError = 1;
-calculateSurfaceError = 0;
+err.calculateSurfaceError = 0;
 % extraGP = -2;
 if runTasksInParallel
-    loopParameters = {'M','degree','coreMethod','BC','f'};
+    loopParameters = {'M','degree','misc.coreMethod','BC','f'};
 else
-%     loopParameters = {'M','degree','coreMethod','BC'};
-    loopParameters = {'M','degree','coreMethod','BC','f'};
+%     loopParameters = {'M','degree','misc.coreMethod','BC'};
+    loopParameters = {'M','degree','misc.coreMethod','BC','f'};
 end
 BCs = {'SHBC','SSBC','NNBC'};
 % BCs = {'NNBC'};
 % BCs = {'SHBC'};
-coreMethods = {'IGA','IGA','linear_FEM','hp_FEM'}; % [5, 4, 2, 1, 3]
-% coreMethods = {'linear_FEM'}; % [5, 4, 2, 1, 3]
+misc.coreMethods = {'IGA','IGA','linear_FEM','hp_FEM'}; % [5, 4, 2, 1, 3]
+% misc.coreMethods = {'linear_FEM'}; % [5, 4, 2, 1, 3]
 M_0 = 4;
-% coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
-for i_coreM = 1:length(coreMethods) %{'IGA'}
-    coreMethod = {coreMethods{i_coreM}};
+% misc.coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+for i_coreM = 1:length(misc.coreMethods) %{'IGA'}
+    misc.coreMethod = {misc.coreMethods{i_coreM}};
     for BC = BCs %
         npts = 1500;
 %         npts = 15;
@@ -150,7 +150,7 @@ for i_coreM = 1:length(coreMethods) %{'IGA'}
         omega = k*varCol{1}.c_f;
         f = omega/(2*pi); 
 
-        switch coreMethod{1}
+        switch misc.coreMethod{1}
             case 'IGA'
                 if i_coreM == 1
                     M = (M_0-1):M_0; % 4

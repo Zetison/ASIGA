@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_FreeCAD(varCol, M, degree)
+function task = createNURBSmesh_FreeCAD(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 switch varCol{1}.method
     case {'IE','IENSG','ABC'}
@@ -37,3 +40,4 @@ end
 varCol{1}.nurbs = fluid;
 
 varCol{1}.L_gamma = max(X(:,2)-X(:,1));
+task.varCol = varCol;

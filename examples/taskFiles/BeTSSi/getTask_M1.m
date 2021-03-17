@@ -6,11 +6,11 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'M1';
+misc.model = 'M1';
 
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = {'CBM','CCBIE'};
 formulation = {'CCBIE'};
 formulation = {'CCBIE','GBM'};
@@ -27,7 +27,7 @@ beta = 0;
 alpha = (0:0.5:360)*pi/180;
 solveForPtot = true;
 
-loopParameters = {'M','parm','f','method','formulation','alpha_s'};
+loopParameters = {'M','parm','f','misc.method','formulation','alpha_s'};
 prePlot.plot3Dgeometry = 1;
 % prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
@@ -47,7 +47,7 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','f','formulation','M','alpha_s'};
+postPlot(1).legendEntries 	= {'misc.method','parm','f','formulation','M','alpha_s'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
@@ -56,12 +56,12 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 collectIntoTasks
 
 solveForPtot = false;
-method = {'IENSG'};
+misc.method = {'IENSG'};
 formulation = {'BGU'};
 N = 3;
 collectIntoTasks
 
-method = {'KDT'};
+misc.method = {'KDT'};
 formulation = {'MS1'};
 
 collectIntoTasks

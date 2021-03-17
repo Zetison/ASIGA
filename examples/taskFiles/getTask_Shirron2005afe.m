@@ -8,28 +8,25 @@ getDefaultTaskValues
 
 
 %% IE simulation
-hetmaniukCase = false; % evaluating solution at boundary not implemented
+misc.scatteringCase = 'BI';
+misc.model = 'S1';  % Spherical shell
+% misc.coreMethod = {'C0_IGA'};
+misc.coreMethod = {'IGA'};
+misc.applyLoad = 'planeWave';
+% misc.applyLoad = 'radialPulsation';
 
-scatteringCase = 'BI';
-model = 'S1';  % Spherical shell
-coreMethod = {'IGA'};
-applyLoad = 'planeWave';
+% misc.method = {'IENSG'};
+% misc.method = {'IE'};
+misc.method = {'PML'};
+misc.BC = {'SHBC'};
 
-% method = {'IENSG'};
-% method = {'IE'};
-method = {'PML'};
-BC = {'SHBC'};
 
-plotFarField = ~hetmaniukCase;
-% plotFarField = true;     % If false, plots the near field instead
-
-calculateFarFieldPattern    = true;     % Calculate far field pattern
-alpha_s = 0;                            % Aspect angle of incident wave
-beta_s  = -pi/2;                        % Elevation angle of incident wave
-alpha   = 0;                            % Aspect angles of observation points
-beta = linspace(-pi/2,pi/2,1000);   
-r = 1;                            % radii for near-field evaluation.
-extraGP = [7,0,0];    % extra quadrature points
+ffp.calculateFarFieldPattern    = true;     % Calculate far field pattern
+ffp.alpha_s = 0;                            % Aspect angle of incident wave
+ffp.beta_s  = pi/2;                        % Elevation angle of incident wave
+ffp.alpha   = 0;                            % Aspect angles of observation points
+ffp.beta = linspace(-pi/2,pi/2,1000);   
+ffp.r = 1;                            % radii for near-field evaluation.
 
 a = 1; % Midsurface radius
 varCol{1} = struct('media', 'fluid', ...
@@ -37,46 +34,56 @@ varCol{1} = struct('media', 'fluid', ...
                   't',   a, ...
                   'c_f', 1524, ...
                   'rho', 1000);
-N = 4; % 9
-varCol{1}.meshFile = 'createNURBSmesh_EL';
-Xi = [0,0,0,1,1,2,2,3,3,3]/3;
-if strcmp(method{1},'PML')
-%     formulation = {'GSB'};
-    formulation = {'STD'};
-    varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,10)];
+ie.N = 4; % 9
+msh.meshFile = 'createNURBSmesh_EL';
+msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+if strcmp(misc.method{1},'PML')
+    misc.formulation = {'GSB'};
+%     formulation = {'STD'};
+    varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-1)/8-1, 2^(M-1)/2-1];
+    varCol{1}.refinement = @(M) [0, round(pi/0.5*1.5*10/2), 4, M];
+%     varCol{1}.refinement = @(M) [0, 0, 4, M];
 else
-    formulation = {'BGU'};
-    varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,10-N+1)];
+    misc.formulation = {'BGU'};
+    varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-1)/8-1];
+%     varCol{1}.refinement = @(M) [0, 0, 4];
 end
 
-degree = 2;
-M = 7; % 6
+msh.degree = 4;
+msh.M = 4; % 6
+misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
+% extraGP = [7,7,0];    % extra quadrature points
+warning('off','NURBS:weights')
 
-k = 1/a;
 k = 10/a;
 lambda = 2*pi/k;
 f = k*varCol{1}.c_f/(2*pi);
-omega = 2*pi*f;
-r_PML = 1.25*a;
-r_PML = a;
-r_a = 1.5*a;
-gamma = 5;
-% gamma = 10;
+misc.omega = 2*pi*f;
+misc.r_a = 1.25*a;
 
-parm = 1;
-calculateSurfaceError = 1;
-calculateVolumeError  = 0;
-calculateFarFieldPattern = 1;
+pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
+pml.sigmaType = 1;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.gamma = [5,7];          % parameter for sigmaType = 1
+pml.t = 0.25*a;         % thickness of PML
+pml.dirichlet = false;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+
+msh.parm = 1;
+err.calculateSurfaceError = 1;
+err.calculateVolumeError  = 0;
+err.calculateFarFieldPattern = 1;
+
+ffp.splineBasedNFPcalc = true;
+
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;
-% prePlot.colorFun = @(v) abs(norm2(v)-1);
+% prePlot.colorFun = @(v) abs(norm2(v)-(r_a+t_PML));
 prePlot.resolution = [20,20,0];
-computeCondNumber = 0;
+misc.computeCondNumber = 0;
 
 postPlot(1).xname           = 'M';
 postPlot(1).yname        	= 'surfaceError';
-postPlot(1).plotResults  	= true;
+postPlot(1).plotResults  	= 0;
 postPlot(1).printResults 	= false;
 postPlot(1).axisType      	= 'semilogy';
 postPlot(1).lineStyle    	= '-';
@@ -89,16 +96,18 @@ postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).xLoopName     	= 'M';
 
 postPlot(2) = postPlot(1);
-postPlot(2).xname           = 'beta';
-postPlot(2).yname           = 'TS';
+postPlot(2).plotResults  	= true;
+postPlot(2).xname           = 'theta';
+postPlot(2).yname           = 'abs_p';
+% postPlot(2).yname           = 'TS';
 postPlot(2).axisType      	= 'plot';
 postPlot(2).noXLoopPrms   	= 0;
 
-postPlot(3) = postPlot(2);
-postPlot(3).axisType = 'semilogy';
-postPlot(3).yname = 'error_p';
+% postPlot(3) = postPlot(2);
+% postPlot(3).axisType = 'semilogy';
+% postPlot(3).yname = 'error_p';
 
-loopParameters = {'M','method','BC'};
+loopParameters = {'msh.M','misc.method','misc.BC','pml.gamma'};
 para.plotResultsInParaview	= 0;
 para.extraXiPts              = '30';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
