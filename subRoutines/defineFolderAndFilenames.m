@@ -1,7 +1,12 @@
 function saveName = defineFolderAndFilenames(task,loopParameters)
 saveName = task.misc.model;
 for i = 1:length(loopParameters)
-    temp2 = loopParameters{i}(find(loopParameters{i} == '.',1,'last')+1:end);
+    idx = find(loopParameters{i} == '.',1,'last');
+    if isempty(idx)
+        temp2 = loopParameters{i};
+    else
+        temp2 = loopParameters{i}(idx+1:end);
+    end
     eval(['temp = task.' loopParameters{i} ';'])
     if ~ischar(temp)
         temp = num2str(temp);
@@ -13,7 +18,7 @@ for i = 1:length(loopParameters)
     end
     temp = erase(temp,':');
     temp = erase(temp,' ');
-    switch loopParameters{i}
+    switch temp2
         case {'formulation','IEbasis','method','coreMethod','BC'}
             saveName = [saveName '_' temp];
         otherwise

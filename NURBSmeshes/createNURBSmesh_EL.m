@@ -146,7 +146,7 @@ else
         [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
     end
     
-    varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
+    task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
 
     if numel(varCol) > 1
         solid = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);

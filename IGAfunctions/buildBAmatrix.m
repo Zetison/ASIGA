@@ -7,40 +7,40 @@ function task = buildBAmatrix(task,i_varCol)
 
 
 %% Extract all needed data from options and varCol
-degree = task.varCol{i_domain}.degree; % assume degree is equal in all patches
+degree = task.varCol{i_varCol}.degree; % assume degree is equal in all patches
 
-index = task.varCol{i_domain}.index;
-noElems = task.varCol{i_domain}.noElems;
-elRange = task.varCol{i_domain}.elRange;
-element = task.varCol{i_domain}.element;
-element2 = task.varCol{i_domain}.element2;
-weights = task.varCol{i_domain}.weights;
-controlPts = task.varCol{i_domain}.controlPts;
-knotVecs = task.varCol{i_domain}.knotVecs;
-pIndex = task.varCol{i_domain}.pIndex;
-noDofs = task.varCol{i_domain}.noDofs;
-extraGP = task.varCol{i_domain}.extraGP;
-d_p = task.varCol{i_domain}.patches{1}.nurbs.d_p;
+index = task.varCol{i_varCol}.index;
+noElems = task.varCol{i_varCol}.noElems;
+elRange = task.varCol{i_varCol}.elRange;
+element = task.varCol{i_varCol}.element;
+element2 = task.varCol{i_varCol}.element2;
+weights = task.varCol{i_varCol}.weights;
+controlPts = task.varCol{i_varCol}.controlPts;
+knotVecs = task.varCol{i_varCol}.knotVecs;
+pIndex = task.varCol{i_varCol}.pIndex;
+noDofs = task.varCol{i_varCol}.noDofs;
+extraGP = task.misc.extraGP;
+d_p = task.varCol{i_varCol}.patches{1}.nurbs.d_p;
 
 if task.misc.solveForPtot && task.misc.exteriorProblem
-    analytic = @(x) task.varCol{i_domain}.p_(x) + task.varCol{i_domain}.p_inc_(x);
+    analytic = @(x) task.varCol{i_varCol}.p_(x) + task.p_inc_(x);
 else
-    switch task.varCol{i_domain}.media
+    switch task.varCol{i_varCol}.media
         case 'fluid'
-            analytic = task.varCol{i_domain}.p_;
+            analytic = task.varCol{i_varCol}.p_;
         case 'solid'
-            analytic = @(X) reshape([task.varCol{i_domain}.u_x_(X).'; task.varCol{i_domain}.u_y_(X).'; task.varCol{i_domain}.u_z_(X).'],3*size(X{i_varCol},1),1);
+            analytic = @(X) reshape([task.varCol{i_varCol}.u_x_(X).'; task.varCol{i_varCol}.u_y_(X).'; task.varCol{i_varCol}.u_z_(X).'],3*size(X{i_varCol},1),1);
     end
 end
 
-if strcmp(task.varCol{i_domain}.coreMethod, 'XI')
+if strcmp(task.misc.coreMethod, 'XI')
     useEnrichedBfuns = true;
-    d_vec = task.varCol{i_domain}.d_vec;
+    d_vec = task.varCol{i_varCol}.d_vec;
 else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
-k = task.varCol{i_domain}.k;
+k = task.varCol{i_varCol}.k;
 [Q, W] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 n_en = prod(degree+1);
 
@@ -99,7 +99,7 @@ else
     analytic_values = analytic(X);
 end
 
-d_f = task.varCol{i_domain}.dimension;
+d_f = task.varCol{i_varCol}.dimension;
 analytic_values = reshape(analytic_values, d_f, size(W,1), noElems);
 
 
@@ -153,5 +153,5 @@ end
         
 
 %% Collect data into global matrices (and load vector)
-task.varCol{i_domain}.FF = vectorAssembly(Fvalues,F_indices,noDofs);
+task.varCol{i_varCol}.FF = vectorAssembly(Fvalues,F_indices,noDofs);
 

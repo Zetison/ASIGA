@@ -1,36 +1,37 @@
-function relError = calcSurfErrorBndryMethodVec(varCol, LpOrder)
+function relError = calcSurfErrorBndryMethodVec(task)
 
 i = 1;
-degree = varCol{i}.degree; % assume degree is equal in all patches
+LpOrder = task.err.LpOrder;
+degree = task.varCol{i}.degree; % assume degree is equal in all patches
 
-index = varCol{i}.index;
-noElems = varCol{i}.noElems;
-elRange = varCol{i}.elRange;
-element = varCol{i}.element;
-element2 = varCol{i}.element2;
-weights = varCol{i}.weights;
-controlPts = varCol{i}.controlPts;
-knotVecs = varCol{i}.knotVecs;
-pIndex = varCol{i}.pIndex;
-d_p = varCol{i}.patches{1}.nurbs.d_p;
-U = varCol{i}.U;
-k = varCol{i}.k;
+index = task.varCol{i}.index;
+noElems = task.varCol{i}.noElems;
+elRange = task.varCol{i}.elRange;
+element = task.varCol{i}.element;
+element2 = task.varCol{i}.element2;
+weights = task.varCol{i}.weights;
+controlPts = task.varCol{i}.controlPts;
+knotVecs = task.varCol{i}.knotVecs;
+pIndex = task.varCol{i}.pIndex;
+d_p = task.varCol{i}.patches{1}.nurbs.d_p;
+U = task.varCol{i}.U;
+k = task.varCol{i}.k;
 
-if strcmp(varCol{1}.coreMethod, 'XI')
+if strcmp(task.misc.coreMethod, 'XI')
     useEnrichedBfuns = true;
-    d_vec = varCol{1}.d_vec;
+    d_vec = task.varCol{1}.d_vec;
 else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
 
-extraGP = varCol{1}.extraGP;
+extraGP = task.misc.extraGP;
 [Q, W] = gaussTensorQuad(degree+3+extraGP(1:2));
 
 p_h = complex(zeros(size(W,1), noElems, size(U,2)));
 fact = zeros(size(W,1), noElems);
 points = zeros(size(W,1), noElems,3);
-isMFS = strcmp(varCol{1}.method,'MFS');
+isMFS = strcmp(task.misc.method,'MFS');
 
 % for e = 1:noElems
 parfor e = 1:noElems
@@ -68,7 +69,7 @@ points = reshape(points, size(points,1)*size(points,2),3);
 if isMFS
     Phi_k = @(r) exp(1i*k*r)./(4*pi*r);
     n_cp = size(U,1);
-    y_s = varCol{i}.y_s;
+    y_s = task.varCol{i}.y_s;
     r = zeros(size(points));
     for j = 1:n_cp
         r(:,j) = norm2(elementAddition(-y_s(j,:), points));
@@ -78,10 +79,10 @@ else
     p_h = reshape(p_h, size(p_h,1)*size(p_h,2),size(U,2));
 end
 
-if varCol{i}.solveForPtot && varCol{i}.exteriorProblem
-    analytic = @(x) varCol{i}.p_(x) + varCol{i}.p_inc_(x);
+if task.misc.solveForPtot && task.misc.exteriorProblem
+    analytic = @(x) task.varCol{i}.p_(x) + task.p_inc_(x);
 else
-    analytic = varCol{i}.p_;
+    analytic = task.varCol{i}.p_;
 end
 p = analytic(points);
 if isinf(LpOrder)

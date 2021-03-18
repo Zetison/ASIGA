@@ -1,30 +1,30 @@
-function varCol = buildMFSmatrix(varCol)
+function task = buildMFSmatrix(task)
 
 
-patches = varCol.patches;
-index = varCol.index;
-noElems = varCol.noElems;
-elRangeXi = varCol.elRange{1};
-elRangeEta = varCol.elRange{2};
-pIndex = varCol.pIndex;
+patches = task.varCol{1}.patches;
+index = task.varCol{1}.index;
+noElems = task.varCol{1}.noElems;
+elRangeXi = task.varCol{1}.elRange{1};
+elRangeEta = task.varCol{1}.elRange{2};
+pIndex = task.varCol{1}.pIndex;
 
-k = varCol.k;
+k = task.varCol{1}.k;
 
-SHBC = strcmp(varCol.BC, 'SHBC');
+SHBC = strcmp(task.misc.BC, 'SHBC');
 if SHBC
-    no_angles = length(varCol.alpha_s);
-    p_inc = varCol.p_inc_;
-    dp_inc = varCol.dp_inc_;
+    no_angles = length(task.ffp.alpha_s);
+    p_inc = task.p_inc_;
+    dp_inc = task.dp_inc_;
 else
     no_angles = 1;
     p_inc = NaN;
     dp_inc = NaN;
 end
-dpdn = varCol.dpdn;
+dpdn = task.dpdn_;
 % n_cp = noDofs - length(dofsToRemove);
 
 nProgressStepSize = ceil(noElems/1000);
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 if progressBars
     ppm = ParforProgMon('Building MFS matrix: ', noElems, nProgressStepSize);
 else
@@ -32,14 +32,14 @@ else
 end
 
 if false
-    p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-    p_eta = varCol.degree(2); % assume p_eta is equal in all patches
-    element = varCol.element;
-    element2 = varCol.element2;
-    weights = varCol.weights;
-    controlPts = varCol.controlPts;
-    knotVecs = varCol.knotVecs;
-    noCtrlPts = varCol.noCtrlPts;
+    p_xi = task.varCol{1}.degree(1); % assume p_xi is equal in all patches
+    p_eta = task.varCol{1}.degree(2); % assume p_eta is equal in all patches
+    element = task.varCol{1}.element;
+    element2 = task.varCol{1}.element2;
+    weights = task.varCol{1}.weights;
+    controlPts = task.varCol{1}.controlPts;
+    knotVecs = task.varCol{1}.knotVecs;
+    noCtrlPts = task.varCol{1}.noCtrlPts;
     
     xb = [min(controlPts(:,1)),max(controlPts(:,1))];
     yb = [min(controlPts(:,2)),max(controlPts(:,2))];
@@ -50,7 +50,7 @@ if false
     Ly = yb(2)-yb(1);
     Lz = zb(2)-zb(1);
 
-    % delta = findMaxElementDiameter(varCol.patches)/2;
+    % delta = findMaxElementDiameter(task.varCol{1}.patches)/2;
     delta = 0.08;
 
     x = linspace(xb(1),xb(2), ceil(Lx/delta)+1);
@@ -70,12 +70,12 @@ if false
     %      1,-1,1;
     %      -1,1,1;
     %      1,1,1];
-    min_d_Xon = varCol.parm; % minimal distance from scatterer to points in X_exterior
+    min_d_Xon = task.mfs.parm; % minimal distance from scatterer to points in X_exterior
     if 0
         extraPts = 4; % extra knots in mesh for plotting on scatterer
 
 
-        [faces,X_on,varCol.patches] = triangulateNURBSsurface(varCol.patches,extraPts);
+        [faces,X_on,task.varCol{1}.patches] = triangulateNURBSsurface(task.varCol{1}.patches,extraPts);
 
         in = intriangulation(X_on,faces,X,0);
         y_s = X(in,:);
@@ -86,7 +86,7 @@ if false
         end
         y_s(I3,:) = [];
     else
-        parms = varCol.parms;
+        parms = task.mfs.parms;
     %     L = parms.L;
         R_o = parms.R_o;
     %     in = or(and(sqrt(X(:,2).^2+X(:,3).^2) < R_o-min_d_Xon,and(-L <= X(:,1), X(:,1) <= 0)), ...
@@ -142,10 +142,10 @@ if false
         end
     end
 else
-    extraGP = varCol.extraGP;
+    extraGP = task.misc.extraGP;
     degree = patches{1}.nurbs.degree;
     p_eta = patches{1}.nurbs.degree(2);  
-    [Q, W] = gaussTensorQuad(degree+1+extraGP);
+    [Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
     nQuadPts = size(Q,1);
     n_vec = zeros(nQuadPts,3,noElems);
     x_vec = zeros(nQuadPts,3,noElems);
@@ -187,11 +187,11 @@ else
     n_vec = reshape(permute(n_vec,[1,3,2]),n_sp,3);
     n_sp = size(x_vec,1);
     n_vec = n_vec(I,:);
-%     y_s = x_vec - n_vec*varCol.delta;
-    if varCol.exteriorProblem
-        y_s = x_vec*(1-varCol.delta);
+%     y_s = x_vec - n_vec*task.misc.delta;
+    if task.misc.exteriorProblem
+        y_s = x_vec*(1-task.mfs.delta);
     else
-        y_s = x_vec*(1+varCol.delta);
+        y_s = x_vec*(1+task.mfs.delta);
     end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -297,7 +297,7 @@ end
 
 if 1
     noCoresToUse = feature('numCores');
-    formulation = varCol.formulation;
+    formulation = task.misc.formulation;
     if n_sp > 1e4 && noCoresToUse < 10
         error('This is a little bit too much?')
     end
@@ -312,7 +312,7 @@ if 1
             N = floor(sqrt(n_sp)-1);
             A = zeros(n_sp,(N+1)^2);
 %             F = zeros(n_sp,no_angles);
-            y = varCol.x_0;
+            y = task.varCol{1}.x_0;
             R = norm2(x_vec-y(ones(n_sp,1),:));
             theta = acos((x_vec(:,3)-y(3))./R);
             phi = atan2(x_vec(:,2)-y(2),x_vec(:,1)-y(1));
@@ -360,7 +360,7 @@ if 1
                 Prev = P;
             end
             F = -dp_inc(x_vec,n_vec);
-            varCol.N = N;
+            task.mfs.N = N;
         case 'PS'
             A = zeros(n_sp);
             F = zeros(n_sp,no_angles);
@@ -376,7 +376,7 @@ if 1
                     F(i,:) = dpdn(x,n);
                 end
             end
-            varCol.y_s = y_s;
+            task.varCol{1}.y_s = y_s;
     end
 else
     nQuadPts = 3;
@@ -410,9 +410,9 @@ else
     n_vec = reshape(permute(n_vec,[1,3,2]),1,n_qp,3);
     fact = reshape(fact,1,n_qp);
     
-    d_vec = repmat(reshape(varCol.d_vec.',no_angles,1,3),1,n_qp,1);
+    d_vec = repmat(reshape(task.varCol{1}.d_vec.',no_angles,1,3),1,n_qp,1);
     y_s = reshape(y_s,n_sp,1,3);
-    P_inc = varCol.P_inc;
+    P_inc = task.misc.P_inc;
     A = zeros(n_sp);
     F = zeros(n_sp,no_angles);
     
@@ -427,15 +427,15 @@ else
         A(i,:) = sum(dPhi_kdnx_.*repmat(dPhi_kdnx_i.*fact,n_sp,     1,1),2);
         F(i,:) = sum(-dp_inc_  .*repmat(dPhi_kdnx_i.*fact,no_angles,1,1),2);
     end
-    varCol.y_s = reshape(y_s,n_sp,3);
+    task.varCol{1}.y_s = reshape(y_s,n_sp,3);
 end
-varCol.A_K = A;
-varCol.FF = F;
+task.varCol{1}.A_K = A;
+task.varCol{1}.FF = F;
 % 
 % keyboard
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plotNURBS(varCol.nurbs,[40 40], 1, getColor(1), 0.8);
+% plotNURBS(task.varCol{1}.nurbs,[40 40], 1, getColor(1), 0.8);
 % hold on
 % plot3(x_vec(:,1),x_vec(:,2),x_vec(:,3),'o')issymmetric2
 % plot3(y_s(:,1),y_s(:,2),y_s(:,3),'o','color','blue')

@@ -27,10 +27,11 @@ end
 if task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
-    plotMeshAndGeometry(task.varCol,task);
+    plotMeshAndGeometry(task);
     fprintf('using %12f seconds.', toc)
     
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Check NURBS compatibility
 for j = 1:numel(task.varCol)
@@ -64,33 +65,22 @@ if ~runTasksInParallel
     fprintf('using %12f seconds.', toc)
     fprintf('\nTotal number of elements = %d', totNoElems)
 end
-task.varCol{1}.totNoElems = totNoElems;
+task.totNoElems = totNoElems;
 if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry) && task.prePlot.abortAfterPlotting
     return
 end
 
 %% Build stiffness matrix
 t_start = tic;
-f = task.misc.omega/(2*pi);
+omega = task.misc.omega;
 if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
-    U_sweep = cell(1,numel(f));
+    U_sweep = cell(1,numel(omega));
 end
 if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
-    for i_f = 1:numel(f)
-        f_i = f(i_f);
-        omega = 2*pi*f_i;
-        for m = 1:noDomains
-            task.varCol{m}.omega = omega;
-            switch task.varCol{m}.media
-                case 'fluid'
-                    task.varCol{m}.f = f_i;
-                    task.varCol{m}.k = omega/task.varCol{m}.c_f;
-                    task.varCol{m}.lambda = 2*pi/task.varCol{m}.k;
-                case 'solid'
-                    task.varCol{m}.k = NaN;
-            end
-        end
+    for i_o = 1:numel(omega)
+        omega_i = omega(i_o);
         t_freq = tic;
+        task.misc.omega = omega_i;
         task = getAnalyticSolutions(task);
         switch task.misc.method
             case {'IE','ABC','IENSG','PML'}
@@ -132,10 +122,10 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         chimax = task.varCol{1}.chimax;
                         chimin = task.varCol{1}.chimin;
                         if abs(chimax - chimin)/abs(chimax) < 100*eps
-                            task.varCol{1}.r_a = mean([chimax,chimin]);
+                            task.misc.r_a = mean([chimax,chimin]);
                             task = buildIEmatrix(task);
                         else
-                            task.varCol{1} = infElementsNonSepGeom(task.varCol{1});  
+                            task = infElementsNonSepGeom(task);  
                         end
                         if ~runTasksInParallel
                             fprintf('using %12f seconds.', toc)
@@ -161,8 +151,8 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     if ~runTasksInParallel
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
                     end  
-                    for i = 2:noDomains
-                        task.varCol{i} = applyCouplingConditionPatches(task.varCol{i},task.varCol{i-1});
+                    for i_domain = 2:noDomains
+                        task = applyCouplingConditionPatches(task,i_domain);
                     end
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
@@ -189,9 +179,9 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 end
                 switch task.misc.formulation(1)
                     case 'G' % Galerkin
-                        task.varCol{1} = buildGBEMmatrix(task.varCol{1},noDomains > 1);  
+                        task = buildGBEMmatrix(task,1);  
                     case 'C' % Collocation
-                        task.varCol{1} = buildCBEMmatrix(task.varCol{1});  
+                        task = buildCBEMmatrix(task);  
                 end
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', toc)
@@ -199,7 +189,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 if strcmp(task.misc.formulation(end),'C')
                     tic
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
-                    task.varCol{1} = buildCHIEFmatrix(task.varCol{1});
+                    task = buildCHIEFmatrix(task);
                     if ~runTasksInParallel
                         fprintf('using %12f seconds.', toc)
                     end
@@ -225,7 +215,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     
                     switch formulation(1)
                         case 'G' % Galerkin
-                            task.varCol{3} = buildGBEMmatrix(task.varCol{3},noDomains > 1);  
+                            task = buildGBEMmatrix(task,3);  
                         case 'C' % Collocation
                             error('Not implemented')
                     end
@@ -273,7 +263,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 if ~runTasksInParallel
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building MFS matrix ... ')
                 end
-                task.varCol{1} = buildMFSmatrix(task.varCol{1});  
+                task = buildMFSmatrix(task);  
                 task.varCol{1}.timeBuildSystem = toc;
                 if ~runTasksInParallel
                     fprintf('using %12f seconds.', task.varCol{1}.timeBuildSystem)
@@ -285,7 +275,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 if strcmp(task.misc.method,'BA')
                     A = A2;
                 else
-                    A = A0 + omega*A1 + omega^2*A2 + omega^4*A4;
+                    A = A0 + omega_i*A1 + omega_i^2*A2 + omega_i^4*A4;
                 end
                 
                 if ~runTasksInParallel
@@ -333,9 +323,9 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                             error('not implemented')
                         end
                         if task.rom.useROM
-                            dAdomega = A1 + 2*omega*A2 + 4*omega^3*A4;
-                            d2Adomega2 = 2*A2 + 12*omega^2*A4;
-                            if task.rom.useDGP && i_f == numel(f)
+                            dAdomega = A1 + 2*omega_i*A2 + 4*omega_i^3*A4;
+                            d2Adomega2 = 2*A2 + 12*omega_i^2*A4;
+                            if task.rom.useDGP && i_o == numel(omega)
                                 task.varCol{1}.A0 = A0;
                                 task.varCol{1}.A1 = A1;
                                 task.varCol{1}.A2 = A2;
@@ -356,11 +346,11 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                                 UU(:,i) = Pinv*(dA\b);
                             end
                         else
-                            if i_f == 1 && strcmp(task.misc.formulation,'Sweep')
-                                UU = zeros(size(A,1),numel(f));
+                            if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
+                                UU = zeros(size(A,1),numel(omega));
                             end
                             if strcmp(task.misc.scatteringCase,'Sweep')
-                                UU(:,i_f) = Pinv*((A*Pinv)\FF);
+                                UU(:,i_o) = Pinv*((A*Pinv)\FF);
                             else
                                 UU = Pinv*((A*Pinv)\FF);
                             end
@@ -396,20 +386,20 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
         end
         if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
-            U_sweep{i_f} = UU;
-            task.varCol = postProcessSolution(task.varCol,UU);
+            U_sweep{i_o} = UU;
+            task = postProcessSolution(task,UU);
         end
-        if strcmp(task.misc.scatteringCase,'Sweep') && numel(f) > 1
-            fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_f, numel(f), toc(t_freq))  
+        if strcmp(task.misc.scatteringCase,'Sweep') && numel(omega) > 1
+            fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_o, numel(omega), toc(t_freq))  
         end
     end
-    if numel(f) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
+    if numel(omega) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         tic
         fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
-        progressBars = numel(f) > 1 && task.progressBars;
-        nProgressStepSize = ceil(numel(f)/10);
+        progressBars = numel(omega) > 1 && task.progressBars;
+        nProgressStepSize = ceil(numel(omega)/10);
         if progressBars
-            ppm = ParforProgMon('Calculating surface error: ', numel(f));
+            ppm = ParforProgMon('Calculating surface error: ', numel(omega));
         else
             ppm = NaN;
         end
@@ -419,65 +409,43 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
     end
 
     if ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
-        for i_f = 1:numel(f)
+        task.results.energyError = zeros(1,numel(omega));
+        task.results.L2Error = zeros(1,numel(omega));
+        task.results.H1Error = zeros(1,numel(omega));
+        task.results.H1sError = zeros(1,numel(omega));
+        task.results.surfaceError = zeros(1,numel(omega));
+        for i_o = 1:numel(omega)
             if progressBars
                 ppm.increment();
             end
-            f_i = f(i_f);
-            omega = 2*pi*f_i;
-            for m = 1:noDomains
-                task.varCol{m}.omega = omega;
-                switch task.varCol{m}.media
-                    case 'fluid'
-                        task.varCol{m}.f = f_i;
-                        task.varCol{m}.k = omega/task.varCol{m}.c_f;
-                        task.varCol{m}.lambda = 2*pi/task.varCol{m}.k;
-                    case 'solid'
-                        task.varCol{m}.k = NaN;
-                end
-            end
+            task.misc.omega = omega(i_o);
             task = getAnalyticSolutions(task);
-            if i_f == 1
-                task.results.energyError = zeros(1,size(f,2));
-                task.results.L2Error = zeros(1,size(f,2));
-                task.results.H1Error = zeros(1,size(f,2));
-                task.results.H1sError = zeros(1,size(f,2));
-                task.results.surfaceError = zeros(1,size(f,2));
-            end
-            task.varCol = postProcessSolution(task.varCol,UU(:,i_f));
-            printLog = numel(f) == 1 && ~runTasksInParallel;
-            printLog = true && ~runTasksInParallel;
-            [L2Error, H1Error, H1sError, energyError, surfaceError] ...
-                = calculateErrors(task, task.varCol, printLog, stringShift);
-            task.results.surfaceError(i_f) = surfaceError;
-            task.results.energyError(i_f) = energyError;
-            task.results.L2Error(i_f) = L2Error;
-            task.results.H1Error(i_f) = H1Error;
-            task.results.H1sError(i_f) = H1sError;
+            
+            task = postProcessSolution(task,UU(:,i_o));
+%             printLog = numel(omega) == 1 && ~runTasksInParallel;
+            printLog = ~runTasksInParallel;
+            [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, printLog, stringShift);
+            task.results.surfaceError(i_o) = surfaceError;
+            task.results.energyError(i_o) = energyError;
+            task.results.L2Error(i_o) = L2Error;
+            task.results.H1Error(i_o) = H1Error;
+            task.results.H1sError(i_o) = H1sError;
         end
     end
-    if numel(f) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
+    if numel(omega) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         fprintf('using %12f seconds.', toc)   
     end
 else
     task.varCol{1}.U = [];
 end  
+task.misc.omega = omega;
 
 %% Compute scattered pressure   
 if task.ffp.calculateFarFieldPattern && ~task.rom.useROM
-    omega = 2*pi*f;
-    task.omega = omega;
-    task.varCol{1}.k = omega/task.varCol{1}.c_f;
-    task.varCol{1}.lambda = 2*pi./task.varCol{1}.k;
-    task.varCol{1}.f = f;
     task = getAnalyticSolutions(task);
-    task.varCol = postProcessSolution(task.varCol,UU);
+    task = postProcessSolution(task,UU);
     task = calculateTS(task,runTasksInParallel,stringShift);
-end
-if ~task.rom.useROM
-    task.varCol{1}.k = (2*pi*f)/task.varCol{1}.c_f;
-    task.varCol{1}.f = f;
-    task.varCol{1}.omega = 2*pi*f;
+    task = computeDerivedFFPquantities(task,task.p_h);
 end
 if task.misc.clearGlobalMatrices
     clear UU U
@@ -577,13 +545,10 @@ task.varCol{1}.tot_time = toc(t_start);
 
 fprintf('\nTotal time spent on task: %12f', task.varCol{1}.tot_time)  
 
-if task.misc.storeFullVarCol
-    varColTemp = task.varCol;
-    if task.rom.useROM
-        varColTemp{1}.U_sweep = U_sweep;
-    end
-    task.varCol = varColTemp;
-else
+if task.rom.useROM
+    task.U_sweep = U_sweep;
+end
+if ~task.misc.storeFullVarCol
     task.varCol = extractVarColFields(task,task.varCol);
 end
 

@@ -1,21 +1,20 @@
-function varColInner = applyCouplingConditionPatches(varColInner,varColOuter)
+function task = applyCouplingConditionPatches(task,i_domain)
 % Future work: Vectorize over Gauss points
+knotVecs = task.varCol{i_domain}.knotVecs;
+elRange = task.varCol{i_domain}.elRange;
+d_p = task.varCol{i_domain}.patches{1}.nurbs.d_p;
 
-knotVecs = varColInner.knotVecs;
-elRange = varColInner.elRange;
-d_p = varColInner.patches{1}.nurbs.d_p;
-
-degree = varColInner.degree(1:2);
+degree = task.varCol{i_domain}.degree(1:2);
 
 
-weights = varColInner.weights;
-controlPts = varColInner.controlPts;
+weights = task.varCol{i_domain}.weights;
+controlPts = task.varCol{i_domain}.controlPts;
 
-d_inner = varColInner.dimension;
-d_outer = varColOuter.dimension;
+d_inner = task.varCol{i_domain}.dimension;
+d_outer = task.varCol{i_domain-1}.dimension;
 
-[innerNodes, innerNoElemsXiEta, innerXiEtaMesh, innerXiEtaMesh2, innerIndexXiEta, pIndex, n_en] = meshBoundary(varColInner,'outerCoupling');
-outerNodes = meshBoundary(varColOuter,'innerCoupling');
+[innerNodes, innerNoElemsXiEta, innerXiEtaMesh, innerXiEtaMesh2, innerIndexXiEta, pIndex, n_en] = meshBoundary(task.varCol{i_domain},'outerCoupling');
+outerNodes = meshBoundary(task.varCol{i_domain-1},'innerCoupling');
 
 Avalues = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
@@ -23,7 +22,7 @@ spIdxRow1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 spIdxCol1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
 
-extraGP = varColOuter.extraGP;
+extraGP = task.misc.extraGP;
 [Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 parfor e = 1:innerNoElemsXiEta
 % for e = 1:innerNoElemsXiEta    
@@ -79,4 +78,4 @@ Avalues = reshape(Avalues,numel(Avalues),1);
 [spIdx1,~,IuniqueIdx1] = unique([spIdxRow1, spIdxCol1],'rows');
 Avalues = accumarray(IuniqueIdx1,Avalues);
 
-varColInner.A_C = sparse(spIdx1(:,1),spIdx1(:,2),Avalues,max(spIdx1(:,1)),max(spIdx1(:,2)),numel(IuniqueIdx1));
+task.varCol{i_domain}.A_C = sparse(spIdx1(:,1),spIdx1(:,2),Avalues,max(spIdx1(:,1)),max(spIdx1(:,2)),numel(IuniqueIdx1));

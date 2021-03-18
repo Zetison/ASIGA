@@ -6,6 +6,9 @@ knotVecs = task.varCol{1}.knotVecs;
 degree = task.varCol{1}.degree(1:2); % assume degree is equal in all patches
 Ntot = task.iem.N;
 r_a = task.misc.r_a;
+if isnan(r_a)
+    error('misc.r_a must be set, either in the mesh script or in the task script')
+end
 IEbasis = task.iem.IEbasis;
 p_ie = task.iem.p_ie;
 IElocSup = task.iem.IElocSup;

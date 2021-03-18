@@ -29,7 +29,7 @@ for i = 1:noDomains
         noQuadPts = 6;
         [W,Q] = gaussianQuadNURBS(noQuadPts,noQuadPts,noQuadPts); 
     else
-        extraGP = task.varCol{i}.extraGP;
+        extraGP = task.misc.extraGP;
         [Q, W] = gaussTensorQuad(degree+3+extraGP);
     end
     if mod(i,2) == 0

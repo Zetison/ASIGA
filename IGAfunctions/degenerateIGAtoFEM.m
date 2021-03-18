@@ -235,7 +235,7 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                                         length(nurbs.knots{3})-2];
                 end
             case 2
-                switch task.coreMethod
+                switch task.misc.coreMethod
                     case 'SEM'
                         Nxi = nurbs.number(1);
                         Neta = nurbs.number(2);

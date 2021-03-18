@@ -7,21 +7,21 @@ function tasks = computeROMsolution(tasks,i_task,basisROMcell,omega_ROM,noVecsAr
 % basisROM = 'Bernstein';
 runTasksInParallel = false;
 
-U_sweep = tasks(i_task).task.varCol{1}.U_sweep;
+U_sweep = tasks(i_task).task.U_sweep;
 noDofs = size(U_sweep{1},1);
 A0 = tasks(i_task).task.varCol{1}.A0;
 A1 = tasks(i_task).task.varCol{1}.A1;
 A2 = tasks(i_task).task.varCol{1}.A2;
-tasks(i_task).task.varCol = rmfields(tasks(i_task).task.varCol,{'A0','A1','A2','U_sweep','U'});
+tasks(i_task).task.varCol = rmfields(tasks(i_task).task.varCol,{'A0','A1','A2','U'});
+tasks(i_task).task = rmfield(tasks(i_task).task,'U_sweep');
 task = tasks(i_task).task;
-omega_P = task.omega;
+omega_P = task.misc.omega;
 P = numel(omega_P);
 omega_start = omega_P(1);
 omega_end = omega_P(end);
 stringShift = 40;
-varCol = task.varCol;
-tasks(i_task).task.varCol = extractVarColFields(task,varCol);
-noDomains = numel(varCol);
+tasks(i_task).task.varCol = extractVarColFields(task,task.varCol);
+noDomains = numel(task.varCol);
 
 % noVec = size(U_P{1},2);
 for i_b = 1:numel(basisROMcell)
@@ -246,90 +246,90 @@ for i_b = 1:numel(basisROMcell)
 
 %             omega_ROM = double(unique(sort([k_P,omega_ROM])));
         omega_ROM = double(omega_ROM);
-        fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
-        t_startROM = tic;
-        switch basisROM
-            case 'DGP'
-                UU = zeros(noDofs,numel(omega_ROM));
-                varCol{1}.omega = omega_ROM;
-                varCol{1}.k = omega_ROM/varCol{1}.c_f;
-                varCol{1}.noRHSs = numel(omega_ROM);
-                task = getAnalyticSolutions(task);
-                if noDomains > 1
-                    varCol{2}.p_inc_ = varCol{1}.p_inc_;
-                    varCol{2}.dp_inc_ = varCol{1}.dp_inc_;
-                    varCol{2}.noRHSs = varCol{1}.noRHSs;
-                end
-                for i = 1:min(noDomains,2)
-                    varCol{i}.useROM = false;
-                    varCol{i} = applyNeumannCondition(varCol{i});
-                    varCol{i}.useROM = true;
-                end
-                [varCol,FF] = collectMatrices(varCol,task);
-                FFm = V'*FF;  
+        energyError = zeros(1,size(omega_ROM,2));
+        L2Error = zeros(1,size(omega_ROM,2));
+        H1Error = zeros(1,size(omega_ROM,2));
+        H1sError = zeros(1,size(omega_ROM,2));
+        surfaceError = zeros(1,size(omega_ROM,2));
+        p_h = zeros(1,size(omega_ROM,2));
+        for i_f = 1:numel(omega_ROM)
+            omega = omega_ROM(i_f);
+            task.misc.omega = omega;
+            fprintf(['\n%-' num2str(stringShift) 's'], ['Computing ROM solution (' num2str(i_f) '/' num2str(numel(omega_ROM)) ')... '])
+            t_startROM = tic;
+            task = getAnalyticSolutions(task);
+            switch basisROM
+                case 'DGP'
+                    task.noRHSs = 1;
+                    for i_domain = 1:min(noDomains,2)
+                        task.rom.useROM = false;
+                        task = applyNeumannCondition(task,i_domain);
+                        task.rom.useROM = true;
+                    end
+                    [task,FF] = collectMatrices(task);
+                    FFm = V'*FF;  
 
-                for i_f = 1:numel(omega_ROM)
-                    omega = omega_ROM(i_f);
                     Am = A0_am + omega*A1_am + omega^2*A2_am;
                     Pinv = spdiags(1./diag(Am),0,size(Am,1),size(Am,2));
-                    UU(:,i_f) = V*(Pinv*((Am*Pinv)\FFm(:,i_f)));
-                end
-            case 'Hermite'
-                UU = zeros(noDofs,numel(omega_ROM));
-                counter = 1;
-                for i = 1:P
-                    for n = 1:noVecs
-                        UU = UU + U_sweep{i}(:,n)*Y(counter,:);
-                        counter = counter + 1;
+                    UU = V*(Pinv*((Am*Pinv)\FFm));
+                case 'Hermite'
+                    UU = zeros(noDofs,1);
+                    counter = 1;
+                    for i = 1:P
+                        for n = 1:noVecs
+                            UU = UU + U_sweep{i}(:,n)*Y(counter,:);
+                            counter = counter + 1;
+                        end
                     end
-                end
-            case 'Pade'
-                if useHP
-                    UU = double(interPade(mp(omega_ROM),mp(omega_P),p,q));
-                else
-                    UU = interPade(omega_ROM,omega_P,p,q);
-                end
-            case 'Bernstein'
-                B = bernsteinBasis(double((omega_ROM-omega_start)/(omega_end - omega_start)),double(p_ROM),0);
-                UU = (B*a).';
-            case 'Taylor'
-                UU = interTaylor(omega_ROM,omega_P,U_sweep,noVecs-1);
-        end
-        fprintf('using %12f seconds.', toc(t_startROM))
+                case 'Pade'
+                    if useHP
+                        UU = double(interPade(mp(omega),mp(omega_P),p,q));
+                    else
+                        UU = interPade(omega,omega_P,p,q);
+                    end
+                case 'Bernstein'
+                    B = bernsteinBasis(double((omega-omega_start)/(omega_end - omega_start)),double(p_ROM),0);
+                    UU = (B*a).';
+                case 'Taylor'
+                    UU = interTaylor(omega,omega_P,U_sweep,noVecs-1);
+            end
+            task = postProcessSolution(task,UU);
+            fprintf('using %12f seconds.', toc(t_startROM))
 
-        if task.calculateSurfaceError || task.calculateVolumeError
-            fprintf(['\n%-' num2str(stringShift) 's'], 'Computing errors for ROM sweeps ... ')
-            t_startROM = tic;
-            
-            if task.calculateSurfaceError && ~task.calculateVolumeError
-                task = getAnalyticSolutions(task);
-                varCol = postProcessSolution(varCol,UU);
-                [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, 1, stringShift);
-            else
-                energyError = zeros(1,size(omega_ROM,2));
-                L2Error = zeros(1,size(omega_ROM,2));
-                H1Error = zeros(1,size(omega_ROM,2));
-                H1sError = zeros(1,size(omega_ROM,2));
-                surfaceError = zeros(1,size(omega_ROM,2));
-                for i_f = 1:numel(omega_ROM)
-    %             parfor i_f = 1:numel(omega_ROM)
-                    varCol_temp = varCol;
-                    varCol_temp{1}.omega = omega_ROM(i_f);
-                    k = omega_ROM(i_f)/varCol_temp{1}.c_f;
-                    varCol_temp{1}.k = k;
-                    varCol_temp{1}.f = omega_ROM(i_f)/(2*pi);
-                    task = getAnalyticSolutions(task);
-                    varCol_temp = postProcessSolution(varCol_temp,UU(:,i_f));
-                    [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] ...
-                                    = calculateErrors(task, varCol_temp, 1, stringShift);
+            if task.err.calculateSurfaceError || task.err.calculateVolumeError
+                [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] = calculateErrors(task, 1, stringShift);
+            end
+
+            if task.ffp.calculateFarFieldPattern
+                task = calculateTS(task,runTasksInParallel,stringShift);
+                p_h(i_f) = task.p_h;
+            end
+        end
+        if task.ffp.calculateFarFieldPattern
+            task.misc.omega = omega_ROM;
+            task = getAnalyticSolutions(task);
+            task = computeDerivedFFPquantities(task,p_h);
+            fieldCell = {'p','p_Re','p_Im','abs_p','TS'};
+            if task.analyticSolutionExist
+                fieldCell = [fieldCell, 'p_ref', 'p_Re_ref', 'p_Im_ref','abs_p_ref','TS_ref','error_pAbs','error_p'];
+            end
+            for field = fieldCell
+                switch basisROM
+                    case {'Taylor','Pade'}
+                        [tasks(i_task,taskROM,i_b).task.results.(field{1}),temp_omega_ROM] = insertNaN(omega_ROM,task.results.(field{1}),omega_P);
+                    otherwise
+                        tasks(i_task,taskROM,i_b).task.results.(field{1}) = task.results.(field{1});
+                        temp_omega_ROM = omega_ROM;
                 end
             end
+        end
+        if task.err.calculateSurfaceError || task.err.calculateVolumeError
             switch basisROM
                 case {'Taylor','Pade'}
-                    if task.calculateSurfaceError
+                    if task.err.calculateSurfaceError
                         [surfaceError,temp_omega_ROM] = insertNaN(omega_ROM,surfaceError,omega_P);
                     end
-                    if task.calculateVolumeError
+                    if task.err.calculateVolumeError
                         [energyError,temp_omega_ROM] = insertNaN(omega_ROM,energyError,omega_P);
                         L2Error  = insertNaN(omega_ROM,L2Error,omega_P);
                         H1Error  = insertNaN(omega_ROM,H1Error,omega_P);
@@ -343,35 +343,12 @@ for i_b = 1:numel(basisROMcell)
             tasks(i_task,taskROM,i_b).task.results.H1Error = H1Error;
             tasks(i_task,taskROM,i_b).task.results.H1sError = H1sError;
             tasks(i_task,taskROM,i_b).task.results.surfaceError = surfaceError;
+        end
 
-            fprintf('using %12f seconds.', toc(t_startROM))
-        end
-        if task.calculateFarFieldPattern
-            varCol{1}.omega = omega_ROM;
-            varCol{1}.k = omega_ROM/varCol{1}.c_f;
-            varCol{1}.lambda = 2*pi./varCol{1}.k;
-            varCol{1}.f = omega_ROM/(2*pi);
-            varCol = postProcessSolution(varCol,UU);
-            task = getAnalyticSolutions(task);
-            task = calculateTS(varCol,task,runTasksInParallel,stringShift);
-            fieldCell = {'p','p_Re','p_Im','abs_p','TS'};
-            if varCol{1}.analyticSolutionExist
-                fieldCell = [fieldCell, 'p_ref', 'p_Re_ref', 'p_Im_ref','abs_p_ref','TS_ref','error_pAbs','error_p'];
-            end
-            for field = fieldCell
-                switch basisROM
-                    case {'Taylor','Pade'}
-                        [tasks(i_task,taskROM,i_b).task.results.(field{1}),temp_omega_ROM] = insertNaN(omega_ROM,task.results.(field{1}),omega_P);
-                    otherwise
-                        tasks(i_task,taskROM,i_b).task.results.(field{1}) = task.results.(field{1});
-                        temp_omega_ROM = omega_ROM;
-                end
-            end
-        end
-        tasks(i_task,taskROM,i_b).task.varCol = extractVarColFields(task,varCol);
+        tasks(i_task,taskROM,i_b).task.varCol = extractVarColFields(task,task.varCol);
         tasks(i_task,taskROM,i_b).task.varCol{1}.omega_ROM = temp_omega_ROM;
         tasks(i_task,taskROM,i_b).task.varCol{1}.f_ROM = temp_omega_ROM/(2*pi);
-        tasks(i_task,taskROM,i_b).task.varCol{1}.k_ROM = temp_omega_ROM/varCol{1}.c_f;
+        tasks(i_task,taskROM,i_b).task.varCol{1}.k_ROM = temp_omega_ROM/task.varCol{1}.c_f;
         tasks(i_task,taskROM,i_b).task.noVecs = noVecs;
         tasks(i_task,taskROM,i_b).task.basisROM = basisROM;
     end

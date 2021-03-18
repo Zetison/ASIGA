@@ -52,7 +52,7 @@ if varCol{1}.boundaryMethod
 
     solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi);
     refLength = R_max*pi/2;
-    if varCol{1}.refineThetaOnly
+    if task.msh.refineThetaOnly
         if parm ~= 1
             error('Must have parm = 1 for pure theta refinement')
         end

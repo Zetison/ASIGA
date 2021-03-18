@@ -18,10 +18,10 @@
 % studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
 % studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Shirron2005afe'; %getTask_Shirron2005afe
-studyName = 'Shirron2005afe_Fig3'; %getTask_Shirron2005afe_Fig3
+% studyName = 'Shirron2005afe_Fig3'; %getTask_Shirron2005afe_Fig3
 % studyName = 'FreeCAD'; %getTask_FreeCAD
 % studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
-% studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
+studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 % studyName = 'test'; %getTask_test
 
 %% Venas2020ibe

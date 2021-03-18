@@ -1,5 +1,7 @@
-function v = getFarFieldPoints(alpha,beta,r)
-
+function v = getFarFieldPoints(task)
+alpha = task.ffp.alpha;
+beta = task.ffp.beta;
+r = task.ffp.r;
 v = zeros(length(alpha)*length(beta)*length(r),3);
 counter = 1;
 for l = 1:length(r)

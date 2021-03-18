@@ -38,8 +38,8 @@ else
 end
 
 BC = task.misc.BC;
-k = task.varCol{1}.k;
 omega = task.misc.omega;
+k = omega/task.varCol{1}.c_f;
 method = task.misc.method;
 if strcmp(method,'IENSG') && ~farFieldNormalPressFromSolid
     error('Not implemented')

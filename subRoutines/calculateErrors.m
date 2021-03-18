@@ -1,16 +1,16 @@
-function [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, varCol, printLog, stringShift)
+function [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, printLog, stringShift)
 L2Error = NaN;
 H1Error = NaN;
 H1sError = NaN;
 energyError = NaN;
 surfaceError = NaN;
-if varCol{1}.boundaryMethod
+if task.varCol{1}.boundaryMethod
     if task.err.calculateSurfaceError
         tic 
         if printLog
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
         end
-        surfaceError = calcSurfErrorBndryMethodVec(varCol, task.err.LpOrder);
+        surfaceError = calcSurfErrorBndryMethodVec(task);
         if printLog
             fprintf('using %12f seconds.', toc)   
             fprintf('\nSurface error = %.16g', max(surfaceError))
@@ -48,10 +48,10 @@ else
         if printLog
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating error ... ')
         end
-        if strcmp(varCol{1}.coreMethod,'SEM')
+        if strcmp(task.misc.coreMethod,'SEM')
             [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(task,1);
         else
-            [L2Error, H1Error, H1sError, energyError] = calcErrorVec(task,1);
+            [L2Error, H1Error, H1sError, energyError] = calcErrorVec(task);
         end
         if printLog
             fprintf('using %12f seconds.', toc)

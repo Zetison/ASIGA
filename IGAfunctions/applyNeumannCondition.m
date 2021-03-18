@@ -9,23 +9,20 @@ d_f = task.varCol{i_domain}.fieldDimension;
 media = task.varCol{i_domain}.media;
 useROM = task.rom.useROM;
 noRHSs = task.noRHSs;
-if useROM
-    dp_inc_ROM_ = task.dp_inc_ROM_;
-    p_inc_ROM_ = task.vp_inc_ROM_;
-end
+
 switch media
     case 'fluid' 
         if useROM
-            dp_inc = @(X,n) dp_inc_ROM_(X,n);  
+            dp_inc = task.dp_inc_ROM_;  
         else
-            dp_inc = @(X,n) task.dp_inc_(X,n);  
+            dp_inc = task.dp_inc_;  
         end
         p_inc = NaN; % for for-loop transparency
     case 'solid'
         if useROM
-            p_inc = @(X) p_inc_ROM_(X);  
+            p_inc = task.dp_inc_;  
         else
-            p_inc = @(X) task.p_inc_(X);  
+            p_inc = task.p_inc_;  
         end
         dp_inc = NaN; % for for-loop transparency
 end
@@ -76,7 +73,7 @@ parfor e = 1:noElems
     n = crossProd./repmat(J_1,1,3);
     switch media
         case 'fluid' 
-            Fvalues(:,e,:) = R{1}'*(dp_inc(X,n).*fact);
+            Fvalues(:,e,:) = R{1}.'*(dp_inc(X,n).*fact);
         case 'solid'
             Fvalues(:,e,:) = -kron2(n,R{1})*(p_inc(X).*fact);
     end

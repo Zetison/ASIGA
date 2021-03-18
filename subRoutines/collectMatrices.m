@@ -3,7 +3,7 @@ noDomains = numel(task.varCol);
 Aindices = cell(noDomains,2);
 noCols_tot = 0;
 noRows_tot = 0;
-if isfield(task.varCol{1},'A_K') || isfield(task.varCol{1},'A_M') || strcmp(task.method,'IENSG')
+if isfield(task.varCol{1},'A_K') || isfield(task.varCol{1},'A_M') || strcmp(task.misc.method,'IENSG')
     allDofsToRemove = [];
     for i = noDomains:-1:1
         if isfield(task.varCol{i},'A_K')
@@ -12,7 +12,7 @@ if isfield(task.varCol{1},'A_K') || isfield(task.varCol{1},'A_M') || strcmp(task
         elseif isfield(task.varCol{i},'A_M')
             noRows = size(task.varCol{i}.A_M,1);
             noCols = size(task.varCol{i}.A_M,2);
-        elseif strcmp(task.method,'IENSG')
+        elseif strcmp(task.misc.method,'IENSG')
             noRows = task.varCol{i}.noDofs;
             noCols = task.varCol{i}.noDofs;
         else

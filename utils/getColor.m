@@ -21,5 +21,7 @@ switch type
         color = [0, 68, 123]; % FFI logo color
     case 9
         color = [0, 77, 145]; % background FFI color
+    case 10
+        color = [173, 216, 230]; % water
 end
 color = color/255;

@@ -1,5 +1,5 @@
 
-structs = {'varCol','misc','msh','prePlot','postPlot','sol','err','ffp','para','iem','pml','mfs','rom'};
+structs = {'varCol','misc','msh','prePlot','postPlot','sol','err','ffp','para','iem','pml','bem','mfs','rom'};
 for i = 1:numel(structs)
     task.(structs{i}) = eval(structs{i});
 end
@@ -51,10 +51,13 @@ studies(counter).runTasksInParallel = runTasksInParallel;
 if exist('basisROMcell','var')
     studies(counter).basisROMcell = basisROMcell;
     studies(counter).omega_ROM = omega_ROM;
-    studies(counter).noVecsArr = noVecsArr;
+    studies(counter).noVecsArr = rom.noVecsArr;
 end
 
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);
+if isempty(studies(counter).tasks)
+    error('loopParameters does not contain any valid parameters')
+end
 studies(counter).postPlot = postPlot;
 if isempty(subFolderName)
     subFolderName = misc.model;

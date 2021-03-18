@@ -1,15 +1,15 @@
 function layer = extract_e3Dss_data(task)
 M = numel(task.varCol);
 layer = cell(1,M);
-copyFields = {'P_inc','k','applyLoad','r_s','d_vec','isSphericalShell','N_max','omega','BC','a','noRHSs','model','splitExteriorFields'};
+copyFields = {'P_inc','applyLoad','r_s','d_vec','isSphericalShell','N_max','omega','BC','a','noRHSs','model','splitExteriorFields'};
 
 for i = 1:numel(copyFields)
-    if isfield(task.varCol{1},copyFields{i})
-        layer{1}.(copyFields{i}) = task.varCol{1}.(copyFields{i});
+    if isfield(task.misc,copyFields{i})
+        layer{1}.(copyFields{i}) = task.misc.(copyFields{i});
     elseif isfield(task,copyFields{i})
         layer{1}.(copyFields{i}) = task.(copyFields{i});
-    elseif isfield(task.misc,copyFields{i})
-        layer{1}.(copyFields{i}) = task.misc.(copyFields{i});
+    elseif isfield(task.varCol{1},copyFields{i})
+        layer{1}.(copyFields{i}) = task.varCol{1}.(copyFields{i});
     end
 end
 for m = 1:M

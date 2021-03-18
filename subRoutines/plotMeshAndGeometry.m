@@ -1,12 +1,12 @@
-function plotMeshAndGeometry(varCol,task)
+function plotMeshAndGeometry(task)
 prePlot = task.prePlot;
 if prePlot.plot3Dgeometry
-    figure('Color','white','name',['3D plot of geometry with mesh ' num2str(task.M)])
-    if strcmp(task.method, 'IENSG') && prePlot.plotArtificialBndry
-        c_z = varCol{1}.c_z;
-        c_x = varCol{1}.c_x;
-        alignWithAxis = varCol{1}.alignWithAxis;
-        x_0 = varCol{1}.x_0;
+    figure('Color','white','name',['3D plot of geometry with mesh ' num2str(task.msh.M)])
+    if strcmp(task.misc.method, 'IENSG') && prePlot.plotArtificialBndry
+        c_z = task.varCol{1}.c_z;
+        c_x = task.varCol{1}.c_x;
+        alignWithAxis = task.varCol{1}.alignWithAxis;
+        x_0 = task.varCol{1}.x_0;
         ellipsoid = getEllipsoidData('C',[c_x,c_x,c_z],'alignWithAxis', alignWithAxis, 'x_0', x_0);
         alphaValue = 0.6;
         if prePlot.alphaValue == 1
@@ -14,17 +14,25 @@ if prePlot.plot3Dgeometry
         end
         plotNURBS(ellipsoid,'resolution',[20 40],'alphaValue',0.6,'color','blue');
     end
-    for j = 1:numel(varCol)
-        if strcmp(varCol{j}.coreMethod, 'linear_FEM')
+    for j = 1:numel(task.varCol)
+        if strcmp(task.misc.coreMethod, 'linear_FEM')
             prePlot.resolution = [0,0,0];
         end
-        nurbs = varCol{j}.nurbs;
+        switch task.varCol{j}.media
+            case 'fluid'
+                prePlot.color = getColor(10);
+            case 'solid'
+                prePlot.color = getColor(1);
+        end
+        nurbs = task.varCol{j}.nurbs;
         prePlot.displayName = ['Domain ' num2str(j)];
         plotNURBS(nurbs, prePlot);
-        if isfield(varCol{1},'geometry')
-            topset = varCol{1}.geometry.topologysets.set;
+        if isfield(task.varCol{j},'geometry')
+            topset = task.varCol{j}.geometry.topologysets.set;
             patchIdx = [];
-            for i = 1:numel(topset)
+            noTopsets = numel(topset);
+            colors = jet(noTopsets);
+            for i = 1:noTopsets
                 noPatches = numel(topset{i}.item);
                 nurbs = cell(1,noPatches);
                 for ii = 1:numel(topset{i}.item)
@@ -33,9 +41,10 @@ if prePlot.plot3Dgeometry
                     patchIdx = [patchIdx, patch];
                     midx = topset{i}.item{ii}.Text;
                     at(midx) = true;
-                    nurbs(ii) = subNURBS(varCol{j}.nurbs(patch),'at',at.');
+                    nurbs(ii) = subNURBS(task.varCol{j}.nurbs(patch),'at',at.');
                 end
                 prePlot.displayName = ['Domain ' num2str(j) ', ' topset{i}.Attributes.name];
+                prePlot.color = colors(i,:);
                 plotNURBS(nurbs, prePlot);
             end
         end
@@ -72,25 +81,25 @@ if prePlot.plot3Dgeometry
     savefig([figName, '.fig'])
 end   
 if prePlot.plot2Dgeometry
-    figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(task.M)])
-    for j = 1:numel(varCol)
-        switch task.model
+    figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(task.msh.M)])
+    for j = 1:numel(task.varCol)
+        switch task.misc.model
             case {'M3','MS'}
-                nurbs2D = varCol{j}.nurbs(1:4:end);
+                nurbs2D = task.varCol{j}.nurbs(1:4:end);
             otherwise
-                nurbs2D = varCol{j}.nurbs;
+                nurbs2D = task.varCol{j}.nurbs;
         end
         nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
-        switch task.model
+        switch task.misc.model
             case {'PH', 'M3', 'MS', 'IMS', 'SMS'}
                 prePlot.view = [0,90];
             otherwise
                 prePlot.view = [0,0];
         end
-        if numel(varCol) > 1
-            switch varCol{j}.media
+        if numel(task.varCol) > 1
+            switch task.varCol{j}.media
                 case 'fluid'
-                    prePlot.color = [173, 216, 230]/255;
+                    prePlot.color = getColor(10);
                 case 'solid'
                     prePlot.color = getColor(1);
             end
@@ -131,7 +140,7 @@ end
 
 
 % plotControlPts(fluid);
-% dofsToRemove = varCol{1}.dofsToRemove;
-% controlPts = varCol{1}.controlPts;
+% dofsToRemove = task.varCol{1}.dofsToRemove;
+% controlPts = task.varCol{1}.controlPts;
 % plot3(controlPts(dofsToRemove,1),controlPts(dofsToRemove,2),controlPts(dofsToRemove,3),'o','color','blue','MarkerFaceColor','blue')
 

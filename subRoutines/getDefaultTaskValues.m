@@ -24,6 +24,7 @@ misc.storeSolution       = false;       % Store the solution vector
 misc.storeFullVarCol     = false;       % Store all variable in the varCol variable collector
 misc.clearGlobalMatrices = true;        % Clear memory consuming matrices
 misc.P_inc               = 1;           % Amplitude of incident wave
+misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as opposed to the interior problem)
 
 %% Mesh settings
 msh.M                   = 1;	% Mesh number
@@ -48,7 +49,6 @@ prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NU
 prePlot.plotNormalVectors   = false;       % Plot the normal vectors for the NURBS mesh
 prePlot.plotArtificialBndry = true;        % Plot the artificial boundary for the IENSG method
 prePlot.resolution       	= [20,20,20];  % Number of evaluation points in the visualization for each element for each parametric direction
-prePlot.color               = getColor(1); % Color for the NURBS surfaces
 prePlot.plotAt              = true(3,2);   % For solids: toggle which surfaces to visualize
 prePlot.alphaValue          = 1;           % Transparency value of NURBS surfaces
 prePlot.colorFun            = NaN;         % Color the NURBS surfaces by the values of a colorFun function \R^d -> \R
@@ -131,7 +131,6 @@ para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization point
 
 %% Settings for the BEM (boundary element method)
 bem.useNeumanProj       = false;        % In BEM; project Neumann boundary conditions onto solution space
-bem.exteriorProblem  	= true;         % In BEM: solve for the exterior problem (as opposed to the interior problem)
 bem.extraGPBEM         	= 50;        	% extra quadrature points around singularities for BEM formulations
 bem.agpBEM              = 1.4;       	% parameter for adaptiv Gauss point integration around singularities for BEM formulations
 bem.quadMethodBEM   	= 'Adaptive2';  % In BEM: Quadrature method for handling weakly singular integrals

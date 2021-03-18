@@ -11,9 +11,9 @@ prePlot.plot2Dgeometry = 0;
 prePlot.abortAfterPlotting = 1;
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'IL';
-formulation = {'BGU'};
+misc.formulation = {'BGU'};
 misc.method = {'IE'};
-parm = 1;
+msh.parm = 1;
 misc.coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
 misc.coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 % misc.coreMethods = {'hp_FEM'}; % [5, 4, 2, 1, 3]
@@ -27,7 +27,7 @@ postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= 0;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
-postPlot(1).xLoopName     	= 'M';
+postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
@@ -40,6 +40,7 @@ M_0 = 4; % 4
 for i_coreM = 1:length(misc.coreMethods)
     misc.coreMethod = misc.coreMethods(i_coreM);
     for BC = BCs
+        misc.BC = BC{1};
         switch BC{1}
             case 'SHBC'
                 noDomains = 1;
@@ -50,27 +51,26 @@ for i_coreM = 1:length(misc.coreMethods)
         end
         k = 1;
         c_f = 1524;
-        omega = k*c_f;
-        f = omega/(2*pi); 
+        misc.omega = k*c_f;
 
         switch misc.coreMethod{1}
             case 'IGA'
                 if i_coreM == 1
-                    M = M_0; % 4
-                    degree = 3; %3
+                    msh.M = M_0; % 4
+                    msh.degree = 3; %3
                 else
-                    M = M_0+1;
-                    degree = 2:3;
+                    msh.M = M_0+1;
+                    msh.degree = 2:3;
                 end
             case 'hp_FEM'
-                degree = 2;
-                M = M_0+1;
+                msh.degree = 2;
+                msh.M = M_0+1;
             case 'linear_FEM'
-                degree = 2;
-                M = M_0+2;
+                msh.degree = 2;
+                msh.M = M_0+2;
         end
         varCol = setIhlenburgParameters(noDomains);
-        varCol{1}.meshFile = 'createNURBSmesh_EL';
+        msh.meshFile = 'createNURBSmesh_EL';
         varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
         if numel(varCol) > 1
             varCol{2}.refinement = @(M,t,t_fluid) [2^(M-1)-1, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
@@ -78,19 +78,20 @@ for i_coreM = 1:length(misc.coreMethods)
         if numel(varCol) > 2
             varCol{3}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, max(2^(M-2)-1,0)];
         end
-        alpha_s = pi;
-        beta_s = 0;
+        ffp.alpha_s = pi;
+        ffp.beta_s = 0;
+        
         para.plotResultsInParaview = 0;
-        calculateFarFieldPattern = 1;
-        calculateVolumeError = 1;
+        err.calculateFarFieldPattern = 1;
+        err.calculateVolumeError = 1;
         err.calculateSurfaceError = 0;
-        loopParameters = {'misc.method','formulation','M','degree','misc.coreMethod','BC','f'};
+        loopParameters = {'misc.method','misc.formulation','msh.M','msh.degree','misc.coreMethod','misc.BC','misc.omega'};
 
-        formulation = {'BGU'};
+        misc.formulation = {'BGU'};
         misc.method = {'IE'};    
         collectIntoTasks
         
-        formulation = {'VL2E'};
+        misc.formulation = {'VL2E'};
         misc.method = {'BA'};
         collectIntoTasks
     end

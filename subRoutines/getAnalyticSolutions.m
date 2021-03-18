@@ -4,7 +4,7 @@ applyLoad = task.misc.applyLoad;
 splitExteriorFields = strcmp(applyLoad,'planeWave') || strcmp(applyLoad,'pointCharge') || strcmp(applyLoad,'radialPulsation');
 task.splitExteriorFields = splitExteriorFields;
 
-if ~splitExteriorFields && ~strcmp(task.varCol{1}.BC,'NBC')
+if ~splitExteriorFields && ~strcmp(task.misc.BC,'NBC')
     error('This exact solution requires BC = ''NBC''')
 end    
 
@@ -15,7 +15,7 @@ switch task.misc.applyLoad
         d_vec = -[cos(beta_s(1))*cos(alpha_s);
                   cos(beta_s(1))*sin(alpha_s);
                   sin(beta_s(1))*ones(1,length(alpha_s))];
-        task.varCol{1}.d_vec = d_vec;
+        task.d_vec = d_vec;
     case 'pointCharge'
         alpha_s = task.ffp.alpha_s;
         beta_s = task.ffp.beta_s;
@@ -35,15 +35,16 @@ if splitExteriorFields
     task.dp_incdy_ = @(X) analytic({X},layer,NaN,'dp_incdy',1);
     task.dp_incdz_ = @(X) analytic({X},layer,NaN,'dp_incdz',1);
 end
-task.varCol{1}.dpdn_ = @(X,n) analytic({X},layer,NaN,'dpdn',1);
+task.dpdn_ = @(X,n) analytic({X},layer,NaN,'dpdn',1);
 for i = 1:noDomains
-    k = task.varCol{i}.k;
-    Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
-    dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
-    task.varCol{i}.Phi_k = Phi_k;
-    task.varCol{i}.dPhi_kdny = dPhi_kdny;
     switch task.varCol{i}.media
         case 'fluid'
+            k = task.misc.omega/task.varCol{i}.c_f;
+            Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
+            dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
+            task.varCol{i}.Phi_k = Phi_k;
+            task.varCol{i}.dPhi_kdny = dPhi_kdny;
+            
             task.varCol{i}.p_ = @(X) analytic({X},layer,NaN,'p',i);
         case 'solid'
             task.varCol{i}.u_x_ = @(X) analytic({X},layer,NaN,'u_x',i);
@@ -68,7 +69,7 @@ if isfield(varCol{1},'P_inc')
 else
     P_inc = 1;
 end
-k = varCol{1}.k;
+k = varCol{1}.omega/varCol{1}.c_f;
 applyLoad = varCol{1}.applyLoad;
 switch applyLoad
     case 'Safjan'
@@ -235,7 +236,7 @@ switch applyLoad
             varCol = e3Dss(varCol, options);
         end
     case 'Cartesian'
-        k = varCol{1}.c_f/varCol{1}.e3Dss_options.omega;
+        k = varCol{1}.omega/varCol{1}.c_f;
 
 
         Acoeff = [1, 1i+1];
@@ -248,7 +249,7 @@ switch applyLoad
 
         Fcoeff = [1+1i, 1;
                   1i,    -1];
-        [p,dpdx,dpdy,dpdz] = general3DSolutionHelmholtz(X{m}, k, Acoeff,Bcoeff,Ccoeff,Dcoeff,Ecoeff,Fcoeff);
+        [p,dpdx,dpdy,dpdz] = general3DSolutionHelmholtz(X{1}, k, Acoeff,Bcoeff,Ccoeff,Dcoeff,Ecoeff,Fcoeff);
         varCol{1}.p = p;
         varCol{1}.dpdx = dpdx;
         varCol{1}.dpdy = dpdy;
@@ -313,8 +314,8 @@ switch varCol{1}.applyLoad
         error('Not implemented')
 end
 temp = zeros(numel(d_vecX),varCol{1}.noRHSs);
-k = varCol{1}.k;
 c_f = varCol{1}.c_f;
+k = varCol{1}.omega/c_f;
 temp(:,2:end) = (1i./d_vecX)*m(2:end)/k;
 dp_inc_ROM = dp_inc_(X,n).*(1i*d_vecX/c_f).^m.*(1-temp);
 

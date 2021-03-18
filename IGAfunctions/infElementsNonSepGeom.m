@@ -1,35 +1,35 @@
-function varCol = infElementsNonSepGeom(varCol)
+function task = infElementsNonSepGeom(task)
 
-degree = varCol.degree; % assume degree is equal in all patches
+degree = task.varCol{1}.degree; % assume degree is equal in all patches
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
+index = task.varCol{1}.index;
+noElems = task.varCol{1}.noElems;
+elRange = task.varCol{1}.elRange;
+element = task.varCol{1}.element;
+element2 = task.varCol{1}.element2;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
+knotVecs = task.varCol{1}.knotVecs;
+pIndex = task.varCol{1}.pIndex;
 
-extraGP = varCol.extraGP;
+extraGP = task.misc.extraGP;
 
-N = varCol.N;
-formulation = varCol.formulation;
+N = task.iem.N;
+formulation = task.misc.formulation;
 
-noDofs = varCol.noDofs;
+noDofs = task.varCol{1}.noDofs;
 
 
 %Use chebychev polynomials
-chimin = varCol.chimin;
-chimax = varCol.chimax;
-x_0 = varCol.x_0;
-A_2 = varCol.A_2;
-[D,Dt] = generateCoeffMatrix(varCol);
+chimin = task.varCol{1}.chimin;
+chimax = task.varCol{1}.chimax;
+x_0 = task.varCol{1}.x_0;
+A_2 = task.varCol{1}.A_2;
+[D,Dt] = generateCoeffMatrix(task);
 n_en = prod(degree+1);
 
-k = varCol.k;
-Upsilon = varCol.Upsilon;
+k = task.varCol{1}.k;
+Upsilon = task.varCol{1}.Upsilon;
 
 useApproxRadialIntegrals = 2; % 0 is most accurate, 1 is a spline approximation (not reccomended here as Chebychev is here implemented more robust), 2 is Chebychev (reccomended)
 B1splines = {};
@@ -71,7 +71,7 @@ Avalues = zeros((N*n_en)^2,noElems);
 % max_r_a_recorded = -inf;
 % min_r_a_recorded = inf;
 
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
     ppm = ParforProgMon('Building IE matrix: ', noElems, nProgressStepSize);
@@ -306,8 +306,8 @@ Avalues = reshape(Avalues,numel(Avalues),1);
 [spIdx,~,IuniqueIdx] = unique([spIdxRow, spIdxCol],'rows');
 Avalues = accumarray(IuniqueIdx,Avalues);
 
-varCol.Ainf = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
+task.varCol{1}.Ainf = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
 
-varCol.newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
-varCol.noDofs_new = noDofs_new;
+task.varCol{1}.newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
+task.varCol{1}.noDofs_new = noDofs_new;
 

@@ -403,8 +403,10 @@ switch legendEntries{j}
         else
             legendEntry = legendEntries{j};
             legendEntry = insertBefore(legendEntry,'_','\');
-            
-            legendEntry = legendEntry(find(legendEntry == '.',1,'last')+1:end);
+            idx = find(legendEntry == '.',1,'last');
+            if ~isempty(idx)
+                legendEntry = legendEntry(idx+1:end);
+            end
             legendName = [legendName legendEntry '=' temp];
         end
 end

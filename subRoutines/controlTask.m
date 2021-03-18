@@ -45,7 +45,9 @@ end
 if strcmp(method,'BA') && strcmp(scatteringCase,'MS')
     error('This is case is not implemented. The best approximation method must be combined with "scatteringCase = BI"')
 end
-
+if strcmp(method,'PML') && isnan(task.pml.C) && task.rom.useROM
+    error('C is not set: C cannot be frequency dependent when using ROM')
+end
 task.misc.storeFullVarCol = task.misc.storeFullVarCol || task.rom.useROM;
 
 
