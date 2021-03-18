@@ -1,5 +1,5 @@
 function createVTKmeshFiles(varargin)
-varCol = varargin{1};
+task = varargin{1};
 options = struct('para_options', []);
 if nargin > 1
     if numel(varargin) > 2
@@ -9,31 +9,31 @@ if nargin > 1
     end
     options = updateOptions(options,newOptions);
 end
-for i_v = 1:numel(varCol)
+for i_v = 1:numel(task.varCol)
     para = options.para_options;
-    U = varCol{i_v}.U;
+    U = task.varCol{i_v}.U;
     isOuterDomain = i_v == 1;
 
     extraXiPts = para.extraXiPts;
     extraEtaPts = para.extraEtaPts;
     extraZetaPts = para.extraZetaPts;
-    degree = varCol{i_v}.degree; % assume p_xi is equal in all patches
+    degree = task.varCol{i_v}.degree; % assume p_xi is equal in all patches
     n_en = prod(degree+1);
     
-    index = varCol{i_v}.index;
-    noElems = varCol{i_v}.noElems;
-    elRange = varCol{i_v}.elRange;
-    element = varCol{i_v}.element;
-    element2 = varCol{i_v}.element2;
-    weights = varCol{i_v}.weights;
-    controlPts = varCol{i_v}.controlPts;
-    knotVecs = varCol{i_v}.knotVecs;
-    pIndex = varCol{i_v}.pIndex;
-    noDofs = varCol{i_v}.noDofs;
-    patches = varCol{i_v}.patches;
-    d = varCol{i_v}.dimension;
-    if isfield(varCol{i_v},'omega')
-        omega = varCol{i_v}.omega;
+    index = task.varCol{i_v}.index;
+    noElems = task.varCol{i_v}.noElems;
+    elRange = task.varCol{i_v}.elRange;
+    element = task.varCol{i_v}.element;
+    element2 = task.varCol{i_v}.element2;
+    weights = task.varCol{i_v}.weights;
+    controlPts = task.varCol{i_v}.controlPts;
+    knotVecs = task.varCol{i_v}.knotVecs;
+    pIndex = task.varCol{i_v}.pIndex;
+    noDofs = task.varCol{i_v}.noDofs;
+    patches = task.varCol{i_v}.patches;
+    d = task.varCol{i_v}.dimension;
+    if isfield(task.varCol{i_v},'omega')
+        omega = task.varCol{i_v}.omega;
     else
         omega = NaN;
     end
@@ -296,7 +296,7 @@ for i_v = 1:numel(varCol)
                 for i = 1:12
                     visElements{12*(e-1)+i} = nodesCount + container{e}.container_e{i}.visElements;
                     nodes(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.nodes;
-                    switch varCol{i_v}.media
+                    switch task.varCol{i_v}.media
                         case 'fluid'
                             displacement(nodesCount+1:nodesCount+container{e}.container_e{i}.noNodes,:) = container{e}.container_e{i}.gScalarField_p;
                         case 'solid'
@@ -305,13 +305,13 @@ for i_v = 1:numel(varCol)
                     nodesCount = nodesCount + container{e}.container_e{i}.noNodes;
                 end
             end
-            switch varCol{i_v}.media
+            switch task.varCol{i_v}.media
                 case 'fluid'
                     if isOuterDomain
                         if d_p == 3
-                            rho_f = varCol{i_v}.rho;
-                            if varCol{1}.splitExteriorFields
-                                gp_inc = [varCol{i_v}.dp_incdx_(nodes),varCol{i_v}.dp_incdy_(nodes),varCol{i_v}.dp_incdz_(nodes)];
+                            rho_f = task.varCol{i_v}.rho;
+                            if task.splitExteriorFields
+                                gp_inc = [task.dp_incdx_(nodes),task.dp_incdy_(nodes),task.dp_incdz_(nodes)];
                                 displacement = (displacement+gp_inc)/(rho_f*omega^2);
                             else
                                 displacement = displacement/(rho_f*omega^2);
@@ -319,7 +319,7 @@ for i_v = 1:numel(varCol)
                         end
                     else
                         if d_p == 3
-                            rho_f = varCol{i_v}.rho; 
+                            rho_f = task.varCol{i_v}.rho; 
                             displacement = displacement/(rho_f*omega^2);  
                         end
                     end

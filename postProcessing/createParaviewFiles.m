@@ -1,5 +1,5 @@
 function maxU = createParaviewFiles(varargin)
-varCol = varargin{1};
+task = varargin{1};
 options = struct('para_options', 0,...
                  'rho',NaN);
 if nargin > 1
@@ -10,9 +10,9 @@ if nargin > 1
     end
     options = updateOptions(options,newOptions);
 end
-analyticSolutionExist = varCol{1}.analyticSolutionExist;
-splitExteriorFields = varCol{1}.splitExteriorFields;
-noDomains = numel(varCol);
+analyticSolutionExist = task.analyticSolutionExist;
+splitExteriorFields = task.splitExteriorFields;
+noDomains = numel(task.varCol);
 nodes = cell(1,noDomains);
 visElements = cell(1,noDomains);
 scalarField = cell(1,noDomains);
@@ -26,14 +26,14 @@ fprintf(['\n%-' num2str(stringShift) 's'], '    Evaluating solution ... ')
 tic
 for i_v = 1:noDomains
     para{i_v} = options.para_options;
-    if varCol{i_v}.boundaryMethod
+    if task.varCol{i_v}.boundaryMethod
         celltype = 'VTK_QUAD';
     else
         celltype = 'VTK_HEXAHEDRON';
     end
     isOuterDomain = i_v == 1;
-    varCol{i_v}.isOuterDomain = isOuterDomain;
-    d = varCol{i_v}.dimension;
+    task.varCol{i_v}.isOuterDomain = isOuterDomain;
+    d = task.varCol{i_v}.dimension;
     isSolid = d == 3;
 
     para{i_v}.celltype = celltype;
@@ -43,7 +43,7 @@ for i_v = 1:noDomains
     para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && splitExteriorFields; 
     para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && splitExteriorFields; 
     para{i_v}.plotAnalytic = options.para_options.plotAnalytic && analyticSolutionExist; 
-    para{i_v}.computeGrad = options.para_options.computeGrad && ~(varCol{i_v}.boundaryMethod && ~isSolid);
+    para{i_v}.computeGrad = options.para_options.computeGrad && ~(task.varCol{i_v}.boundaryMethod && ~isSolid);
     para{i_v}.plotError = options.para_options.plotError && (analyticSolutionExist && ~options.para_options.plotTimeOscillation); 
     para{i_v}.plotErrorGrad = para{i_v}.plotError; 
     para{i_v}.plotErrorEnergy = para{i_v}.plotError; 
@@ -56,7 +56,7 @@ for i_v = 1:noDomains
     para{i_v}.plotStressXZ = options.para_options.plotStressXZ && isSolid;
     para{i_v}.plotStressXY = options.para_options.plotStressXY && isSolid;
 
-    U = varCol{i_v}.U;
+    U = task.varCol{i_v}.U;
     rho = options.rho;
     if isnan(options.rho)
         rho = zeros(size(U,1),1);
@@ -67,48 +67,48 @@ for i_v = 1:noDomains
     end
     maxU = NaN;
 
-    degree = varCol{i_v}.degree;
+    degree = task.varCol{i_v}.degree;
 
     extraXiPts = options.para_options.extraXiPts;
     extraEtaPts = options.para_options.extraEtaPts;
     extraZetaPts = options.para_options.extraZetaPts;
 
-    index = varCol{i_v}.index;
-    noElems = varCol{i_v}.noElems;
-    elRange = varCol{i_v}.elRange;
-    element = varCol{i_v}.element;
-    element2 = varCol{i_v}.element2;
-    weights = varCol{i_v}.weights;
-    controlPts = varCol{i_v}.controlPts;
-    knotVecs = varCol{i_v}.knotVecs;
-    pIndex = varCol{i_v}.pIndex;
-    noDofs = varCol{i_v}.noDofs;
-    patches = varCol{i_v}.patches;
-    d = varCol{i_v}.dimension;
-    if isfield(varCol{i_v},'omega')
-        omega = varCol{i_v}.omega;
+    index = task.varCol{i_v}.index;
+    noElems = task.varCol{i_v}.noElems;
+    elRange = task.varCol{i_v}.elRange;
+    element = task.varCol{i_v}.element;
+    element2 = task.varCol{i_v}.element2;
+    weights = task.varCol{i_v}.weights;
+    controlPts = task.varCol{i_v}.controlPts;
+    knotVecs = task.varCol{i_v}.knotVecs;
+    pIndex = task.varCol{i_v}.pIndex;
+    noDofs = task.varCol{i_v}.noDofs;
+    patches = task.varCol{i_v}.patches;
+    d = task.varCol{i_v}.dimension;
+    if isfield(task.varCol{i_v},'omega')
+        omega = task.varCol{i_v}.omega;
     else
         omega = NaN;
     end
 
     if d == 3
-        C = varCol{i_v}.C;
+        C = task.varCol{i_v}.C;
         Ux = U(1:d:noDofs);
         Uy = U(2:d:noDofs);
         Uz = U(3:d:noDofs);
         U = [Ux, Uy, Uz];
     else
-    %     varCol{i_v}.dofsToRemove = varCol{i_v}.dofsToRemove_old;
+    %     task.varCol{i_v}.dofsToRemove = task.varCol{i_v}.dofsToRemove_old;
     %     tic
     %     fprintf(['\n%-' num2str(stringShift) 's'], '    Performing least squares ... ')
-    %     dU = leastSquares(varCol{i_v},U,'gradient');
-    %     dU = leastSquares(varCol{i_v},U,'scalar');
+    %     dU = leastSquares(task.varCol{i_v},U,'gradient');
+    %     dU = leastSquares(task.varCol{i_v},U,'scalar');
     %     fprintf('using %12f seconds.', toc)
         C = 0;
     end
     n_en = prod(degree+1);
     d_p = patches{1}.nurbs.d_p;
-    if options.para_options.plotDisplacementVectors && strcmp(varCol{1}.BC,'SHBC') && varCol{1}.boundaryMethod
+    if options.para_options.plotDisplacementVectors && strcmp(task.misc.BC,'SHBC') && task.varCol{1}.boundaryMethod
         warning('Displacement (gradient of pressure) may not be plotted for SHBC and isBoundaryMethod')
     end
     switch d_p
@@ -334,30 +334,30 @@ for i_v = 1:noDomains
 end
 fprintf('using %12f seconds.', toc)
 if analyticSolutionExist
-    layer = varCol{1}.analyticFunctions(nodes);
+    layer = task.varCol{1}.analyticFunctions(nodes);
 end
 
-for i_v = 1:numel(varCol)
+for i_v = 1:numel(task.varCol)
     fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
     tic
     isOuterDomain = i_v == 1;
     data.nodes = nodes{i_v};
     data.visElements = visElements{i_v};
     data.omega = omega;
-    switch varCol{i_v}.media
+    switch task.varCol{i_v}.media
         case 'fluid'
             if isOuterDomain
                 if para{i_v}.plotP_inc
-                    data.P_inc = real(makeDynamic(varCol{i_v}.p_inc_(nodes{i_v}), para{i_v}, omega)); 
+                    data.P_inc = real(makeDynamic(task.p_inc_(nodes{i_v}), para{i_v}, omega)); 
                 end
-                if varCol{i_v}.solveForPtot
+                if task.misc.solveForPtot
                     totField = scalarField{i_v};
                     if isOuterDomain && splitExteriorFields
-                        scalarField{i_v} = scalarField{i_v} - varCol{i_v}.p_inc_(nodes{i_v});
+                        scalarField{i_v} = scalarField{i_v} - task.p_inc_(nodes{i_v});
                     end
                 else   
                     if splitExteriorFields
-                        totField = scalarField{i_v} + varCol{i_v}.p_inc_(nodes{i_v});
+                        totField = scalarField{i_v} + task.p_inc_(nodes{i_v});
                     else
                         totField = scalarField{i_v};
                     end
@@ -365,9 +365,9 @@ for i_v = 1:numel(varCol)
                 data.scalarField = real(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
                 data.scalarFieldAbs = abs(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
                 if d_p == 3
-                    rho_f = varCol{i_v}.rho;
+                    rho_f = task.varCol{i_v}.rho;
                     if splitExteriorFields
-                        gp_inc = [varCol{i_v}.dp_incdx_(nodes{i_v}),varCol{i_v}.dp_incdy_(nodes{i_v}),varCol{i_v}.dp_incdz_(nodes{i_v})];
+                        gp_inc = [task.dp_incdx_(nodes{i_v}),task.dp_incdy_(nodes{i_v}),task.dp_incdz_(nodes{i_v})];
                         displacement{i_v} = (gScalarField_p{i_v}+gp_inc)/(rho_f*omega^2);
                     else
                         displacement{i_v} = gScalarField_p{i_v}/(rho_f*omega^2);
@@ -376,7 +376,7 @@ for i_v = 1:numel(varCol)
             else
                 totField = scalarField{i_v};
                 if d_p == 3
-                    rho_f = varCol{i_v}.rho; 
+                    rho_f = task.varCol{i_v}.rho; 
                     displacement{i_v} = gScalarField_p{i_v}/(rho_f*omega^2);  
                 end
             end
@@ -396,7 +396,7 @@ for i_v = 1:numel(varCol)
                     p_e2 = abs(p_e).^2;
                     dp_e2 = sum(abs(dp_e).^2,2);
 
-                    k = varCol{i_v}.k;
+                    k = task.varCol{i_v}.k;
                     data.Error = sqrt(p_e2/max(p2));
                     data.ErrorGrad = sqrt(dp_e2/max(dp2));
                     data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
@@ -414,7 +414,7 @@ for i_v = 1:numel(varCol)
                 u_e2 = sum(abs(u_e).^2,2);
 
                 sigma = [layer{2}.sigma_xx,layer{2}.sigma_yy,layer{2}.sigma_zz,layer{2}.sigma_yz,layer{2}.sigma_xz,layer{2}.sigma_xy];
-                C = varCol{i_v}.C;
+                C = task.varCol{i_v}.C;
 
                 strain_vec = (C\sigma.').';
 
@@ -423,7 +423,7 @@ for i_v = 1:numel(varCol)
                 eCe = real(sum((strain_e*C).*conj(strain_e),2)); % the usage of real() is to remove machine epsilon imaginary part
                 uCu = real(sum((strain_vec*C).*conj(strain_vec),2)); % the usage of real() is to remove machine epsilon imaginary part
 
-                rho_s = varCol{i_v}.rho; 
+                rho_s = task.varCol{i_v}.rho; 
                 data.Error = sqrt(u_e2/max(u2));
                 data.ErrorGrad = sqrt(eCe/max(uCu));
                 data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
@@ -448,6 +448,6 @@ end
 if options.para_options.plotMesh
     fprintf(['\n%-' num2str(stringShift) 's'], '    Creating mesh-files ... ')
     tic
-    createVTKmeshFiles(varCol, 'para_options', options.para_options)
+    createVTKmeshFiles(task, 'para_options', options.para_options)
     fprintf('using %12f seconds.', toc)
 end

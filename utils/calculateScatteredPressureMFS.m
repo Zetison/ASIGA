@@ -1,17 +1,17 @@
-function p_h = calculateScatteredPressureMFS(varCol, P_far, plotFarField)
+function p_h = calculateScatteredPressureMFS(task, P_far)
 
-k = varCol.k;
-U = varCol{1}.U;
+k = task.varCol{1}.k;
+U = task.varCol{1}.U;
 
-switch varCol.formulation
+switch task.varCol{1}.formulation
     case 'SS'
         if plotFarField
-            y = varCol.x_0;
+            y = task.varCol{1}.x_0;
             R = norm2(P_far-y);
             theta = acos((P_far(:,3)-y(3))./R);
             phi = atan2(P_far(:,2)-y(2),P_far(:,1)-y(1));
             eta = cos(theta);
-            N = varCol.N;
+            N = task.ie.N;
             exp_phi = exp(1i*phi*(-N:N));
             p_h = zeros(size(P_far,1),1);
             for n = 0:N
@@ -23,10 +23,10 @@ switch varCol.formulation
             end
         end
     case 'PS'
-        y_s = varCol.y_s;
+        y_s = task.mfs.y_s;
         if plotFarField
             x_hat = elementProd(1./norm2(P_far),P_far);
-            switch varCol.scatteringCase
+            switch task.misc.scatteringCase
                 case {'BI','Sweep'}
                     p_h = 1/(4*pi)*exp(-1i*k*x_hat*y_s.')*U;
                 case 'MS'

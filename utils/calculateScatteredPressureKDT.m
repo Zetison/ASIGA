@@ -1,34 +1,34 @@
-function p_h = calculateScatteredPressureKDT(varCol, P_far, computeFarField)
+function p_h = calculateScatteredPressureKDT(task, P_far)
 
-
-if ~strcmp(varCol.BC, 'SHBC')
+calculateFarFieldPattern = task.ffp.calculateFarFieldPattern;
+if ~strcmp(task.varCol{1}.BC, 'SHBC')
     error('This is not implemented')
 end
-degree = varCol.degree; % assume degree is equal in all patches
+degree = task.varCol{1}.degree; % assume degree is equal in all patches
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
-patches = varCol.patches;
-agpBEM = varCol.agpBEM;
-extraGPBEM = varCol.extraGPBEM;
-formulation = varCol.formulation;
+index = task.varCol{1}.index;
+noElems = task.varCol{1}.noElems;
+elRange = task.varCol{1}.elRange;
+element = task.varCol{1}.element;
+element2 = task.varCol{1}.element2;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
+knotVecs = task.varCol{1}.knotVecs;
+pIndex = task.varCol{1}.pIndex;
+patches = task.varCol{1}.patches;
+agpBEM = task.bem.agpBEM;
+extraGPBEM = task.bem.extraGPBEM;
+formulation = task.misc.formulation;
 Eps = 10*eps;
 
-d_vec = varCol.d_vec;
-k = varCol.k;
+d_vec = task.varCol{1}.d_vec;
+k = task.varCol{1}.k;
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
 
-p_inc = varCol.p_inc;
+p_inc = task.varCol{1}.p_inc;
 
-extraGP = varCol.extraGP;
+extraGP = task.misc.extraGP;
 % [~,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,'adaptive');
 [~,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:2),extraGPBEM,'adaptive2');
 [Q2D,W2D] = gaussTensorQuad(degree+1+extraGP(1:2));
@@ -121,7 +121,7 @@ switch formulation
             p_h_gp = 2*p_inc(Y);
             p_h_gp(normals*d_vec > 0) = 0;
 
-            if computeFarField
+            if calculateFarFieldPattern
                 x_d_n = normals*X.';
                 x_d_y = Y*X.';
                 p_h = p_h + (1i*k*p_h_gp.*x_d_n.*exp(-1i*k*x_d_y)).'* (J_1_y * J_2_y .* W2D);  
@@ -136,7 +136,7 @@ end
 if numel(k) > 1
     p_h = p_h.';
 end
-if computeFarField
+if calculateFarFieldPattern
     p_h = -1/(4*pi)*p_h;
 end
 

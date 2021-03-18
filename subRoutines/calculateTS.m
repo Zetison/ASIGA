@@ -46,10 +46,10 @@ switch task.misc.method
             task.ffp.theta = acos(v(:,3)./norm2(v));
             task.ffp.plotFarField = false;
         else
-            p_h = calculateScatteredPressure(task.varCol, v, 0, task.ffp.plotFarField);
+            p_h = calculateScatteredPressure(task, v, 0);
         end
     case 'MFS'
-        p_h = calculateScatteredPressureMFS(task.varCol{1}, v, task.ffp.plotFarField);
+        p_h = calculateScatteredPressureMFS(task, v);
     case 'KDT'
         switch task.varCol{1}.coreMethod
             case 'linear_FEM'
@@ -113,7 +113,7 @@ switch task.misc.method
                 task.varCol{1}.nepw = task.varCol{1}.lambda./task.varCol{1}.h_max;
                 task.varCol{1}.dofs = task.varCol{1}.noDofs;
 %                     p = calculateScatteredPressureBA(task.varCol{1}, Uc{1}, v, 0, plotFarField);
-                p_h = calculateScatteredPressureKDT(task.varCol{1}, v, task.ffp.plotFarField);
+                p_h = calculateScatteredPressureKDT(task, v);
         end
     case 'RT'
         switch scatteringCase

@@ -1,15 +1,16 @@
-function p_h = calculateScatteredPressure(varCol, P_far, useExtraQuadPts, computeFarField)
+function p_h = calculateScatteredPressure(task, P_far, useExtraQuadPts)
 
-d_p = varCol{1}.patches{1}.nurbs.d_p;
-d = varCol{1}.patches{1}.nurbs.d;
-U = varCol{1}.U;
-farFieldNormalPressFromSolid = varCol{1}.farFieldNormalPressFromSolid;
-if numel(varCol) > 1 && (d_p == 2 || farFieldNormalPressFromSolid)
-    [nodesSolid, ~, elementSolid] = meshBoundary(varCol{2},'Gamma');
-    noDofs = varCol{2}.noDofs;
-    Ux = varCol{2}.U(1:d:noDofs,:);
-    Uy = varCol{2}.U(2:d:noDofs,:);
-    Uz = varCol{2}.U(3:d:noDofs,:);
+calculateFarFieldPattern = task.ffp.calculateFarFieldPattern;
+d_p = task.varCol{1}.patches{1}.nurbs.d_p;
+d = task.varCol{1}.patches{1}.nurbs.d;
+U = task.varCol{1}.U;
+farFieldNormalPressFromSolid = task.ffp.farFieldNormalPressFromSolid;
+if numel(task.varCol) > 1 && (d_p == 2 || farFieldNormalPressFromSolid)
+    [nodesSolid, ~, elementSolid] = meshBoundary(task.varCol{2},'Gamma');
+    noDofs = task.varCol{2}.noDofs;
+    Ux = task.varCol{2}.U(1:d:noDofs,:);
+    Uy = task.varCol{2}.U(2:d:noDofs,:);
+    Uz = task.varCol{2}.U(3:d:noDofs,:);
 else
     nodesSolid = NaN;
     elementSolid = NaN;
@@ -17,44 +18,44 @@ else
     Uy = NaN;
     Uz = NaN;
 end
-knotVecs = varCol{1}.knotVecs;
-weights = varCol{1}.weights;
-controlPts = varCol{1}.controlPts;
-elRange = varCol{1}.elRange;
-noDofs = varCol{1}.noDofs;
-rho = varCol{1}.rho;
+knotVecs = task.varCol{1}.knotVecs;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
+elRange = task.varCol{1}.elRange;
+noDofs = task.varCol{1}.noDofs;
+rho = task.varCol{1}.rho;
 if farFieldNormalPressFromSolid && d_p == 3
-    degree = varCol{1}.degree(1:2); % assume p_xi is equal in all patches
-    [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(varCol{1},'Gamma');
+    degree = task.varCol{1}.degree(1:2); % assume p_xi is equal in all patches
+    [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(task.varCol{1},'Gamma');
 else
-    degree = varCol{1}.degree; % assume p_xi is equal in all patches
-    index = varCol{1}.index;
-    noElems = varCol{1}.noElems;
-    element = varCol{1}.element;
-    element2 = varCol{1}.element2;
-    pIndex = varCol{1}.pIndex;
+    degree = task.varCol{1}.degree; % assume p_xi is equal in all patches
+    index = task.varCol{1}.index;
+    noElems = task.varCol{1}.noElems;
+    element = task.varCol{1}.element;
+    element2 = task.varCol{1}.element2;
+    pIndex = task.varCol{1}.pIndex;
     zeta0Nodes = 1:noDofs;
 end
 
-BC = varCol{1}.BC;
-k = varCol{1}.k;
-omega = varCol{1}.omega;
-method = varCol{1}.method;
+BC = task.misc.BC;
+k = task.varCol{1}.k;
+omega = task.misc.omega;
+method = task.misc.method;
 if strcmp(method,'IENSG') && ~farFieldNormalPressFromSolid
     error('Not implemented')
 end
-dp_inc = varCol{1}.dp_inc_;
+dp_inc = task.dp_inc_;
 
-Phi_k = varCol{1}.Phi_k;
+Phi_k = task.varCol{1}.Phi_k;
 if d_p == 3 && ~farFieldNormalPressFromSolid
     error('Depricated')
 else
     surfaceElements = 1:noElems;
 end
-solveForPtot = varCol{1}.solveForPtot;
-exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(varCol) == 1;
+solveForPtot = task.misc.solveForPtot;
+exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(task.varCol) == 1;
 
-extraGP = varCol{1}.extraGP;
+extraGP = task.misc.extraGP;
 if useExtraQuadPts
     noGp = degree+1+5;
 else
@@ -117,7 +118,7 @@ parfor i = 1:length(surfaceElements)
 
     X = P_far./repmat(norm2(P_far),1,size(P_far,2));
     
-    if computeFarField
+    if calculateFarFieldPattern
         x_d_n = normals*X.';
         x_d_y = Y*X.';
         if solveForPtot
@@ -139,7 +140,7 @@ end
 if numel(k) > 1
     p_h = p_h.';
 end
-if computeFarField
+if calculateFarFieldPattern
     p_h = -1/(4*pi)*p_h;
 end
 

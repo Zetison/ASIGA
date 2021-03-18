@@ -119,7 +119,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         if ~runTasksInParallel
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
                         end
-                        task.varCol{1} = buildIEmatrix(task.varCol{1});
+                        task = buildIEmatrix(task);
                         task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                         if ~runTasksInParallel
                             fprintf('using %12f seconds.', toc)
@@ -133,7 +133,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         chimin = task.varCol{1}.chimin;
                         if abs(chimax - chimin)/abs(chimax) < 100*eps
                             task.varCol{1}.r_a = mean([chimax,chimin]);
-                            task.varCol{1} = buildIEmatrix(task.varCol{1});
+                            task = buildIEmatrix(task);
                         else
                             task.varCol{1} = infElementsNonSepGeom(task.varCol{1});  
                         end
@@ -551,7 +551,7 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
 
 
                 para.plotArtificialBoundary = para.plotArtificialBoundary && (strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'ABC') || strcmp(task.misc.method,'PML'));
-                M = task.M;
+                M = task.msh.M;
                 para.extraXiPts = eval(para.extraXiPts);
                 para.extraEtaPts = eval(para.extraEtaPts);
                 para.extraZetaPts = eval(para.extraZetaPts);
@@ -561,7 +561,7 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
                     task.varCol{1}.U = zeros(task.varCol{1}.noDofs,1);
                 end
         
-                createParaviewFiles(task.varCol, 'para_options', para);
+                createParaviewFiles(task, 'para_options', para);
 
                 % plot artificial boundary
 %                 if para.plotArtificialBoundary

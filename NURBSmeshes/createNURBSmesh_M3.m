@@ -1,7 +1,7 @@
 function task = createNURBSmesh_M3(task)
 varCol = task.varCol;
-M = task.M;
-degree = task.degree;
+M = task.msh.M;
+degree = task.msh.degree;
 if isfield(varCol{1}, 'R1')
     R1 = varCol{1}.R1;
     R2 = varCol{1}.R2;
@@ -16,10 +16,10 @@ else
 end
 t = varCol{1}.t;
 L = varCol{1}.L;
-parm = varCol{1}.parm;
+parm = task.msh.parm;
 x_0 = [-L/2-(R2-R1)/2, 0, 0]; % The origin of the model
 alignWithAxis = 'Xaxis';
-switch varCol{1}.method
+switch task.misc.method
     case {'IE','IENSG','ABC','MFS'}
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
@@ -78,8 +78,8 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
-    if ~strcmp(varCol{1}.method,'PML')
-        if strcmp(varCol{1}.model,'MS')
+    if ~strcmp(task.misc.method,'PML')
+        if strcmp(task.misc.model,'MS')
             Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
             c_z = 1.2*(L+2*R1)/2; % 30
             c_xy = 1.3*R1; % 2.5, 3.75
@@ -88,7 +88,7 @@ else
             eta2 = 1-eta1;
             noNewZetaKnots = max(2^(M-1)/4-1,0);
             nn = 2^(M-1)-1;
-        elseif strcmp(varCol{1}.model,'IMS')
+        elseif strcmp(task.misc.model,'IMS')
             c_z = varCol{1}.c_z;
             c_xy = varCol{1}.c_xy;
             Upsilon = sqrt(c_z^2-c_xy^2);
@@ -106,7 +106,7 @@ else
             eta1 = theta1/pi;
             eta2 = theta2/pi;
         end
-        varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
+        task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
     end
 
     
@@ -119,7 +119,7 @@ else
     else
         solid = [glueNURBS(solid(1:3),1),glueNURBS(solid(4:6),1),glueNURBS(solid(7:9),1)];
     end
-    if varCol{1}.refineThetaOnly
+    if task.msh.refineThetaOnly
         if parm ~= 1
             error('Must have parm = 1 for pure theta refinement')
         end
@@ -130,8 +130,8 @@ else
     
 
     refLength = R_max*pi/2;
-    if strcmp(varCol{1}.method,'PML')
-        t_fluid = varCol{1}.r_a-R2;
+    if strcmp(task.misc.method,'PML')
+        t_fluid = task.misc.r_a-R2;
         Gamma_a = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi);
         if numel(Xi) == 12
             Gamma_a = [glueNURBS(Gamma_a(1:4),1),glueNURBS(Gamma_a(5:8),1),glueNURBS(Gamma_a(9:12),1)];
@@ -151,12 +151,12 @@ else
     else
         ellipsoid = getEllipsoidData('C',[c_z,c_xy,c_xy],'alignWithAxis',alignWithAxis,'x_0',x_0, 'alpha', 0, ...
                                      'Xi', Xi, 'Eta', [0,0,0,eta1,eta1,eta2,eta2,1,1,1]);
-        if strcmp(varCol{1}.model,'MS')
+        if strcmp(task.misc.model,'MS')
             fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),explodeNURBS(ellipsoid,2)});
             fluid = makeUniformNURBSDegree(fluid,degree);
 %             fluid = glueNURBS([glueNURBS(fluid(1:4),1),glueNURBS(fluid(5:8),1),glueNURBS(fluid(9:12),1)],2);
             fluid = insertKnotsInNURBS(fluid,[nn,nn,noNewZetaKnots]);
-        elseif strcmp(varCol{1}.model,'IMS')
+        elseif strcmp(task.misc.model,'IMS')
             fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),explodeNURBS(ellipsoid,2)});
             fluid = makeUniformNURBSDegree(fluid,degree);
             [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{[],[],[c_z-L/2-R_max, 3.154251830015168]},0,2:3); %c_z-L/2-R_max, 
@@ -214,7 +214,7 @@ end
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
-if ~strcmp(varCol{1}.method,'PML')
+if ~strcmp(task.misc.method,'PML')
     varCol{1}.chimin = chimin;
     varCol{1}.chimax = chimax;
     varCol{1}.Upsilon = Upsilon;
