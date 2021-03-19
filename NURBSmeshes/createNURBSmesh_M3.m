@@ -140,9 +140,9 @@ else
         end
 %         fluid = getBeTSSiM3Data('R1', R1+t_fluid, 'R2', R2+t_fluid, 't', t_fluid, 'L', L, 'parm', parm, 'Xi', Xi);
         fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),Gamma_a});
-        fluid = makeUniformNURBSDegree(fluid,degree);
+        fluid = makeUniformNURBSDegree(fluid,degreeVec);
         [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0,2:3); %c_z-L/2-R_max, 
-        solid = makeUniformNURBSDegree(solid,degree);
+        solid = makeUniformNURBSDegree(solid,degreeVec);
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,3);
         for i = 1:numel(newKnotsIns)
             newKnotsIns{i}{3} = {};
@@ -153,14 +153,14 @@ else
                                      'Xi', Xi, 'Eta', [0,0,0,eta1,eta1,eta2,eta2,1,1,1]);
         if strcmp(task.misc.model,'MS')
             fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),explodeNURBS(ellipsoid,2)});
-            fluid = makeUniformNURBSDegree(fluid,degree);
+            fluid = makeUniformNURBSDegree(fluid,degreeVec);
 %             fluid = glueNURBS([glueNURBS(fluid(1:4),1),glueNURBS(fluid(5:8),1),glueNURBS(fluid(9:12),1)],2);
             fluid = insertKnotsInNURBS(fluid,[nn,nn,noNewZetaKnots]);
         elseif strcmp(task.misc.model,'IMS')
             fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),explodeNURBS(ellipsoid,2)});
-            fluid = makeUniformNURBSDegree(fluid,degree);
+            fluid = makeUniformNURBSDegree(fluid,degreeVec);
             [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{[],[],[c_z-L/2-R_max, 3.154251830015168]},0,2:3); %c_z-L/2-R_max, 
-            solid = makeUniformNURBSDegree(solid,degree);
+            solid = makeUniformNURBSDegree(solid,degreeVec);
             solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,3);
             for i = 1:numel(newKnotsIns)
                 newKnotsIns{i}{3} = {};

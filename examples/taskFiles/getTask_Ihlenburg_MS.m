@@ -15,8 +15,8 @@ misc.coreMethod = {'IGA'};
 % misc.method = {'IE'};
 misc.method = {'PML'};
 applyLoads = {'pointPulsation','pointCharge'};
-% applyLoads = {'pointCharge'};
-applyLoads = {'pointPulsation'};
+applyLoads = {'pointCharge'};
+% applyLoads = {'pointPulsation'};
 for i = 1:numel(applyLoads)
     misc.applyLoad = applyLoads{i};
     % BCs = {'SHBC','SSBC'};
@@ -107,8 +107,8 @@ for i = 1:numel(applyLoads)
 %         k = linspace(0.5, 4.29, 3);
 %         k = linspace(0.5, 4.29, 10)/10;
 
-%         k_ROM = k(1):0.005:k(end);
-        k_ROM = k(1):0.05:k(end);
+        k_ROM = k(1):0.005:k(end);
+%         k_ROM = k(1):0.05:k(end);
 %         k_ROM = k(1):0.5:k(end);
         k_ROM = sort(unique([k_ROM,k]));
 %         k_ROM = k;
@@ -128,6 +128,7 @@ for i = 1:numel(applyLoads)
         postPlot(1).xScale = varCol{1}.R1;
 
         msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+        msh.refineThetaOnly = true;
         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0), max(round(2^(M-1)-1),0)];
         if noDomains > 1
             varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
@@ -147,8 +148,8 @@ for i = 1:numel(applyLoads)
         else
             misc.formulation = {'BGC'};
         end
-        msh.degree = 2;
-        msh.M = 6; % 5
+        msh.degree = 4;
+        msh.M = 5; % 5
         
         misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
         
@@ -196,9 +197,10 @@ for i = 1:numel(applyLoads)
         rom.useROM = false;
         if 0 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
-            para.extraXiPts              = '0';  % Extra visualization points in the xi-direction per element
-            para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
-            para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element
+            para.extraXiPts              = '30';  % Extra visualization points in the xi-direction per element
+            para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
+            para.extraZetaPts            = '1';   % Extra visualization points in the zeta-direction per element
+            para.plotTimeOscillation     = 1;
             misc.omega = omega_ROM(end);
         else
             misc.omega = omega_ROM;
