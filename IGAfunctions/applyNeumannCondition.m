@@ -20,7 +20,7 @@ switch media
         p_inc = NaN; % for for-loop transparency
     case 'solid'
         if useROM
-            p_inc = task.dp_inc_;  
+            p_inc = task.p_inc_ROM_;  
         else
             p_inc = task.p_inc_;  
         end
