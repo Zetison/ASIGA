@@ -40,4 +40,5 @@ else
     nurbs = [nurbsDisk,nurbsCyl,nurbsTop];
 end
 nurbs = explodeNURBS(nurbs);
+nurbs = translateNURBS(nurbs,[0,0,-L/2]);
 nurbs = rotateNURBS(nurbs,'rotAxis','Yaxis');

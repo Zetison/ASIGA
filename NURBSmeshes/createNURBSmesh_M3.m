@@ -17,7 +17,7 @@ end
 t = varCol{1}.t;
 L = varCol{1}.L;
 parm = task.msh.parm;
-x_0 = [-L/2-(R2-R1)/2, 0, 0]; % The origin of the model
+x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
 switch task.misc.method
     case {'IE','IENSG','ABC','MFS'}
@@ -101,8 +101,8 @@ else
             c_z = (L+R1+R2)/2 + s*R_max;
             c_xy = R_max + s*R_max;
             Upsilon = sqrt(c_z^2-c_xy^2);
-            [~, theta1, ~] = evaluateProlateCoords(([0,0,R1]-x_0)*A_2.',Upsilon);
-            [~, theta2, ~] = evaluateProlateCoords(([-L,0,R1]-x_0)*A_2.',Upsilon);
+            [~, theta1, ~] = evaluateProlateCoords([L/2,0,R1]*A_2.',Upsilon);
+            [~, theta2, ~] = evaluateProlateCoords([-L/2,0,R2]*A_2.',Upsilon);
             eta1 = theta1/pi;
             eta2 = theta2/pi;
         end

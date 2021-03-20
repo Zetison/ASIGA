@@ -10,7 +10,7 @@ t = varCol{1}.t;
 Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 % Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 
-x_0 = [-L/2, 0, 0]; % The origin of the model
+x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
 varCol{1}.x_0 = x_0;
 switch varCol{1}.method

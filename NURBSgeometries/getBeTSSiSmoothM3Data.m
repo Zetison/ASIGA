@@ -37,3 +37,4 @@ nurbs = [hSphere2, cone, hSphere1];
 
 nurbs = makeUniformNURBSDegree(nurbs);
 nurbs = explodeNURBS(nurbs);
+nurbs = translateNURBS(nurbs,[L/2+(R2-R1)/2,0,0]);

@@ -4,7 +4,7 @@ M = task.msh.M;
 degree = task.msh.degree;
 
 x_0 = [0, 0, 0];
-varCol{1}.x_0 = x_0; % The origin of the model
+varCol{1}.x_0 = x_0; % The center of the model
 alignWithAxis = 'Zaxis';
 switch task.misc.method
     case {'IE','IENSG','ABC'}

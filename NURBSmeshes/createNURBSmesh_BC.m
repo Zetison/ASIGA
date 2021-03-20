@@ -3,7 +3,7 @@ varCol = task.varCol;
 M = task.msh.M;
 degree = task.msh.degree;
 
-x_0 = [-(L+a+g2+g3)/2+a+1.5, 0, 0]; % The origin of the model
+x_0 = [-(L+a+g2+g3)/2+a+1.5, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
 switch varCol{1}.method
     case 'IE'
@@ -15,7 +15,7 @@ switch varCol{1}.method
         varCol{1}.x_0 = x_0;
         varCol{1}.A_2 = A_2;
     case 'IENSG'
-        x_0 = [-(L+a+g2+g3)/2+a, 0, 0]; % The origin of the model
+        x_0 = [-(L+a+g2+g3)/2+a, 0, 0]; % The center of the model
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
         alignWithAxis = 'Xaxis';

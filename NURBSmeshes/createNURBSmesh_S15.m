@@ -10,7 +10,7 @@ for j = 1:numel(names)
 end
 
 x_0 = [0, 0, 0];
-varCol{1}.x_0 = x_0; % The origin of the model
+varCol{1}.x_0 = x_0; % The center of the model
 alignWithAxis = 'Zaxis';
 switch varCol{1}.method
     case {'IE','IENSG','ABC'}

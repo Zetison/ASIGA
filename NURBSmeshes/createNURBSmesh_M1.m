@@ -8,7 +8,7 @@ R = varCol{1}.R;
 t = varCol{1}.t;
 L = varCol{1}.L;
 
-x_0 = [-(L-R)/2, R/2, 0]; % The origin of the model
+x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
 switch varCol{1}.method
     case {'IE','IENSG','MFS'}

@@ -9,7 +9,7 @@ for j = 1:numel(names)
     eval([name, ' = parms.(names{j});']);
 end
 
-x_0 = [-L/2, 0, 0]; % The origin of the model
+x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
 switch varCol{1}.method
     case {'IE','IENSG'}

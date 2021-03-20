@@ -50,5 +50,5 @@ end
 nurbs = makeUniformNURBSDegree(nurbs);
 nurbs = rotateNURBS(nurbs,'rotAxis','Xaxis','theta',-pi/2);
 nurbs = explodeNURBS(nurbs,[1,2]);
-
+nurbs = translateNURBS(nurbs,[L/2+(options.R2-options.R1)/2,0,0]);
 

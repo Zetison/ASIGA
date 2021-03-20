@@ -101,5 +101,6 @@ nurbs = rotateNURBS(nurbs,'rotAxis',[1,0,0],'theta',options.theta2);
 nurbs = makeUniformNURBSDegree(nurbs);
 nurbs = explodeNURBS(nurbs);
 
+nurbs = translateNURBS(nurbs,[L/2,0,0]);
 
 

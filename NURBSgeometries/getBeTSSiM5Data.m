@@ -31,6 +31,7 @@ nurbsCyl = getCylinderData('Xi',Xi,'R',R,'parm',1,'L',L,'d_p',2);
 nurbs = [nurbsDisk,nurbsCyl,nurbsTop];
 nurbs = [translateNURBS(nurbs,[l/2,0,0]),...
          translateNURBS(nurbs,[-l/2,0,0])];
+nurbs = translateNURBS(nurbs,[0,0,-L/2]);
 if strcmp(options.type,'A')
     nurbs = rotateNURBS(nurbs,'rotAxis','Yaxis');
 end

@@ -21,3 +21,5 @@ arc([3,4,6]) = flipNURBSparametrization(arc([3,4,6]));
 arc2 = translateNURBS(arc,[-L,0,0]);
 nurbs(9:14) = loftNURBS({arc,arc2});
 nurbs(15:18) = translateNURBS(rotateNURBS(rotateNURBS(temp,'rotAxis',[0,0,1],'theta',pi/2),'rotAxis',[0,1,0],'theta',-pi/2),[-L,0,0]);
+
+nurbs = translateNURBS(nurbs,[(L-R)/2, -R/2, 0]);
