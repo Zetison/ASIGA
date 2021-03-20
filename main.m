@@ -17,7 +17,6 @@ end
 studiesCol = getTasks(studyName);
 
 %% Perform studies
-diary(['output_' datestr(datetime('now'),'dd-mmm-yyyy_HH-MM-SS') '.log'])
 for i_col = 1:numel(studiesCol)
     t_start_study = tic;
     studies = studiesCol{i_col};
@@ -31,6 +30,7 @@ for i_col = 1:numel(studiesCol)
         if ~exist(resultsFolder, 'dir')
             mkdir(resultsFolder)
         end
+        diary([resultsFolder '/ASIGA.log'])
 
         runTasksInParallel = studies(i_study).runTasksInParallel;
         if runTasksInParallel

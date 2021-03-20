@@ -34,7 +34,7 @@ for i = 1:numel(applyLoads)
 
     postPlot(1).yname        	= 'TS';
     postPlot(1).plotResults  	= true;
-    postPlot(1).printResults 	= false;
+    postPlot(1).printResults 	= true;
     postPlot(1).axisType      	= 'plot';
     postPlot(1).lineStyle    	= '-';
     postPlot(1).xScale       	= 1;
@@ -103,7 +103,7 @@ for i = 1:numel(applyLoads)
         varCol = varCol(1:noDomains);
         msh.meshFile = 'createNURBSmesh_M3';
     %     k = linspace(2.5, 20, 5)/varCol{1}.R1;
-        k = linspace(0.5, 4.29, 10);
+        k = linspace(0.5, 4.29, 20);
 %         k = linspace(0.5, 4.29, 3);
 %         k = linspace(0.5, 4.29, 10)/10;
 
@@ -133,9 +133,9 @@ for i = 1:numel(applyLoads)
         if noDomains > 1
             varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
         end
-
-        sdfmsc = 3*(varCol{1}.R1+varCol{1}.L+varCol{1}.R2)/1.36;
-        misc.r_s = sdfmsc - varCol{1}.L/2;
+        scale = (varCol{1}.R1+varCol{1}.L+varCol{1}.R2)/1.36; % Scaling between experimental and theoretical setup
+        msh.x_0 = [-varCol{1}.L/2,0,0];       % Move the origin to the center of the model
+        misc.r_s = 3*scale;                   % Distance from the center of the model to the point charge
         msh.c_z = 45;
     %     c_xy = 15;
     %     c_z = 44.45920956623927;
@@ -162,7 +162,7 @@ for i = 1:numel(applyLoads)
         rom.noVecsArr = 32;
 %         rom.noVecsArr = 1;
 
-        misc.r_a = msh.c_z-varCol{1}.R1-varCol{1}.L/2;
+        misc.r_a = 6.3158;
         
         misc.storeFullVarCol = false;
         if strcmp(misc.scatteringCase, 'Sweep')
@@ -170,7 +170,7 @@ for i = 1:numel(applyLoads)
         else
             loopParameters = {'msh.M','misc.method','misc.BC','misc.applyLoad','misc.omega'};
         end
-        collectIntoTasks
+%         collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.scatteringCase = 'BI';
@@ -195,9 +195,9 @@ for i = 1:numel(applyLoads)
         end
         misc.omega = omega_ROM;
         rom.useROM = false;
-        if 0 %strcmp(misc.scatteringCase, 'BI')
+        if 1 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
-            para.extraXiPts              = '30';  % Extra visualization points in the xi-direction per element
+            para.extraXiPts              = '60';  % Extra visualization points in the xi-direction per element
             para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
             para.extraZetaPts            = '1';   % Extra visualization points in the zeta-direction per element
             para.plotTimeOscillation     = 1;
@@ -213,7 +213,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-        collectIntoTasks
+%         collectIntoTasks
         
         iem.N = 50;
         iem.p_ie = 4;

@@ -85,8 +85,8 @@ for i_v = 1:noDomains
     noDofs = task.varCol{i_v}.noDofs;
     patches = task.varCol{i_v}.patches;
     d = task.varCol{i_v}.dimension;
-    if isfield(task.varCol{i_v},'omega')
-        omega = task.varCol{i_v}.omega;
+    if isfield(task.misc,'omega')
+        omega = task.misc.omega;
     else
         omega = NaN;
     end
