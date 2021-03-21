@@ -1,9 +1,10 @@
 %% Default task values
 % This script sets the default task values for each study
 
-loopParameters     = {'msh.M'};       % parameter study array to be investigated
+loopParameters     = {'msh.M'};   % parameter study array to be investigated
 runTasksInParallel = false;       % Run tasks in parallel
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
+saveStudies        = false;       % save ASIGA-struct into a .mat file
     
 %% Miscellaneous settings
 misc.scatteringCase      = 'BI';        % Bistatic scattering
@@ -25,15 +26,17 @@ misc.storeFullVarCol     = false;       % Store all variable in the varCol varia
 misc.clearGlobalMatrices = true;        % Clear memory consuming matrices
 misc.P_inc               = 1;           % Amplitude of incident wave
 misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as opposed to the interior problem)
+misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are compatible across patch interfaces
 
 %% Mesh settings
-msh.M                   = 1;	% Mesh number
-msh.initMeshFactXi      = 1;	% initial number of knots in xi direction
-msh.initMeshFactEta 	= 1;	% initial number of knots in eta direction
-msh.initMeshFactZeta    = 1;	% initial number of knots in zeta direction
-msh.parm                = 1;    % Toggle different parameterizations of a geometric model
-msh.refineThetaOnly     = 0;    % For the ellipsoidal/spherical geometries, refine in the theta direction only
-msh.degree              = 2;    % NURBS polynomial degree
+msh.M                   = 1;	 % Mesh number
+msh.initMeshFactXi      = 1;	 % initial number of knots in xi direction
+msh.initMeshFactEta 	= 1;	 % initial number of knots in eta direction
+msh.initMeshFactZeta    = 1;	 % initial number of knots in zeta direction
+msh.parm                = 1;     % Toggle different parameterizations of a geometric model
+msh.refineThetaOnly     = 0;     % For the ellipsoidal/spherical geometries, refine in the theta direction only
+msh.degree              = 2;     % NURBS polynomial degree
+msh.explodeNURBS        = false; % Create patches from all C^0 interfaces
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plot2Dgeometry      = false;       % Plot cross section of mesh and geometry
@@ -47,6 +50,7 @@ prePlot.useCamlight         = true;        % Toggle camlight on
 
 prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh
 prePlot.plotNormalVectors   = false;       % Plot the normal vectors for the NURBS mesh
+prePlot.plotGeometryInfo    = true;
 prePlot.plotArtificialBndry = true;        % Plot the artificial boundary for the IENSG method
 prePlot.resolution       	= [20,20,20];  % Number of evaluation points in the visualization for each element for each parametric direction
 prePlot.plotAt              = true(3,2);   % For solids: toggle which surfaces to visualize
@@ -56,7 +60,7 @@ prePlot.lineColor           = 'black';     % Mesh line color
 prePlot.colorControlPolygon = 'red';       % Control polygon line color
 prePlot.markerEdgeColor     = 'black';     % Control polygon edge marker color
 prePlot.markerColor         = 'black';     % Control polygon marker color
-prePlot.LineWidth           = 0.5;         % Width of lines
+prePlot.LineWidth           = 0.1;         % Width of lines
 prePlot.elementBasedSamples = false;       % If true, sampling is based on distance rather than elements
 prePlot.samplingDistance  	= NaN;         % Set sampling distance if elementBasedSamples = true
 prePlot.title               = '';          % Set figure title
@@ -64,7 +68,7 @@ prePlot.axis                = 'off';       % Set axis() property
 prePlot.xlabel              = 'x';         % Set x-axis label
 prePlot.ylabel              = 'y';         % Set y-axis label
 prePlot.zlabel              = 'z';         % Set z-axis label
-
+prePlot.pngResolution       = '-r200';     % Resolution of exported png images
 
 %% Solver settings
 sol.solver = 'LU';              % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
@@ -105,7 +109,7 @@ postPlot(1).addCommands   	= [];
 
 %% Settings for paraview
 para.name                    = '';
-para.plotResultsInParaview	 = false;	% Only if scatteringCase == 'Bi'
+para.plotResultsInParaview	 = false;
 para.plotMesh              	 = true;	% Create additional Paraview files to visualize IGA mesh
 para.plotP_inc               = true;
 para.plotScalarField         = true;
@@ -115,7 +119,8 @@ para.plotAnalytic            = true;
 para.plotTimeOscillation     = false;
 para.computeGrad             = true;
 para.plotError               = true; 
-para.plotArtificialBoundary  = true;
+para.plotSubsets             = {'Gamma','Gamma_a'}; % Plot subsets (i.e. the artificial boundary Gamma_a) in paraview
+para.plotFullDomain          = true;
 para.plotDisplacementVectors = true;
 para.plotVonMisesStress      = true;
 para.plotStressXX            = false;
@@ -124,6 +129,7 @@ para.plotStressZZ            = false;
 para.plotStressYZ            = false;
 para.plotStressXZ            = false;
 para.plotStressXY            = false;
+para.i_MS                    = 1;   % Visualize of UU(:,i_MS) in paraview
     
 para.extraXiPts              = 'round(20/2^(M-1))';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
@@ -157,6 +163,9 @@ pml.C = NaN;            % If ~isnan(pml.C) the matrices will be frequency indepe
 
 %% Settings for the MFS (method of fundamental solution)
 mfs.delta = 0.1;            % Distance from the boundary to the internal source points
+
+%% Settings for RT (Ray tracing)
+rt.N = 4; % Number of rays is approximately round(10^(rt.N/2))
 
 %% Settings for ROM (reduced order modelling)
 rom.useROM      = false;    % Toggle the usage of ROM

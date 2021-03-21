@@ -5,7 +5,7 @@ U = task.varCol{1}.U;
 
 switch task.varCol{1}.formulation
     case 'SS'
-        if plotFarField
+        if task.ffp.plotFarField
             y = task.varCol{1}.x_0;
             R = norm2(P_far-y);
             theta = acos((P_far(:,3)-y(3))./R);
@@ -34,13 +34,13 @@ switch task.varCol{1}.formulation
             end
         else
             n_cp = numel(U);
-            y_s = varCol.y_s;
+            y_s = task.varCol{1}.y_s;
             rs = zeros(size(P_far,1),n_cp);
             parfor j = 1:n_cp
                 xmys = elementAddition(-y_s(j,:), P_far);
                 rs(:,j) = norm2(xmys);
             end
-            switch varCol.scatteringCase
+            switch task.misc.scatteringCase
                 case {'BI','Sweep'}
                     p_h = Phi_k(rs,k)*U;
                 case 'MS'

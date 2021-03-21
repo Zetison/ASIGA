@@ -1,4 +1,4 @@
-function [nodes, noElemsBdry, element, element2, index, pIndex, n_en, noSurfDofs, elemMap] = meshBoundary(varCol,name)
+function varColBdry = meshBoundary(varCol,name)
 if ~isa(name,'char')
     error('This parameter should be a string')
 end
@@ -27,10 +27,13 @@ nodes = zeros(1,varCol.noDofs);
 counter = 1;
 [idx,setFound] = findSet(set,name);
 if ~setFound
-    nodes = [];
+    varColBdry.nodes = [];
     return
 end
-for i_free = 1:numel(set{idx}.item)
+noItems = numel(set{idx}.item);
+sub_nurbs = cell(1,noItems);
+
+for i_free = 1:noItems
     patch = set{idx}.item{i_free}.Attributes.patch;
     midx = set{idx}.item{i_free}.Text;
     nurbs = patches{patch}.nurbs;
@@ -40,6 +43,7 @@ for i_free = 1:numel(set{idx}.item)
     at(midx) = true;
     varCol_dummy.dimension = 1;
     varCol_dummy.nurbs = subNURBS({nurbs},'at',at.');
+    sub_nurbs(i_free) = varCol_dummy.nurbs;
     varCol_dummy = generateIGAmesh(convertNURBS(varCol_dummy));
     noElemsXiEta = varCol_dummy.patches{1}.noElems;
     index(eBdry:eBdry+noElemsXiEta-1,:) = varCol_dummy.patches{1}.index + repmat(jEl,noElemsXiEta,1);    
@@ -47,7 +51,7 @@ for i_free = 1:numel(set{idx}.item)
     element(eBdry:eBdry+noElemsXiEta-1,:) = maxDof + varCol_dummy.patches{1}.element;
     noEl1 = size(varCol_dummy.patches{1}.elRange{1},1);
     noEl2 = size(varCol_dummy.patches{1}.elRange{2},1);
-    noEl3 = size(patches{patch}.elRange{3},1);
+    noEl3 = size(patches{patch}.elRange{ceil(midx/2)},1);
     jEl = jEl + [noEl1,noEl2];
     maxDof = maxDof + numel(bdryNodes);
     
@@ -80,6 +84,16 @@ for i = 1:length(gluedNodes)
         end
     end
 end
+varColBdry.nodes = nodes;
+varColBdry.noElems = noElemsBdry;
+varColBdry.element = element;
+varColBdry.element2 = element2;
+varColBdry.index = index;
+varColBdry.pIndex = pIndex;
+varColBdry.n_en = n_en;
+varColBdry.noSurfDofs = noSurfDofs;
+varColBdry.elemMap = elemMap;
+varColBdry.sub_nurbs = sub_nurbs;
 
 function bdryNodes = extractBdryNodes(nurbs,midx)
 n_xi = nurbs.number(1);

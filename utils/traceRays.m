@@ -1,14 +1,13 @@
-function varCol = traceRays(varCol)
+function task = traceRays(task)
 
-d_inc = varCol.d_vec.';
-O = zeros(size(varCol.o,1),3,2);
+d_inc = task.d_vec.';
+O = zeros(size(task.varCol{1}.o,1),3,2);
 
-objectHit = zeros(size(varCol.o,1),1,'logical');
+objectHit = zeros(size(task.varCol{1}.o,1),1,'logical');
 
-N = size(varCol.o,1);
-O(:,:,1) = varCol.o;
+N = size(task.varCol{1}.o,1);
+O(:,:,1) = task.varCol{1}.o;
 
-p_inc = varCol.p_inc;
 Eps = 1e6*eps;
 d = zeros(N,3);
 % plotRays = 1;
@@ -17,9 +16,9 @@ R1 = 5;
 R2 = 3;
 x0 = L*R2/(R1-R2);
 mu = (R2/x0)^2;
-switch varCol.model
+switch task.misc.model
     case 'S1'
-        R = varCol.R_i;
+        R = task.varCol{1}.R_i;
         if 1
             for n = 1:size(O,1)
             % parfor n = 1:size(O,1)
@@ -45,9 +44,9 @@ switch varCol.model
             %             y = O(n,2,1:2);
             %             z = O(n,3,1:2);
             %             plot3(x(:),y(:),z(:),'black')
-            %             x = [varCol.o(n,1); reshape(O(n,1,2:end),size(O,3)-1,1)];
-            %             y = [varCol.o(n,2); reshape(O(n,2,2:end),size(O,3)-1,1)];
-            %             z = [varCol.o(n,3); reshape(O(n,3,2:end),size(O,3)-1,1)];
+            %             x = [task.varCol{1}.o(n,1); reshape(O(n,1,2:end),size(O,3)-1,1)];
+            %             y = [task.varCol{1}.o(n,2); reshape(O(n,2,2:end),size(O,3)-1,1)];
+            %             z = [task.varCol{1}.o(n,3); reshape(O(n,3,2:end),size(O,3)-1,1)];
             %             plot3(x(:),y(:),z(:),'black')
             %         end
                 end
@@ -146,24 +145,24 @@ end
 temp = zeros(N,1);
 temp(objectHit) = 1:sum(objectHit);
 
-beams = varCol.beams;
+beams = task.varCol{1}.beams;
 beams = reshape(temp(beams(:)),size(beams,1),size(beams,2));
 beams(any(~beams,2),:) = [];
 
-varCol.O = O(objectHit,:,:);
-varCol.o = varCol.o(objectHit,:);
-varCol.d = d(objectHit,:);
-dofs = size(varCol.O,1);
-varCol.dofs = dofs;
-varCol.beams = beams;
-% varCol.A = p_inc(O(objectHit,:,end-1));
+task.varCol{1}.O = O(objectHit,:,:);
+task.varCol{1}.o = task.varCol{1}.o(objectHit,:);
+task.varCol{1}.d = d(objectHit,:);
+dofs = size(task.varCol{1}.O,1);
+task.varCol{1}.dofs = dofs;
+task.varCol{1}.beams = beams;
+% task.varCol{1}.A = p_inc(O(objectHit,:,end-1));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % close all
-% XX = varCol.o;
-% XX2 = varCol.O(:,1:3,1);
-% d_vec = varCol.d_vec;
+% XX = task.varCol{1}.o;
+% XX2 = task.varCol{1}.O(:,1:3,1);
+% d_vec = task.d_vec;
 % XX_m = orthogonalTransform(XX, d_vec);
 % XX2_m = orthogonalTransform(XX2, d_vec);
 % YY_m = XX_m(:,2);
@@ -171,10 +170,10 @@ varCol.beams = beams;
 % YY2_m = XX2_m(:,2);
 % XX2_m = XX2_m(:,1);
 %    
-% oXX_m = varCol.oXX_m;
-% oYY_m = varCol.oYY_m;
-% X_m = varCol.X_m;
-% convexHull = varCol.convexHull;
+% oXX_m = task.varCol{1}.oXX_m;
+% oYY_m = task.varCol{1}.oYY_m;
+% X_m = task.varCol{1}.X_m;
+% convexHull = task.varCol{1}.convexHull;
 % close all
 % figure(1)
 % hold on

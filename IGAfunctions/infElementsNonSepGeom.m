@@ -28,7 +28,7 @@ A_2 = task.varCol{1}.A_2;
 [D,Dt] = generateCoeffMatrix(task);
 n_en = prod(degree+1);
 
-k = task.varCol{1}.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 Upsilon = task.varCol{1}.Upsilon;
 
 useApproxRadialIntegrals = 2; % 0 is most accurate, 1 is a spline approximation (not reccomended here as Chebychev is here implemented more robust), 2 is Chebychev (reccomended)
@@ -308,6 +308,15 @@ Avalues = accumarray(IuniqueIdx,Avalues);
 
 task.varCol{1}.Ainf = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
 
-task.varCol{1}.newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
+% newDofsToRemove = zeros(1,noDofsToRemove*Ntot);
+% i = 1;
+% for n = 1:Ntot
+%     newDofsToRemove(i:i+noDofsToRemove-1) = dofsToRemove+(n-1)*noSurfDofs;
+%     i = i + noDofsToRemove;
+% end
+dofsToRemove = task.varCol{1}.dofsToRemove;
+newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
+task.varCol{1}.dofsToRemove = sort(unique([dofsToRemove newDofsToRemove]));
+task.varCol{1}.dofsToRemove_old = dofsToRemove;
 task.varCol{1}.noDofs_new = noDofs_new;
 

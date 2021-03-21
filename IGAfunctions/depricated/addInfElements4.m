@@ -1,4 +1,5 @@
 function [A_inf, newDofsToRemove] = addInfElements4(varCol, k, Upsilon)
+error('Depricated. Use buildIEmatrix instead')
 
 elRangeXi = varCol.elRangeXi;
 elRangeEta = varCol.elRangeEta;

@@ -30,7 +30,7 @@ quadMethodBEM = task.bem.quadMethodBEM;
 
 Eps = 10*eps;
 
-k = task.varCol{i_domain}.k;
+k = task.misc.omega/task.varCol{i_domain}.c_f;
 alpha = 1i/k;
 formulation = task.misc.formulation;
 if strcmp(formulation(end),'C')

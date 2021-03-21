@@ -1,7 +1,7 @@
 function p_h = calculateScatteredPressureKDT(task, P_far)
 
 calculateFarFieldPattern = task.ffp.calculateFarFieldPattern;
-if ~strcmp(task.varCol{1}.BC, 'SHBC')
+if ~strcmp(task.misc.BC, 'SHBC')
     error('This is not implemented')
 end
 degree = task.varCol{1}.degree; % assume degree is equal in all patches
@@ -21,12 +21,12 @@ extraGPBEM = task.bem.extraGPBEM;
 formulation = task.misc.formulation;
 Eps = 10*eps;
 
-d_vec = task.varCol{1}.d_vec;
-k = task.varCol{1}.k;
+d_vec = task.d_vec;
+k = task.misc.omega/task.varCol{1}.c_f;
 [~, ~, diagsMax] = findMaxElementDiameter(patches);
 centerPts = findCenterPoints(patches);
 
-p_inc = task.varCol{1}.p_inc;
+p_inc = task.p_inc_;
 
 extraGP = task.misc.extraGP;
 % [~,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,'adaptive');

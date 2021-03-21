@@ -1,13 +1,13 @@
-function plotMeshAndGeometry(task)
+function task = plotMeshAndGeometry(task)
 prePlot = task.prePlot;
 if prePlot.plot3Dgeometry
-    figure('Color','white','name',['3D plot of geometry with mesh ' num2str(task.msh.M)])
+    task.prePlot.fig3Dplot = figure('Color','white','name',['3D plot of geometry with mesh ' num2str(task.msh.M)]);
     if strcmp(task.misc.method, 'IENSG') && prePlot.plotArtificialBndry
         c_z = task.varCol{1}.c_z;
-        c_x = task.varCol{1}.c_x;
+        c_xy = task.varCol{1}.c_xy;
         alignWithAxis = task.varCol{1}.alignWithAxis;
         x_0 = task.varCol{1}.x_0;
-        ellipsoid = getEllipsoidData('C',[c_x,c_x,c_z],'alignWithAxis', alignWithAxis, 'x_0', x_0);
+        ellipsoid = getEllipsoidData('C',[c_xy,c_xy,c_z]*task.varCol{1}.A_2,'alignWithAxis', alignWithAxis, 'x_0', x_0);
         alphaValue = 0.6;
         if prePlot.alphaValue == 1
             prePlot.alphaValue = 0.8;
@@ -20,14 +20,18 @@ if prePlot.plot3Dgeometry
         end
         switch task.varCol{j}.media
             case 'fluid'
-                prePlot.color = getColor(10);
+                if task.varCol{j}.boundaryMethod
+                    prePlot.color = getColor(1);
+                else
+                    prePlot.color = getColor(10);
+                end
             case 'solid'
                 prePlot.color = getColor(1);
         end
         nurbs = task.varCol{j}.nurbs;
         prePlot.displayName = ['Domain ' num2str(j)];
         plotNURBS(nurbs, prePlot);
-        if isfield(task.varCol{j},'geometry')
+        if isfield(task.varCol{j},'geometry') && prePlot.plotGeometryInfo
             topset = task.varCol{j}.geometry.topologysets.set;
             patchIdx = [];
             noTopsets = numel(topset);
@@ -44,7 +48,11 @@ if prePlot.plot3Dgeometry
                     nurbs(ii) = subNURBS(task.varCol{j}.nurbs(patch),'at',at.');
                 end
                 prePlot.displayName = ['Domain ' num2str(j) ', ' topset{i}.Attributes.name];
-                prePlot.color = colors(i,:);
+                if strcmp(topset{i}.Attributes.name,'Gamma')
+                    prePlot.color = getColor(1);
+                else
+                    prePlot.color = colors(i,:);
+                end
                 plotNURBS(nurbs, prePlot);
             end
         end
@@ -76,15 +84,21 @@ if prePlot.plot3Dgeometry
     end
     figName = [task.resultsFolder '/' figName '_3D'];
     if exist('../export_fig', 'dir')
-        export_fig(figName, '-png', '-transparent', '-r200')
+        export_fig(figName, '-png', '-transparent', prePlot.pngResolution)
     end
     savefig([figName, '.fig'])
 end   
 if prePlot.plot2Dgeometry
     figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(task.msh.M)])
     for j = 1:numel(task.varCol)
+        switch task.varCol{j}.media
+            case 'fluid'
+                prePlot.color = getColor(10);
+            case 'solid'
+                prePlot.color = getColor(1);
+        end
         switch task.misc.model
-            case {'M3','MS'}
+            case {'MS'}
                 nurbs2D = task.varCol{j}.nurbs(1:4:end);
             otherwise
                 nurbs2D = task.varCol{j}.nurbs;
@@ -99,10 +113,12 @@ if prePlot.plot2Dgeometry
         if numel(task.varCol) > 1
             switch task.varCol{j}.media
                 case 'fluid'
-                    prePlot.color = getColor(10);
+                    prePlot.color = [1,1,1];
                 case 'solid'
                     prePlot.color = getColor(1);
             end
+        else
+            prePlot.color = [1,1,1];
         end
         prePlot.displayName = ['Domain ' num2str(j)];
         plotNURBS(nurbs, prePlot);
@@ -132,7 +148,9 @@ if prePlot.plot2Dgeometry
     end
     figName = [task.resultsFolder '/' figName '_2D'];
     if exist('../export_fig', 'dir')
-        export_fig(figName, '-png', '-transparent', '-r200')
+        ax.SortMethod='ChildOrder';
+%         export_fig(figName, '-png', '-transparent', prePlot.pngResolution)
+        export_fig(figName, '-pdf', '-transparent')
     end
     savefig([figName, '.fig'])
 end

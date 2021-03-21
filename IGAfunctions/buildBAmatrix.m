@@ -40,7 +40,7 @@ else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
-k = task.varCol{i_varCol}.k;
+k = task.misc.omega/task.varCol{i_varCol}.c_f;
 [Q, W] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 n_en = prod(degree+1);
 

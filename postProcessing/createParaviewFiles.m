@@ -26,10 +26,12 @@ fprintf(['\n%-' num2str(stringShift) 's'], '    Evaluating solution ... ')
 tic
 for i_v = 1:noDomains
     para{i_v} = options.para_options;
-    if task.varCol{i_v}.boundaryMethod
-        celltype = 'VTK_QUAD';
-    else
-        celltype = 'VTK_HEXAHEDRON';
+    d_p = task.varCol{i_v}.nurbs{1}.d_p;
+    switch d_p
+        case 2
+            celltype = 'VTK_QUAD';
+        case 3
+            celltype = 'VTK_HEXAHEDRON';
     end
     isOuterDomain = i_v == 1;
     task.varCol{i_v}.isOuterDomain = isOuterDomain;
@@ -56,7 +58,7 @@ for i_v = 1:noDomains
     para{i_v}.plotStressXZ = options.para_options.plotStressXZ && isSolid;
     para{i_v}.plotStressXY = options.para_options.plotStressXY && isSolid;
 
-    U = task.varCol{i_v}.U;
+    U = task.varCol{i_v}.U(:,task.para.i_MS);
     rho = options.rho;
     if isnan(options.rho)
         rho = zeros(size(U,1),1);
@@ -83,7 +85,6 @@ for i_v = 1:noDomains
     knotVecs = task.varCol{i_v}.knotVecs;
     pIndex = task.varCol{i_v}.pIndex;
     noDofs = task.varCol{i_v}.noDofs;
-    patches = task.varCol{i_v}.patches;
     d = task.varCol{i_v}.dimension;
     if isfield(task.misc,'omega')
         omega = task.misc.omega;
@@ -107,7 +108,6 @@ for i_v = 1:noDomains
         C = 0;
     end
     n_en = prod(degree+1);
-    d_p = patches{1}.nurbs.d_p;
     if options.para_options.plotDisplacementVectors && strcmp(task.misc.BC,'SHBC') && task.varCol{1}.boundaryMethod
         warning('Displacement (gradient of pressure) may not be plotted for SHBC and isBoundaryMethod')
     end

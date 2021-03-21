@@ -8,7 +8,9 @@ if isfield(task.ffp,'theta')
 end
 varCol2{1}.f = task.misc.omega/(2*pi);
 varCol2{1}.k = task.misc.omega/varCol{1}.c_f;
-varCol2{1}.dofsAlg = (varCol{1}.dofs)^(1/3);
+if isfield(varCol{1},'dofs')
+    varCol2{1}.dofsAlg = (varCol{1}.dofs)^(1/3);
+end
 
 varCol2{1}.totNoElems = task.totNoElems;    
 fieldCell = {'noElems', 'tot_time', 'nepw', 'tau', 'h_max', 'surfDofs', 'dofs', 'N', 'timeBuildSystem', 'timeSolveSystem','totNoQP','totNoQPnonPolar','boundaryMethod'};

@@ -170,7 +170,7 @@ for i = 1:numel(applyLoads)
         else
             loopParameters = {'msh.M','misc.method','misc.BC','misc.applyLoad','misc.omega'};
         end
-%         collectIntoTasks
+        collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.scatteringCase = 'BI';

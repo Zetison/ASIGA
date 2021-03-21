@@ -36,7 +36,14 @@ if task.varCol{i_domain}.boundaryMethod
     n_en = prod(degree+1);
     zeta0Nodes = 1:noDofs;
 else
-    [zeta0Nodes, noElems, element, element2, index, pIndex, n_en] = meshBoundary(task.varCol{i_domain},'Neumann');
+    varColBdry = meshBoundary(task.varCol{i_domain},'Neumann');
+    zeta0Nodes = varColBdry.nodes;
+    noElems = varColBdry.noElems;
+    element = varColBdry.element;
+    element2 = varColBdry.element2;
+    index = varColBdry.index;
+    pIndex = varColBdry.pIndex;
+    n_en = varColBdry.n_en;
 end
 Fvalues = zeros(d_f*n_en,noElems,noRHSs);
 indices = zeros(d_f*n_en,noElems);

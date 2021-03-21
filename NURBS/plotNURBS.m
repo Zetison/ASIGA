@@ -48,8 +48,6 @@ lineWidth = options.LineWidth;
 lineColor = options.lineColor;
 colorControlPolygon = options.colorControlPolygon;
 markerColor = options.markerColor;
-sd = options.samplingDistance;
-elementBasedSamples = options.elementBasedSamples;
 color = options.color;
 alphaValue = options.alphaValue;
 if alphaValue ~= 1
@@ -77,6 +75,11 @@ for patch = 1:noPatches
         displayName = [options.displayName ', patch ' num2str(patch)];
     end
     nurbs = nurbsPatches{patch};
+    if isfield(nurbs,'isPML') && nurbs.isPML
+        colorPatch = getColor(11);
+    else
+        colorPatch = color(patch,:);
+    end
     d_p = nurbs.d_p;
     d = nurbs.d;
     if d > d_max
@@ -90,17 +93,22 @@ for patch = 1:noPatches
     dimensions = size(coeffs);
     p_values = cell(1,d_p);
     uniqueKnots = cell(1,d_p);
+    noElemsDir = zeros(1,d_p);
+    noUniqueKnots = zeros(1,d_p);
+    res = zeros(1,d_p);
     for i = 1:d_p
         % To reconstruct any interpolatory points, any p repeated knot should be
         % included in the abscissa values to plot
         uniqueKnots{i} = unique(nurbs.knots{i});
+        noUniqueKnots(i) = numel(uniqueKnots{i});
+        noElemsDir(i) = noUniqueKnots(i)-1;
         p = nurbs.degree(i);
         if p == 1
-            res = 0;
+            res(i) = 0;
         else
-            res = resolution(i);
+            res(i) = round(resolution(i)/noElemsDir(i));
         end
-        p_values{i} = unique(insertUniform3(nurbs.knots{i}, res, nurbs.degree(i)));
+        p_values{i} = insertUniform(uniqueKnots{i}, res(i));
     end
     if d_p == 3
         indicesMat = [1,2,3;
@@ -121,6 +129,7 @@ for patch = 1:noPatches
             nuk2 = length(p_values{2});
             nuk3 = length(p_values{3});
             maxnuk = max([nuk1,nuk2,nuk3]);
+            vElementEdges = NaN(6*(maxnuk+1)*max(noUniqueKnots)*2,3);
             X = NaN(maxnuk,6*(maxnuk+1),3);
             Up = cell(3,3);
             for i_c = 1:d_p
@@ -130,6 +139,7 @@ for patch = 1:noPatches
             end
             C = NaN(maxnuk,6*(maxnuk+1));
             counter = 0;
+            elCounter = 1;
             for ii = 1:d_p
                 indices = indicesMat(ii,:);
                 for jj = 1:size(plotAt,2)
@@ -148,7 +158,6 @@ for patch = 1:noPatches
                                     Up_temp2{i_c,j_c} = zeros(1,nuk2);
                                 end
                             end
-                            C_temp2 = zeros(1,nuk2);
                             for k = 1:nuk2
                                 xi = jj-1;
                                 eta = p_values{indices(2)}(j);
@@ -186,16 +195,27 @@ for patch = 1:noPatches
                         if plotSolution
                             C(1:nuk1,counter+1:counter+nuk2) = reshape(colorFun(reshape(X_temp,nuk1*nuk2,3)),nuk1,nuk2);
                         end
+                        
+                        stepLen = res(indices(2:3))+1;
+                        noLines = noUniqueKnots(indices(2:3));
+                        
+                        temp = NaN(nuk1+1, noLines(2), 3);
+                        temp(1:end-1,:,:) = X_temp(:,1:stepLen(2):end,:);
+                        noAddedPoints = noLines(2)*(nuk1+1);
+                        vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
+                        elCounter = elCounter+noAddedPoints;
+                        
+                        temp = NaN(nuk2+1, noLines(1), 3);
+                        temp(1:end-1,:,:) = permute(X_temp(1:stepLen(1):end,:,:),[2,1,3]);
+                        noAddedPoints = noLines(1)*(nuk2+1);
+                        vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
+                        elCounter = elCounter+noAddedPoints;
+                        
                         counter = counter + nuk2+1;
                     end
                 end
             end
-    %         if plotSolution
-    %             surf(X,Y,Z,C, 'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
-    %         else
-    %             surf(X,Y,Z,C, 'FaceColor', color(patch,:),'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-    %                         'FaceLighting', faceLighting, 'DisplayName',displayName)
-    %         end
+            vElementEdges(elCounter:end,:) = [];
 
             maxC = max(max(C));
             minC = min(min(C));
@@ -203,7 +223,7 @@ for patch = 1:noPatches
                 surf(X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName)
                 colorbar
             else
-                surf(X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', color(patch,:),'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                surf(X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
                         'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
             if plotParmDir
@@ -212,247 +232,67 @@ for patch = 1:noPatches
                     quiver3(X(:,:,1),X(:,:,2),X(:,:,3),Up{1,i},Up{2,i},Up{3,i},'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
             end
+            if plotElementEdges
+                plotGridLines(vElementEdges,displayName)
+            end
         elseif d_p == 2 && d == 3
-            if 0 %plotSolution
-                unif = linspace(-1, 1, resolution(1));
-                p_values{1} = insertUniform3(nurbs.knots{1}, resolution(1), nurbs.degree(1));
-                xi_x = varCol.xi_x;
-                if xi_x < 0.2
-                    coeff = xi_x;
-                elseif xi_x > 0.8
-                    coeff = 1-xi_x;
-                else
-                    coeff = 0.2;
-                end
-                p_values{1} = sort([p_values{1}', xi_x+coeff*sign(unif).*abs(unif).^1.3])';
-
-                unif = linspace(-1, 1, resolution(2));
-                p_values{2} = insertUniform3(nurbs.knots{2}, resolution(2), nurbs.degree(2));
-                eta_x = varCol.eta_x;
-                if eta_x < 0.2
-                    coeff = eta_x;
-                elseif eta_x > 0.8
-                    coeff = 1-eta_x;
-                else
-                    coeff = 0.2;
-                end
-                p_values{2} = sort([p_values{2}', eta_x+coeff*sign(unif).*abs(unif).^1.3])';
-            else
-                if elementBasedSamples
-                    p_values{1} = insertUniform(nurbs.knots{1}, resolution(1));
-                    p_values{2} = insertUniform(nurbs.knots{2}, resolution(2));
-                else
-                    p_values{1} = insertUniform3(nurbs.knots{1}, resolution(1), nurbs.degree(1));
-                    p_values{2} = insertUniform3(nurbs.knots{2}, resolution(2), nurbs.degree(2));
-                end
-            end
-        %     %% Plot surface where zeta = 1
-            if 0 %plotSolution
-                p_xi = nurbs.degree(1);
-                p_eta = nurbs.degree(2);
-                Xi = nurbs.knots{1};
-                Eta = nurbs.knots{2};
-                weights = varCol.weights;
-                controlPts = varCol.controlPts;
-                colorFun = varCol.colorFun;
-                x = varCol.x;
-                d_vec = varCol.d_vec;
-            else
-                p_xi = NaN;
-                p_eta = NaN;
-                Xi = NaN;
-                Eta = NaN;
-                weights = NaN;
-                controlPts = NaN;
-                x = NaN;
-                d_vec = NaN;
-            end
-            if elementBasedSamples
-                varCol.dimension = 1;
-                varCol.nurbs = nurbs;
-                varCol = convertNURBS(varCol);  
-                varCol = generateIGAmesh(varCol);
-                noElems = varCol.patches{1}.noElems;
-                index = varCol.patches{1}.index;
-                elRangeXi = varCol.patches{1}.elRange{1};
-                elRangeEta = varCol.patches{1}.elRange{2};
-                maxC = zeros(noElems,1);
-                X = cell(noElems,1);
-                Y = cell(noElems,1);
-                Z = cell(noElems,1);
-                U = cell(noElems,1);
-                V = cell(noElems,1);
-                W = cell(noElems,1);
-                C = cell(noElems,1);
-                parfor e = 1:noElems
-    %             for e = 1:noElems
-                    idXi = index(e,1);
-                    idEta = index(e,2);
-
-                    Xi_e = elRangeXi(idXi,:);
-                    Eta_e = elRangeEta(idEta,:);
-                    [~, dydxi, dydeta] = evaluateNURBS(nurbs, [Xi_e(1) Eta_e(1); Xi_e(2) Eta_e(1); Xi_e(2) Eta_e(2); Xi_e(1) Eta_e(2)],1);
-                    d12 = mean([norm(dydxi(1,:)),norm(dydxi(2,:))])*(Xi_e(2)-Xi_e(1));
-                    d43 = mean([norm(dydxi(4,:)),norm(dydxi(3,:))])*(Xi_e(2)-Xi_e(1));
-                    dxi = max(d12,d43);
-                    d23 = mean([norm(dydeta(2,:)),norm(dydeta(3,:))])*(Eta_e(2)-Eta_e(1));
-                    d14 = mean([norm(dydeta(1,:)),norm(dydeta(4,:))])*(Eta_e(2)-Eta_e(1));
-                    deta = max(d23,d14);
-
-
-                    noXiValues  = max([round(dxi/sd)+1, 2]);
-                    noEtaValues = max([round(deta/sd)+1, 2]);
-                    if noXiValues*noEtaValues < resolution(1)*resolution(2)
-                        noXiValues = max([round(resolution(1)*sqrt(dxi/deta)),2]);
-                        noEtaValues = max([round(resolution(2)*sqrt(deta/dxi)),2]);
-                    end
-                    Xi_values2 = linspace(Xi_e(1),Xi_e(2),noXiValues).';
-                    Eta_values2 = linspace(Eta_e(1),Eta_e(2),noEtaValues).';
-                    xi = copyVector(Xi_values2,noEtaValues,1);
-                    eta = copyVector(Eta_values2,noXiValues,2);
-
-                    [v,dvdxi,dvdeta] = evaluateNURBS(nurbs, [xi eta],1);
-                    normal = cross(dvdxi,dvdeta,2);
-                    normal = quiverScale*normal./repmat(norm2(normal),1,3);
-
-                    X{e} = reshape(v(:,1),noXiValues,noEtaValues);
-                    Y{e} = reshape(v(:,2),noXiValues,noEtaValues);
-                    Z{e} = reshape(v(:,3),noXiValues,noEtaValues); 
-                    U{e} = reshape(normal(:,1),noXiValues,noEtaValues);
-                    V{e} = reshape(normal(:,2),noXiValues,noEtaValues);
-                    W{e} = reshape(normal(:,3),noXiValues,noEtaValues); 
+            nuk1 = length(p_values{1});
+            nuk2 = length(p_values{2});
+            X = zeros(nuk1, nuk2, 3);
+            normals = zeros(length(p_values{1}), length(p_values{2}),3);
+            C = zeros(length(p_values{1}), length(p_values{2}));
+            parfor i = 1:length(p_values{1})
+                X_temp = zeros(length(p_values{2}),3);
+                normals_temp = zeros(length(p_values{2}),3);
+                C_temp = zeros(1,length(p_values{2}));
+                xi = p_values{1}(i);
+                for j = 1:length(p_values{2})
+                    eta = p_values{2}(j);
+                    [y,dydxi,dydeta] = evaluateNURBS(nurbs, [xi eta], 1);
+                    normal = cross(dydxi,dydeta);
                     if plotSolution
-                        C{e} = reshape(colorFun(v),noXiValues,noEtaValues);
-            %             C{e} = zeros(noXiValues,noEtaValues);
-                        maxC(e) = max(max(C{e}));
-                    else
-                        maxC(e) = NaN;
-                    end
-                end
-                for e = 1:noElems
-                    if plotSolution
-                        if plotElementEdges
-                            surf(X{e},Y{e},Z{e}, C{e}, 'EdgeColor','none','LineStyle','none','DisplayName',displayName)
-                        else
-                            surf(X{e},Y{e},Z{e}, C{e},'DisplayName',displayName)
-                        end
-                    else
-                        if plotElementEdges
-                            if alphaValue < 1
-                                surf(X{e},Y{e},Z{e}, 'FaceColor', color(patch,:),'EdgeColor','none','LineStyle','none', ...
-                                    'FaceAlpha',alphaValue, 'FaceLighting', 'none','DisplayName',displayName)
-                            else
-                                surf(X{e},Y{e},Z{e}, 'FaceColor', color(patch,:),'EdgeColor','none','LineStyle','none', ...
-                                    'FaceAlpha',alphaValue,'DisplayName',displayName)
-                            end
-                        else
-                            surf(X{e},Y{e},Z{e})
-                        end
+                        ny = normal/norm(normal);
+                        C_temp(j) = colorFun(y);
                     end
                     if plotNormalVectors
-                        quiver3(X{e},Y{e},Z{e},U{e},V{e},W{e},'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
+                        ny = quiverScale*normal/norm(normal);
+                        normals_temp(j,:) = ny;
                     end
+                    X_temp(j,:) = y;
                 end
-                if plotSolution
-                    maxC = max(maxC);
-                    minC = min(min(C));
-                    colorbar
-                end
+                X(i,:,:) = X_temp;
+                normals(i,:,:) = normals_temp;
+                C(i,:) = C_temp;
+            end
+            if plotSolution
+                surf(X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                            'FaceLighting', faceLighting, 'DisplayName',displayName)
+                maxC = max(max(C));
+                minC = min(min(C));
+                colorbar
             else
-                X = zeros(length(p_values{1}), length(p_values{2}));
-                Y = zeros(length(p_values{1}), length(p_values{2}));
-                Z = zeros(length(p_values{1}), length(p_values{2}));
-                U = zeros(length(p_values{1}), length(p_values{2}));
-                V = zeros(length(p_values{1}), length(p_values{2}));
-                W = zeros(length(p_values{1}), length(p_values{2}));
-                C = zeros(length(p_values{1}), length(p_values{2}));
-    %             for i = 1:length(p_values{1})
-                parfor i = 1:length(p_values{1})
-                    X_temp = zeros(1,length(p_values{2}));
-                    Y_temp = zeros(1,length(p_values{2}));
-                    Z_temp = zeros(1,length(p_values{2}));
-                    U_temp = zeros(1,length(p_values{2}));
-                    V_temp = zeros(1,length(p_values{2}));
-                    W_temp = zeros(1,length(p_values{2}));
-                    C_temp = zeros(1,length(p_values{2}));
-                    xi = p_values{1}(i);
-                    for j = 1:length(p_values{2})
-                        eta = p_values{2}(j);
-                        [y,dydxi,dydeta] = evaluateNURBS(nurbs, [xi eta], 1);
-                        normal = cross(dydxi,dydeta);
-                        if plotSolution
-            %                 [u, v] = numericalSolEval_final_surf(xi, eta, p_xi, p_eta, Xi, Eta, weights, controlPts, U);
-        %                     y = evaluateNURBS(nurbs, [xi eta]);
-        %                     xmy = x - y.';
-        %                     nx = x'/norm(x');
-        %                     ny = y/norm(y);
-        %                     r = norm(xmy);
-            %                 C_temp(j) = real(colorFun(xmy,r,nx,ny));
-            %                 C_temp(j) = log10(abs(norm(-xmy/r + d_vec')));
-        %                     C_temp(j) = colorFun(y);
-        %                     C_temp(j) = abs(real(colorFun(y.')));
-    %                         y = evaluateNURBS(nurbs, [xi eta]);
-                            ny = normal/norm(normal);
-                            dotProd = dot([0,-1,0],ny);
-                            k = 2*pi*1000/1500;
-                            if false
-                                C_temp2 = 0;
-                                if dotProd > 0
-                                    C_temp2 = real(dotProd*exp(-2*1i*k*dot([0,-1,0],y)));
-                                end
-                                C_temp(j) = C_temp2;
-                            else
-                                C_temp(j) = colorFun(y);
-                            end
-        %                     C_temp(j) = colorFun(y.',ny);
-        %                     y = y + ny*real(C_temp(j))*2;
-            %                 C_temp(j)
-            %                 C_temp(j) = colorFun(y,xi,eta);
-            %                 C_temp(j) = log10(abs(norm(y)-1));
-            %                 C_temp(j) = abs(norm(y)-1);
-                        end
-                        if plotNormalVectors
-                            ny = quiverScale*normal/norm(normal);
-                            U_temp(j) = ny(1);
-                            V_temp(j) = ny(2);
-                            W_temp(j) = ny(3);
-                        end
-                        X_temp(j) = y(1);
-                        Y_temp(j) = y(2);
-                        Z_temp(j) = y(3);
-                    end
-                    X(i,:) = X_temp;
-                    Y(i,:) = Y_temp;
-                    Z(i,:) = Z_temp;
-                    U(i,:) = U_temp;
-                    V(i,:) = V_temp;
-                    W(i,:) = W_temp;
-                    C(i,:) = C_temp;
-                end
-                if plotSolution
-                    if false
-                        noPts = length(p_values{1})*length(p_values{2});
-                        C = reshape(colorFun([reshape(X,noPts,1),reshape(Y,noPts,1),reshape(Z,noPts,1)],...
-                                             [reshape(X,noPts,1),reshape(Y,noPts,1),reshape(Z,noPts,1)].'), ...
-                                              length(p_values{1}), length(p_values{2}));
-            %             C = log10(abs(C-analytic_v)/max(max(abs(C))));
-                    end
-                    if plotElementEdges
-                        surf(X,Y,Z,C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-                                    'FaceLighting', faceLighting, 'DisplayName',displayName)
-                    else
-                        surf(X,Y,Z, C,'DisplayName',displayName)
-                    end
-                    maxC = max(max(C));
-                    minC = min(min(C));
-                    colorbar
-                else
-                    surf(X,Y,Z, 'FaceColor', color(patch,:),'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-                                'FaceLighting', faceLighting, 'DisplayName',displayName)
-                end
-                if plotNormalVectors
-                    quiver3(X,Y,Z,U,V,W,'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
-                end
+                surf(X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                            'FaceLighting', faceLighting, 'DisplayName',displayName)
+            end
+            if plotNormalVectors
+                quiver3(X(:,:,1),X(:,:,2),X(:,:,3),normals(:,:,1),normals(:,:,2),normals(:,:,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
+            end
+            if plotElementEdges
+                stepLen = res+1;
+                vElementEdges = NaN((nuk1+1)*noUniqueKnots(2)+(nuk1+1)*noUniqueKnots(2),3);
+
+                elCounter = 1;
+                temp = NaN(nuk1+1, noUniqueKnots(2), 3);
+                temp(1:end-1,:,:) = X(:,1:stepLen(2):end,:);
+                noAddedPoints = noUniqueKnots(2)*(nuk1+1);
+                vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
+                elCounter = elCounter+noAddedPoints;
+
+                temp = NaN(nuk2+1, noUniqueKnots(1), 3);
+                temp(1:end-1,:,:) = permute(X(1:stepLen(1):end,:,:),[2,1,3]);
+                noAddedPoints = noUniqueKnots(1)*(nuk2+1);
+                vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
+                plotGridLines(vElementEdges,displayName)
             end
         elseif d_p == 2 && d == 2
             X = zeros(2*length(p_values{1})+2*length(p_values{2})-3,1);
@@ -501,11 +341,7 @@ for patch = 1:noPatches
             % reverse back order of arrays
             p_values{1} = p_values{1}(end:-1:1);
             p_values{2} = p_values{2}(end:-1:1);
-            if plotElementEdges
-                fill(X,Y, color(patch,:),'EdgeColor','none','LineStyle','none')
-            else
-                fill(X,Y, color(patch,:))
-            end
+            fill(X,Y, colorPatch,'EdgeColor','none','LineStyle','none')
         elseif d_p == 1
             C = zeros(length(p_values{1}), d);
 
@@ -515,15 +351,15 @@ for patch = 1:noPatches
             end
             switch d
                 case 1
-                    plot(C,zeros(size(C)), 'color', color(patch,:));  
+                    plot(C,zeros(size(C)), 'color', colorPatch);  
                 case 2
-                    plot(C(:,1), C(:,2), 'color', color(patch,:));  
+                    plot(C(:,1), C(:,2), 'color', colorPatch);  
                 case 3
-                    plot3(C(:,1), C(:,2), C(:,3), 'color', color(patch,:)); 
+                    plot3(C(:,1), C(:,2), C(:,3), 'color', colorPatch); 
             end  
         end
     end
-    if plotElementEdges && ~(d_p == 1)
+    if plotElementEdges && d_p == 2 && d == 2
         v = [];
         for i = 1:d_p
             indices = indicesMat(i,:);
@@ -542,7 +378,6 @@ for patch = 1:noPatches
                     for k = 1:nuk2
                         zeta = uniqueKnots{indices(3)}(k);
                         temp2 = zeros(d,nok);
-%                         for ii = 1:nok
                         parfor ii = 1:nok
                             xi = p_values{indices(1)}(ii);
                             XI = [xi eta zeta];
@@ -553,7 +388,6 @@ for patch = 1:noPatches
                     end
                 else
                     temp2 = zeros(d,nok);
-%                     for ii = 1:nok
                     parfor ii = 1:nok
                         xi = p_values{indices(1)}(ii);
                         XI = [xi eta];
@@ -564,11 +398,11 @@ for patch = 1:noPatches
                 end
             end
             v = [v, temp];
-        end
-        if size(v,1) > 2
-            plot3(v(1,:),v(2,:),v(3,:),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
-        else
-            plot(v(1,:),v(2,:),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+            if size(v,1) > 2
+                plot3(v(1,:),v(2,:),v(3,:),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+            else
+                plot(v(1,:),v(2,:),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+            end
         end
     end
     if plotControlPolygon
@@ -581,7 +415,7 @@ for patch = 1:noPatches
                 indices([i+1,2]) = [2,i+1];
                 temp = permute(coeffs,indices);
                 prd = prod(dimensions(indices(3:end))); % product of remaining dimensions
-                temp = cat(2,reshape(temp,dimensions(1),dimensions(i+1),prd),NaN(d,1,prd));  % adding NaN make the data discontinous
+                temp = cat(2,reshape(temp,dimensions(1),dimensions(i+1),prd),NaN(d,1,prd));  % adding NaN to make the data discontinous
                 temp = reshape(temp,dimensions(1),(dimensions(i+1)+1)*prd);
                 v = [v, temp, NaN(dimensions(1),1)];
             end
@@ -612,4 +446,11 @@ axis equal
 drawnow
 h = gcf;
 
-
+function plotGridLines(v,displayName)
+if size(v,2) > 2
+    plot3(v(:,1),v(:,2),v(:,3),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+else
+    plot(v(:,1),v(:,2),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+end
+end
+end

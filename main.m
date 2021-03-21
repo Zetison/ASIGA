@@ -66,7 +66,9 @@ for i_col = 1:numel(studiesCol)
             end
             studies(i_study).resultsFolder = resultsFolder;
         end 
-%         save([resultsFolder '/studies'], 'studies')
+        if studies(i_study).saveStudies
+            save([resultsFolder '/studies'], 'studies')
+        end
     end
     close all
     for i_study = 1:numel(studies)  

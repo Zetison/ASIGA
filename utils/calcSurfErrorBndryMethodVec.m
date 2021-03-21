@@ -15,7 +15,7 @@ knotVecs = task.varCol{i}.knotVecs;
 pIndex = task.varCol{i}.pIndex;
 d_p = task.varCol{i}.patches{1}.nurbs.d_p;
 U = task.varCol{i}.U;
-k = task.varCol{i}.k;
+k = task.misc.omega/task.varCol{i}.c_f;
 
 if strcmp(task.misc.coreMethod, 'XI')
     useEnrichedBfuns = true;

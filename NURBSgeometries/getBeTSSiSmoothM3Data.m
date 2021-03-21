@@ -1,4 +1,4 @@
-function nurbs = getBeTSSiSmoothM3Data(varargin)
+function [nurbs,RR] = getBeTSSiSmoothM3Data(varargin)
 options = struct('R1', 3,...
                  'R2', 5,...
                  't', 1,...
@@ -18,23 +18,21 @@ R1 = options.R1;
 R2 = options.R2;
 x = t*(R2-R1)/sqrt(L^2+(R2-R1)^2);
 y = t*L/sqrt(L^2+(R2-R1)^2);
-theta = asin(x/t);
-theta_eta = asin(y/t);
-options.theta_eta = theta_eta;
-options.Eta = [0,0,0,1,1,1];
-options.C = R1 + t;
-hSphere1 = rotateNURBS(getEllipsoidData(rmfield(options,'t')),'rotAxis','Zaxis','theta',pi/2);
-hSphere1 = translateNURBS(rotateNURBS(hSphere1,'rotAxis','Yaxis','theta',pi/2),[-R1*tan(theta),0,0]);
-hSphere1 = mirrorNURBS(hSphere1,'x');
-hSphere1 = flipNURBSparametrization(hSphere1,2);
-
-options.C = R2 + t;
-options.theta_eta = pi - theta_eta;
-hSphere2 = rotateNURBS(getEllipsoidData(rmfield(options,'t')),'rotAxis','Zaxis','theta',pi/2);
-hSphere2 = translateNURBS(rotateNURBS(hSphere2,'rotAxis','Yaxis','theta',pi/2),[-L-R2*tan(theta),0,0]);
-cone = loftNURBS({subNURBS(hSphere2,'at',[0,0;0,1]),subNURBS(hSphere1,'at',[0,0;1,0])});
-nurbs = [hSphere2, cone, hSphere1];
-
+a = -(R2-R1)/L;
+w = 1/sqrt(2);
+coeffs1 = [x,    R1+t,         R1+t;
+           R1+y, a*(R1+t-x)+R1+y, 0;
+           1,    w,            1];
+arc1 = createNURBSobject(coeffs1,[0,0,0,1,1,1]);
+coeffs2 = [-L-R2-t, -L-R2-t,         -L+x;
+           0,       a*(-L-R2-t-x)+R1+y, R2+y;
+           1,       w,               1]; 
+RR = [R2+y,R1+y];
+arc2 = createNURBSobject(coeffs2,[0,0,0,1,1,1]);
+line = createNURBSobject([coeffs2(:,end), coeffs1(:,1)],[0,0,1,1]);
+nurbs = uniteNURBS({arc2,line,arc1});
+nurbs = revolveNURBS(nurbs,'rotAxis', [1, 0, 0], 'Xi', options.Xi);
+nurbs = permuteNURBS(nurbs,[2,1]);
 nurbs = makeUniformNURBSDegree(nurbs);
 nurbs = explodeNURBS(nurbs);
 nurbs = translateNURBS(nurbs,[L/2+(R2-R1)/2,0,0]);

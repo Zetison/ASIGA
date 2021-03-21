@@ -39,7 +39,7 @@ noDofs = task.varCol{1}.noDofs;
 weights = task.varCol{1}.weights;
 controlPts = task.varCol{1}.controlPts;
 
-k = task.varCol{1}.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 Upsilon = task.varCol{1}.Upsilon;
 if task.varCol{1}.boundaryMethod
     noElems = task.varCol{1}.noElems;
@@ -565,7 +565,7 @@ else
     task.varCol{1}.Ainf = sparse(i,j,Avalues,noDofs_new,noDofs_new);
 end
 dofsToRemove_old = task.varCol{1}.dofsToRemove;
-task.varCol{1}.dofsToRemove = sort(unique([task.varCol{1}.dofsToRemove newDofsToRemove]));
+task.varCol{1}.dofsToRemove = sort(unique([dofsToRemove_old newDofsToRemove]));
 task.varCol{1}.dofsToRemove_old = dofsToRemove_old;
 task.varCol{1}.noDofs_new = noDofs_new;
 

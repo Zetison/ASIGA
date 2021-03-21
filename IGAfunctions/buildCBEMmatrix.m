@@ -27,7 +27,7 @@ quadMethodBEM = task.bem.quadMethodBEM;
 
 Eps = 1e4*eps;
 
-k = task.varCol{1}.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 alpha = 1i/k;
 
 formulation = task.misc.formulation;

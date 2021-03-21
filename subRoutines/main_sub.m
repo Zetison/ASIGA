@@ -27,22 +27,9 @@ end
 if task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry
     tic
     fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting geometry ... ')
-    plotMeshAndGeometry(task);
+    task = plotMeshAndGeometry(task);
     fprintf('using %12f seconds.', toc)
     
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Check NURBS compatibility
-for j = 1:numel(task.varCol)
-    nurbs = task.varCol{j}.nurbs;
-    equalWeights = checkNURBSweightsCompatibility(nurbs,task.prePlot.plot3Dgeometry);
-    if ~equalWeights
-        warning('NURBS:weights','Some weights in the geometry are not equal. For geometries containing singularities this might be ok (this warning may then be supressed using the key NURBS:weights).')
-        % supress the following warning with warning('off','NURBS:weights')
-        % in your getTask_<model> script if the model contains
-        % singularities
-    end
 end
 
 %% Build connectivity
@@ -66,6 +53,13 @@ if ~runTasksInParallel
     fprintf('\nTotal number of elements = %d', totNoElems)
 end
 task.totNoElems = totNoElems;
+
+
+%% Check NURBS compatibility
+if task.misc.checkNURBSweightsCompatibility
+    checkNURBSweightsCompatibility(task);
+end
+
 if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry) && task.prePlot.abortAfterPlotting
     return
 end
@@ -110,6 +104,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Building infinite element matrix ... ')
                         end
                         task = buildIEmatrix(task);
+                        
                         task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
                         if ~runTasksInParallel
                             fprintf('using %12f seconds.', toc)
@@ -435,6 +430,9 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
     if numel(omega) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         fprintf('using %12f seconds.', toc)   
     end
+    if ~task.rom.useROM
+        task = postProcessSolution(task,UU);
+    end
 else
     task.varCol{1}.U = [];
 end  
@@ -443,7 +441,6 @@ task.misc.omega = omega;
 %% Compute scattered pressure   
 if task.ffp.calculateFarFieldPattern && ~task.rom.useROM
     task = getAnalyticSolutions(task);
-    task = postProcessSolution(task,UU);
     task = calculateTS(task,runTasksInParallel,stringShift);
     task = computeDerivedFFPquantities(task,task.p_h);
 end
@@ -453,92 +450,111 @@ end
 
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
 if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
-    switch task.misc.scatteringCase
-        case {'BI','Sweep','Ray'}
-            tic
-            if task.misc.plotResidualError && task.analyticSolutionExist && strcmp(task.misc.formulation,'GCBIE')
+    tic
+    if task.misc.plotResidualError && task.analyticSolutionExist && strcmp(task.misc.formulation,'GCBIE')
 %                 close all
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting zeros of residual ... ')
-                plotGalerkinResidual(task.varCol{1});
-                fprintf('using %12f seconds.', toc)
-                axis equal
-                axis off
-    %             set(gca, 'Color', 'none');
+        fprintf(['\n%-' num2str(stringShift) 's'], 'Plotting zeros of residual ... ')
+        plotGalerkinResidual(task.varCol{1});
+        fprintf('using %12f seconds.', toc)
+        axis equal
+        axis off
+%             set(gca, 'Color', 'none');
 %                 title('Error in Galerkin solution')
 %                 colorbar
 %                 caxis([-7,0])
 %                 camlight
-                colorbar off
-                savefig([resultsFolder '/' task.saveName])
-    %             n_xi = fluid.number(1);
-    %             n_eta = fluid.number(2);
-    %             [cg_xi, grev_xi] = CauchyGalerkin(fluid.degree(1), n_xi, fluid.knots{1});
-    %             [cg_eta, grev_eta] = CauchyGalerkin(fluid.degree(2), n_eta, fluid.knots{2});
-    %             % keyboard
-    %             n_cp = task.varCol{1}.noDofs - length(dofsToRemove);
-    %             
-    %             cp_cg = zeros(n_cp,3);
-    %             cp_grev = zeros(n_cp,3);
-    %             counter = 1;
-    %             counter2 = 1;
-    %             for j = 1:n_eta
-    %                 eta_cg = cg_eta(j);
-    %                 eta_grev = grev_eta(j);
-    %                 for i = 1:n_xi
-    %                     if ~any(dofsToRemove == counter)
-    %                         xi_cg = cg_xi(i);        
-    %                         xi_grev = grev_xi(i);            
-    %                         cp_cg(counter2,:) = evaluateNURBS(fluid, [xi_cg, eta_cg]); 
-    %                         cp_grev(counter2,:) = evaluateNURBS(fluid, [xi_grev, eta_grev]); 
-    %                         counter2 = counter2 + 1;
-    %                     end
-    %                     counter = counter + 1;
-    %                 end
-    %             end
-    %             hold on
-    %             h1 = plot3(cp_cg(:,1),cp_cg(:,2),cp_cg(:,3), '*','color','red');
-    %             h2 = plot3(cp_grev(:,1),cp_grev(:,2),cp_grev(:,3), '*','color','blue');
-    %             legend([h1, h2], {'CG','Grev'})
-    %             hold off
-    %             savefig([resultsFolderName '/' task.saveName '_surfPlot_mesh' num2str(M) '_formulation_' formulation '_degree' num2str(max(fluid.degree)) '.fig'])
-            end
-            para = task.para;
-            if para.plotResultsInParaview
-                tic
-                if ~runTasksInParallel
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Post-processing ... ')
-                end
-                resultsFolderNameParaview = [resultsFolder '/paraviewResults'];
-                if ~exist(resultsFolderNameParaview, 'dir')
-                    mkdir(resultsFolderNameParaview);
-                end          
-                vtfFileName = [resultsFolderNameParaview '/' task.saveName];
-                if isempty(para.name)
-                    para.name = vtfFileName;
-                end
-
-
-                para.plotArtificialBoundary = para.plotArtificialBoundary && (strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'ABC') || strcmp(task.misc.method,'PML'));
-                M = task.msh.M;
-                para.extraXiPts = eval(para.extraXiPts);
-                para.extraEtaPts = eval(para.extraEtaPts);
-                para.extraZetaPts = eval(para.extraZetaPts);
-                testFun = @(v) -analytic(v) - P_inc(v);
-                task.varCol{1}.testFun = testFun;
-                if strcmp(task.misc.method, 'KDT')
-                    task.varCol{1}.U = zeros(task.varCol{1}.noDofs,1);
-                end
-        
-                createParaviewFiles(task, 'para_options', para);
-
-                % plot artificial boundary
-%                 if para.plotArtificialBoundary
-%                     plotModelInParaview(subNURBS(task.varCol{1}.nurbs,'at',[0,0;0,0;0,1]), para, 0, 'artificialBoundary')
-%                     if strcmp(BC,'SHBC')
-%                         createParaviewFiles(subNURBS(task.varCol{1}.nurbs,'at',[0,0;0,0;1,0]), para, 1, 'scatterer')
+        colorbar off
+        savefig([resultsFolder '/' task.saveName])
+%             n_xi = fluid.number(1);
+%             n_eta = fluid.number(2);
+%             [cg_xi, grev_xi] = CauchyGalerkin(fluid.degree(1), n_xi, fluid.knots{1});
+%             [cg_eta, grev_eta] = CauchyGalerkin(fluid.degree(2), n_eta, fluid.knots{2});
+%             % keyboard
+%             n_cp = task.varCol{1}.noDofs - length(dofsToRemove);
+%             
+%             cp_cg = zeros(n_cp,3);
+%             cp_grev = zeros(n_cp,3);
+%             counter = 1;
+%             counter2 = 1;
+%             for j = 1:n_eta
+%                 eta_cg = cg_eta(j);
+%                 eta_grev = grev_eta(j);
+%                 for i = 1:n_xi
+%                     if ~any(dofsToRemove == counter)
+%                         xi_cg = cg_xi(i);        
+%                         xi_grev = grev_xi(i);            
+%                         cp_cg(counter2,:) = evaluateNURBS(fluid, [xi_cg, eta_cg]); 
+%                         cp_grev(counter2,:) = evaluateNURBS(fluid, [xi_grev, eta_grev]); 
+%                         counter2 = counter2 + 1;
 %                     end
+%                     counter = counter + 1;
 %                 end
+%             end
+%             hold on
+%             h1 = plot3(cp_cg(:,1),cp_cg(:,2),cp_cg(:,3), '*','color','red');
+%             h2 = plot3(cp_grev(:,1),cp_grev(:,2),cp_grev(:,3), '*','color','blue');
+%             legend([h1, h2], {'CG','Grev'})
+%             hold off
+%             savefig([resultsFolderName '/' task.saveName '_surfPlot_mesh' num2str(M) '_formulation_' formulation '_degree' num2str(max(fluid.degree)) '.fig'])
+    end
+    para = task.para;
+    if para.plotResultsInParaview
+        task.ffp.alpha_s = task.ffp.alpha_s(task.para.i_MS);
+        task = getAnalyticSolutions(task);
+        if isempty(para.name)
+            resultsFolderNameParaview = [resultsFolder '/paraviewResults'];
+            if ~exist(resultsFolderNameParaview, 'dir')
+                mkdir(resultsFolderNameParaview);
+            end          
+            vtfFileName = [resultsFolderNameParaview '/' task.saveName];
+            para.name = vtfFileName;
+        end
+
+
+        M = task.msh.M;
+        para.extraXiPts = eval(para.extraXiPts);
+        para.extraEtaPts = eval(para.extraEtaPts);
+        para.extraZetaPts = eval(para.extraZetaPts);
+        if strcmp(task.misc.method, 'KDT')
+            task.varCol{1}.U = zeros(task.varCol{1}.noDofs,1);
+        end
+        if para.plotFullDomain
+            tic
+            if ~runTasksInParallel
+                fprintf(['\n%-' num2str(stringShift) 's'], 'Creating paraview files for domains ... ')
             end
+            createParaviewFiles(task, 'para_options', para);
+        end
+
+        if ~isempty(para.plotSubsets)
+            name = para.name;
+            for i = 1:numel(para.plotSubsets)
+                bdryName = para.plotSubsets{i};
+                if ~runTasksInParallel
+                    fprintf(['\n%-' num2str(stringShift) 's'], ['Creating paraview files for ' bdryName ' ... '])
+                end
+                [~,setFound] = findSet(task.varCol{1}.geometry.topologysets.set,bdryName);
+                if setFound
+                    varColBdry = meshBoundary(task.varCol{1},bdryName);
+                    nodes = varColBdry.nodes;
+                    taskBdry = task;
+                    taskBdry.varCol{1}.nurbs = varColBdry.sub_nurbs;
+                    taskBdry = collectVariables(taskBdry);
+                    taskBdry.varCol{1} = findDofsToRemove(generateIGAmesh(taskBdry.varCol{1}));
+                    switch taskBdry.varCol{1}.media
+                        case 'fluid'
+                            taskBdry.varCol{1}.U = task.varCol{1}.U(nodes,:);
+                        case 'solid'
+                            error('Not implemented')
+                            taskBdry.varCol{1}.U = task.varCol{1}.U(nodes,:);
+                    end
+                    para.name = [name, '_', bdryName];
+                    createParaviewFiles(taskBdry, 'para_options', para);
+                else
+                    warning(['The set ' bdryName ' was not found, and is thus not plotted in paraview'])
+                end
+            end
+        end
     end
 end
 task.varCol{1}.tot_time = toc(t_start);

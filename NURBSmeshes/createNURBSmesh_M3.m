@@ -49,6 +49,11 @@ if varCol{1}.boundaryMethod
     else
         chimax = 25.7;
     end
+    if numel(Xi) == 12
+        xiAngle = pi/2;
+    else
+        xiAngle = 2*pi/3;
+    end
 
     solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi);
     refLength = R_max*pi/2;
@@ -60,7 +65,7 @@ if varCol{1}.boundaryMethod
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,2:3); %c_z-L/2-R_max, 
     else
         solid = makeUniformNURBSDegree(solid,degree);
-        Imap{1} = [R2*pi/2,R1*pi/2,(R2-t)*pi/2,(R1-t)*pi/2];
+        Imap{1} = [R2*xiAngle,R1*xiAngle,(R2-t)*xiAngle,(R1-t)*xiAngle];
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/(R2*pi/2),Imap);
     end
 
@@ -107,6 +112,8 @@ else
             eta2 = theta2/pi;
         end
         task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
+        varCol{1}.c_z = c_z;
+        varCol{1}.c_xy = c_xy;
     end
 
     
@@ -115,8 +122,10 @@ else
 
     solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi);
     if numel(Xi) == 12
+        xiAngle = pi/2;
         solid = [glueNURBS(solid(1:4),1),glueNURBS(solid(5:8),1),glueNURBS(solid(9:12),1)];
     else
+        xiAngle = 2*pi/3;
         solid = [glueNURBS(solid(1:3),1),glueNURBS(solid(4:6),1),glueNURBS(solid(7:9),1)];
     end
     if task.msh.refineThetaOnly
@@ -124,15 +133,16 @@ else
             error('Must have parm = 1 for pure theta refinement')
         end
         degreeVec = [2,degree,degree];
+        refDirs = 2:3;
     else
         degreeVec = degree;
+        refDirs = 1:3;
     end
     
-
     refLength = R_max*pi/2;
     if strcmp(task.misc.method,'PML')
         t_fluid = task.misc.r_a-R2;
-        Gamma_a = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi);
+        [Gamma_a,RR] = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi);
         if numel(Xi) == 12
             Gamma_a = [glueNURBS(Gamma_a(1:4),1),glueNURBS(Gamma_a(5:8),1),glueNURBS(Gamma_a(9:12),1)];
         else
@@ -141,7 +151,7 @@ else
 %         fluid = getBeTSSiM3Data('R1', R1+t_fluid, 'R2', R2+t_fluid, 't', t_fluid, 'L', L, 'parm', parm, 'Xi', Xi);
         fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),Gamma_a});
         fluid = makeUniformNURBSDegree(fluid,degreeVec);
-        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0,2:3); %c_z-L/2-R_max, 
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{RR*xiAngle},0,refDirs); %c_z-L/2-R_max, 
         solid = makeUniformNURBSDegree(solid,degreeVec);
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,3);
         for i = 1:numel(newKnotsIns)

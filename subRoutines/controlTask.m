@@ -4,8 +4,14 @@ formulation = task.misc.formulation;
 scatteringCase = task.misc.scatteringCase;
 method = task.misc.method;
 
-if strcmp(method,'PML') && isnan(task.pml.t)
+if strcmp(method,'PML') && isnan(task.pml.t) 
     error('The PML thickness pml.t must be set')
+end
+if strcmp(method,'PML') && isnan(task.misc.r_a) 
+    error('The distance to the PML layer must be set')
+end
+if strcmp(method,'PML') && ~isfield(task.varCol{1},'refinement') 
+    error('The refinement field must be specified using PML')
 end
 if strcmp(task.misc.method,'BEM') && ~task.misc.solveForPtot && ~strcmp(task.misc.BC,'NBC')...
         && ~strcmp(task.applyLoad,'radialPulsation')
@@ -50,7 +56,16 @@ if strcmp(method,'PML') && isnan(task.pml.C) && task.rom.useROM
 end
 task.misc.storeFullVarCol = task.misc.storeFullVarCol || task.rom.useROM;
 
-
+if strcmp(task.misc.scatteringCase,'MS') && (~isnan(task.ffp.alpha_s(1)) || ~isnan(task.ffp.beta_s(1)))
+    error(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
+           'Note that alpha_s = alpha and beta_s = beta.'])
+end
+if (isnan(task.ffp.alpha_s(1)) || isnan(task.ffp.beta_s(1))) && strcmp(task.misc.scatteringCase,'BI') && strcmp(task.misc.applyLoad,'planeWave')
+    error('Incident direction is not set: alpha_s = NaN and/or beta_s = NaN')
+end
+if task.misc.solveForPtot && ~(strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'BA'))
+    error('solveForPtot can only be used with method = BEM or method = BA')
+end
 
 
 

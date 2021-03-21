@@ -1,4 +1,5 @@
 function [A_inf, newDofsToRemove] = addInfElements2D(varCol, k, f, r_a)
+error('Depricated. Use buildIEmatrix instead')
 
 elRangeXi = varCol.elRangeXi;
 Xi = varCol.nurbs.knots{1};

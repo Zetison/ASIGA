@@ -40,6 +40,10 @@ switch task.misc.method
                 error('Not implemented')
         end
 end
+if strcmp(task.misc.scatteringCase,'MS')
+    task.ffp.alpha_s = task.ffp.alpha;
+    task.ffp.beta_s = task.ffp.beta;
+end
 
 task.analyticSolutionExist = analyticSolutionExist;
 task.isSphericalShell = isSphericalShell;

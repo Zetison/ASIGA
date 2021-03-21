@@ -25,7 +25,7 @@ c_f = varCol{1}.c_f;   % Speed of sound in outer fluid
 k = 2;                 % Wave number for Simpson2014aib
 misc.omega = c_f*k;         % Angular frequency
 
-msh.M = 1; % 3:4
+msh.M = 3; % 3:4
 msh.degree = 3;
 msh.parm = 1;
 
@@ -74,7 +74,7 @@ postPlot(3).axisType	= 'plot';
 postPlot(3).yScale      = 1;
 postPlot(3).addCommands = [];
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
@@ -82,12 +82,12 @@ misc.method = {'BA'};
 misc.solveForPtot = 1;
 % misc.formulation = {'SL2E','VL2E'};
 misc.formulation = {'SL2E'};
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 misc.method = {'BEM'};
-msh.M = 1; % 1:3
+msh.M = 1:3; % 1:3
 % misc.formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 misc.formulation = {'CCBIE'};
 % misc.formulation = {'GCBIE','GHBIE','GBM'};

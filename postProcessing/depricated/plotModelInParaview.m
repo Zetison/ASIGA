@@ -1,5 +1,5 @@
 function plotModelInParaview(nurbs, options, plotMesh, appendName)
-depricated('Use createParaviewFiles() instead')
+error('Depricated. Use createParaviewFiles() instead, by extracting surfaces and fields')
 extraXiPts = options.extraXiPts;
 extraEtaPts = options.extraEtaPts;
 extraZetaPts = options.extraZetaPts;

@@ -40,11 +40,20 @@ usePML = any(isPML) && isfield(task,'pml');
 if usePML
     pml = task.pml;
     if isnan(pml.C)
-        pml.C = -log(pml.eps)*(pml.n+1)/(task.varCol{i_varCol}.k*pml.t);
+        k = task.misc.omega/task.varCol{i_varCol}.c_f;
+        pml.C = -log(pml.eps)*(pml.n+1)/(k*pml.t);
     end
     formulation = task.misc.formulation;
     r_a = task.misc.r_a;
-    [zeta0Nodes_a, noElems_a, element_a, element2_a, index_a, pIndex_a, ~, ~, elemMap] = meshBoundary(task.varCol{i_varCol},'Gamma_a_PML');
+    varColBdry = meshBoundary(task.varCol{i_varCol},'Gamma_a_PML');
+    zeta0Nodes_a = varColBdry.nodes;
+    noElems_a = varColBdry.noElems;
+    element_a = varColBdry.element;
+    element2_a = varColBdry.element2;
+    index_a = varColBdry.index;
+    pIndex_a = varColBdry.pIndex;
+    elemMap = varColBdry.elemMap;
+    
     J_a = zeros(size(Q,1),3,3,noElems_a);
     for e = 1:noElems_a
         patch = pIndex_a(e);

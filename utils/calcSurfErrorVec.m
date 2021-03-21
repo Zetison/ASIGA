@@ -9,7 +9,14 @@ knotVecs = task.varCol{i_domain}.knotVecs;
 
 U = task.varCol{i_domain}.U;
 
-[zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(task.varCol{i_domain},'Gamma');
+varColBdry = meshBoundary(task.varCol{i_domain},'Gamma');
+
+zeta0Nodes = varColBdry.nodes;
+noElems = varColBdry.noElems;
+element = varColBdry.element;
+element2 = varColBdry.element2;
+index = varColBdry.index;
+pIndex = varColBdry.pIndex;
 
 extraGP = task.misc.extraGP(1:2);
 [Q, W] = gaussTensorQuad(degree(1:2)+3+extraGP);

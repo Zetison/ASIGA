@@ -1,12 +1,16 @@
 function p_h = calculateScatteredPressure(task, P_far, useExtraQuadPts)
 
-calculateFarFieldPattern = task.ffp.calculateFarFieldPattern;
+plotFarField = task.ffp.plotFarField;
 d_p = task.varCol{1}.patches{1}.nurbs.d_p;
 d = task.varCol{1}.patches{1}.nurbs.d;
 U = task.varCol{1}.U;
 farFieldNormalPressFromSolid = task.ffp.farFieldNormalPressFromSolid;
 if numel(task.varCol) > 1 && (d_p == 2 || farFieldNormalPressFromSolid)
-    [nodesSolid, ~, elementSolid] = meshBoundary(task.varCol{2},'Gamma');
+    varColBdrySolid = meshBoundary(task.varCol{2},'Gamma');
+    
+    nodesSolid = varColBdrySolid.nodes;
+    elementSolid = varColBdrySolid.element;    
+    
     noDofs = task.varCol{2}.noDofs;
     Ux = task.varCol{2}.U(1:d:noDofs,:);
     Uy = task.varCol{2}.U(2:d:noDofs,:);
@@ -26,7 +30,14 @@ noDofs = task.varCol{1}.noDofs;
 rho = task.varCol{1}.rho;
 if farFieldNormalPressFromSolid && d_p == 3
     degree = task.varCol{1}.degree(1:2); % assume p_xi is equal in all patches
-    [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(task.varCol{1},'Gamma');
+    varColBdry = meshBoundary(task.varCol{1},'Gamma');
+    
+    zeta0Nodes = varColBdry.nodes;
+    noElems = varColBdry.noElems;
+    element = varColBdry.element;
+    element2 = varColBdry.element2;
+    index = varColBdry.index;
+    pIndex = varColBdry.pIndex;
 else
     degree = task.varCol{1}.degree; % assume p_xi is equal in all patches
     index = task.varCol{1}.index;
@@ -118,7 +129,7 @@ parfor i = 1:length(surfaceElements)
 
     X = P_far./repmat(norm2(P_far),1,size(P_far,2));
     
-    if calculateFarFieldPattern
+    if plotFarField
         x_d_n = normals*X.';
         x_d_y = Y*X.';
         if solveForPtot
@@ -140,7 +151,7 @@ end
 if numel(k) > 1
     p_h = p_h.';
 end
-if calculateFarFieldPattern
+if plotFarField
     p_h = -1/(4*pi)*p_h;
 end
 

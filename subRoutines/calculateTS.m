@@ -9,7 +9,15 @@ v = getFarFieldPoints(task);
 switch task.misc.method
     case {'IE','ABC','IENSG','BA','BEM','PML'}
         if task.ffp.splineBasedNFPcalc
-            [zeta0Nodes, noElems, element, element2, index, pIndex] = meshBoundary(task.varCol{1},'Gamma');
+            varColBdry = meshBoundary(task.varCol{1},'Gamma');
+
+            zeta0Nodes = varColBdry.nodes;
+            noElems = varColBdry.noElems;
+            element = varColBdry.element;
+            element2 = varColBdry.element2;
+            index = varColBdry.index;
+            pIndex = varColBdry.pIndex;
+    
             knotVecs = task.varCol{1}.knotVecs;
             elRange = task.varCol{1}.elRange;
             controlPts = task.varCol{1}.controlPts;
@@ -51,7 +59,9 @@ switch task.misc.method
     case 'MFS'
         p_h = calculateScatteredPressureMFS(task, v);
     case 'KDT'
-        switch task.varCol{1}.coreMethod
+        k = task.misc.omega/task.varCol{1}.c_f;
+        lambda = 2*pi/k;
+        switch task.misc.coreMethod
             case 'linear_FEM'
                 noElems = task.varCol{1}.noElems;
                 element = task.varCol{1}.element;
@@ -90,7 +100,7 @@ switch task.misc.method
                                     norm2(P(tri(:,1),:)-P(tri(:,3),:)); 
                                     norm2(P(tri(:,2),:)-P(tri(:,3),:))]);
                 task.varCol{1}.dofs = size(unique(tri,'rows','stable'),1);
-                task.varCol{1}.nepw = lambda(1)./task.varCol{1}.h_max;
+                task.varCol{1}.nepw = lambda./task.varCol{1}.h_max;
                 task.varCol{1}.noElems = size(tri,1);
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                     trisurf(tri,P(:,1),P(:,2),P(:,3), 'FaceColor', getColor(1))
@@ -110,46 +120,39 @@ switch task.misc.method
                 p_h = kirchApprTri(tri,P,v,task.varCol{1});
             case 'IGA'
                 task.varCol{1}.h_max = findMaxElementDiameter(task.varCol{1}.patches);
-                task.varCol{1}.nepw = task.varCol{1}.lambda./task.varCol{1}.h_max;
+                task.varCol{1}.nepw = lambda./task.varCol{1}.h_max;
                 task.varCol{1}.dofs = task.varCol{1}.noDofs;
-%                     p = calculateScatteredPressureBA(task.varCol{1}, Uc{1}, v, 0, plotFarField);
                 p_h = calculateScatteredPressureKDT(task, v);
         end
     case 'RT'
-        switch scatteringCase
+        switch task.misc.scatteringCase
             case 'MS'
-                d_vec = task.varCol{1}.d_vec;
+                d_vec = task.d_vec;
                 p_h = zeros(size(d_vec,2),1);
-%                     for i = 1:size(d_vec,2) %874%
                 noIncDir = size(d_vec,2);
-                progressBars = task.varCol{1}.progressBars;
+                progressBars = task.misc.progressBars;
                 nProgressStepSize = ceil(noIncDir/1000);
                 if progressBars
                     ppm = ParforProgMon('Tracing rays: ', noIncDir, nProgressStepSize);
                 else
                     ppm = NaN;
                 end
-%                     for i = 1:noIncDir
+%                 for i = 1:noIncDir
                 parfor i = 1:noIncDir
                     if progressBars && mod(i,nProgressStepSize) == 0
                         ppm.increment();
                     end
-                    varColTemp2 = task.varCol{1};
-                    varColTemp2.d_vec = d_vec(:,i);
-%                         tic
-                    varColTemp2 = createRays(varColTemp2);
-%                         fprintf('\nCreating rays in %12f seconds.', toc)
-%                         tic
-                    varColTemp2 = traceRays(varColTemp2);    
-%                         fprintf('\nTracing rays in %12f seconds.', toc)
-%                         tic        
-                    p_h(i) = calculateScatteredPressureRT(varColTemp2, v(i,:), task.ffp.plotFarField);
-%                         fprintf('\nFar field in %12f seconds.', toc)
+                    task_cp = task;
+                    task_cp.d_vec = d_vec(:,i);
+                    task_cp = createRays(task_cp);
+                    task_cp = traceRays(task_cp);    
+                    p_h(i) = calculateScatteredPressureRT(task_cp, v(i,:));
                 end
+                task.d_vec = d_vec;
             otherwise
-                task.varCol{1} = createRays(task.varCol{1});
-                task.varCol{1} = traceRays(task.varCol{1});            
-                p_h = calculateScatteredPressureRT(task.varCol{1}, v, task.ffp.plotFarField);
+                task = createRays(task);
+                task = traceRays(task);            
+                p_h = calculateScatteredPressureRT(task, v);
         end
 end
 task.p_h = p_h;

@@ -13,8 +13,17 @@ controlPts = task.varCol{i_domain}.controlPts;
 d_inner = task.varCol{i_domain}.dimension;
 d_outer = task.varCol{i_domain-1}.dimension;
 
-[innerNodes, innerNoElemsXiEta, innerXiEtaMesh, innerXiEtaMesh2, innerIndexXiEta, pIndex, n_en] = meshBoundary(task.varCol{i_domain},'outerCoupling');
-outerNodes = meshBoundary(task.varCol{i_domain-1},'innerCoupling');
+varColBdryOuter = meshBoundary(task.varCol{i_domain},'outerCoupling');
+innerNodes = varColBdryOuter.nodes;
+innerNoElemsXiEta = varColBdryOuter.noElems;
+innerXiEtaMesh = varColBdryOuter.element;
+innerXiEtaMesh2 = varColBdryOuter.element2;
+innerIndexXiEta = varColBdryOuter.index;
+pIndex = varColBdryOuter.pIndex;
+n_en = varColBdryOuter.n_en;
+    
+varColBdryInner = meshBoundary(task.varCol{i_domain-1},'innerCoupling');
+outerNodes = varColBdryInner.nodes;
 
 Avalues = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 

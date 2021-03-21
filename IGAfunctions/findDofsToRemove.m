@@ -65,7 +65,6 @@ else
     Eps = 1e7*eps;
     % Eps = 1e5*eps;
     % [~, I, IC] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)));
-    % [~, I, IC] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(max(abs(controlPts))));
     [~, gluedNodes] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)), 'OutputAllIndices', true);
     repeatedNode = zeros(numel(gluedNodes),1);
     for i = 1:numel(gluedNodes)
@@ -127,7 +126,8 @@ varCol.noPatches = noPatches;
 varCol.isPML = isPML;
 
 if isfield(varCol,'geometry')
-    dirichletNodes = meshBoundary(varCol,'homDirichlet');
+    varColBdry = meshBoundary(varCol,'homDirichlet');
+    dirichletNodes = varColBdry.nodes;
     dofsToRemove = sort(unique([dofsToRemove,dirichletNodes]));
 end
 varCol.dofsToRemove = dofsToRemove;

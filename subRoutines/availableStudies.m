@@ -2,7 +2,7 @@
 % studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'M1'; %getTask_M1
 % studyName = 'M2'; %getTask_M2
-% studyName = 'M3'; %getTask_M3
+studyName = 'M3'; %getTask_M3
 % studyName = 'M4'; %getTask_M4
 % studyName = 'M5'; %getTask_M5
 % studyName = 'M31'; %getTask_M31
@@ -21,7 +21,7 @@
 % studyName = 'Shirron2005afe_Fig3'; %getTask_Shirron2005afe_Fig3
 % studyName = 'FreeCAD'; %getTask_FreeCAD
 % studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
-studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
+% studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 % studyName = 'test'; %getTask_test
 
 %% Venas2020ibe

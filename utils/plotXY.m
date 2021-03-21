@@ -1,5 +1,7 @@
 function h = plotXY(x,y,axisType,lineStyle,color,legendEntry)
-
+if all(isnan(x)) || all(isnan(y))
+    error('All values are NaN')
+end
 if isempty(get(gca, 'Children'))
     xlimOld = [inf,-inf];
     ylimOld = [inf,-inf];
