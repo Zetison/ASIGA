@@ -27,7 +27,7 @@ switch task.misc.method
             nptsPerEl = round(3000/noElems);
             degree = task.varCol{1}.degree(1:2);
             p_h = complex(zeros(nptsPerEl,noElems));
-            v = complex(zeros(nptsPerEl,noElems,3));
+            v = zeros(nptsPerEl,noElems,3);
     %         for e1 = 1:noElems
             parfor e1 = 1:noElems
                 e = 3*(e1-1)+1;
@@ -155,7 +155,8 @@ switch task.misc.method
                 p_h = calculateScatteredPressureRT(task, v);
         end
 end
-task.p_h = p_h;
+task.ffp.v = v;
+task.ffp.p_h = p_h;
 if ~runTasksInParallel
     fprintf('using %12f seconds.', toc)
 end

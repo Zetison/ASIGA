@@ -9,8 +9,8 @@ else
     R1 = varCol{1}.R;
     R2 = varCol{1}.R;
 end
-if isfield(varCol{1}, 'Xi')
-    Xi = varCol{1}.Xi;
+if isfield(task.msh, 'Xi')
+    Xi = task.msh.Xi;
 else
     Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 end

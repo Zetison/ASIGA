@@ -16,7 +16,7 @@ misc.checkNURBSweightsCompatibility = false;
 
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
-prePlot.resolution = [40,20,0];
+prePlot.resolution = [80,60,0];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
@@ -24,6 +24,7 @@ prePlot.plotGeometryInfo = 1;
 prePlot.plotControlPolygon = 0;
 prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 prePlot.pngResolution = '-r800';
+% prePlot.LineWidth           = 0.5;         % Width of lines
 
 varCol = setM3Parameters(1);
 varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-1)/8-1, 2^(M-1)/4-1];
@@ -31,7 +32,7 @@ msh.meshFile = 'createNURBSmesh_M3';
 msh.degree = 2;
 % msh.degree = 5; % use and odd degree > 4 if parm = 2 and misc.method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
 msh.parm = 1;
-varCol{1}.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
+msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = ~prePlot.plot2Dgeometry;
 msh.M = 2;
 f = 1e3;             % Frequency
@@ -87,7 +88,7 @@ misc.formulation = {'CCBIE','CBM'};
 misc.formulation = {'CCBIE'};
 misc.formulation = {'GBM'};
 msh.M = 5:7;
-% msh.M = 2;
+% msh.M = 1;
 loopParameters = {'misc.formulation','msh.M','misc.method','misc.omega'};
 collectIntoTasks
 

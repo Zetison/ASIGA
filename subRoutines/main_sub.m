@@ -442,7 +442,7 @@ task.misc.omega = omega;
 if task.ffp.calculateFarFieldPattern && ~task.rom.useROM
     task = getAnalyticSolutions(task);
     task = calculateTS(task,runTasksInParallel,stringShift);
-    task = computeDerivedFFPquantities(task,task.p_h);
+    task = computeDerivedFFPquantities(task,task.ffp.p_h);
 end
 if task.misc.clearGlobalMatrices
     clear UU U

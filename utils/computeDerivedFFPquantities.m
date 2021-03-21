@@ -1,5 +1,5 @@
 function task = computeDerivedFFPquantities(task,p_h)
-v = getFarFieldPoints(task);
+v = task.ffp.v;
 
 task.results.p = p_h;
 task.results.p_Re = real(p_h);

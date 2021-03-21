@@ -388,11 +388,15 @@ if isstruct(temp)
     temp2 = fieldNames{1};
     temp = temp.(temp2);
 end
+idx = find(temp2 == '.',1,'last');
+if ~isempty(idx)
+    temp2 = temp2(idx+1:end);
+end
 if ~isempty(legendName)
     legendName = [legendName ', ' ];
 end
 switch legendEntries{j}
-    case {'formulation','IEbasis','method','coreMethod','BC'}
+    case {'misc.formulation','ie.IEbasis','misc.method','misc.coreMethod','misc.BC'}
         temp = insertBefore(temp,'_','\');
         legendName = [legendName temp];
         saveName = [saveName '_' temp];
