@@ -24,7 +24,7 @@ switch task.misc.method
             weights = task.varCol{1}.weights;
             U = task.varCol{1}.U;
             noElems = noElems/3;
-            nptsPerEl = round(3000/noElems);
+            nptsPerEl = round(size(v,1)/noElems);
             degree = task.varCol{1}.degree(1:2);
             p_h = complex(zeros(nptsPerEl,noElems));
             v = zeros(nptsPerEl,noElems,3);
@@ -49,9 +49,11 @@ switch task.misc.method
                 p_h(:,e1) = R{1}*U(sctr,:);
                 v(:,e1,:) = R{1}*pts;
             end
-            p_h = p_h(:);
+            p_h = [p_h(:); U(end)];
             v = reshape(v,[],3);
-            task.ffp.theta = acos(v(:,3)./norm2(v));
+            task.ffp.theta = [acos(v(:,3)./norm2(v)).',0];
+            v = [v; -v(1,:)];
+            task.ffp.beta = pi/2-task.ffp.theta;
             task.ffp.plotFarField = false;
         else
             p_h = calculateScatteredPressure(task, v, 0);

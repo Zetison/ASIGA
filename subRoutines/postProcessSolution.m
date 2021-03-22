@@ -25,11 +25,13 @@ for i = 1:numel(task.varCol)
 end
 task.varCol = addSolutionToRemovedNodes(task.varCol);
 
-if isfield(task.varCol{1},'lambda')
+if isfield(task.varCol{1},'c_f')
+    k = task.misc.omega/task.varCol{1}.c_f;
+    lambda = 2*pi/k;
     task.varCol{1}.h_max = h_max;
-    task.varCol{1}.nepw = task.varCol{1}.lambda./h_max;
+    task.varCol{1}.nepw = lambda./h_max;
     task.varCol{1}.surfDofs = getNoSurfDofs(task);
     if task.varCol{1}.boundaryMethod
-        task.varCol{1}.tau = computeTau(task.varCol{1});
+        task.varCol{1}.tau = computeTau(task);
     end
 end

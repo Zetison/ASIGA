@@ -6,13 +6,18 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
+% misc.applyLoad = 'pointPulsation';
+
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 misc.model = 'M3';
 misc.BC = 'SHBC';
+% misc.BC = 'NBC';
 misc.method = {'IENSG'};
 misc.formulation = 'BGU';
 misc.checkNURBSweightsCompatibility = false;
+err.calculateSurfaceError = 1;
 
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
@@ -59,6 +64,19 @@ postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
+postPlot(2)                 = postPlot(1);
+postPlot(2).xname       	= 'nepw';
+postPlot(2).yname        	= 'surfaceError';
+postPlot(2).plotResults  	= true;
+postPlot(2).printResults 	= true;
+postPlot(2).axisType        = 'loglog';
+postPlot(2).lineStyle   	= '-*';
+postPlot(2).xLoopName     	= 'msh.M';
+postPlot(2).fileDataHeaderX	= [];
+postPlot(2).noXLoopPrms   	= 1;
+postPlot(2).xScale          = 1;
+postPlot(2).addCommands   	= [];
+
 if strcmp(misc.scatteringCase,'MS')
     para.i_MS = find(abs(ffp.alpha - 240*pi/180) < 20*eps);
     postPlot(1).xlim            = [0,180];
@@ -82,7 +100,7 @@ msh.M = 6; % 5
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-misc.solveForPtot = true;
+misc.solveForPtot = strcmp(misc.applyLoad,'planeWave');
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE','CBM'};
 misc.formulation = {'CCBIE'};
@@ -90,8 +108,7 @@ misc.formulation = {'GBM'};
 msh.M = 5:7;
 % msh.M = 1;
 loopParameters = {'misc.formulation','msh.M','misc.method','misc.omega'};
-collectIntoTasks
-
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
@@ -128,7 +145,7 @@ para.plotFullDomain          = 0;
 para.plotSubsets             = {'Gamma','Gamma_a','xy','xz'}; % Plot subsets (i.e. the artificial boundary Gamma_a) in paraview
 
 loopParameters = {'misc.formulation','msh.M','misc.method','misc.omega'};
-collectIntoTasks
+% collectIntoTasks
 
 
 function addCommands_(i_study)

@@ -9,7 +9,7 @@ getDefaultTaskValues
 
 %% IE simulation
 misc.scatteringCase = 'BI';
-misc.model = 'S1';  % Spherical shell
+misc.model = 'Shirron2005afe';  % Spherical shell
 misc.coreMethod = {'C0_IGA'};
 % misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
@@ -23,7 +23,7 @@ misc.BC = {'SHBC'};
 
 ffp.calculateFarFieldPattern    = true;     % Calculate far field pattern
 ffp.alpha_s = 0;                            % Aspect angle of incident wave
-ffp.beta_s  = pi/2;                        % Elevation angle of incident wave
+ffp.beta_s  = -pi/2;                        % Elevation angle of incident wave
 ffp.alpha   = 0;                            % Aspect angles of observation points
 ffp.beta = linspace(-pi/2,pi/2,1000);   
 ffp.r = 1;                            % radii for near-field evaluation.
@@ -98,7 +98,8 @@ postPlot(1).xLoopName     	= 'msh.M';
 postPlot(2) = postPlot(1);
 postPlot(2).plotResults  	= true;
 postPlot(2).printResults 	= 1;
-postPlot(2).xname           = 'theta';
+postPlot(2).xScale       	= 180/pi;
+postPlot(2).xname           = 'beta';
 postPlot(2).yname           = 'abs_p';
 % postPlot(2).yname           = 'TS';
 postPlot(2).axisType      	= 'plot';

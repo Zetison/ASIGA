@@ -8,6 +8,7 @@ options = struct('xname',           'alpha',  ...
                  'lineStyle',        '*-', ... 
                  'xScale',          1, ...
                  'yScale',          1, ... 
+                 'format',          'LaTeX', ...
                  'xlim',            NaN, ...
                  'ylim',            NaN, ...
                  'xLoopName',       NaN, ...
@@ -50,6 +51,7 @@ if isempty(options.fileDataHeaderX)
 else
     fileDataHeaderX = options.fileDataHeaderX;
 end
+ioOptions.format = options.format;
 
 switch options.noXLoopPrms
     case 0
@@ -74,12 +76,20 @@ switch options.noXLoopPrms
                     y = y.';
                 end
                 saveName(saveName == '.') = [];
-                printResultsToFile2([subFolderName '/' saveName], {'x', x.', 'y', y, 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
-                                                                                                            'task', study.tasks(i).task});
+                
+                ioOptions.filename = [subFolderName '/' saveName];
+                ioOptions.x = x.';
+                ioOptions.y = y;
+                ioOptions.xlabel = {fileDataHeaderX};
+                ioOptions.ylabel = {yname};
+                ioOptions.task = study.tasks(i).task;
+                ioOptions.xLoopName = NaN;
+                printResultsToFile2(ioOptions);
             end
             if plotResults
                 analyticSolutionExist = study.tasks(i).task.analyticSolutionExist;
-                plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
+                plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || ...
+                                                                                    strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
                 if plotAnalyticSolution
                     prevGrafs = get(gca, 'Children');
                     analyticPlotted = false;
@@ -112,8 +122,14 @@ switch options.noXLoopPrms
             if isrow(y_ref)
                 y_ref = y_ref.';
             end
-            printResultsToFile2([subFolderName '/' saveName], {'x', x.', 'y', y_ref, 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
-                                                                                                            'task', study.tasks(i).task});
+            ioOptions.filename = [subFolderName '/' saveName '_analytic'];
+            ioOptions.x = x.';
+            ioOptions.y = y_ref;
+            ioOptions.xlabel = {fileDataHeaderX};
+            ioOptions.ylabel = {yname};
+            ioOptions.task = study.tasks(i).task;
+            ioOptions.xLoopName = NaN;
+            printResultsToFile2(ioOptions);
         end
     case 1
         idx = 1;
@@ -174,8 +190,15 @@ switch options.noXLoopPrms
             [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,yname,fileDataHeaderX,otherInd);
             if printResults
                 saveName(saveName == '.') = [];
-                printResultsToFile2([subFolderName '/' saveName], {'x', x_temp(:), 'y', y_temp(:), 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
-                                                                                'task', study.tasks(idxMap(i)).task, 'xLoopName',options.xLoopName});
+                
+                ioOptions.filename = [subFolderName '/' saveName];
+                ioOptions.x = x_temp(:);
+                ioOptions.y = y_temp(:);
+                ioOptions.xlabel = {fileDataHeaderX};
+                ioOptions.ylabel = {yname};
+                ioOptions.task = study.tasks(idxMap(i)).task;
+                ioOptions.xLoopName = options.xLoopName;
+                printResultsToFile2(ioOptions);
             end
             if plotResults
                 x_temp = x_temp(:);
@@ -208,8 +231,14 @@ switch options.noXLoopPrms
             if isrow(y_ref)
                 y_ref = y_ref.';
             end
-            printResultsToFile2([subFolderName '/' saveName], {'x', x.', 'y', y_ref, 'xlabel',{fileDataHeaderX}, 'ylabel',{yname}, ...
-                                                                'task', study.tasks(i).task});
+                
+            ioOptions.filename = [subFolderName '/' saveName '_analytic'];
+            ioOptions.x = x.';
+            ioOptions.y = y_ref;
+            ioOptions.xlabel = {fileDataHeaderX};
+            ioOptions.ylabel = {yname};
+            ioOptions.task = study.tasks(i).task;
+            printResultsToFile2(ioOptions);
         end
 end
 

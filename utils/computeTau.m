@@ -1,16 +1,16 @@
-function tau = computeTau(varCol)
-patches = varCol.patches;
-dofsToRemove = varCol.dofsToRemove;
-lambda = 2*pi./varCol.k;
-noDofs = varCol.noDofs;
+function tau = computeTau(task)
+dofsToRemove = task.varCol{1}.dofsToRemove;
+k = task.misc.omega/task.varCol{1}.c_f;
+lambda = 2*pi/k;
+noDofs = task.varCol{1}.noDofs;
 dofsToRemove(dofsToRemove > noDofs) = [];
 n_cp = noDofs - length(dofsToRemove);
 cp = zeros(n_cp,3);
 counter = 1;
 counter2 = 1;
-if varCol.boundaryMethod
-    for patch = 1:varCol.noPatches
-        nurbs = patches{patch}.nurbs;
+if task.varCol{1}.boundaryMethod
+    for patch = 1:numel(task.varCol{1}.nurbs)
+        nurbs = task.varCol{1}.nurbs{patch};
         n_xi = nurbs.number(1);
         n_eta = nurbs.number(2);
         p_xi = nurbs.degree(1);
@@ -31,8 +31,8 @@ if varCol.boundaryMethod
         end
     end
 else
-    for patch = 1:varCol.noPatches
-        nurbs = patches{patch}.nurbs;
+    for patch = 1:numel(task.varCol{1}.nurbs)
+        nurbs = task.varCol{1}.nurbs{patch};
         n_xi = nurbs.number(1);
         n_eta = nurbs.number(2);
         n_zeta = nurbs.number(3);
