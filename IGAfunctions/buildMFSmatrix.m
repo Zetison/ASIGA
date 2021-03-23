@@ -8,7 +8,7 @@ elRangeXi = task.varCol{1}.elRange{1};
 elRangeEta = task.varCol{1}.elRange{2};
 pIndex = task.varCol{1}.pIndex;
 
-k = task.varCol{1}.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 
 SHBC = strcmp(task.misc.BC, 'SHBC');
 if SHBC
@@ -312,7 +312,7 @@ if 1
             N = floor(sqrt(n_sp)-1);
             A = zeros(n_sp,(N+1)^2);
 %             F = zeros(n_sp,no_angles);
-            y = task.varCol{1}.x_0;
+            y = task.mfs.x_0;
             R = norm2(x_vec-y(ones(n_sp,1),:));
             theta = acos((x_vec(:,3)-y(3))./R);
             phi = atan2(x_vec(:,2)-y(2),x_vec(:,1)-y(1));

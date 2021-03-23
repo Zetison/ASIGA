@@ -23,8 +23,8 @@ noDofs = task.varCol{1}.noDofs;
 %Use chebychev polynomials
 chimin = task.varCol{1}.chimin;
 chimax = task.varCol{1}.chimax;
-x_0 = task.varCol{1}.x_0;
-A_2 = task.varCol{1}.A_2;
+x_0 = task.iem.x_0;
+A_2 = task.iem.A_2;
 [D,Dt] = generateCoeffMatrix(task);
 n_en = prod(degree+1);
 

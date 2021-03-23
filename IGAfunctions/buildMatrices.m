@@ -45,7 +45,7 @@ if usePML
     end
     formulation = task.misc.formulation;
     r_a = task.misc.r_a;
-    varColBdry = meshBoundary(task.varCol{i_varCol},'Gamma_a_PML');
+    varColBdry = meshBoundary(task.varCol{i_varCol},'Gamma_a');
     zeta0Nodes_a = varColBdry.nodes;
     noElems_a = varColBdry.noElems;
     element_a = varColBdry.element;

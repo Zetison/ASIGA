@@ -4,7 +4,7 @@ M = task.msh.M;
 degree = task.msh.degree;
 
 
-varCol{1}.x_0 = [0, 0, 0];
+task.iem.x_0 = [0, 0, 0];
 
 initMeshFactXi = varCol{1}.initMeshFactXi;
 if varCol{1}.boundaryMethod

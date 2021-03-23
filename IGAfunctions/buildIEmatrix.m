@@ -32,8 +32,8 @@ else
     p_ie = N;
 end
 formulation = task.misc.formulation;
-A_2 = task.varCol{1}.A_2;
-x_0 = task.varCol{1}.x_0;
+A_2 = task.iem.A_2;
+x_0 = task.iem.x_0;
 noDofs = task.varCol{1}.noDofs;
 
 weights = task.varCol{1}.weights;
@@ -53,7 +53,16 @@ if task.varCol{1}.boundaryMethod
     nodes = 1:noSurfDofs;
     noDofs_new = noSurfDofs*N;
 else
-    [nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(task.varCol{1},'Gamma_a');
+    varColBdry = meshBoundary(task.varCol{1},'Gamma_a');
+    
+    nodes = varColBdry.nodes;
+    noElems = varColBdry.noElems;
+    element = varColBdry.element;
+    element2 = varColBdry.element2;
+    index = varColBdry.index;
+    pIndex = varColBdry.pIndex;
+    n_en = varColBdry.n_en;
+    noSurfDofs = varColBdry.noSurfDofs;
     noDofs_new = noDofs + noSurfDofs*(N-1);
 end
 

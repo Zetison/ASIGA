@@ -7,7 +7,7 @@ R1 = varCol{1}.R1;
 R2 = varCol{1}.R2;
 t = varCol{1}.t;
 L = varCol{1}.L;
-varCol{1}.x_0 = [0, 0, 0]; % The center of the model
+task.iem.x_0 = [0, 0, 0]; % The center of the model
 if varCol{1}.boundaryMethod
 
     solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', 2);

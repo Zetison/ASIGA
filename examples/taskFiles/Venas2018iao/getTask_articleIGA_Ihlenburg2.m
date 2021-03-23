@@ -8,6 +8,7 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 prePlot.plot2Dgeometry = 0; 
+prePlot.plot3Dgeometry = 0; 
 prePlot.abortAfterPlotting = 1;
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'IL';

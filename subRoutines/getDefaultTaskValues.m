@@ -50,7 +50,7 @@ prePlot.useCamlight         = true;        % Toggle camlight on
 
 prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh
 prePlot.plotNormalVectors   = false;       % Plot the normal vectors for the NURBS mesh
-prePlot.plotGeometryInfo    = true;
+prePlot.plotGeometryInfo    = true;        % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.plotArtificialBndry = true;        % Plot the artificial boundary for the IENSG method
 prePlot.resolution       	= [20,20,20];  % Number of evaluation points in the visualization for each element for each parametric direction
 prePlot.plotAt              = true(3,2);   % For solids: toggle which surfaces to visualize
@@ -151,6 +151,8 @@ iem.ie_Zeta  = [];           % Node/knot placements for basis function with loca
 iem.IElocSup = false;        % Toggle usage of radial shape functions in IE with local support
 iem.p_ie     = NaN;          % Set polynomial order for radial shape functions
 iem.s_ie     = NaN;          % Distrubution order for radial shape functions
+iem.x_0      = zeros(1,3);   % The center of the prolate coordinate system of the infinite elemenets
+iem.A_2      = eye(3);       % Rotation matrix for the prolate coordinate system 
 
 %% Settings for the PML (perfectly matched layers)
 pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function

@@ -30,7 +30,6 @@ for i_v = 1:numel(task.varCol)
     knotVecs = task.varCol{i_v}.knotVecs;
     pIndex = task.varCol{i_v}.pIndex;
     noDofs = task.varCol{i_v}.noDofs;
-    patches = task.varCol{i_v}.patches;
     d = task.varCol{i_v}.dimension;
     if isfield(task.varCol{i_v},'omega')
         omega = task.varCol{i_v}.omega;
@@ -43,7 +42,7 @@ for i_v = 1:numel(task.varCol)
         Uz = U(3:d:noDofs);
         U = [Ux, Uy, Uz];
     end
-    d_p = patches{1}.nurbs.d_p;
+    d_p = task.varCol{i_v}.nurbs{1}.d_p;
     switch d_p
         case 2
             container = cell(1,noElems);

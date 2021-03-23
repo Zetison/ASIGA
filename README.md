@@ -31,6 +31,10 @@ sudo ln -s $HOME/kode/GoTools/build/igeslib/app/iges2go /usr/local/bin/iges2go
 iges2go < ~/kode/ASIGA/miscellaneous/FreeCADsphere.iges > ~/kode/ASIGA/miscellaneous/FreeCADsphere.g2
 
 ```
+## Creating the geometry
+Several CAD-like routines exist in ASIGA and can be used to create geometries manually.
+
+Note that an assumption of ASIGA is that the third parametric NURBS direction never is part of any surface parametrization and is directed outwards from the model
 
 ## Run program
 The following will run the input script scriptName.m (given that studyName = 'scriptName'; is set in availableStudies.m)

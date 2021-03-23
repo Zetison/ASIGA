@@ -57,6 +57,7 @@ for j = 1:3
     if ~isempty(faces)
         topset.Attributes.name = names{j};
         topset.Attributes.type = 'face';
+        topset.Attributes.normal = 'outward';
         topset.item = cell(1,numel(patches));
         for i = 1:numel(patches)
             topset.item{i}.Text = faces(i);
@@ -112,21 +113,23 @@ task.varCol{1}.geometry = geometry;
 if task.pml.dirichlet
     task.varCol = copySet(task.varCol,1, 'outer', 'homDirichlet');
 end
-task.varCol = copySet(task.varCol,1, 'Gamma_a', 'Gamma_a_PML');
-topset = task.varCol{1}.geometry.topologysets.set;
-idx = findSet(topset,'Gamma_a_PML');
 
-connection = task.varCol{1}.geometry.topology.connection;
-item = task.varCol{1}.geometry.topologysets.set{idx}.item;
-for i = 1:numel(connection)
-    for j = 1:numel(item)
-        if connection{i}.Attributes.master == item{j}.Attributes.patch && connection{i}.Attributes.midx == item{j}.Text
-            item{j}.Attributes.patch = connection{i}.Attributes.slave;
-            item{j}.Text = connection{i}.Attributes.sidx;
-        end
-    end
-end
-task.varCol{1}.geometry.topologysets.set{idx}.item = item;
+
+% task.varCol = copySet(task.varCol,1, 'Gamma_a', 'Gamma_a_PML');
+% topset = task.varCol{1}.geometry.topologysets.set;
+% idx = findSet(topset,'Gamma_a_PML');
+% 
+% connection = task.varCol{1}.geometry.topology.connection;
+% item = task.varCol{1}.geometry.topologysets.set{idx}.item;
+% for i = 1:numel(connection)
+%     for j = 1:numel(item)
+%         if connection{i}.Attributes.master == item{j}.Attributes.patch && connection{i}.Attributes.midx == item{j}.Text
+%             item{j}.Attributes.patch = connection{i}.Attributes.slave;
+%             item{j}.Text = connection{i}.Attributes.sidx;
+%         end
+%     end
+% end
+% task.varCol{1}.geometry.topologysets.set{idx}.item = item;
 
 
 

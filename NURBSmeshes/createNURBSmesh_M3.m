@@ -23,11 +23,11 @@ switch task.misc.method
     case {'IE','IENSG','ABC','MFS'}
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
-        varCol{1}.x_0 = x_0;
+        task.iem.x_0 = x_0;
         A_2 = [0 1 0;
                0 0 1;
                1 0 0];
-        varCol{1}.A_2 = A_2;
+        task.iem.A_2 = A_2;
         varCol{1}.alignWithAxis = alignWithAxis;
 end
 

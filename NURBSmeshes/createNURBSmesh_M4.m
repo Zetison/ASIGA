@@ -6,8 +6,8 @@ degree = task.msh.degree;
 x_0 = [0, 0, 0];
 switch varCol{1}.method
     case {'IE','IENSG','ABC'}
-        varCol{1}.x_0 = x_0; % The center of the model
-        varCol{1}.A_2 = [1 0 0;
+        task.iem.x_0 = x_0; % The center of the model
+        task.iem.A_2 = [1 0 0;
                       0 1 0;
                       0 0 1];
         varCol{1}.alignWithAxis = alignWithAxis;

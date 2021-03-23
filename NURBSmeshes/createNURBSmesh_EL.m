@@ -4,13 +4,11 @@ M = task.msh.M;
 degree = task.msh.degree;
 
 x_0 = [0, 0, 0];
-varCol{1}.x_0 = x_0; % The center of the model
+task.ie.x_0 = x_0; % The center of the model
 alignWithAxis = 'Zaxis';
 switch task.misc.method
     case {'IE','IENSG','ABC'}
-        varCol{1}.A_2 = [1 0 0;
-                         0 1 0;
-                         0 0 1];
+        task.ie.A_2 = eye(3);
         varCol{1}.alignWithAxis = alignWithAxis;
 end
 if isfield(task.msh, 'Xi')

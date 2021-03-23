@@ -10,20 +10,20 @@ switch varCol{1}.method
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
         A_2 = [0 1 0;
-                      0 0 1;
-                      1 0 0];
-        varCol{1}.x_0 = x_0;
-        varCol{1}.A_2 = A_2;
+              0 0 1;
+              1 0 0];
+        task.iem.x_0 = x_0;
+        task.iem.A_2 = A_2;
     case 'IENSG'
         x_0 = [-(L+a+g2+g3)/2+a, 0, 0]; % The center of the model
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
         alignWithAxis = 'Xaxis';
         A_2 = [0 1 0;
-                      0 0 1;
-                      1 0 0];
-        varCol{1}.x_0 = x_0;
-        varCol{1}.A_2 = A_2;
+              0 0 1;
+              1 0 0];
+        task.iem.x_0 = x_0;
+        task.iem.A_2 = A_2;
         varCol{1}.alignWithAxis = alignWithAxis;
 end
 

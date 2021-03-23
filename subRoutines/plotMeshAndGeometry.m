@@ -6,8 +6,8 @@ if prePlot.plot3Dgeometry
         c_z = task.varCol{1}.c_z;
         c_xy = task.varCol{1}.c_xy;
         alignWithAxis = task.varCol{1}.alignWithAxis;
-        x_0 = task.varCol{1}.x_0;
-        ellipsoid = getEllipsoidData('C',[c_xy,c_xy,c_z]*task.varCol{1}.A_2,'alignWithAxis', alignWithAxis, 'x_0', x_0);
+        x_0 = task.iem.x_0;
+        ellipsoid = getEllipsoidData('C',[c_xy,c_xy,c_z]*task.iem.A_2,'alignWithAxis', alignWithAxis, 'x_0', x_0);
         alphaValue = 0.6;
         if prePlot.alphaValue == 1
             prePlot.alphaValue = 0.8;
@@ -33,7 +33,6 @@ if prePlot.plot3Dgeometry
         plotNURBS(nurbs, prePlot);
         if isfield(task.varCol{j},'geometry') && prePlot.plotGeometryInfo
             topset = task.varCol{j}.geometry.topologysets.set;
-            patchIdx = [];
             noTopsets = numel(topset);
             colors = jet(noTopsets);
             for i = 1:noTopsets
@@ -42,10 +41,12 @@ if prePlot.plot3Dgeometry
                 for ii = 1:numel(topset{i}.item)
                     at = zeros(2,3,'logical');
                     patch = topset{i}.item{ii}.Attributes.patch;
-                    patchIdx = [patchIdx, patch];
                     midx = topset{i}.item{ii}.Text;
                     at(midx) = true;
-                    nurbs(ii) = subNURBS(task.varCol{j}.nurbs(patch),'at',at.');
+                    outwardPointingNormals = strcmp(topset{i}.Attributes.normal, 'outward');
+                    inwardPointingNormals = strcmp(topset{i}.Attributes.normal, 'inward');
+    
+                    nurbs(ii) = subNURBS(task.varCol{j}.nurbs(patch),'at',at.','outwardPointingNormals',outwardPointingNormals,'inwardPointingNormals',inwardPointingNormals);
                 end
                 prePlot.displayName = ['Domain ' num2str(j) ', ' topset{i}.Attributes.name];
                 if strcmp(topset{i}.Attributes.name,'Gamma')

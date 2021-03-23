@@ -10,11 +10,11 @@ for j = 1:numel(names)
 end
 
 x_0 = [0, 0, 0];
-varCol{1}.x_0 = x_0; % The center of the model
+task.iem.x_0 = x_0; % The center of the model
 alignWithAxis = 'Zaxis';
 switch varCol{1}.method
     case {'IE','IENSG','ABC'}
-        varCol{1}.A_2 = [1 0 0;
+        task.iem.A_2 = [1 0 0;
                       0 1 0;
                       0 0 1];
         varCol{1}.alignWithAxis = alignWithAxis;

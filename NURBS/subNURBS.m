@@ -1,5 +1,7 @@
 function subnurbs = subNURBS(varargin)
-options = struct('outwardPointingNormals',false);
+options = struct('outwardPointingNormals',false,...
+                 'inwardPointingNormals',false,...
+                 'useFlipping',true);
 nurbs = varargin{1};
 if nargin > 1
     if numel(varargin) > 2
@@ -14,6 +16,9 @@ if isfield(options,'at') && ~iscell(options.at)
     temp = options.at;
     options.at = cell(1,noPatches);
     [options.at(:)] = deal({temp});
+end
+if options.outwardPointingNormals && options.inwardPointingNormals
+    error('Contradicting options')
 end
 subnurbs = cell(1,6*noPatches);
 counter = 1;
@@ -37,14 +42,25 @@ for patch = 1:noPatches
                     J = dimensions(i+1);
                 end
                 idx = mod(i:i+1+d_p-2,d_p)+1;
-                controlPts = permute(slc(coeffs,J,i+1),[1,idx+1]);
+                controlPts = permute(slc(coeffs,J,i+1),[1,idx+1]); % permute to obtains normal vectors aligned with the left over parametric direction
                 idx = idx(1:end-1);
                 controlPts = reshape(controlPts,[d+1,number(idx)]);
                 knots = nurbs{patch}.knots(idx);
 
                 subnurbs(counter) = createNURBSobject(controlPts,knots);
                 if options.outwardPointingNormals && j == 1
-                    subnurbs(counter) = flipNURBSparametrization(subnurbs(counter));
+                    if options.useFlipping
+                        subnurbs(counter) = flipNURBSparametrization(subnurbs(counter));
+                    else
+                        subnurbs(counter) = permuteNURBS(subnurbs(counter),[2,1]);
+                    end
+                end
+                if options.inwardPointingNormals && j == 2
+                    if options.useFlipping
+                        subnurbs(counter) = flipNURBSparametrization(subnurbs(counter));
+                    else
+                        subnurbs(counter) = permuteNURBS(subnurbs(counter),[2,1]);
+                    end
                 end
                 counter = counter + 1;
             end

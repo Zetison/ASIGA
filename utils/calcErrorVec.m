@@ -180,9 +180,10 @@ for i = 1:noDomains
             H1sError = H1sError + sum(dp_e2.*factors{i});
             normalizationH1 = normalizationH1 + sum((p2 + dp2).*factors{i});
             normalizationH1s = normalizationH1s + sum(dp2.*factors{i});
+            k = task.misc.omega/task.varCol{i}.c_f;
 
-            EnergyError = EnergyError + 1/(task.varCol{i}.rho*omega^2)*sum((dp_e2 + task.varCol{i}.k^2*p_e2).*factors{i});
-            normalizationEnergy = normalizationEnergy + 1/(task.varCol{i}.rho*omega^2)*sum((dp2 + task.varCol{i}.k^2*p2).*factors{i});
+            EnergyError = EnergyError + 1/(task.varCol{i}.rho*omega^2)*sum((dp_e2 + k*p_e2).*factors{i});
+            normalizationEnergy = normalizationEnergy + 1/(task.varCol{i}.rho*omega^2)*sum((dp2 + k^2*p2).*factors{i});
 
             L2Error = L2Error + sum(p_e2.*factors{i});
             normalizationL2 = normalizationL2 + sum(p2.*factors{i});
