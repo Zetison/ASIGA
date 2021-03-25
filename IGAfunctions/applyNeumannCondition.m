@@ -3,8 +3,6 @@ noDofs = task.varCol{i_domain}.noDofs;
 weights = task.varCol{i_domain}.weights;
 controlPts = task.varCol{i_domain}.controlPts;
 degree = task.varCol{i_domain}.degree(1:2);
-elRange = task.varCol{i_domain}.elRange;
-knotVecs = task.varCol{i_domain}.knotVecs;
 d_f = task.varCol{i_domain}.fieldDimension;
 media = task.varCol{i_domain}.media;
 useROM = task.rom.useROM;
@@ -31,8 +29,10 @@ if task.varCol{i_domain}.boundaryMethod
     noElems = task.varCol{i_domain}.noElems;
     element = task.varCol{i_domain}.element;
     element2 = task.varCol{i_domain}.element2;
+    knotVecs = task.varCol{i_domain}.knotVecs;
     index = task.varCol{i_domain}.index;
     pIndex = task.varCol{i_domain}.pIndex;
+    elRange = task.varCol{i_domain}.elRange;
     n_en = prod(degree+1);
     zeta0Nodes = 1:noDofs;
 else
@@ -42,7 +42,9 @@ else
     element = varColBdry.element;
     element2 = varColBdry.element2;
     index = varColBdry.index;
+    knotVecs = varColBdry.knotVecs;
     pIndex = varColBdry.pIndex;
+    elRange = varColBdry.elRange;
     n_en = varColBdry.n_en;
 end
 Fvalues = zeros(d_f*n_en,noElems,noRHSs);
@@ -54,7 +56,7 @@ extraGP = task.misc.extraGP;
 parfor e = 1:noElems
 % for e = 1:noElems
     patch = pIndex(e);
-    knots = knotVecs{patch}(1:2);
+    knots = knotVecs{patch};
     Xi_e = zeros(2,2);
     for i = 1:2
         Xi_e(i,:) = elRange{i}(index(e,i),:);

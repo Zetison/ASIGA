@@ -7,12 +7,12 @@ patches = varCol.patches;
 noPatches = numel(patches);
 noElemsPatch = zeros(noPatches,1);
 noCtrlPtsPatch = zeros(noPatches,1);
-noParams = numel(patches{1}.elRange);
-noEl = zeros(noPatches,noParams);
+d_p = numel(patches{1}.elRange);
+noEl = zeros(noPatches,d_p);
 for i = 1:noPatches
     noElemsPatch(i) = patches{i}.noElems;
     noCtrlPtsPatch(i) = patches{i}.noCtrlPts;
-    for j = 1:noParams
+    for j = 1:d_p
         noEl(i,j) = size(patches{i}.elRange{j},1);
     end
 end
@@ -24,15 +24,15 @@ isPML = false(noElems,1);
 element = zeros(noElems,size(patches{1}.element,2));
 controlPts = zeros(noCtrlPts,size(patches{1}.controlPts,2));
 weights = zeros(noCtrlPts,1);
-index = zeros(noElems,noParams);
-elRange = cell(1,noParams);
-for j = 1:noParams
+index = zeros(noElems,d_p);
+elRange = cell(1,d_p);
+for j = 1:d_p
     elRange{j} = zeros(sum(noEl(:,j)),2);
 end
 e = 1;
 jC = 1;
 maxDof = 0;
-jEl = zeros(1,noParams);
+jEl = zeros(1,d_p);
 knotVecs = cell(1,noPatches);
 for i = 1:noPatches
     if isfield(varCol.nurbs{i},'isPML')
@@ -44,7 +44,7 @@ for i = 1:noPatches
     weights(jC:jC+noCtrlPtsPatch(i)-1,:) = patches{i}.weights;
     maxDof = maxDof + noCtrlPtsPatch(i);
     index(e:e+noElemsPatch(i)-1,:) = patches{i}.index + repmat(jEl,noElemsPatch(i),1);       
-    for j = 1:noParams
+    for j = 1:d_p
         elRange{j}(jEl(j)+1:jEl(j)+noEl(i,j),:) = patches{i}.elRange{j};
     end
     e = e + noElemsPatch(i);

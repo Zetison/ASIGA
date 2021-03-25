@@ -94,7 +94,7 @@ ffp.r       = 1;                            % radii for near-field evaluation. A
 %% Settings for post plotting 
 postPlot(1).xname        	= 'alpha';
 postPlot(1).yname        	= 'TS';
-postPlot(1).plotResults  	= true;
+postPlot(1).plotResults  	= false;
 postPlot(1).printResults 	= false;
 postPlot(1).axisType      	= 'plot';
 postPlot(1).lineStyle    	= '*-';
@@ -153,6 +153,7 @@ iem.p_ie     = NaN;          % Set polynomial order for radial shape functions
 iem.s_ie     = NaN;          % Distrubution order for radial shape functions
 iem.x_0      = zeros(1,3);   % The center of the prolate coordinate system of the infinite elemenets
 iem.A_2      = eye(3);       % Rotation matrix for the prolate coordinate system 
+iem.Upsilon  = 0;            % Parameter for prolate spheroidal coordinate system
 
 %% Settings for the PML (perfectly matched layers)
 pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function

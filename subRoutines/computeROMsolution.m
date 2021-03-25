@@ -1,11 +1,10 @@
-function tasks = computeROMsolution(tasks,i_task,basisROMcell,omega_ROM,noVecsArr)
+function tasks = computeROMsolution(tasks,i_task,basisROMcell,omega_ROM,noVecsArr,printLog)
 % basisROM = 'Taylor';
 % basisROM = 'Pade';
 % basisROM = 'Lagrange';
 % basisROM = 'Splines';
 % basisROM = 'Fourier';
 % basisROM = 'Bernstein';
-runTasksInParallel = false;
 
 U_sweep = tasks(i_task).task.U_sweep;
 noDofs = size(U_sweep{1},1);
@@ -28,8 +27,9 @@ for i_b = 1:numel(basisROMcell)
     basisROM = basisROMcell{i_b};
     for taskROM = 1:numel(noVecsArr)
         noVecs = noVecsArr(taskROM);
-
-        fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
+        if printLog
+            fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
+        end
         t_startROM = tic;
         switch basisROM
             case 'DGP'
@@ -190,7 +190,9 @@ for i_b = 1:numel(basisROMcell)
                 cond(V)
                 a = V\b;
         end  
-        fprintf('using %12f seconds.', toc(t_startROM))
+        if printLog
+            fprintf('using %12f seconds.', toc(t_startROM))
+        end
     %     k_arr3 = linspace(k_start,k_end,100);
     %     k_arr3 = sort(unique([k_P, k_arr3]));
     %     nPts = numel(k_arr3);
@@ -255,7 +257,9 @@ for i_b = 1:numel(basisROMcell)
         for i_f = 1:numel(omega_ROM)
             omega = omega_ROM(i_f);
             task.misc.omega = omega;
-            fprintf(['\n%-' num2str(stringShift) 's'], ['Computing ROM solution (' num2str(i_f) '/' num2str(numel(omega_ROM)) ')... '])
+            if printLog
+                fprintf(['\n%-' num2str(stringShift) 's'], ['Computing ROM solution (' num2str(i_f) '/' num2str(numel(omega_ROM)) ')... '])
+            end
             t_startROM = tic;
             task = getAnalyticSolutions(task);
             switch basisROM
@@ -294,14 +298,16 @@ for i_b = 1:numel(basisROMcell)
                     UU = interTaylor(omega,omega_P,U_sweep,noVecs-1);
             end
             task = postProcessSolution(task,UU);
-            fprintf('using %12f seconds.', toc(t_startROM))
+            if printLog
+                fprintf('using %12f seconds.', toc(t_startROM))
+            end
 
             if task.err.calculateSurfaceError || task.err.calculateVolumeError
                 [L2Error(i_f), H1Error(i_f), H1sError(i_f), energyError(i_f), surfaceError(i_f)] = calculateErrors(task, 1, stringShift);
             end
 
             if task.ffp.calculateFarFieldPattern
-                task = calculateTS(task,runTasksInParallel,stringShift);
+                task = calculateTS(task,printLog,stringShift);
                 p_h(i_f) = task.p_h;
             end
         end

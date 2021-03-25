@@ -10,18 +10,15 @@ p_xi = degree(1); % assume p_xi is equal in all patches
 p_eta = degree(2); % assume p_eta is equal in all patches
 n_en = (p_xi+1)*(p_eta+1);
 
-
-noParams = 2;
-nodesMap = varCol.nodesMap;
+d_p = 2;
 noElemsPatch = varCol.noElemsPatch;
 set = varCol.geometry.topologysets.set;
 connection = varCol.geometry.topology.connection;
 noElems = varCol.noElems;
 pIndex = zeros(noElems,1);
 element = zeros(noElems,n_en);
-index = zeros(noElems,noParams);
+index = zeros(noElems,d_p);
 eBdry = 1;
-maxDof = 0;
 jEl = zeros(1,2);
 elemMap = zeros(noElems,1);
 nodes = zeros(1,varCol.noDofs);
@@ -33,7 +30,11 @@ if ~setFound
 end
 noItems = numel(set{idx}.item);
 sub_nurbs = cell(1,noItems);
-nodesInv = zeros(varCol.noDofs,1);
+elRange = cell(1,d_p);
+knotVecs = cell(1,noItems);
+for i = 1:d_p
+    elRange{i} = zeros(noElems,d_p);
+end
 
 for i_free = 1:noItems
     patch = set{idx}.item{i_free}.Attributes.patch;
@@ -48,21 +49,21 @@ for i_free = 1:noItems
     varCol_dummy.dimension = 1;
     
     varCol_dummy.nurbs = subNURBS({nurbs},'at',at.','outwardPointingNormals',outwardPointingNormals,'inwardPointingNormals',inwardPointingNormals,'useFlipping',false);
-%     if ceil(midx/2) == 2 % subNURBS obtains normal vectors aligned with the left over parametric direction, and so we must redo this
-%         varCol_dummy.nurbs = permuteNURBS(varCol_dummy.nurbs,[2,1]);
-%     end
+    
     sub_nurbs(i_free) = varCol_dummy.nurbs;
     varCol_dummy = generateIGAmesh(convertNURBS(varCol_dummy));
     noElemsXiEta = varCol_dummy.patches{1}.noElems;
     index(eBdry:eBdry+noElemsXiEta-1,:) = varCol_dummy.patches{1}.index + repmat(jEl,noElemsXiEta,1);    
-    pIndex(eBdry:eBdry+noElemsXiEta-1) = patch;
-    element(eBdry:eBdry+noElemsXiEta-1,:) = maxDof + varCol_dummy.patches{1}.element;
-    noEl1 = size(varCol_dummy.patches{1}.elRange{1},1);
-    noEl2 = size(varCol_dummy.patches{1}.elRange{2},1);
+    pIndex(eBdry:eBdry+noElemsXiEta-1) = i_free;
+    element(eBdry:eBdry+noElemsXiEta-1,:) = counter-1 + varCol_dummy.patches{1}.element;
+    elRange_dummy = varCol_dummy.patches{1}.elRange;
+    noEl1 = size(elRange_dummy{1},1);
+    noEl2 = size(elRange_dummy{2},1);
     noEl3 = size(patches{patch}.elRange{ceil(midx/2)},1);
+    elRange{1}(jEl(1)+1:jEl(1)+noEl1,:) = elRange_dummy{1};
+    elRange{2}(jEl(2)+1:jEl(2)+noEl2,:) = elRange_dummy{2};
     jEl = jEl + [noEl1,noEl2];
-    nodesInv(nodesMap(bdryNodes)) = (maxDof+1):(maxDof+numel(bdryNodes));
-    maxDof = maxDof + numel(bdryNodes);
+    knotVecs{i_free} = sub_nurbs{i_free}.knots;
     
     temp = repmat(eBdry:eBdry+noElemsXiEta-1,1,noEl3);
     e = sum(noElemsPatch(1:patch-1)) + 1;    
@@ -88,8 +89,6 @@ for i_free = 1:noItems
     eBdry = eBdry + noElemsXiEta;
 end
 
-
-
 nodes(counter:end) = [];
 pIndex(eBdry:end) = [];
 element(eBdry:end,:) = [];
@@ -99,7 +98,7 @@ noSurfDofs = numel(nodes);
 
 element2 = element;
 % Glue nodes in 2D mesh
-if 1 % use slow method
+if 0 % use slow method
     gluedNodes = varCol.gluedNodes;
     for i = 1:length(gluedNodes)
         indices = (nodes(element(:)) == gluedNodes{i}(1));
@@ -112,21 +111,38 @@ if 1 % use slow method
         end
     end
 else % use fast method
-    element = nodesInv(nodesMap(nodes(element)));
+    Eps = 1e7*eps;
+    controlPts = varCol.controlPts(nodes,:);
+    nodesMapBdry = 1:size(controlPts,1);
+    [~, gluedNodes] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)), 'OutputAllIndices', true);
+    repeatedNode = zeros(numel(gluedNodes),1);
+    for i = 1:numel(gluedNodes)
+        repeatedNode(i) = numel(gluedNodes{i}) - 1;
+    end
+    gluedNodes(repeatedNode == 0) = [];
+
+    counter = 1;
+    for i = 1:length(gluedNodes)
+        childrenNodes_i = gluedNodes{i}(2:end);
+        noChildrenNodes_i = numel(childrenNodes_i);
+        nodesMapBdry(childrenNodes_i) = gluedNodes{i}(1);
+        counter = counter + noChildrenNodes_i;
+    end
+    element = nodesMapBdry(element);
 end
 varColBdry.nodes = nodes;
 varColBdry.noElems = noElemsBdry;
 varColBdry.element = element;
 varColBdry.element2 = element2;
 varColBdry.index = index;
-varColBdry.pIndex = pIndex;
+varColBdry.knotVecs = knotVecs;
 varColBdry.n_en = n_en;
 varColBdry.noSurfDofs = noSurfDofs;
 varColBdry.elemMap = elemMap;
 varColBdry.nurbs = sub_nurbs;
 varColBdry.degree = degree;
-varColBdry.controlPts = varCol.controlPts(nodes,:);
-varColBdry.weights = varCol.weights(nodes,:);
+varColBdry.elRange = elRange;
+varColBdry.pIndex = pIndex;
 
 function bdryNodes = extractBdryNodes(nurbs,midx,outwardPointingNormals,inwardPointingNormals)
 n_xi = nurbs.number(1);

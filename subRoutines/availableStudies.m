@@ -1,3 +1,5 @@
+function studyName = availableStudies()
+
 
 % studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'M1'; %getTask_M1
@@ -9,7 +11,7 @@
 % studyName = 'PH'; %getTask_PH
 % studyName = 'Barrel'; %getTask_Barrel
 % studyName = 'S15'; %getTask_S15
-studyName = 'CE'; %getTask_CE
+% studyName = 'CE'; %getTask_CE
 % studyName = {'articleIGA_Simpson', 'PH', 'S15', 'Barrel', 'CE', 'M4', 'M5', 'M1', 'M2', 'M3', 'M31'};
 % studyName = {'articleIGA_Simpson', 'PH'};
 
@@ -115,6 +117,10 @@ studyName = 'CE'; %getTask_CE
 % studyName = 'S5'; %getTask_S5
 % studyName = 'FEBE_IL'; %getTask_FEBE_IL
 
+%% Regression tests
+% studyName = 'Venas2018iao_Figure6'; %getTask_Venas2018iao_Figure6
+% studyName = 'Venas2020asi_Figure21'; %getTask_Venas2020asi_Figure21
+studyName = 'Venas2018iao_Table2'; % getTask_Venas2018iao_Table2
 
 
 

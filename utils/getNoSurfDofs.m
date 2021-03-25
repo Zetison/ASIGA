@@ -3,16 +3,9 @@ function surfDofs = getNoSurfDofs(task)
 if task.varCol{1}.boundaryMethod
     switch task.misc.method
         case 'IENSG'
-            surfDofs = task.varCol{1}.dofs/task.iem.N;
+            surfDofs = task.dofs/task.iem.N;
         otherwise
-            counter = 0;
-            surfDofs = [];
-            for patch = 1:task.varCol{1}.noPatches
-                noCtrlPtsPatch = task.varCol{1}.noCtrlPtsPatch(patch);
-                surfDofs = [surfDofs, 1:noCtrlPtsPatch+counter];
-                counter = counter + noCtrlPtsPatch;
-            end
-            surfDofs = numel(setdiff(surfDofs,task.varCol{1}.dofsToRemove));
+            surfDofs = task.dofs;
     end
 else
     counter = 0;

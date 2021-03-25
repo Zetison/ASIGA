@@ -153,7 +153,7 @@ task.varCol{1}.O = O(objectHit,:,:);
 task.varCol{1}.o = task.varCol{1}.o(objectHit,:);
 task.varCol{1}.d = d(objectHit,:);
 dofs = size(task.varCol{1}.O,1);
-task.varCol{1}.dofs = dofs;
+task.dofs = dofs;
 task.varCol{1}.beams = beams;
 % task.varCol{1}.A = p_inc(O(objectHit,:,end-1));
 

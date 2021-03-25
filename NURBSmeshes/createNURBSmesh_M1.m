@@ -55,7 +55,7 @@ if numel(varCol) > 2
 end
 
 varCol{1}.L_gamma = L + R;
-varCol{1}.Upsilon = Upsilon;
+task.iem.Upsilon = Upsilon;
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 task.varCol = varCol;

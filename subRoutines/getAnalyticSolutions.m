@@ -42,8 +42,10 @@ for i = 1:noDomains
             k = task.misc.omega/task.varCol{i}.c_f;
             Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
             dPhi_kdny = @(xmy,r,ny) -Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
+            dPhi_kdnx = @(xmy,r,ny)  Phi_k(r)./r.^2.*(1i*k.*r - 1).*sum(xmy.*ny,2);
             task.varCol{i}.Phi_k = Phi_k;
             task.varCol{i}.dPhi_kdny = dPhi_kdny;
+            task.varCol{i}.dPhi_kdnx = dPhi_kdnx;
             
             task.varCol{i}.p_ = @(X) analytic({X},layer,NaN,'p',i);
         case 'solid'

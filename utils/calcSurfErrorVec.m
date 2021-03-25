@@ -2,10 +2,8 @@ function relError = calcSurfErrorVec(task, i_domain)
 
 LpOrder = task.err.LpOrder;
 degree = task.varCol{i_domain}.degree(1:2);
-elRange = task.varCol{i_domain}.elRange;
 weights = task.varCol{i_domain}.weights;
 controlPts = task.varCol{i_domain}.controlPts;
-knotVecs = task.varCol{i_domain}.knotVecs;
 
 U = task.varCol{i_domain}.U;
 
@@ -17,6 +15,8 @@ element = varColBdry.element;
 element2 = varColBdry.element2;
 index = varColBdry.index;
 pIndex = varColBdry.pIndex;
+knotVecs = varColBdry.knotVecs;
+elRange = varColBdry.elRange;
 
 extraGP = task.misc.extraGP(1:2);
 [Q, W] = gaussTensorQuad(degree(1:2)+3+extraGP);

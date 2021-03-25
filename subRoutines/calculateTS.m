@@ -1,5 +1,5 @@
-function task = calculateTS(task,runTasksInParallel,stringShift)
-if ~runTasksInParallel
+function task = calculateTS(task,printLog,stringShift)
+if printLog
     fprintf(['\n%-' num2str(stringShift) 's'], 'Computing far-field pattern ... ')
 end
 
@@ -18,8 +18,8 @@ switch task.misc.method
             index = varColBdry.index;
             pIndex = varColBdry.pIndex;
     
-            knotVecs = task.varCol{1}.knotVecs;
-            elRange = task.varCol{1}.elRange;
+            knotVecs = varColBdry.knotVecs;
+            elRange = varColBdry.elRange;
             controlPts = task.varCol{1}.controlPts;
             weights = task.varCol{1}.weights;
             U = task.varCol{1}.U;
@@ -101,7 +101,7 @@ switch task.misc.method
                 task.varCol{1}.h_max = max([norm2(P(tri(:,1),:)-P(tri(:,2),:)); 
                                     norm2(P(tri(:,1),:)-P(tri(:,3),:)); 
                                     norm2(P(tri(:,2),:)-P(tri(:,3),:))]);
-                task.varCol{1}.dofs = size(unique(tri,'rows','stable'),1);
+                task.dofs = size(unique(tri,'rows','stable'),1);
                 task.varCol{1}.nepw = lambda./task.varCol{1}.h_max;
                 task.varCol{1}.noElems = size(tri,1);
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -123,7 +123,7 @@ switch task.misc.method
             case 'IGA'
                 task.varCol{1}.h_max = findMaxElementDiameter(task.varCol{1}.patches);
                 task.varCol{1}.nepw = lambda./task.varCol{1}.h_max;
-                task.varCol{1}.dofs = task.varCol{1}.noDofs;
+                task.dofs = task.varCol{1}.noDofs;
                 p_h = calculateScatteredPressureKDT(task, v);
         end
     case 'RT'
@@ -159,6 +159,6 @@ switch task.misc.method
 end
 task.ffp.v = v;
 task.ffp.p_h = p_h;
-if ~runTasksInParallel
+if printLog
     fprintf('using %12f seconds.', toc)
 end

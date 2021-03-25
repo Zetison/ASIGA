@@ -164,5 +164,5 @@ end
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
-varCol{1}.Upsilon = Upsilon;
+task.iem.Upsilon = Upsilon;
 task.varCol = varCol;

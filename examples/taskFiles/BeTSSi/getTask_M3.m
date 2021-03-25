@@ -17,7 +17,7 @@ misc.BC = 'SHBC';
 misc.method = {'IENSG'};
 misc.formulation = 'BGU';
 misc.checkNURBSweightsCompatibility = false;
-err.calculateSurfaceError = 1;
+err.calculateSurfaceError = 0;
 
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
@@ -56,7 +56,7 @@ postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
-postPlot(1).axisType        = 'polar';
+postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
@@ -67,8 +67,8 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 postPlot(2)                 = postPlot(1);
 postPlot(2).xname       	= 'nepw';
 postPlot(2).yname        	= 'surfaceError';
-postPlot(2).plotResults  	= true;
-postPlot(2).printResults 	= true;
+postPlot(2).plotResults  	= 0;
+postPlot(2).printResults 	= 0;
 postPlot(2).axisType        = 'loglog';
 postPlot(2).lineStyle   	= '-*';
 postPlot(2).xLoopName     	= 'msh.M';
@@ -131,7 +131,7 @@ loopParameters = {'msh.parm','msh.M','misc.method','rt.N'};
 misc.method = {'PML'};
 misc.formulation = {'GSB'};
 msh.M = 4:6;
-% msh.M = 2;
+msh.M = 5;
 
 pml.t = 0.25*varCol{1}.R2;         % thickness of PML
 misc.r_a = 1.25*varCol{1}.R2;         % thickness of PML
@@ -145,7 +145,7 @@ para.plotFullDomain          = 0;
 para.plotSubsets             = {'Gamma','Gamma_a','xy','xz'}; % Plot subsets (i.e. the artificial boundary Gamma_a) in paraview
 
 loopParameters = {'misc.formulation','msh.M','misc.method','misc.omega'};
-% collectIntoTasks
+collectIntoTasks
 
 
 function addCommands_(i_study)
@@ -155,15 +155,20 @@ if i_study == 1
                         'FileType','text','CommentStyle','%');
         x = T.alpha;
         y = T.TS;
+        polarplot(x*pi/180,y,'DisplayName','Reference solution f = 1000Hz')
     else
-        T = readtable('miscellaneous/refSolutions/M3_HWBC_BI_A240_E0_F0.5_IGABEM_mesh3_degree2_formulationGBM_.txt', ...
+        T = readtable('miscellaneous/refSolutions/M3_SHBC_BI_alpha240.txt', ...
                         'FileType','text','headerLines',6);
+        x = T.Var1;
+        y = T.Var2;
+        plot(x,y,'DisplayName','Reference solution f = 1000Hz')
+        
         T = readtable('miscellaneous/refSolutions/M3_HWBC_BI_A240_E0_F1_FOI.txt', ...
                         'FileType','text','headerLines',6);
         x = T.Var1;
         y = T.Var2;
+        plot(x,y,'DisplayName','FOI')
     end
-    polarplot(x*pi/180,y,'DisplayName','Reference solution f = 1000Hz')
     legend('off');
     legend('show','Interpreter','latex');
 end

@@ -100,7 +100,7 @@ else
     
     Upsilon = sqrt(c_z^2-c_xy^2);
     varCol{1}.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
-    varCol{1}.Upsilon = Upsilon;
+    task.iem.Upsilon = Upsilon;
     
     if numel(varCol) > 1
         solid = getEllipsoidalData({'R', R_o(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t(1)});

@@ -53,14 +53,16 @@ if usePML
     index_a = varColBdry.index;
     pIndex_a = varColBdry.pIndex;
     elemMap = varColBdry.elemMap;
+    knotVecs_a = varColBdry.knotVecs;
+    elRange_a = varColBdry.elRange;
     
     J_a = zeros(size(Q,1),3,3,noElems_a);
     for e = 1:noElems_a
         patch = pIndex_a(e);
-        knots = knotVecs{patch}(1:2);
+        knots = knotVecs_a{patch}(1:2);
         Xi_e = zeros(2,2);
         for i = 1:2
-            Xi_e(i,:) = elRange{i}(index_a(e,i),:);
+            Xi_e(i,:) = elRange_a{i}(index_a(e,i),:);
         end
 
         sctr = zeta0Nodes_a(element_a(e,:));

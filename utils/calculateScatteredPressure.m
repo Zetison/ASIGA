@@ -4,8 +4,10 @@ plotFarField = task.ffp.plotFarField;
 d_p = task.varCol{1}.patches{1}.nurbs.d_p;
 d = task.varCol{1}.patches{1}.nurbs.d;
 U = task.varCol{1}.U;
-farFieldNormalPressFromSolid = task.ffp.farFieldNormalPressFromSolid;
-if numel(task.varCol) > 1 && (d_p == 2 || farFieldNormalPressFromSolid)
+noDofs = task.varCol{1}.noDofs;
+noElems = task.varCol{1}.noElems;
+degree = task.varCol{1}.degree(1:2); % assume p_xi is equal in all patches
+if numel(task.varCol) > 1
     varColBdrySolid = meshBoundary(task.varCol{2},'Gamma');
     
     nodesSolid = varColBdrySolid.nodes;
@@ -16,20 +18,16 @@ if numel(task.varCol) > 1 && (d_p == 2 || farFieldNormalPressFromSolid)
     Uy = task.varCol{2}.U(2:d:noDofs,:);
     Uz = task.varCol{2}.U(3:d:noDofs,:);
 else
-    nodesSolid = NaN;
-    elementSolid = NaN;
+    nodesSolid = NaN(noDofs,1);
+    elementSolid = NaN(noElems,prod(degree+1));
     Ux = NaN;
     Uy = NaN;
     Uz = NaN;
 end
-knotVecs = task.varCol{1}.knotVecs;
 weights = task.varCol{1}.weights;
 controlPts = task.varCol{1}.controlPts;
-elRange = task.varCol{1}.elRange;
-noDofs = task.varCol{1}.noDofs;
 rho = task.varCol{1}.rho;
-if farFieldNormalPressFromSolid && d_p == 3
-    degree = task.varCol{1}.degree(1:2); % assume p_xi is equal in all patches
+if d_p == 3
     varColBdry = meshBoundary(task.varCol{1},'Gamma');
     
     zeta0Nodes = varColBdry.nodes;
@@ -38,31 +36,29 @@ if farFieldNormalPressFromSolid && d_p == 3
     element2 = varColBdry.element2;
     index = varColBdry.index;
     pIndex = varColBdry.pIndex;
+    knotVecs = varColBdry.knotVecs;
+    elRange = varColBdry.elRange;
+    if numel(task.varCol) == 1
+        elementSolid = NaN(noElems,prod(degree+1));
+    end
 else
     degree = task.varCol{1}.degree; % assume p_xi is equal in all patches
     index = task.varCol{1}.index;
-    noElems = task.varCol{1}.noElems;
     element = task.varCol{1}.element;
     element2 = task.varCol{1}.element2;
     pIndex = task.varCol{1}.pIndex;
     zeta0Nodes = 1:noDofs;
+    knotVecs = task.varCol{1}.knotVecs;
+    elRange = task.varCol{1}.elRange;
 end
 
 BC = task.misc.BC;
 omega = task.misc.omega;
 k = omega/task.varCol{1}.c_f;
-method = task.misc.method;
-if strcmp(method,'IENSG') && ~farFieldNormalPressFromSolid
-    error('Not implemented')
-end
+
 dp_inc = task.dp_inc_;
 
 Phi_k = task.varCol{1}.Phi_k;
-if d_p == 3 && ~farFieldNormalPressFromSolid
-    error('Depricated')
-else
-    surfaceElements = 1:noElems;
-end
 solveForPtot = task.misc.solveForPtot;
 exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(task.varCol) == 1;
 
@@ -78,9 +74,8 @@ if numel(k) > 1 && size(P_far,1) > 1
 end
 p_h = zeros(max([size(P_far,1),numel(k)]),1);
 
-% for i = 1:length(surfaceElements) %
-parfor i = 1:length(surfaceElements)
-    e = surfaceElements(i);
+for e = 1:noElems %
+% parfor e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(2,2);
@@ -107,23 +102,12 @@ parfor i = 1:length(surfaceElements)
     if exteriorSHBC
         dp_h_gp = -dp_inc(Y,normals); 
     else
-        if d_p == 2 || farFieldNormalPressFromSolid
-            sctrSolid = nodesSolid(elementSolid(e,:));
-            dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*Ux(sctrSolid,:)) ...
-                                     +normals(:,2).*(R{1}*Uy(sctrSolid,:)) ...
-                                     +normals(:,3).*(R{1}*Uz(sctrSolid,:)));
-            if ~solveForPtot
-                dp_h_gp = dp_h_gp - dp_inc(Y,normals);
-            end
-        else
-            dp_h_gp = zeros(size(p_h_gp));
-            for gp = 1:size(W,1)
-                dXdxi = R{2}*pts;
-                dXdeta = R{3}*pts;
-                dXdzeta = R{4}*pts;
-                J = [dXdxi(gp,:).' dXdeta(gp,:).' dXdzeta(gp,:).'];
-                dp_h_gp(gp,:) = (J'\[R{2}(gp,:); R{3}(gp,:); R{4}(gp,:)]*U_sctr).'*normals(gp,:).';
-            end
+        sctrSolid = nodesSolid(elementSolid(e,:));
+        dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*Ux(sctrSolid,:)) ...
+                                 +normals(:,2).*(R{1}*Uy(sctrSolid,:)) ...
+                                 +normals(:,3).*(R{1}*Uz(sctrSolid,:)));
+        if ~solveForPtot
+            dp_h_gp = dp_h_gp - dp_inc(Y,normals);
         end
     end
 

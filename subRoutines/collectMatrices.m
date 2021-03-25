@@ -40,11 +40,18 @@ else
     allDofsToRemove = task.varCol{1}.allDofsToRemove;
 end
 % Collect all matrices
-A0 = sparse(noRows_tot,noCols_tot);
-A1 = sparse(noRows_tot,noCols_tot);
-A2 = sparse(noRows_tot,noCols_tot);
-A4 = sparse(noRows_tot,noCols_tot);
-FF = zeros(noRows_tot,size(task.varCol{1}.FF,2));
+if noDomains == 1 && (strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'MFS'))
+    A0 = complex(zeros(noRows_tot,noCols_tot));
+    A1 = complex(zeros(noRows_tot,noCols_tot));
+    A2 = complex(zeros(noRows_tot,noCols_tot));
+    A4 = complex(zeros(noRows_tot,noCols_tot));
+else
+    A0 = sparse(noRows_tot,noCols_tot);
+    A1 = sparse(noRows_tot,noCols_tot);
+    A2 = sparse(noRows_tot,noCols_tot);
+    A4 = sparse(noRows_tot,noCols_tot);
+end
+FF = complex(zeros(noRows_tot,size(task.varCol{1}.FF,2)));
 for i = 1:noDomains
     if isfield(task.varCol{i},'rho')
         rho = task.varCol{i}.rho;
@@ -108,6 +115,7 @@ if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
         end  
     end
 end
+
 
 if ~(strcmp(task.misc.method,'BEM') && strcmp(task.misc.formulation(1),'C'))
     A0(allDofsToRemove,:) = [];

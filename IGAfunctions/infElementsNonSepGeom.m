@@ -29,7 +29,7 @@ A_2 = task.iem.A_2;
 n_en = prod(degree+1);
 
 k = task.misc.omega/task.varCol{1}.c_f;
-Upsilon = task.varCol{1}.Upsilon;
+Upsilon = task.iem.Upsilon;
 
 useApproxRadialIntegrals = 2; % 0 is most accurate, 1 is a spline approximation (not reccomended here as Chebychev is here implemented more robust), 2 is Chebychev (reccomended)
 B1splines = {};

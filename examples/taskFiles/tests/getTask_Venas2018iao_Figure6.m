@@ -1,4 +1,4 @@
-function studies = getTask_articleIGA_Simpson(M_0)
+function studies = getTask_Venas2018iao_Figure6(M_0)
 % This study is based on Simpson2014aib and correspond to Figure 6 in Venas2018iao
 % Simpson2014aib is available at https://doi.org/10.1016/j.cma.2013.10.026
 % Venas2018iao   is available at https://doi.org/10.1016/j.cma.2018.02.015 (open access version at http://hdl.handle.net/11250/2493754)
@@ -49,33 +49,18 @@ iem.N = 4;
 
 loopParameters = {'msh.M','misc.method','misc.formulation'};
 
-postPlot(1).xname       	= 'dofs';
-postPlot(1).yname        	= 'surfaceError';
-postPlot(1).plotResults  	= true;
-postPlot(1).printResults 	= true;
-postPlot(1).axisType    	= 'loglog';
-postPlot(1).lineStyle   	= '*-';
-postPlot(1).xLoopName     	= 'msh.M';
-% postPlot(1).legendEntries 	= {'misc.method','misc.formulation','msh.M'};
+postPlot(1).xname       	= 'alpha';
+postPlot(1).yname        	= 'error_pAbs';
+postPlot(1).plotResults  	= false;
+postPlot(1).printResults 	= false;
+postPlot(1).axisType    	= 'semilogy';
+postPlot(1).lineStyle   	= '-';
 postPlot(1).fileDataHeaderX	= [];
-postPlot(1).noXLoopPrms   	= 1;
+postPlot(1).noXLoopPrms     = 0;
+postPlot(1).xScale          = 180/pi;
+postPlot(1).yScale          = 1/100;
 postPlot(1).addCommands   	= [];
-
-postPlot(2) = postPlot(1);
-postPlot(2).noXLoopPrms     = 0;
-postPlot(2).lineStyle       = '-';
-postPlot(2).xname           = 'alpha';
-postPlot(2).yname           = 'error_pAbs';
-postPlot(2).axisType        = 'semilogy';
-postPlot(2).xScale          = 180/pi;
-postPlot(2).yScale          = 1/100;
-postPlot(2).addCommands   	= @(study,i_study,studies) addCommands_();
-
-postPlot(3) = postPlot(2);
-postPlot(3).yname       = 'abs_p';
-postPlot(3).axisType	= 'plot';
-postPlot(3).yScale      = 1;
-postPlot(3).addCommands = [];
+postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_();
 
 collectIntoTasks
 

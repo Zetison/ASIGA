@@ -227,7 +227,7 @@ end
 if ~strcmp(task.misc.method,'PML')
     varCol{1}.chimin = chimin;
     varCol{1}.chimax = chimax;
-    varCol{1}.Upsilon = Upsilon;
+    task.iem.Upsilon = Upsilon;
 end
 varCol{1}.L_gamma = L + R1 + R2;
 varCol{1}.nurbs = fluid;

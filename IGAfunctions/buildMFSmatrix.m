@@ -152,6 +152,7 @@ else
     fact = zeros(nQuadPts,noElems);
 %     Q2D = [copyVector(linspace(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace(-1,1,nQuadPts).',nQuadPts,2)];
 %     Q2D = [copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,1), copyVector(linspace2(-1,1,nQuadPts).',nQuadPts,2)];
+%     for e = 1:noElems  
     parfor e = 1:noElems  
         if progressBars && mod(e,nProgressStepSize) == 0
             ppm.increment();
@@ -183,10 +184,10 @@ else
     end
     n_sp = nQuadPts*noElems;
     x_vec = reshape(permute(x_vec,[1,3,2]),n_sp,3);
-    [x_vec, I] = uniquetol(x_vec,1e-10,'ByRows',true);
+%     [x_vec, I] = uniquetol(x_vec,1e-10,'ByRows',true);
     n_vec = reshape(permute(n_vec,[1,3,2]),n_sp,3);
     n_sp = size(x_vec,1);
-    n_vec = n_vec(I,:);
+%     n_vec = n_vec(I,:);
 %     y_s = x_vec - n_vec*task.misc.delta;
     if task.misc.exteriorProblem
         y_s = x_vec*(1-task.mfs.delta);
@@ -376,15 +377,15 @@ if 1
                     F(i,:) = dpdn(x,n);
                 end
             end
-            task.varCol{1}.y_s = y_s;
     end
 else
     nQuadPts = 3;
-    x_vec = zeros(nQuadPts,3,noElems);
-    n_vec = zeros(nQuadPts,3,noElems);
-    fact = zeros(nQuadPts,noElems);
-    [W,Q] = gaussianQuadNURBS(nQuadPts,nQuadPts);  
+    x_vec = zeros(nQuadPts^2,3,noElems);
+    n_vec = zeros(nQuadPts^2,3,noElems);
+    fact = zeros(nQuadPts^2,noElems);
+    [Q, W] = gaussTensorQuad([nQuadPts,nQuadPts]);  
     parfor e = 1:noElems  
+%     for e = 1:noElems  
         patch = pIndex(e); % New
         nurbs = patches{patch}.nurbs;
 
@@ -397,7 +398,7 @@ else
 
         xi = parent2ParametricSpace(Xi_e, Q(:,1));
         eta = parent2ParametricSpace(Eta_e, Q(:,2));
-        [y, dydxi, dydeta] = evaluateNURBS_2ndDeriv(nurbs, [xi,eta]);
+        [y, dydxi, dydeta] = evaluateNURBS(nurbs, [xi,eta], 1);
 
         crossProd = cross(dydxi,dydeta); % normal vector points inwards
         J_1 = norm2(crossProd);
@@ -410,7 +411,7 @@ else
     n_vec = reshape(permute(n_vec,[1,3,2]),1,n_qp,3);
     fact = reshape(fact,1,n_qp);
     
-    d_vec = repmat(reshape(task.varCol{1}.d_vec.',no_angles,1,3),1,n_qp,1);
+    d_vec = repmat(reshape(task.d_vec.',no_angles,1,3),1,n_qp,1);
     y_s = reshape(y_s,n_sp,1,3);
     P_inc = task.misc.P_inc;
     A = zeros(n_sp);
@@ -418,26 +419,31 @@ else
     
     xmy = repmat(x_vec,n_sp,1,1) - repmat(y_s,1,n_qp,1);
     r = sqrt(sum(xmy.^2,3));
-    dPhi_kdnx_ = -Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*repmat(n_vec,n_sp,1,1),3);
+%     dPhi_kdnx_ = task.varCol{1}.dPhi_kdny(xmy,r,
+    dPhi_kdnx_ = -task.varCol{1}.Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*repmat(n_vec,n_sp,1,1),3);
     p_inc_ = P_inc*exp(1i*sum(repmat(x_vec,no_angles,1,1).*d_vec,3)*k);
     dp_inc_ = 1i*sum(d_vec.*repmat(n_vec,no_angles,1,1),3)*k.*p_inc_;
-    for i = 1:n_sp
-%     parfor i = 1:n_sp  
+%     for i = 1:n_sp
+    parfor i = 1:n_sp  
         dPhi_kdnx_i = conj(dPhi_kdnx_(i,:));
         A(i,:) = sum(dPhi_kdnx_.*repmat(dPhi_kdnx_i.*fact,n_sp,     1,1),2);
         F(i,:) = sum(-dp_inc_  .*repmat(dPhi_kdnx_i.*fact,no_angles,1,1),2);
     end
-    task.varCol{1}.y_s = reshape(y_s,n_sp,3);
+    y_s = reshape(y_s,n_sp,3);
 end
+task.varCol{1}.y_s = y_s;
 task.varCol{1}.A_K = A;
 task.varCol{1}.FF = F;
-% 
-% keyboard
+task.varCol{1}.dofsToRemove = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plotNURBS(task.varCol{1}.nurbs,[40 40], 1, getColor(1), 0.8);
+% close all
+% plotNURBS(task.varCol{1}.nurbs,'color',getColor(1),'resolution',[20,20],'alphaValue', 0.8);
 % hold on
-% plot3(x_vec(:,1),x_vec(:,2),x_vec(:,3),'o')issymmetric2
+% x_vec = reshape(x_vec,[],3);
+% y_s = reshape(y_s,[],3);
+% n_vec = reshape(n_vec,[],3);
+% plot3(x_vec(:,1),x_vec(:,2),x_vec(:,3),'o','color','red')
 % plot3(y_s(:,1),y_s(:,2),y_s(:,3),'o','color','blue')
 % quiver3(x_vec(:,1),x_vec(:,2),x_vec(:,3),n_vec(:,1),n_vec(:,2),n_vec(:,3))
 % axis equal

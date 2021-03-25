@@ -9,7 +9,7 @@ L = varCol{1}.L;
 theta1 = varCol{1}.theta1;
 theta2 = varCol{1}.theta2;
 if varCol{1}.boundaryMethod
-    fluid = getBeTSSiM2Data('R', R, 'L', L, 't', t, 'parm', varCol{1}.parm, 'theta1', theta1, 'theta2', theta2);
+    fluid = getBeTSSiM2Data('R', R, 'L', L, 't', t, 'parm', task.msh.parm, 'theta1', theta1, 'theta2', theta2);
     fluid = makeUniformNURBSDegree(fluid,degree);
     Imap{1} = [0.010000018518611 0.000023554074421   0.000033333395062   0.007066209240776   0.009976464444190 0.009999962962798];
     Imap{2} = [4.681336475976538 2.985867581518450   2.989983333287038   t/2*pi/2 0.015641296477826 0.011052467370932];

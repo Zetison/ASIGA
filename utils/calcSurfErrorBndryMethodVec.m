@@ -72,7 +72,7 @@ if isMFS
     y_s = task.varCol{i}.y_s;
     r = zeros(size(points));
     for j = 1:n_cp
-        r(:,j) = norm2(elementAddition(-y_s(j,:), points));
+        r(:,j) = norm2(points-y_s(j,:));
     end
     p_h = Phi_k(r)*U;
 else

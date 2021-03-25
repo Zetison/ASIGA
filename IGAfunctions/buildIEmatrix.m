@@ -40,7 +40,7 @@ weights = task.varCol{1}.weights;
 controlPts = task.varCol{1}.controlPts;
 
 k = task.misc.omega/task.varCol{1}.c_f;
-Upsilon = task.varCol{1}.Upsilon;
+Upsilon = task.iem.Upsilon;
 if task.varCol{1}.boundaryMethod
     noElems = task.varCol{1}.noElems;
     element = task.varCol{1}.element;
@@ -58,6 +58,8 @@ else
     nodes = varColBdry.nodes;
     noElems = varColBdry.noElems;
     element = varColBdry.element;
+    knotVecs = varColBdry.knotVecs;
+    elRange = varColBdry.elRange;
     element2 = varColBdry.element2;
     index = varColBdry.index;
     pIndex = varColBdry.pIndex;

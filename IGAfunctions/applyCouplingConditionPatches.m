@@ -1,7 +1,5 @@
 function task = applyCouplingConditionPatches(task,i_domain)
 % Future work: Vectorize over Gauss points
-knotVecs = task.varCol{i_domain}.knotVecs;
-elRange = task.varCol{i_domain}.elRange;
 d_p = task.varCol{i_domain}.patches{1}.nurbs.d_p;
 
 degree = task.varCol{i_domain}.degree(1:2);
@@ -19,6 +17,8 @@ innerNoElemsXiEta = varColBdryOuter.noElems;
 innerXiEtaMesh = varColBdryOuter.element;
 innerXiEtaMesh2 = varColBdryOuter.element2;
 innerIndexXiEta = varColBdryOuter.index;
+knotVecs = varColBdryOuter.knotVecs;
+elRange = varColBdryOuter.elRange;
 pIndex = varColBdryOuter.pIndex;
 n_en = varColBdryOuter.n_en;
     

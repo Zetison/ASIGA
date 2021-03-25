@@ -79,11 +79,11 @@ switch format
         if isfield(task,'N') && ~strcmp(xLoopName,task.ie.N)
             fprintf(fid, '%% N: %d\n', task.ie.N);
         end
-        if isfield(task.varCol{1},'totNoElems')
+        if isfield(task.varCol{1},'totNoElems') && ~strcmp(xLoopName,task.msh.M) && ~strcmp(xLoopName,task.msh.degree)
             fprintf(fid, '%% Total number of elements: %d\n', task.varCol{1}.totNoElems);
         end
-        if isfield(task.varCol{1},'dofs')
-            fprintf(fid, '%% Degrees of freedom: %d\n', task.varCol{1}.dofs);
+        if isfield(task.varCol{1},'dofs') && ~strcmp(xLoopName,task.msh.M) && ~strcmp(xLoopName,task.msh.degree)
+            fprintf(fid, '%% Degrees of freedom: %d\n', task.dofs);
         end
         if isfield(task.varCol{1},'timeBuildSystem')
             totTimeString = convertTimeToString(task.varCol{1}.timeBuildSystem);
@@ -110,7 +110,7 @@ switch format
         elseif isfield(task,'actualNoDofs')
             totTimeString = convertTimeToString(task.varCol{1}.timeBuildSystem);
             fprintf(fid, 'Method: %s%s %s with %d elements (%d degrees of freedom) and NURBS degree %d. Computational time for system assembly (4x6-core Xeon 2.67 GHz): %s\n', ...
-                task.misc.coreMethod, task.misc.method, task.misc.formulation, task.varCol{1}.totNoElems, task.varCol{1}.dofs, max(task.varCol{1}.nurbs{1}.degree), totTimeString); % Line 3: Comments, Computer specs. and calculation times
+                task.misc.coreMethod, task.misc.method, task.misc.formulation, task.varCol{1}.totNoElems, task.dofs, max(task.varCol{1}.nurbs{1}.degree), totTimeString); % Line 3: Comments, Computer specs. and calculation times
         else
             fprintf(fid, 'No info\n');
         end

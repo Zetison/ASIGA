@@ -1,4 +1,4 @@
-function studies = getTask_articleIGA_Ihlenburg2()
+function studies = getTask_Venas2018iao_Table2(M_0)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This study correspond to Table 2 in Venas2018iao
 % Venas2018iao is available at https://doi.org/10.1016/j.cma.2018.02.015 (open access version at http://hdl.handle.net/11250/2493754)
@@ -6,6 +6,10 @@ function studies = getTask_articleIGA_Ihlenburg2()
 counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
+
+if nargin < 1
+    M_0 = 4; % 4
+end
 
 prePlot.plot2Dgeometry = 0; 
 prePlot.plot3Dgeometry = 0; 
@@ -16,10 +20,10 @@ misc.formulation = {'BGU'};
 misc.method = {'IE'};
 msh.parm = 1;
 misc.coreMethods = {'IGA','IGA','hp_FEM','linear_FEM'}; % [5, 4, 2, 1, 3]
-misc.coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
+% misc.coreMethods = {'IGA'}; % [5, 4, 2, 1, 3]
 % misc.coreMethods = {'hp_FEM'}; % [5, 4, 2, 1, 3]
 BCs = {'SHBC','SSBC','NNBC'};
-BCs = {'NNBC'};
+% BCs = {'NNBC'};
 % BCs = {'SHBC'};
 % BCs = {'SSBC'};
 postPlot(1).xname       	= 'alpha';
@@ -37,7 +41,6 @@ postPlot(2) = postPlot(1);
 postPlot(2).yname = 'error_p';
 postPlot(2).axisType = 'semilogy';
 warning('off','NURBS:weights')
-M_0 = 4; % 4
 for i_coreM = 1:length(misc.coreMethods)
     misc.coreMethod = misc.coreMethods(i_coreM);
     for BC = BCs
@@ -91,10 +94,10 @@ for i_coreM = 1:length(misc.coreMethods)
         misc.formulation = {'BGU'};
         misc.method = {'IE'};    
         collectIntoTasks
-        
-        misc.formulation = {'VL2E'};
-        misc.method = {'BA'};
-        collectIntoTasks
+%         
+%         misc.formulation = {'VL2E'};
+%         misc.method = {'BA'};
+%         collectIntoTasks
     end
 end
 

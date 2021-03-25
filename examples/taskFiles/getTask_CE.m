@@ -12,6 +12,7 @@ misc.model = 'CE';
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE'};
 misc.formulation = {'CCBIE'};
+% misc.formulation = {'GBM'};
 
 varCol{1} = struct('media', 'fluid', ...
                    'R', 1, ...
@@ -20,11 +21,11 @@ varCol{1} = struct('media', 'fluid', ...
 msh.meshFile = 'createNURBSmesh_CE';
 misc.omega = 62.8*varCol{1}.c_f;             % angular frequency
 
-misc.omega = 4000;             % angular frequency
+misc.omega = 10000;             % angular frequency
 
 misc.r_a = 1.25*varCol{1}.R;         % thickness of PML
 msh.M = 6:7;
-msh.M = 5;
+msh.M = 4;
 msh.parm = 1;
 msh.degree = 2;
 ffp.beta = 0;
@@ -42,7 +43,7 @@ prePlot.resolution = [10,10,0];
 prePlot.view = [135,30];
 prePlot.plotParmDir = 0;
 prePlot.plotControlPolygon  = 0;                 % Plot the control polygon for the NURBS mesh
-prePlot.plotNormalVectors = 1;
+prePlot.plotNormalVectors = 0;
 prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
 prePlot.plotGeometryInfo    = 1;
 
@@ -63,7 +64,7 @@ misc.method = {'KDT'};
 misc.solveForPtot = false;
 misc.formulation = {'MS1'};
 
-% collectIntoTasks
+collectIntoTasks
 
 misc.method = {'IE'};
 misc.formulation = {'BGU'};
@@ -71,7 +72,7 @@ misc.formulation = {'BGU'};
 collectIntoTasks
 
 pml.t = 0.25*varCol{1}.R;         % thickness of PML
-varCol{1}.refinement = @(M) [0, 0, 0, 2^(M-1)/4-1];
+varCol{1}.refinement = @(M) [0, 0, 0, 2^(M-1)/2-1];
 misc.method = {'PML'};
 misc.formulation = {'GSB'};
 

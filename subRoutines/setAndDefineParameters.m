@@ -18,7 +18,8 @@ if (task.err.calculateSurfaceError || task.err.calculateVolumeError) && ~analyti
     error('The errors cannot be computed without an analytic solution')
 end
 
-for m = 1:numel(task.varCol)
+noDomains = numel(task.varCol);
+for m = 1:noDomains
     if strcmp(task.varCol{m}.media,'solid')
         task.varCol{m}.C = elasticityMatrix(task.varCol{m}.E,task.varCol{m}.nu);
     end
@@ -45,10 +46,7 @@ if strcmp(task.misc.scatteringCase,'MS')
     task.ffp.beta_s = task.ffp.beta;
 end
 
-task.analyticSolutionExist = analyticSolutionExist;
-task.isSphericalShell = isSphericalShell;
-
-for i = 1:numel(task.varCol)
+for i = 1:noDomains
     if mod(i,2)
         task.varCol{i}.boundaryMethod = boundaryMethod; % Assume only 3D elasticity is implemented
     else
@@ -60,4 +58,7 @@ for i = 1:numel(task.varCol)
         task.noRHSs = numel(task.ffp.alpha_s);
     end
 end
+task.analyticSolutionExist = analyticSolutionExist;
+task.isSphericalShell = isSphericalShell;
+task.noDomains = noDomains;
     

@@ -23,7 +23,9 @@ for i = 1:numel(task.varCol)
         h_max = h_max_i;
     end
 end
-task.varCol = addSolutionToRemovedNodes(task.varCol);
+if ~isempty(allDofsToRemove)
+    task.varCol = addSolutionToRemovedNodes(task.varCol);
+end
 
 if isfield(task.varCol{1},'c_f')
     k = task.misc.omega/task.varCol{1}.c_f;
