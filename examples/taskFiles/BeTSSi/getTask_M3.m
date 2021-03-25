@@ -9,7 +9,7 @@ getDefaultTaskValues
 misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 % misc.applyLoad = 'pointPulsation';
 
-misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 misc.model = 'M3';
 misc.BC = 'SHBC';
@@ -64,18 +64,18 @@ postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-postPlot(2)                 = postPlot(1);
-postPlot(2).xname       	= 'nepw';
-postPlot(2).yname        	= 'surfaceError';
-postPlot(2).plotResults  	= 0;
-postPlot(2).printResults 	= 0;
-postPlot(2).axisType        = 'loglog';
-postPlot(2).lineStyle   	= '-*';
-postPlot(2).xLoopName     	= 'msh.M';
-postPlot(2).fileDataHeaderX	= [];
-postPlot(2).noXLoopPrms   	= 1;
-postPlot(2).xScale          = 1;
-postPlot(2).addCommands   	= [];
+% postPlot(2)                 = postPlot(1);
+% postPlot(2).xname       	= 'nepw';
+% postPlot(2).yname        	= 'surfaceError';
+% postPlot(2).plotResults  	= 0;
+% postPlot(2).printResults 	= 0;
+% postPlot(2).axisType        = 'loglog';
+% postPlot(2).lineStyle   	= '-*';
+% postPlot(2).xLoopName     	= 'msh.M';
+% postPlot(2).fileDataHeaderX	= [];
+% postPlot(2).noXLoopPrms   	= 1;
+% postPlot(2).xScale          = 1;
+% postPlot(2).addCommands   	= [];
 
 if strcmp(misc.scatteringCase,'MS')
     para.i_MS = find(abs(ffp.alpha - 240*pi/180) < 20*eps);
@@ -104,11 +104,13 @@ misc.solveForPtot = strcmp(misc.applyLoad,'planeWave');
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE','CBM'};
 misc.formulation = {'CCBIE'};
-misc.formulation = {'GBM'};
-msh.M = 5:7;
+% misc.formulation = {'GBM'};
+msh.M = 5:6;
+msh.degree = 4:5;
+msh.parm = 2;
 % msh.M = 1;
-loopParameters = {'misc.formulation','msh.M','misc.method','misc.omega'};
-% collectIntoTasks
+loopParameters = {'misc.formulation','msh.M','msh.degree','misc.method','misc.omega'};
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
@@ -131,7 +133,8 @@ loopParameters = {'msh.parm','msh.M','misc.method','rt.N'};
 misc.method = {'PML'};
 misc.formulation = {'GSB'};
 msh.M = 4:6;
-msh.M = 5;
+% msh.M = 5;
+msh.parm = 1;
 
 pml.t = 0.25*varCol{1}.R2;         % thickness of PML
 misc.r_a = 1.25*varCol{1}.R2;         % thickness of PML
