@@ -116,7 +116,6 @@ if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
     end
 end
 
-
 if ~(strcmp(task.misc.method,'BEM') && strcmp(task.misc.formulation(1),'C'))
     A0(allDofsToRemove,:) = [];
     A1(allDofsToRemove,:) = [];

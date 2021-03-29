@@ -1,6 +1,10 @@
-function studies = getTask_PhD_S1_BI()
+function studies = getTask_Venas2019asi_FigureB10B11B12(M_0)
 % This study is based on Figure B.10, B.11 and B.12 in Venas2019asi
 % Venas2019asi is available at http://hdl.handle.net/11250/2640443
+
+if nargin < 1
+    M_0 = 6; 
+end
 
 counter = 1;
 studies = cell(0,1);
@@ -23,8 +27,8 @@ ffp.beta_s = 0;
 
 postPlot(1).xname        	= 'alpha';
 postPlot(1).yname        	= 'TS';
-postPlot(1).plotResults  	= true;
-postPlot(1).printResults 	= false;
+postPlot(1).plotResults  	= 0;
+postPlot(1).printResults 	= 0;
 postPlot(1).axisType      	= 'plot';
 postPlot(1).lineStyle    	= '-';
 postPlot(1).xScale       	= 1;
@@ -57,7 +61,7 @@ misc.computeCondNumber = false;
 ffp.plotFarField = 1;
 misc.applyLoad = 'planeWave';
 msh.parm = 1;
-rt.N = 3;
+rt.N = M_0+1;
 warning('off','RT:limitations')
 
 loopParameters = {'rt.N'};

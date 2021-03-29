@@ -8,10 +8,12 @@ for patch = 1:numel(nurbs)
     knots = nurbs{patch}.knots;
     degree = nurbs{patch}.degree;
     newKnots = cell(1,d_p);
+    Eps = 1e5*eps;
     for j = 1:d_p  
-        for i = 1:length(knots{j})
-            mm = length(find(knots{j} == knots{j}(i)));  
-            newKnots{j} = [newKnots{j}, knots{j}(i)*ones(degree(j)-mm,1)];
+        uniqueKnots = unique(knots{j});
+        for i = 1:length(uniqueKnots)
+            mm = length(find(abs(knots{j} - uniqueKnots(i)) < Eps));  
+            newKnots{j} = [newKnots{j}, uniqueKnots(i)*ones(1,degree(j)-mm)];
         end
     end
     nurbs(patch) = insertKnotsInNURBS(nurbs(patch),newKnots);

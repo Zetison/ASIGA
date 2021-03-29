@@ -55,7 +55,7 @@ if varCol{1}.boundaryMethod
         xiAngle = 2*pi/3;
     end
 
-    solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi);
+    solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi, 'x_0', task.msh.x_0);
     refLength = R_max*pi/2;
     if task.msh.refineThetaOnly
         if parm ~= 1

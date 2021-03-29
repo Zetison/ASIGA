@@ -1,5 +1,5 @@
 % addpath('/usr/local/AdvanpixMCT/4.6.0.13135')
-addpath IGAfunctions
+addpath(genpath('IGAfunctions'))
 addpath(genpath('NURBS'))
 addpath SEM
 addpath(genpath('NURBSgeometries'))

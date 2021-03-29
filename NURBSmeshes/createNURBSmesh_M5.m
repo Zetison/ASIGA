@@ -7,7 +7,7 @@ R = varCol{1}.R;
 l = varCol{1}.l;
 L = varCol{1}.L;
 if varCol{1}.boundaryMethod    
-    fluid = getBeTSSiM5Data('R', R, 'type', varCol{1}.type, 'L', L, 'l', l, 'parm', varCol{1}.parm);
+    fluid = getBeTSSiM5Data('R', R, 'type', task.misc.model(end), 'L', L, 'l', l, 'parm', task.msh.parm);
 
     fluid = makeUniformNURBSDegree(fluid,degree);
     fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3));

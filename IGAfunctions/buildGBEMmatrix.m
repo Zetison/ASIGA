@@ -63,7 +63,7 @@ else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
-if isfield(task.varCol{i_domain},'alpha_s')
+if isfield(task.ffp,'alpha_s')
     no_angles = length(task.ffp.alpha_s);
 else
     no_angles = 1;

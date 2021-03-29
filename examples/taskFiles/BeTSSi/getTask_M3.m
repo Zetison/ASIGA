@@ -44,7 +44,7 @@ f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 
 ffp.beta = 0;
-ffp.alpha = (0:0.25:360)*pi/180;
+ffp.alpha = (0:0.1:360)*pi/180;
 
 warning('off','NURBS:weights')
 loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation'};
@@ -94,9 +94,10 @@ end
 %% KDT simulation
 misc.method = {'KDT'};
 misc.formulation = {'MS1'};
-msh.M = 6; % 5
+% misc.coreMethod = 'linear_FEM';
+msh.M = 5; % 5
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
@@ -110,7 +111,7 @@ msh.degree = 4:5;
 msh.parm = 2;
 % msh.M = 1;
 loopParameters = {'misc.formulation','msh.M','msh.degree','misc.method','misc.omega'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
@@ -121,12 +122,18 @@ misc.progressBars = 0;
 err.err.calculateSurfaceError = 0;
 misc.computeCondNumber = false;
 ffp.plotFarField = 1;
-msh.M = 2;
+msh.M = 1;
 misc.applyLoad = 'planeWave';
-rt.N = 4; % 6
-
+msh.degree = 2;
+msh.parm = 1;
+rt.N = 6; % 6
+msh.x_0 = -[varCol{1}.L/2+(varCol{1}.R2-varCol{1}.R1)/2,0,0]; 
+% rt.N = 1; % 6
+warning('off','RT:limitations')
 loopParameters = {'msh.parm','msh.M','misc.method','rt.N'};
 % collectIntoTasks
+
+msh.x_0 = [0,0,0];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PML simulation
@@ -147,18 +154,18 @@ para.plotTimeOscillation     = 0;
 para.plotFullDomain          = 0;
 para.plotSubsets             = {'Gamma','Gamma_a','xy','xz'}; % Plot subsets (i.e. the artificial boundary Gamma_a) in paraview
 
-loopParameters = {'misc.formulation','msh.M','misc.method','misc.omega'};
-collectIntoTasks
+loopParameters = {'misc.formulation','msh.degree','msh.M','misc.method','misc.omega'};
+% collectIntoTasks
 
 
 function addCommands_(i_study)
 if i_study == 1
-    if false
+    if 1
         T = readtable('miscellaneous/refSolutions/M3_BEM_IGA_CBM_M7_f1000_N10_TSVSalpha.txt', ...
                         'FileType','text','CommentStyle','%');
         x = T.alpha;
         y = T.TS;
-        polarplot(x*pi/180,y,'DisplayName','Reference solution f = 1000Hz')
+        plot(x,y,'DisplayName','Reference solution f = 1000Hz')
     else
         T = readtable('miscellaneous/refSolutions/M3_SHBC_BI_alpha240.txt', ...
                         'FileType','text','headerLines',6);

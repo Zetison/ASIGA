@@ -7,7 +7,7 @@ function studyName = availableStudies()
 % studyName = 'M3'; %getTask_M3
 % studyName = 'M4'; %getTask_M4
 % studyName = 'M5'; %getTask_M5
-% studyName = 'M31'; %getTask_M31
+studyName = 'M31'; %getTask_M31
 % studyName = 'PH'; %getTask_PH
 % studyName = 'Barrel'; %getTask_Barrel
 % studyName = 'S15'; %getTask_S15
@@ -63,7 +63,7 @@ function studyName = availableStudies()
 % studyName = 'articleIGA_MockShell_P_convergence'; %getTask_articleIGA_MockShell_P_convergence
 % studyName = 'BC'; %getTask_BC
 
-%% Venas2020asi
+%% Venas2019asi
 % studyName = 'PhD_S1'; %getTask_PhD_S1
 % studyName = 'PhD_S1_IENSG'; %getTask_PhD_S1_IENSG
 % studyName = 'PhD_Spectral'; %getTask_PhD_Spectral
@@ -71,6 +71,7 @@ function studyName = availableStudies()
 % studyName = 'PhD_S1_Sweep'; %getTask_PhD_S1_Sweep
 % studyName = 'PhD_Shirron'; %getTask_PhD_Shirron
 % studyName = 'PhD_M1'; %getTask_PhD_M1
+% studyName = 'PhD_M3'; %getTask_PhD_M3
 
 %% Other studies
 % studyName = 'MA8501'; %getTask_MA8501
@@ -78,13 +79,11 @@ function studyName = availableStudies()
 % studyName = 'articleKirchhoff_M4_para'; %getTask_articleKirchhoff_M4_para
 % studyName = 'Fillinger'; %getTask_Fillinger
 
-% studyName = 'PhD_M3'; %getTask_PhD_M3
 % studyName = 'test2'; %getTask_test2
 % studyName = 'Simpson'; %getTask_Simpson
 % studyName = 'Simpson_sweep'; %getTask_Simpson_sweep
 % studyName = 'BeTSSi_IIb'; %getTask_BeTSSi_IIb
 % studyName = 'M5'; %getTask_M5
-% studyName = 'M4'; %getTask_M4
 % studyName = 'M3_sweep'; %getTask_M3_sweep
 % studyName = 'KarlThomas'; %getTask_KarlThomas
 % studyName = 'MockShell'; %getTask_MockShell
@@ -118,9 +117,13 @@ function studyName = availableStudies()
 % studyName = 'FEBE_IL'; %getTask_FEBE_IL
 
 %% Regression tests
-% studyName = 'Venas2018iao_Figure6'; %getTask_Venas2018iao_Figure6
-% studyName = 'Venas2020asi_Figure21'; %getTask_Venas2020asi_Figure21
-studyName = 'Venas2018iao_Table2'; % getTask_Venas2018iao_Table2
+% studyName = 'Venas2018iao_Figure6'; % getTask_Venas2018iao_Figure6        % Test CCBIE BEM (Simpson case)
+% studyName = 'Venas2020asi_Figure21'; % getTask_Venas2020asi_Figure21      % Test MFS
+% studyName = 'Venas2018iao_Table2'; % getTask_Venas2018iao_Table2        % Test FEM implementations and ASI implementation
+% studyName = 'Venas2020asi_Figure7'; % getTask_Venas2020asi_Figure7      % Test SEM implementation
+% studyName = 'Venas2019asi_Figure4'; % getTask_Venas2019asi_Figure4      % Test KDT implementation
+% studyName = 'Venas2019asi_FigureB10B11B12'; % getTask_Venas2019asi_FigureB10B11B12      % Test RT implementation
+% studyName = 'Venas2019asi_FigureA2A3'; % getTask_Venas2019asi_FigureA2A3      % Test IENSG implementation
 
 
 

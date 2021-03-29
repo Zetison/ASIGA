@@ -7,10 +7,11 @@ R1 = varCol{1}.R1;
 R2 = varCol{1}.R2;
 t = varCol{1}.t;
 L = varCol{1}.L;
-task.iem.x_0 = [0, 0, 0]; % The center of the model
+x_0 = -[L/2+(R2-R1)/2,0,0];
+task.iem.x_0 = x_0; % The center of the model
 if varCol{1}.boundaryMethod
 
-    solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', 2);
+    solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', 2,'x_0',x_0);
     solid = makeUniformNURBSDegree(solid,degree);
     Imap{1} = [R2*pi/2,R1*pi/2,(R2-t)*pi/2,(R1-t)*pi/2];
     solid = refineNURBSevenly(solid,(2^(M-1)-1)/(R2*pi/2),Imap);
@@ -24,7 +25,7 @@ if varCol{1}.boundaryMethod
         t2 = varCol{3}.t;
         L2 = varCol{3}.L;
         
-        fluid_i_inner = getBeTSSiM1Data('R', R, 'L', L2, 't', t2);
+        fluid_i_inner = getBeTSSiM1Data('R', R, 'L', L2, 't', t2, 'x_0',-[(L2-R)/2, -R/2, 0]);
         fluid_i_inner = translateNURBS(fluid_i_inner,[-(L-L2),0,0]);
         fluid_i_inner = makeUniformNURBSDegree(fluid_i_inner,degree);
         Imap{1} = [R*pi/2 4.242171326235288];

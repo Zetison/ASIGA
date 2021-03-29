@@ -182,7 +182,7 @@ for i = 1:noDomains
             normalizationH1s = normalizationH1s + sum(dp2.*factors{i});
             k = task.misc.omega/task.varCol{i}.c_f;
 
-            EnergyError = EnergyError + 1/(task.varCol{i}.rho*omega^2)*sum((dp_e2 + k*p_e2).*factors{i});
+            EnergyError = EnergyError + 1/(task.varCol{i}.rho*omega^2)*sum((dp_e2 + k^2*p_e2).*factors{i});
             normalizationEnergy = normalizationEnergy + 1/(task.varCol{i}.rho*omega^2)*sum((dp2 + k^2*p2).*factors{i});
 
             L2Error = L2Error + sum(p_e2.*factors{i});

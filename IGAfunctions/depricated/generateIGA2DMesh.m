@@ -1,5 +1,5 @@
 function [element, index, noElems] = generateIGA2DMesh(Xi, Eta, p, q, n, m)
-error('Depricated. Use generateIGAmesh instead')
+% warning('This function is depricated. Use generateIGAmesh instead')
 
 uniqueXiKnots   = unique(Xi);
 uniqueEtaKnots   = unique(Eta);

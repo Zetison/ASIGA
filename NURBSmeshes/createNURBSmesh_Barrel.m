@@ -4,7 +4,7 @@ M = task.msh.M;
 degree = task.msh.degree;
 
 x_0 = [0, 0, 0];
-switch varCol{1}.method
+switch task.misc.method
     case {'IE','IENSG','ABC'}
         task.iem.x_0 = x_0; % The center of the model
         task.iem.A_2 = [0 1 0;
@@ -12,11 +12,16 @@ switch varCol{1}.method
                       1 0 0];
         varCol{1}.alignWithAxis = alignWithAxis;
 end
-Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+
+if isfield(varCol{1},'Xi')
+    Xi = varCol{1}.Xi;
+else
+    Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+end
 R = varCol{1}.R;
 t = varCol{1}.t;
 L = varCol{1}.L;
-parm = varCol{1}.parm;
+parm = task.msh.parm;
 if varCol{1}.boundaryMethod
     c_z = L/2; % 30
     c_xy = R; % 12

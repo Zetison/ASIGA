@@ -1,7 +1,7 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(varCol)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(task)
 
 %% Preallocation and initiallizations
-patches = varCol.patches;
+patches = task.varCol{1}.patches;
 nurbs = patches{1}.nurbs;
 
 Nxi = nurbs.number(1);
@@ -10,11 +10,11 @@ Nzeta = nurbs.number(3);
 nxi = Nxi+5;
 neta = Neta+5;
 nzeta = Nzeta+5;
-U = varCol{1}.U;
+U = task.varCol{1}.U;
 
 noComponents = 1;
 noComponentsDeriv = 3;
-noPatches = varCol.noPatches;
+noPatches = task.varCol{1}.noPatches;
 factors = zeros(nxi*neta*nzeta,noPatches);
 nodes = zeros(nxi*neta*nzeta,noPatches,3);
 u_hs = complex(zeros(nxi*neta*nzeta,1,noPatches));
@@ -85,11 +85,11 @@ nodes = reshape(nodes,nxi*neta*nzeta*noPatches,3);
 u_hs = reshape(u_hs,nxi*neta*nzeta*noPatches,1);
 du_hs = reshape(du_hs,nxi*neta*nzeta*noPatches,3);
 
-analyticFunctions = varCol.analyticFunctions({nodes});
+analyticFunctions = task.analyticFunctions({nodes});
 
-rho_f = varCol.rho;
-omega = varCol.omega;
-c_f = varCol.c_f;
+rho_f = task.varCol{1}.rho;
+omega = task.misc.omega;
+c_f = task.varCol{1}.c_f;
 k = omega./c_f;
 
 H1Error = 0;

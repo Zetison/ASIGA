@@ -77,20 +77,23 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
         switch task.misc.method
             case {'IE','ABC','IENSG','PML'}
                 task.varCol{1}.timeBuildSystem = 0;
-                if strcmp(task.misc.coreMethod,'SEM')
-                    task.varCol{1} = buildSEMMatrices(task.varCol{1});
-                else
-                    for i_domain = 1:task.noDomains
-                        if ~(strcmp(task.misc.method,'IENSG') && i_domain == 1)
-                            tic          
-                            if printLog
-                                fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i_domain) ' ... '])
-                            end
+                for i_domain = 1:task.noDomains
+                    if ~(strcmp(task.misc.method,'IENSG') && i_domain == 1)
+                        tic          
+                        if printLog
+                            fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i_domain) ' ... '])
+                        end
+                        if strcmp(task.misc.coreMethod,'SEM')  
+                            if task.noDomains > 1
+                                error('Not implemented')
+                            end  
+                            task = buildSEMMatrices(task);
+                        else  
                             task = buildMatrices(task,i_domain);
-                            task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
-                            if printLog
-                                fprintf('using %12f seconds.', toc)
-                            end
+                        end
+                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                        if printLog
+                            fprintf('using %12f seconds.', toc)
                         end
                     end
                 end
@@ -136,35 +139,34 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                             fprintf('using %12f seconds.', toc)
                         end
                     end  
-                end
+                    % Apply coupling conditions  
+                    if task.noDomains > 1 
+                        tic
+                        if printLog
+                            fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
+                        end  
+                        for i_domain = 2:task.noDomains
+                            task = applyCouplingConditionPatches(task,i_domain);
+                        end
+                        if printLog
+                            fprintf('using %12f seconds.', toc)
+                        end
+                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                    end  
 
-                % Apply coupling conditions  
-                if task.noDomains > 1 
+                    % Apply Neumann conditions
                     tic
                     if printLog
-                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
-                    end  
-                    for i_domain = 2:task.noDomains
-                        task = applyCouplingConditionPatches(task,i_domain);
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building RHS vector ... ')
+                    end
+                    for i_domain = 1:min(task.noDomains,2)
+                        task = applyNeumannCondition(task,i_domain);
                     end
                     if printLog
                         fprintf('using %12f seconds.', toc)
                     end
                     task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
-                end  
-
-                % Apply Neumann conditions
-                tic
-                if printLog
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building RHS vector ... ')
                 end
-                for i_domain = 1:min(task.noDomains,2)
-                    task = applyNeumannCondition(task,i_domain);
-                end
-                if printLog
-                    fprintf('using %12f seconds.', toc)
-                end
-                task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
             case 'BEM'
                 tic
                 if printLog
@@ -362,12 +364,16 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 end
                 task.varCol{1}.timeSolveSystem = toc;
                 if task.misc.computeCondNumber && (size(A,1) == size(A,2))
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating condition number ... ')
+                    if printLog
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating condition number ... ')
+                    end
                     rng('default') % for reproducibility in condest
                     condNumber = condest(A);
         %             condNumber = cond(full(A))
-                    fprintf('using %12f seconds.', toc)
-                    fprintf('\nCondition number = %d', condNumber)
+                    if printLog
+                        fprintf('using %12f seconds.', toc)
+                        fprintf('\nCondition number = %d', condNumber)
+                    end
                 else
                     condNumber = NaN;
                 end

@@ -1,20 +1,20 @@
-function [BB,element,elementInf,zeta1Nodes,zeta0Nodes] = addInfElements3_SEM(varCol)
+function [BB,element,elementInf,zeta1Nodes,zeta0Nodes] = addInfElements3_SEM(task)
 
-patches = varCol.patches;
-knotVecs = varCol.knotVecs;
-noPatches = varCol.noPatches;
+patches = task.varCol{1}.patches;
+knotVecs = task.varCol{1}.knotVecs;
+noPatches = task.varCol{1}.noPatches;
 
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
+p_xi = task.varCol{1}.degree(1); % assume p_xi is equal in all patches
+p_eta = task.varCol{1}.degree(2); % assume p_eta is equal in all patches
 n_en = (p_xi+1)*(p_eta+1);
 
-gluedNodes = varCol.gluedNodes;
-N = varCol.N;
-formulation = varCol.formulation;
+gluedNodes = task.varCol{1}.gluedNodes;
+N = task.iem.N;
+formulation = task.misc.formulation;
 
-k = varCol.k;
-Upsilon = varCol.Upsilon;
-r_a = varCol.r_a;
+k = task.misc.omega/task.varCol{1}.c_f;
+Upsilon = task.iem.Upsilon;
+r_a = task.misc.r_a;
 
 
 noParams = 2;

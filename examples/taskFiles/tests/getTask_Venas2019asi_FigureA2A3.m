@@ -1,6 +1,10 @@
-function studies = getTask_M1()
+function studies = getTask_Venas2019asi_FigureA2A3(M_0)
 % This study is based on Figure A.2 and Figure A.3 in Venas2019asi
 % Venas2019asi is available at http://hdl.handle.net/11250/2640443
+
+if nargin < 1
+    M_0 = 4; 
+end
 
 counter = 1;
 studies = cell(0,1);
@@ -22,7 +26,7 @@ f = 1e2;             % Frequency
 misc.omega = 2*pi*f;
 
 msh.M = 4:5;
-msh.M = 3;
+msh.M = M_0;
 msh.degree = 2;
 ffp.beta = 0;
 ffp.alpha = (0:0.5:360)*pi/180;
@@ -43,8 +47,8 @@ para.plotResultsInParaview = false;
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
-postPlot(1).plotResults  	= true;
-postPlot(1).printResults 	= true;
+postPlot(1).plotResults  	= 0;
+postPlot(1).printResults 	= 0;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
@@ -61,7 +65,7 @@ misc.method = {'IENSG'};
 misc.formulation = {'BGU'};
 iem.N = [3,5];
 loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation','iem.N'};
-% collectIntoTasks
+collectIntoTasks
 
 misc.method = {'KDT'};
 misc.formulation = {'MS1'};

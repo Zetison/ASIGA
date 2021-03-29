@@ -25,9 +25,12 @@ if parm == 2
 else
     Xi = options.Xi;
 end
-nurbsDisk = getDiskData('Xi',Xi,'R',R,'parm',parm);
-nurbsTop = translateNURBS(nurbsDisk,[0,0,L]);
+nurbsDisk = permuteNURBS(getDiskData('Xi',Xi,'R',R,'parm',parm),[2,1]);
+nurbsTop = flipNURBSparametrization(translateNURBS(nurbsDisk,[0,0,L]),2);
 nurbsCyl = getCylinderData('Xi',Xi,'R',R,'parm',1,'L',L,'d_p',2);
+if parm == 2
+    nurbsCyl = explodeNURBS(nurbsCyl);
+end
 nurbs = [nurbsDisk,nurbsCyl,nurbsTop];
 nurbs = [translateNURBS(nurbs,[l/2,0,0]),...
          translateNURBS(nurbs,[-l/2,0,0])];

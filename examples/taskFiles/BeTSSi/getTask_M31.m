@@ -9,32 +9,33 @@ misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scat
 misc.model = 'M31';
 
 misc.method = {'BEM'};
-formulation = {'GCBIE'};
+misc.formulation = {'GCBIE'};
 
 varCol = setM31Parameters(3);
 varCol{1}.meshFile = 'createNURBSmesh_M31';
 f = 1e2;             % Frequency
+misc.omega = 2*pi*f;
 
-M = 3:4;
-% M = 1;
-degree = 4;
-alpha = (0:0.5:360)*pi/180;
-beta = 0;
-alpha_s = 240*pi/180;
-beta_s = 0;
-solveForPtot = true;
+msh.M = 3:4;
+% msh.M = 1;
+msh.degree = 4;
+ffp.alpha = (0:0.5:360)*pi/180;
+ffp.beta = 0;
+ffp.alpha_s = 240*pi/180;
+ffp.beta_s = 0;
+misc.solveForPtot = true;
 
 warning('off','NURBS:weights')
-loopParameters = {'M','parm','f','misc.method','formulation'};
+loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation'};
 
 prePlot.plot3Dgeometry = 1;
 % prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
-prePlot.axis = 'on';
+% prePlot.axis = 'on';
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-prePlot.abortAfterPlotting  = 0;                % Abort simulation after pre plotting
+prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
@@ -43,7 +44,7 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'misc.method','parm','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','msh.parm','misc.formulation','.msh.M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;

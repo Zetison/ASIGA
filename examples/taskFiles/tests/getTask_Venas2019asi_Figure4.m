@@ -1,4 +1,4 @@
-function studies = getTask_M4(M_0)
+function studies = getTask_Venas2019asi_Figure4(M_0)
 % This study is based on Figure 4 page 272 in Venas2019asi
 % Venas2019asi is available at http://hdl.handle.net/11250/2640443
 
@@ -24,7 +24,7 @@ msh.meshFile = 'createNURBSmesh_M4';
 % f = 3e3;             % Frequency
 f = 10e3;             % Frequency
 misc.omega = 2*pi*f;
-msh.M = 5:M_0;
+msh.M = M_0;
 % msh.M = 1;
 msh.parm = [2,1];
 msh.parm = 2;
@@ -46,7 +46,7 @@ para.plotResultsInParaview = false;
 
 postPlot(1).xname       	= 'alpha';
 postPlot(1).yname        	= 'TS';
-postPlot(1).plotResults  	= true;
+postPlot(1).plotResults  	= 0;
 postPlot(1).printResults 	= 0;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';

@@ -60,7 +60,7 @@ if strcmp(task.misc.scatteringCase,'MS') && (~isnan(task.ffp.alpha_s(1)) || ~isn
     error(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
            'Note that alpha_s = alpha and beta_s = beta.'])
 end
-if (isnan(task.ffp.alpha_s(1)) || isnan(task.ffp.beta_s(1))) && strcmp(task.misc.scatteringCase,'BI') && strcmp(task.misc.applyLoad,'planeWave')
+if (isnan(task.ffp.alpha_s(1)) || isnan(task.ffp.beta_s(1))) && ~strcmp(task.misc.scatteringCase,'MS') && strcmp(task.misc.applyLoad,'planeWave')
     error('Incident direction is not set: alpha_s = NaN and/or beta_s = NaN')
 end
 if task.misc.solveForPtot && ~(strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'BA'))

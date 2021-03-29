@@ -49,7 +49,7 @@ else
             fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating error ... ')
         end
         if strcmp(task.misc.coreMethod,'SEM')
-            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(task,1);
+            [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(task);
         else
             [L2Error, H1Error, H1sError, energyError] = calcErrorVec(task);
         end

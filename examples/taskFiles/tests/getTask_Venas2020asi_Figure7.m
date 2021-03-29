@@ -1,4 +1,4 @@
-function studies = getTask_MA8501(M_0)
+function studies = getTask_Venas2020asi_Figure7(M_0)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This study is based on Venas2020asi (Figure 7, page 316)
 % Venas2020asi is available at http://hdl.handle.net/11250/2640443
@@ -10,7 +10,7 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 if nargin < 1
-    M_0 = 7; % 19
+    M_0 = 3; % 16
 end
 
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
@@ -29,7 +29,7 @@ misc.omega = 2*pi*f;
 varCol = setS1Parameters('double',1);
 msh.meshFile = 'createNURBSmesh_EL';
 
-M = M_0; %3:6
+M = M_0-1; %3:6
 iem.N = 3;
 misc.N_max = iem.N-1;
 ffp.alpha_s = 240*pi/180;
@@ -43,8 +43,8 @@ misc.clearGlobalMatrices = false;
 
 postPlot(1).xname        	= 'dofsAlg';
 postPlot(1).yname        	= 'energyError';
-postPlot(1).plotResults  	= true;
-postPlot(1).printResults 	= 1;
+postPlot(1).plotResults  	= 0;
+postPlot(1).printResults 	= 0;
 postPlot(1).axisType      	= 'loglog';
 postPlot(1).lineStyle    	= '*-';
 postPlot(1).xScale       	= 1;
@@ -71,7 +71,7 @@ postPlot(5).xname = 'timeBuildSystem';
 
 ffp.calculateFarFieldPattern = 0;
 prePlot.plot3Dgeometry = 0;
-msh.degree = 4:M_0;
+msh.degree = 4:(4+M_0-1);
 msh.parm = 2;
 
 loopParameters = {'msh.degree','iem.N','misc.coreMethod','misc.omega'};

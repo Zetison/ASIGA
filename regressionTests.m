@@ -1,11 +1,14 @@
 
 
-
-M_0 = 1; % Most test are only availabel for M_0 = 1
-Eps = eps;
+% Most test are only availabel for M_0 = 1 and M_0 = 2
+M_0 = 2;
+% M_0 = 2;
+Eps = 1e-10;
 testFolder = 'examples/taskFiles/tests/';
-studyName = {'Venas2018iao_Figure6','Venas2020asi_Figure21','Venas2018iao_Table2'};
-stringShift = 55;
+studyName = {'Venas2018iao_Figure6','Venas2020asi_Figure21','Venas2018iao_Table2','Venas2020asi_Figure7','Venas2019asi_Figure4','Venas2019asi_FigureB10B11B12',...
+             'Venas2019asi_FigureA2A3'};
+studyName = {'Venas2019asi_FigureA2A3'};
+stringShift = 60;
 noFailedTests = 0;
 for i = 1:numel(studyName)
     fprintf(['\n%-' num2str(stringShift) 's'], ['Running test ''' studyName{i} ''' (M_0 = ' num2str(M_0) ') ...'])
@@ -19,7 +22,7 @@ for i = 1:numel(studyName)
                 results = studiesCol{1}(i_study).tasks(i_task).task.results;
                 results_ref = studiesCol_ref{1}(i_study).tasks(i_task).task.results;
                 fieldNames = fieldnames(results_ref);
-                for field = fieldNames
+                for field = fieldNames.'
                     entry = results.(field{1});
                     entry_ref = results_ref.(field{1});
                     if any(isnan(entry_ref(:)))
@@ -35,9 +38,10 @@ for i = 1:numel(studyName)
             fprintf('test failed due to incorrect results!\n')
             noFailedTests = noFailedTests + 1;
         else
-            fprintf('with success!')
+            fprintf('successfully!')
         end
-    catch
+    catch ME
+%         rethrow(ME)
         fprintf('Test failed due to runtime error!\n')
         noFailedTests = noFailedTests + 1;
     end
@@ -48,9 +52,13 @@ fprintf(['\n\nNumber of failed tests: ' num2str(noFailedTests) '\n'])
 return
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Create and store tests
-% studyName = 'Venas2018iao_Figure6'; % getTask_Venas2018iao_Figure6
-studyName = 'Venas2020asi_Figure21'; % getTask_Venas2020asi_Figure21
-studyName = 'Venas2018iao_Table2'; % getTask_Venas2018iao_Table2
+% studyName = 'Venas2018iao_Figure6'; % getTask_Venas2018iao_Figure6        % Test CCBIE BEM (Simpson case)
+% studyName = 'Venas2020asi_Figure21'; % getTask_Venas2020asi_Figure21      % Test MFS
+% studyName = 'Venas2018iao_Table2'; % getTask_Venas2018iao_Table2        % Test FEM implementations and ASI implementation
+% studyName = 'Venas2020asi_Figure7'; % getTask_Venas2020asi_Figure7      % Test SEM implementation
+% studyName = 'Venas2019asi_Figure4'; % getTask_Venas2019asi_Figure4      % Test KDT implementation
+% studyName = 'Venas2019asi_FigureB10B11B12'; % getTask_Venas2019asi_FigureB10B11B12      % Test RT implementation
+studyName = 'Venas2019asi_FigureA2A3'; % getTask_Venas2019asi_FigureA2A3      % Test IENSG implementation
 
 studiesColFull = main(studyName,true,M_0);
 studiesCol = cell(1);

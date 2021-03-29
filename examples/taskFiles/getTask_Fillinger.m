@@ -1,3 +1,11 @@
+function studies = getTask_Fillinger()
+% This study is based on Figure 14 page 292 in Venas2019asi
+% Venas2019asi is available at http://hdl.handle.net/11250/2640443
+
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
+
 misc.scatteringCase = 'Sweep';
 
 misc.model = 'S1';  % Spherical shell
@@ -6,11 +14,12 @@ misc.model = 'S1';  % Spherical shell
 misc.coreMethod = {'IGA'};
 misc.method = {'BEM'};
 if strcmp(misc.method, 'BEM')
-    formulation = {'CCBIE', 'CBM', 'CHBIE'};
+    misc.formulation = {'CCBIE', 'CBM', 'CHBIE'};
 end
 
+varCol = setS1Parameters('double',1);
+msh.meshFile = 'createNURBSmesh_EL';
 
-f = linspace(0.05,2e3,50);             % Wave number for outer fluid domain
 % Eigenfrequencies from Zheng2015itb (note that they are multiplied by two, to
 % compensate for the half size of the sphere)
 eigenValues = [3.141592653589794 % pi
@@ -24,17 +33,29 @@ eigenValues = [3.141592653589794 % pi
                    8.182561452571243
                    9.355812111042747]';
 
+prePlot.plot3Dgeometry = 0;
+prePlot.abortAfterPlotting = 1;       % Abort simulation after pre plotting
 k = 10.^linspace(-1,4,1000); % 10.^linspace(-1,2,1000)
+% k = 10.^linspace(1,2,20); % 10.^linspace(-1,2,1000)
 % k = sort([eigenValues, k]);
 % eigenValues = eigenValues*1500/(2*pi);
 c_f = 1500;
-f = k*c_f/(2*pi);
+misc.omega = k*c_f;
 
-alpha = 0;
-beta = pi;   
+ffp.alpha_s = 0;
+ffp.beta_s = pi/2;   
+ffp.alpha = ffp.alpha_s;
+ffp.beta = ffp.beta_s;  
 
-M = 1:3;
+msh.M = 1:3;
 err.calculateSurfaceError = 1;
+
+postPlot(1).xname        	= 'k';
+postPlot(1).yname        	= 'TS';
+postPlot(1).plotResults  	= 1;
+postPlot(1).printResults 	= false;
+postPlot(1).axisType      	= 'semilogx';
+postPlot(1).lineStyle    	= '-';
 
 % collectIntoTasks
 
@@ -42,53 +63,43 @@ err.calculateSurfaceError = 1;
 %% MFS simulation
 misc.method = {'MFS'};
 misc.coreMethod = 'IGA';
-formulation = '';
-M = 5;
-degree = 2;
+misc.formulation = 'PS';
+msh.M = 5;
+msh.degree = 2;
 err.calculateSurfaceError = 0;
-computeCondNumber = false;
-loopParameters = {'f','M','misc.method'};
+loopParameters = {'misc.omega','msh.M','misc.method'};
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
 misc.method = {'KDT'};
-formulation = '';
-prePlot.plot3Dgeometry = 0;
-degree = 4;
+misc.formulation = 'MS1';
+msh.degree = 4;
 err.calculateSurfaceError = 0;
-computeCondNumber = false;
-loopParameters = {'misc.method','M','parm','misc.coreMethod'};
+loopParameters = {'misc.method','msh.M','msh.parm','misc.coreMethod'};
 misc.coreMethod = {'linear_FEM'};
 % misc.coreMethod = {'IGA'};
-M = [6,8,10];
-M = 10;
-parm = 2;
-% k = 10.^linspace(-1,4,1000);
-k = 1000;
-c_f = 1500;
-f = k*c_f/(2*pi);
+msh.M = [6,8,10];
+msh.M = 6;
+msh.parm = 2;
 collectIntoTasks
 
 
-% misc.coreMethod = {'IGA'};
-% % M = 3;
+misc.coreMethod = {'IGA'};
+msh.M = 6;
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
 misc.method = {'RT'};
-formulation = '';
-M = 3;
-prePlot.plot3Dgeometry = 0;
-degree = 2;
+misc.formulation = '';
+msh.M = 3;
+msh.degree = 2;
 err.calculateSurfaceError = 0;
-computeCondNumber = false;
-plotFarField = 1;
+misc.plotFarField = 1;
 misc.applyLoad = 'planeWave';
-N = 3:6;
-r = 1;
-parm = 1;
+rt.N = 3:6;
+msh.parm = 1;
 
-loopParameters = {'misc.method','M','parm','N','misc.coreMethod'};
+loopParameters = {'misc.method','msh.M','msh.parm','rt.N','misc.coreMethod'};
 % collectIntoTasks

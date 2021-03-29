@@ -265,6 +265,7 @@ if nargin > 2 && ~any(isnan(n(:)))
     if ~isfield(varCol{1},'dp_inc')
         if varCol{1}.splitExteriorFields
             varCol{1}.dp_inc = varCol{1}.dp_incdx.*n(:,1)+varCol{1}.dp_incdy.*n(:,2)+varCol{1}.dp_incdz.*n(:,3);
+%             varCol{1}.dp_inc = -varCol{1}.dpdn;
         else
             varCol{1}.dp_inc = -varCol{1}.dpdn;
         end

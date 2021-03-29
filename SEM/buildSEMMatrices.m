@@ -1,24 +1,23 @@
-function [A_fluid_o, FF, dofsToRemove] = buildSEMMatrices(varCol)
-patches = varCol.patches;
-noPatches = varCol.noPatches;
+function task = buildSEMMatrices(task)
+patches = task.varCol{1}.patches;
+noPatches = task.varCol{1}.noPatches;
 Nxi = patches{1}.nurbs.number(1);
 Neta = patches{1}.nurbs.number(2);
 Nzeta = patches{1}.nurbs.number(3);
 noDofsPatch = Nxi*Neta*Nzeta;
-element = varCol.element;
-% noDofs = varCol.noDofs;
-N = varCol.N;
-% formulation = varCol.formulation;
-Upsilon = varCol.Upsilon;
-D = varCol.D;
-Dt = varCol.Dt;
-A_2 = varCol.A_2;
-x_0 = varCol.x_0;
-r_a = varCol.r_a;
-noDofs = varCol.noDofs;
+element = task.varCol{1}.element;
+% noDofs = task.varCol{1}.noDofs;
+N = task.iem.N;
+% formulation = task.varCol{1}.formulation;
+Upsilon = task.iem.Upsilon;
+[D,Dt] = generateCoeffMatrix(task);
+A_2 = task.iem.A_2;
+x_0 = task.iem.x_0;
+r_a = task.misc.r_a;
+noDofs = task.varCol{1}.noDofs;
 noSurfDofs = noPatches*Nxi*Neta;
-no_angles = length(varCol.alpha_s);
-dp_dinc = varCol.dp_inc;
+no_angles = length(task.ffp.alpha_s);
+dp_dinc = task.dp_inc_;
 
 
 Dxi = derivativeMatrix(patches{1}.nurbs.GLL{1},Nxi); % assume Nxi to be the same for all patches
@@ -34,7 +33,7 @@ elseif Nzeta == Neta
 else
     Dzeta = derivativeMatrix(patches{1}.nurbs.GLL{3},Nzeta); % assume Nzeta to be the same for all patches
 end
-[BB,elementGamma,elementInf,zeta1Nodes,zeta0Nodes] = addInfElements3_SEM(varCol);
+[BB,elementGamma,elementInf,zeta1Nodes,zeta0Nodes] = addInfElements3_SEM(task);
 
 dofsInInfElements = noDofsPatch*N/Nzeta;
 
@@ -359,7 +358,7 @@ clear spIdxRow spIdxCol
 [spIdx,~,I] = unique(spIdx,'rows','stable');
 Kvalues = accumarray(I,Kvalues);
 noDofs_new = noDofs + noSurfDofs*(N-1);
-varCol.A_K = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kvalues,noDofs_new,noDofs_new,numel(Kvalues));
+task.varCol{1}.A_K = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kvalues,noDofs,noDofs,numel(Kvalues));
 clear Kvalues
 
 spIdxM = reshape(spIdxM,numel(spIdxM),1);
@@ -367,11 +366,11 @@ spIdx = [spIdxM, spIdxM];
 [spIdx,~,I] = unique(spIdx,'rows','stable');
 Mvalues = accumarray(I,Mvalues);
 
-varCol.A_M = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Mvalues,noDofs_new,noDofs_new,numel(Mvalues));
+task.varCol{1}.A_M = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Mvalues,noDofs,noDofs,numel(Mvalues));
 
-varCol.FF = zeros(noDofs_new,no_angles);        % external force vector
+task.varCol{1}.FF = zeros(noDofs,no_angles);        % external force vector
 for alpha_s_Nr = 1:no_angles
-    varCol.FF(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),Findices,noDofs_new);
+    task.varCol{1}.FF(:,alpha_s_Nr) = vectorAssembly(Fvalues(:,:,alpha_s_Nr),Findices,noDofs);
 end
 clear Fvalues
 
@@ -383,10 +382,11 @@ newDofsToRemove = setdiff((noDofs+1):noDofs_new,unique(spIdxRowInf));
 clear spIdxRowInf spIdxColInf
 [spIdx,~,I] = unique(spIdx,'rows','stable');
 Kinfvalues = accumarray(I,Kinfvalues);
-varCol.Ainf = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kinfvalues,noDofs_new,noDofs_new,numel(Kinfvalues));
-% [A_gamma_a, newDofsToRemove] = addInfElements3_testSEM(varCol);
+task.varCol{1}.Ainf = sparse(double(spIdx(:,1)),double(spIdx(:,2)),Kinfvalues,noDofs_new,noDofs_new,numel(Kinfvalues));
+% [A_gamma_a, newDofsToRemove] = addInfElements3_testSEM(task.varCol{1});
 
-varCol.dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));
+task.varCol{1}.dofsToRemove = sort(unique([task.varCol{1}.dofsToRemove newDofsToRemove]));
+task.varCol{1}.noDofs_new = noDofs_new;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function d = delta(i,j)
 

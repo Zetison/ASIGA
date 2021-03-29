@@ -1,6 +1,7 @@
 function nurbs = getBeTSSiM1Data(varargin)
 options = struct('R', 3,...
                  'L', 40,...
+                 'x_0', [0,0,0], ...
                  't', 0.02); 
 if nargin > 0
     if numel(varargin) > 1
@@ -23,3 +24,4 @@ nurbs(9:14) = loftNURBS({arc,arc2});
 nurbs(15:18) = translateNURBS(rotateNURBS(rotateNURBS(temp,'rotAxis',[0,0,1],'theta',pi/2),'rotAxis',[0,1,0],'theta',-pi/2),[-L,0,0]);
 
 nurbs = translateNURBS(nurbs,[(L-R)/2, -R/2, 0]);
+nurbs = translateNURBS(nurbs,options.x_0);

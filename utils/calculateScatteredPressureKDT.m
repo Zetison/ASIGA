@@ -29,13 +29,12 @@ centerPts = findCenterPoints(patches);
 p_inc = task.p_inc_;
 
 extraGP = task.misc.extraGP;
-% [~,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,'adaptive');
-[~,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:2),extraGPBEM,'adaptive2');
-[Q2D,W2D] = gaussTensorQuad(degree+1+extraGP(1:2));
+[Q,W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
-p_h = zeros(size(P_far,1),length(k));
+p_h = complex(zeros(max([size(P_far,1),numel(k)]),1));
 switch formulation
     case 'MS2'
+        error('Not implemented')
 %         for e_y = 1:noElems
 % %         parfor e = 1:noElems
 %             patch_y = pIndex(e_y); % New
@@ -97,26 +96,26 @@ switch formulation
         
     otherwise
         X = P_far./repmat(norm2(P_far),1,size(P_far,2));
-%         for e_y = 1:noElems
-        parfor e_y = 1:noElems
-            patch_y = pIndex(e_y);
-            knots_y = knotVecs{patch_y};
-            Xi_e_y = zeros(2,2);
+%         for e = 1:noElems
+        parfor e = 1:noElems
+            patch = pIndex(e);
+            knots = knotVecs{patch};
+            Xi_e = zeros(2,2);
             for ii = 1:2
-                Xi_e_y(ii,:) = elRange{ii}(index(e_y,ii),:);
+                Xi_e(ii,:) = elRange{ii}(index(e,ii),:);
             end
 
-            sctr = element(e_y,:);
+            sctr = element(e,:);
             pts = controlPts(sctr,:);
-            wgts = weights(element2(e_y,:),:);
+            wgts = weights(element2(e,:),:);
 
-            J_2_y = prod(Xi_e_y(:,2)-Xi_e_y(:,1))/2^2;
+            J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
 
-            xi = [parent2ParametricSpace(Xi_e_y, Q2D), zeros(size(Q2D,1),1)];
-            I = findKnotSpans(degree, xi(1,:), knots_y);
-            R = NURBSbasis(I, xi, degree, knots_y, wgts);
-            [J_1_y,crossProd] = getJacobian(R,pts,2);
-            normals = crossProd./repmat(J_1_y,1,3);
+            xi = parent2ParametricSpace(Xi_e, Q);
+            I = findKnotSpans(degree, xi(1,:), knots);
+            R = NURBSbasis(I, xi, degree, knots, wgts);
+            [J_1,crossProd] = getJacobian(R,pts,2);
+            normals = crossProd./repmat(J_1,1,3);
             Y = R{1}*pts; 
             p_h_gp = 2*p_inc(Y);
             p_h_gp(normals*d_vec > 0) = 0;
@@ -124,12 +123,12 @@ switch formulation
             if calculateFarFieldPattern
                 x_d_n = normals*X.';
                 x_d_y = Y*X.';
-                p_h = p_h + (1i*k*p_h_gp.*x_d_n.*exp(-1i*k*x_d_y)).'* (J_1_y * J_2_y .* W2D);  
+                p_h = p_h + (1i*k.*p_h_gp.*x_d_n.*exp(-1i*k.*x_d_y)).'* (J_1 * J_2 .* W);  
             else
                 xmy = reshape(P_far,[1,size(P_far,1),3]) - reshape(Y,[size(Y,1),1,3]);
                 r = norm2(xmy);
-                dPhidny =  Phi_k(r,k)./r.^2.*(1 - 1i*k*r).*sum(xmy.*repmat(reshape(ny,size(ny,1),1,3),1,size(P_far,1),1),3);
-                p_h = p_h + (p_h_gp.*dPhidny).'* (J_1_y * J_2_y .* W2D);  
+                dPhidny =  Phi_k(r,k)./r.^2.*(1 - 1i*k.*r).*sum(xmy.*repmat(reshape(ny,size(ny,1),1,3),1,size(P_far,1),1),3);
+                p_h = p_h + (p_h_gp.*dPhidny).'* (J_1 * J_2 .* W);  
             end
         end
 end

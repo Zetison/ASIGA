@@ -682,7 +682,7 @@ end
 function adaptiveQuad(recursionLevel)
 maxRecursionLevel = 20;
 if recursionLevel > maxRecursionLevel
-    warning('BEM:recursion',['Reached recursion level > ' num2str(maxRecursionLevel) ', inacurate integration may have occured (probably due to singular geometric points)'])
+    warning('BEM:recursion',['Reached recursion level > ' num2str(maxRecursionLevel) ', inacurate integration may have occured (probably due to singular geometric points or incompatible nurbs patches; please check your NURBS discretization)'])
 end
 l = norm(x-x_5);
 n_div = agpBEM*h/l + 1;

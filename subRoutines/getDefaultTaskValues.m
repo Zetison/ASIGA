@@ -29,14 +29,15 @@ misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as oppo
 misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are compatible across patch interfaces
 
 %% Mesh settings
-msh.M                   = 1;	 % Mesh number
-msh.initMeshFactXi      = 1;	 % initial number of knots in xi direction
-msh.initMeshFactEta 	= 1;	 % initial number of knots in eta direction
-msh.initMeshFactZeta    = 1;	 % initial number of knots in zeta direction
-msh.parm                = 1;     % Toggle different parameterizations of a geometric model
-msh.refineThetaOnly     = 0;     % For the ellipsoidal/spherical geometries, refine in the theta direction only
-msh.degree              = 2;     % NURBS polynomial degree
-msh.explodeNURBS        = false; % Create patches from all C^0 interfaces
+msh.M                   = 1;	   % Mesh number
+msh.initMeshFactXi      = 1;	   % initial number of knots in xi direction
+msh.initMeshFactEta 	= 1;	   % initial number of knots in eta direction
+msh.initMeshFactZeta    = 1;	   % initial number of knots in zeta direction
+msh.parm                = 1;       % Toggle different parameterizations of a geometric model
+msh.refineThetaOnly     = 0;       % For the ellipsoidal/spherical geometries, refine in the theta direction only
+msh.degree              = 2;       % NURBS polynomial degree
+msh.explodeNURBS        = false;   % Create patches from all C^0 interfaces
+msh.x_0                 = [0,0,0]; % Translate center of model
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plot2Dgeometry      = false;       % Plot cross section of mesh and geometry
@@ -101,10 +102,10 @@ postPlot(1).lineStyle    	= '*-';
 postPlot(1).xScale       	= 1;
 postPlot(1).yScale       	= 1;
 postPlot(1).xLoopName     	= NaN;
+postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).legendEntries 	= {};
 postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
-postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).addCommands   	= [];
 
 %% Settings for paraview
@@ -130,7 +131,7 @@ para.plotStressYZ            = false;
 para.plotStressXZ            = false;
 para.plotStressXY            = false;
 para.i_MS                    = 1;   % Visualize of UU(:,i_MS) in paraview
-    
+
 para.extraXiPts              = 'round(20/2^(M-1))';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
 para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element

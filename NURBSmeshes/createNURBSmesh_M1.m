@@ -10,7 +10,7 @@ L = varCol{1}.L;
 
 x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
-switch varCol{1}.method
+switch task.misc.method
     case {'IE','IENSG','MFS'}
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis

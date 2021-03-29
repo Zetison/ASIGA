@@ -13,7 +13,7 @@ Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
 task.iem.x_0 = x_0;
-switch varCol{1}.method
+switch task.misc.method
     case {'IE','IENSG','ABC'}
         task.iem.A_2 = [0 1 0;
                          0 0 1;
@@ -52,7 +52,7 @@ else
     c_xy = R_max + s*R_max;
 
     Upsilon = sqrt(c_z^2-c_xy^2);
-    varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
+    task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
 
     chimin = NaN;
     chimax = NaN;

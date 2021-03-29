@@ -395,15 +395,16 @@ if isempty(legendEntries)
 else
     for j = 1:length(legendEntries)
         temp2 = legendEntries{j};
-        if ~isfield(study.tasks(i).task,legendEntries{j})
-            continue
+        try
+            eval(['temp = study.tasks(i).task.' legendEntries{j} ';']);
+            if strcmp(temp,'NaN')
+                continue
+            end
+            [mathematicalLegend, legendEntriesMath, scale, postfix] = fixLegendEntry(legendEntries{j});
+            [saveName, legendName] = updateStrings(saveName, legendName, j, legendEntries, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2);
+        catch ME
+            error([legendEntries{j} ' is not a field of task'])
         end
-        temp = study.tasks(i).task.(legendEntries{j});
-        if strcmp(temp,'NaN')
-            continue
-        end
-        [mathematicalLegend, legendEntriesMath, scale, postfix] = fixLegendEntry(legendEntries{j});
-        [saveName, legendName] = updateStrings(saveName, legendName, j, legendEntries, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2);
     end
 end
 saveName = [saveName '_' yname 'VS' xname];
