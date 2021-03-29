@@ -9,11 +9,11 @@ getDefaultTaskValues
 misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 % misc.applyLoad = 'pointPulsation';
 
-misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 misc.model = 'M3';
-misc.BC = 'SHBC';
-% misc.BC = 'NBC';
+misc.BC = {'SHBC'};
+% misc.BC = {'NBC'};
 misc.method = {'IENSG'};
 misc.formulation = 'BGU';
 misc.checkNURBSweightsCompatibility = false;
@@ -62,7 +62,7 @@ postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
-postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
+%postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
 % postPlot(2)                 = postPlot(1);
 % postPlot(2).xname       	= 'nepw';
@@ -77,16 +77,16 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 % postPlot(2).xScale          = 1;
 % postPlot(2).addCommands   	= [];
 
-if strcmp(misc.scatteringCase,'MS')
+if strcmp(misc.scatteringCase{1},'MS')
     para.i_MS = find(abs(ffp.alpha - 240*pi/180) < 20*eps);
     postPlot(1).xlim            = [0,180];
     postPlot(1).ylim            = [-60,40];
 else
     postPlot(1).xlim            = [0,360];
     postPlot(1).ylim            = [-40,50];
-    ffp.beta_s = 0;
-    ffp.alpha_s = 240*pi/180;
 end
+ffp.beta_s = 0;
+ffp.alpha_s = 240*pi/180;
 
 % collectIntoTasks
 
@@ -110,8 +110,8 @@ msh.M = 5:6;
 msh.degree = 4:5;
 msh.parm = 2;
 % msh.M = 1;
-loopParameters = {'misc.formulation','msh.M','msh.degree','misc.method','misc.omega'};
-% collectIntoTasks
+loopParameters = {'misc.BC','misc.scatteringCase','misc.formulation','msh.M','msh.degree','misc.method','misc.omega'};
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
@@ -130,7 +130,7 @@ rt.N = 6; % 6
 msh.x_0 = -[varCol{1}.L/2+(varCol{1}.R2-varCol{1}.R1)/2,0,0]; 
 % rt.N = 1; % 6
 warning('off','RT:limitations')
-loopParameters = {'msh.parm','msh.M','misc.method','rt.N'};
+loopParameters = {'misc.BC','misc.scatteringCase','msh.parm','msh.M','misc.method','rt.N'};
 % collectIntoTasks
 
 msh.x_0 = [0,0,0];
@@ -140,6 +140,7 @@ msh.x_0 = [0,0,0];
 misc.method = {'PML'};
 misc.formulation = {'GSB'};
 msh.M = 4:6;
+msh.degree = 2;
 % msh.M = 5;
 msh.parm = 1;
 
@@ -154,9 +155,8 @@ para.plotTimeOscillation     = 0;
 para.plotFullDomain          = 0;
 para.plotSubsets             = {'Gamma','Gamma_a','xy','xz'}; % Plot subsets (i.e. the artificial boundary Gamma_a) in paraview
 
-loopParameters = {'misc.formulation','msh.degree','msh.M','misc.method','misc.omega'};
-% collectIntoTasks
-
+loopParameters = {'misc.BC','misc.scatteringCase','misc.formulation','msh.M','misc.method','misc.omega'};
+collectIntoTasks
 
 function addCommands_(i_study)
 if i_study == 1

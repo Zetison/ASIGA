@@ -57,8 +57,8 @@ end
 task.misc.storeFullVarCol = task.misc.storeFullVarCol || task.rom.useROM;
 
 if strcmp(task.misc.scatteringCase,'MS') && (~isnan(task.ffp.alpha_s(1)) || ~isnan(task.ffp.beta_s(1)))
-    error(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
-           'Note that alpha_s = alpha and beta_s = beta.'])
+    warning(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
+           'The given variables will be overwritten as alpha_s = alpha and beta_s = beta.'])
 end
 if (isnan(task.ffp.alpha_s(1)) || isnan(task.ffp.beta_s(1))) && ~strcmp(task.misc.scatteringCase,'MS') && strcmp(task.misc.applyLoad,'planeWave')
     error('Incident direction is not set: alpha_s = NaN and/or beta_s = NaN')
