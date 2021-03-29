@@ -19,7 +19,7 @@ for i = 1:length(loopParameters)
     temp = erase(temp,':');
     temp = erase(temp,' ');
     switch temp2
-        case {'formulation','IEbasis','method','coreMethod','BC'}
+        case {'scatteringCase','formulation','IEbasis','method','coreMethod','BC'}
             saveName = [saveName '_' temp];
         otherwise
             saveName = [saveName '_' temp2 temp];
