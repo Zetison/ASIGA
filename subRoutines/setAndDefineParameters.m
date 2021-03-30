@@ -1,6 +1,6 @@
 function task = setAndDefineParameters(task)
 switch task.misc.model
-    case {'SS', 'PS', 'S1', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL', 'FreeCADsphere','Shirron2005afe'}
+    case {'SS', 'PS', 'S1', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL', 'FreeCADsphere','Shirron2006afe'}
         analyticSolutionExist = true;
         isSphericalShell = true;
     case {'Safjan2002tdi'}

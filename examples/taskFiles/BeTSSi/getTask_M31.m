@@ -12,12 +12,13 @@ misc.method = {'BEM'};
 misc.formulation = {'GCBIE'};
 
 varCol = setM31Parameters(3);
-varCol{1}.meshFile = 'createNURBSmesh_M31';
+msh.meshFile = 'createNURBSmesh_M31';
+varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-1)/8-1, 2^(M-1)/4-1];
 f = 1e2;             % Frequency
 misc.omega = 2*pi*f;
 
 msh.M = 3:4;
-% msh.M = 1;
+msh.M = 2;
 msh.degree = 4;
 ffp.alpha = (0:0.5:360)*pi/180;
 ffp.beta = 0;
@@ -26,9 +27,10 @@ ffp.beta_s = 0;
 misc.solveForPtot = true;
 
 warning('off','NURBS:weights')
-loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation'};
+loopParameters = {'msh.M','misc.omega','misc.method','misc.formulation'};
 
 prePlot.plot3Dgeometry = 1;
+prePlot.plotGeometryInfo    = 0;        % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 % prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
 % prePlot.axis = 'on';
@@ -49,6 +51,17 @@ postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 
+% collectIntoTasks
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PML simulation
+misc.solveForPtot = false;
+misc.method = {'PML'};
+misc.formulation = {'GSB'};
+msh.degree = 2;
+msh.parm = 1;
+
+pml.t = 0.25*varCol{1}.R2;         % thickness of PML
+misc.r_a = 1.25*varCol{1}.R2;         % thickness of PML
 collectIntoTasks
-
-

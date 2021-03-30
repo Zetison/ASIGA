@@ -102,8 +102,10 @@ for i = 1:numel(applyLoads)
 
         varCol = varCol(1:noDomains);
         msh.meshFile = 'createNURBSmesh_M3';
+        n = 20;
+        eqDistr = 1:n;
     %     k = linspace(2.5, 20, 5)/varCol{1}.R1;
-        k = linspace(0.5, 4.29, 20);
+        k = linspace(0.5, 4.29, n);
 %         k = linspace(0.5, 4.29, 3);
 %         k = linspace(0.5, 4.29, 10)/10;
 
@@ -112,6 +114,7 @@ for i = 1:numel(applyLoads)
 %         k_ROM = k(1):0.5:k(end);
         k_ROM = sort(unique([k_ROM,k]));
 %         k_ROM = k;
+        k = k(1)+(k(end)-k(1))*(1-cos((2*eqDistr-1)/2/n*pi))/2; % Chebyshev nodes
         c_f = varCol{1}.c_f;
         omega_ROM = k_ROM*c_f;
         f = k*c_f/(2*pi);
@@ -148,7 +151,7 @@ for i = 1:numel(applyLoads)
         else
             misc.formulation = {'BGC'};
         end
-        msh.degree = 4;
+        msh.degree = 3:4;
         msh.M = 5; % 5
         
         misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
@@ -166,9 +169,9 @@ for i = 1:numel(applyLoads)
         
         misc.storeFullVarCol = false;
         if strcmp(misc.scatteringCase, 'Sweep')
-            loopParameters = {'msh.M','misc.method','misc.BC','misc.applyLoad'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad'};
         else
-            loopParameters = {'msh.M','misc.method','misc.BC','misc.applyLoad','misc.omega'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','misc.omega'};
         end
         collectIntoTasks
 
@@ -179,9 +182,9 @@ for i = 1:numel(applyLoads)
             if strcmp(misc.applyLoad,'pointPulsation')
                 postPlot(2).noXLoopPrms = 0;
             end
-            loopParameters = {'msh.M','misc.method','misc.BC','misc.applyLoad'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad'};
         else
-            loopParameters = {'msh.M','misc.method','misc.BC','misc.applyLoad','misc.omega'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','misc.omega'};
             postPlot(1).noXLoopPrms   	= 1;
             postPlot(1).xLoopName   	= 'misc.omega';
             if strcmp(misc.applyLoad,'pointPulsation')
@@ -195,7 +198,7 @@ for i = 1:numel(applyLoads)
         end
         misc.omega = omega_ROM;
         rom.useROM = false;
-        if 1 %strcmp(misc.scatteringCase, 'BI')
+        if 0 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
             para.extraXiPts              = '60';  % Extra visualization points in the xi-direction per element
             para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
@@ -213,7 +216,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-%         collectIntoTasks
+        collectIntoTasks
         
         iem.N = 50;
         iem.p_ie = 4;

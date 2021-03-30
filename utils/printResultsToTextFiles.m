@@ -426,7 +426,7 @@ if ~isempty(legendName)
     legendName = [legendName ', ' ];
 end
 switch legendEntries{j}
-    case {'misc.formulation','ie.IEbasis','misc.method','misc.coreMethod','misc.BC'}
+    case {'misc.scatteringCase','misc.formulation','ie.IEbasis','misc.method','misc.coreMethod','misc.BC'}
         temp = insertBefore(temp,'_','\');
         legendName = [legendName temp];
         saveName = [saveName '_' temp];

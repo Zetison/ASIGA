@@ -308,7 +308,7 @@ for i_b = 1:numel(basisROMcell)
 
             if task.ffp.calculateFarFieldPattern
                 task = calculateTS(task,printLog,stringShift);
-                p_h(i_f) = task.p_h;
+                p_h(i_f) = task.ffp.p_h;
             end
         end
         if task.ffp.calculateFarFieldPattern

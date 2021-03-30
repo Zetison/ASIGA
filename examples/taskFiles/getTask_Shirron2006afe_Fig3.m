@@ -1,6 +1,6 @@
-function studies = getTask_Shirron2005afe_Fig3()
-% This study is based on Hetmaniuk2012raa (Figure 7)
-% Hetmaniuk2012raa is available at https://doi.org/10.1002/nme.4271
+function studies = getTask_Shirron2006afe_Fig3()
+% This study is based on Shirron2006afe (Fig. 3)
+% Shirron2006afe is available athttps://doi.org/10.1016/j.cma.2006.07.009
 
 counter = 1;
 studies = cell(0,1);

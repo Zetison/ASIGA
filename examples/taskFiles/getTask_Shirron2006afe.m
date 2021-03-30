@@ -1,6 +1,6 @@
-function studies = getTask_Shirron2005afe()
-% This study is based on Hetmaniuk2012raa (Figure 7)
-% Hetmaniuk2012raa is available at https://doi.org/10.1002/nme.4271
+function studies = getTask_Shirron2006afe()
+% This study is based on Shirron2006afe (Fig. 2)
+% Shirron2006afe is available athttps://doi.org/10.1016/j.cma.2006.07.009
 
 counter = 1;
 studies = cell(0,1);
@@ -9,7 +9,7 @@ getDefaultTaskValues
 
 %% IE simulation
 misc.scatteringCase = 'BI';
-misc.model = 'Shirron2005afe';  % Spherical shell
+misc.model = 'Shirron2006afe';  % Spherical shell
 misc.coreMethod = {'C0_IGA'};
 % misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';

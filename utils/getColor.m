@@ -25,5 +25,9 @@ switch type
         color = [173, 216, 230]; % water
     case 11 
         color = [0,127,0]; % PML color
+    case 12 
+        color = [255,0,0]*0.3; % myRed
+    case 13
+        color = [0,255,0]*0.5; % myGreen
 end
 color = color/255;

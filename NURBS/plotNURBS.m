@@ -11,6 +11,7 @@ options = struct('resolution',[10,10,10], ...
                  'plotJacobian', 0, ...
                  'plotParmDir', 0, ...
                  'quiverScale', 0.2, ...
+                 'coarseLinearSampling', true, ...
                  'color',jet(numel(nurbsPatches)),...
                  'alphaValue',1,...
                  'plotAt',true(3,2),...
@@ -50,6 +51,7 @@ colorControlPolygon = options.colorControlPolygon;
 markerColor = options.markerColor;
 color = options.color;
 alphaValue = options.alphaValue;
+colorParmDirs = {getColor(12),getColor(13),getColor(7)};
 if alphaValue ~= 1
     faceLighting = 'none';
 else
@@ -103,7 +105,7 @@ for patch = 1:noPatches
         noUniqueKnots(i) = numel(uniqueKnots{i});
         noElemsDir(i) = noUniqueKnots(i)-1;
         p = nurbs.degree(i);
-        if p == 1
+        if p == 1 && options.coarseLinearSampling
             res(i) = 0;
         else
             res(i) = round(resolution(i)/noElemsDir(i));
@@ -151,7 +153,7 @@ for patch = 1:noPatches
                         parfor j = 1:nuk1
     %                     for j = 1:nuk1
                             X_temp2 = zeros(1,nuk2, 3);
-                            dX_temp2 = zeros(1,nuk2, 3, 3);
+                            dX_temp2 = zeros(1,nuk2, 3, d_p);
                             Up_temp2 = cell(3,3);
                             for i_c = 1:d_p
                                 for j_c = 1:d_p
@@ -227,7 +229,6 @@ for patch = 1:noPatches
                         'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
             if plotParmDir
-                colorParmDirs = {'blue','red','yellow'};
                 for i = 1:d_p
                     quiver3(X(:,:,1),X(:,:,2),X(:,:,3),Up{1,i},Up{2,i},Up{3,i},'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
@@ -239,28 +240,33 @@ for patch = 1:noPatches
             nuk1 = length(p_values{1});
             nuk2 = length(p_values{2});
             X = zeros(nuk1, nuk2, 3);
+            dX = zeros(nuk1, nuk2, 3, d_p);
             normals = zeros(length(p_values{1}), length(p_values{2}),3);
             C = zeros(length(p_values{1}), length(p_values{2}));
             parfor i = 1:length(p_values{1})
                 X_temp = zeros(length(p_values{2}),3);
+                dX_temp = zeros(length(p_values{2}), 3, d_p);
                 normals_temp = zeros(length(p_values{2}),3);
                 C_temp = zeros(1,length(p_values{2}));
                 xi = p_values{1}(i);
                 for j = 1:length(p_values{2})
                     eta = p_values{2}(j);
-                    [y,dydxi,dydeta] = evaluateNURBS(nurbs, [xi eta], 1);
-                    normal = cross(dydxi,dydeta);
+                    [v,dvdxi,dvdeta] = evaluateNURBS(nurbs, [xi eta], 1);
+                    dX_temp(j,:,1) = quiverScale*dvdxi/norm(dvdxi);
+                    dX_temp(j,:,2) = quiverScale*dvdeta/norm(dvdeta);
+                    normal = cross(dvdxi,dvdeta);
                     if plotSolution
                         ny = normal/norm(normal);
-                        C_temp(j) = colorFun(y);
+                        C_temp(j) = colorFun(v);
                     end
                     if plotNormalVectors
                         ny = quiverScale*normal/norm(normal);
                         normals_temp(j,:) = ny;
                     end
-                    X_temp(j,:) = y;
+                    X_temp(j,:) = v;
                 end
                 X(i,:,:) = X_temp;
+                dX(i,:,:,:) = dX_temp;
                 normals(i,:,:) = normals_temp;
                 C(i,:) = C_temp;
             end
@@ -293,6 +299,11 @@ for patch = 1:noPatches
                 noAddedPoints = noUniqueKnots(1)*(nuk2+1);
                 vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
                 plotGridLines(vElementEdges,displayName)
+            end
+            if plotParmDir
+                for i = 1:d_p
+                    quiver3(X(:,:,1),X(:,:,2),X(:,:,3),dX(:,:,1,i),dX(:,:,2,i),dX(:,:,3,i),'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                end
             end
         elseif d_p == 2 && d == 2
             X = zeros(2*length(p_values{1})+2*length(p_values{2})-3,1);
@@ -341,7 +352,7 @@ for patch = 1:noPatches
             % reverse back order of arrays
             p_values{1} = p_values{1}(end:-1:1);
             p_values{2} = p_values{2}(end:-1:1);
-            fill(X,Y, colorPatch,'EdgeColor','none','LineStyle','none')
+            fill(X,Y, colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
         elseif d_p == 1
             C = zeros(length(p_values{1}), d);
 
@@ -351,11 +362,11 @@ for patch = 1:noPatches
             end
             switch d
                 case 1
-                    plot(C,zeros(size(C)), 'color', colorPatch);  
+                    plot(C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName);  
                 case 2
-                    plot(C(:,1), C(:,2), 'color', colorPatch);  
+                    plot(C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName);  
                 case 3
-                    plot3(C(:,1), C(:,2), C(:,3), 'color', colorPatch); 
+                    plot3(C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName); 
             end  
         end
     end
