@@ -27,6 +27,9 @@ ffp.beta_s  = -pi/2;                        % Elevation angle of incident wave
 ffp.alpha   = 0;                            % Aspect angles of observation points
 ffp.beta = linspace(-pi/2,pi/2,1000);   
 ffp.r = 1;                            % radii for near-field evaluation.
+ffp.paramPts = {zeros(1000,3), []};
+ffp.paramPts{1}(:,2) = linspace(0,1,1000);
+ffp.splineBasedNFPcalc = true;
 
 a = 1; % Midsurface radius
 varCol{1} = struct('media', 'fluid', ...
@@ -49,8 +52,8 @@ else
 %     varCol{1}.refinement = @(M) [0, 0, 4];
 end
 
-msh.degree = 4;
-msh.M = 4; % 6
+msh.degree = 2;
+msh.M = 4; % 4 6
 misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
 % extraGP = [7,7,0];    % extra quadrature points
 warning('off','NURBS:weights')
@@ -72,7 +75,6 @@ err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 err.calculateFarFieldPattern = 1;
 
-ffp.splineBasedNFPcalc = true;
 
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;

@@ -1,11 +1,16 @@
-function I = NURBSarcLength(nurbs,a,b,parm_pt,dir)
-
-[Q, W] = gaussTensorQuad(50);
+function I = NURBSarcLength(nurbs,a,b,parm_pt,dir,pp1qp)
+if nargin < 6
+    pp1qp = false;
+end
+if pp1qp
+    [Q, W] = gaussTensorQuad(nurbs.degree(dir)+3);
+else
+    [Q, W] = gaussTensorQuad(50);
+end
 uniqueKnots = unique(nurbs.knots{dir});
 I = 0;
 d_p = nurbs.d_p;
-% for e = 1:numel(uniqueKnots)-1
-parfor e = 1:numel(uniqueKnots)-1
+for e = 1:numel(uniqueKnots)-1
     Xi_e = uniqueKnots(e:e+1);
     if Xi_e(2) <= a || b <= Xi_e(1)
         continue

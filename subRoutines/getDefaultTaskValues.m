@@ -11,7 +11,7 @@ misc.scatteringCase      = 'BI';        % Bistatic scattering
 misc.applyLoad           = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 misc.model               = 'S1';        % Spherical shell of radius 1
 misc.method              = 'IE';        % Method for handling the unbounded domain problem
-misc.coreMethod          = 'IGA';       % Solution space
+misc.coreMethod          = 'IGA';       % Solution space: 
 misc.BC                  = 'SHBC';      % Boundary condition
 misc.formulation         = 'BGU';       % Formulation
 misc.computeCondNumber   = false;       % Compute the condition number of the global matrix
@@ -172,10 +172,10 @@ mfs.delta = 0.1;            % Distance from the boundary to the internal source 
 rt.N = 4; % Number of rays is approximately round(10^(rt.N/2))
 
 %% Settings for ROM (reduced order modelling)
-rom.useROM      = false;    % Toggle the usage of ROM
-rom.noVecsArr 	= 8;        % Number of derivatives at each point (including the 0th derivative
-rom.k_ROM    	= 3;        % Points at which to compute derivatives
-rom.useDGP      = true;     % Use a Derivative based Galerkin Projection (instead of interpolating techniques)
+rom.useROM       = false;    % Toggle the usage of ROM
+rom.noVecsArr 	 = 8;        % Number of derivatives at each point (including the 0th derivative
+rom.k_ROM    	 = 3;        % Points at which to compute derivatives
+rom.basisROMcell = {'DGP'};  % Basis for ROM ('Pade','Taylor','DGP','Hermite' or 'Bernstein')
 
 
 

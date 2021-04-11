@@ -11,6 +11,7 @@ p_eta = degree(2); % assume p_eta is equal in all patches
 n_en = (p_xi+1)*(p_eta+1);
 
 d_p = 2;
+noCtrlPtsPatch = varCol.noCtrlPtsPatch;
 noElemsPatch = varCol.noElemsPatch;
 set = varCol.geometry.topologysets.set;
 connection = varCol.geometry.topology.connection;
@@ -20,7 +21,8 @@ element = zeros(noElems,n_en);
 index = zeros(noElems,d_p);
 eBdry = 1;
 jEl = zeros(1,2);
-elemMap = zeros(noElems,1);
+elemProj = zeros(noElems,1);
+nodesProj = zeros(varCol.noDofs,1);
 nodes = zeros(1,varCol.noDofs);
 counter = 1;
 [idx,setFound] = findSet(set,name);
@@ -43,7 +45,8 @@ for i_free = 1:noItems
     outwardPointingNormals = strcmp(set{idx}.Attributes.normal, 'outward');
     inwardPointingNormals = strcmp(set{idx}.Attributes.normal, 'inward');
     bdryNodes = sum(varCol.noCtrlPtsPatch(1:patch-1)) + extractBdryNodes(nurbs,midx,outwardPointingNormals,inwardPointingNormals);
-    nodes(counter:counter+numel(bdryNodes)-1) = bdryNodes;
+    noBdryNodes = numel(bdryNodes);
+    nodes(counter:counter+noBdryNodes-1) = bdryNodes;
     at = zeros(2,3,'logical');
     at(midx) = true;
     varCol_dummy.dimension = 1;
@@ -67,7 +70,13 @@ for i_free = 1:noItems
     
     temp = repmat(eBdry:eBdry+noElemsXiEta-1,1,noEl3);
     e = sum(noElemsPatch(1:patch-1)) + 1;    
-    elemMap(e:e+sum(noElemsPatch(patch))-1) = temp(:);
+    elemProj(e:e+sum(noElemsPatch(patch))-1) = temp(:);
+    
+    number3 = patches{patch}.nurbs.number(ceil(midx/2));
+    temp = repmat(counter:counter+noBdryNodes-1,1,number3);
+    i_node = sum(noCtrlPtsPatch(1:patch-1)) + 1;    
+    nodesProj(i_node:i_node+sum(noCtrlPtsPatch(patch))-1) = temp(:);
+    
     neighPatch = NaN;
     for j = 1:numel(connection)
         if connection{j}.Attributes.slave == patch && connection{j}.Attributes.sidx == midx
@@ -82,10 +91,15 @@ for i_free = 1:noItems
         noEl3 = size(patches{neighPatch}.elRange{ceil(sidx/2)},1);
         temp = repmat(eBdry:eBdry+noElemsXiEta-1,1,noEl3);
         e = sum(noElemsPatch(1:neighPatch-1)) + 1;    
-        elemMap(e:e+sum(noElemsPatch(neighPatch))-1) = temp(:);
+        elemProj(e:e+sum(noElemsPatch(neighPatch))-1) = temp(:);
+    
+        number3 = patches{neighPatch}.nurbs.number(ceil(sidx/2));
+        temp = repmat(counter:counter+noBdryNodes-1,1,number3);
+        i_node = sum(noCtrlPtsPatch(1:neighPatch-1)) + 1;    
+        nodesProj(i_node:i_node+sum(noCtrlPtsPatch(neighPatch))-1) = temp(:);
     end
         
-    counter = counter+numel(bdryNodes);
+    counter = counter+noBdryNodes;
     eBdry = eBdry + noElemsXiEta;
 end
 
@@ -138,11 +152,12 @@ varColBdry.index = index;
 varColBdry.knotVecs = knotVecs;
 varColBdry.n_en = n_en;
 varColBdry.noSurfDofs = noSurfDofs;
-varColBdry.elemMap = elemMap;
+varColBdry.elemMap = elemProj;
 varColBdry.nurbs = sub_nurbs;
 varColBdry.degree = degree;
 varColBdry.elRange = elRange;
 varColBdry.pIndex = pIndex;
+varColBdry.nodesProj = nodesProj;
 
 function bdryNodes = extractBdryNodes(nurbs,midx,outwardPointingNormals,inwardPointingNormals)
 n_xi = nurbs.number(1);

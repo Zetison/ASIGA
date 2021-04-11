@@ -55,6 +55,7 @@ if usePML
     elemMap = varColBdry.elemMap;
     knotVecs_a = varColBdry.knotVecs;
     elRange_a = varColBdry.elRange;
+    nodesProj = varColBdry.nodesProj;
     
     J_a = zeros(size(Q,1),3,3,noElems_a);
     for e = 1:noElems_a

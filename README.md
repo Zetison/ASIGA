@@ -101,7 +101,7 @@ The following methods has been implemented (with available formulations)
 - IGA using Beam tracing (method = 'RT')
 
 
-Instead of IGA (coreMethod = 'IGA') the following alternatives are implemented
+Instead of IGA (coreMethod = 'IGA' or coreMethod = 'C0_IGA') the following alternatives are implemented
 - Bilinear isoparametric FEM (coreMethod = 'linear_FEM')
 - Subparametric FEM with bilinear representation of geometry (coremethod = 'h_FEM')
 - Isoparametric FEM (coreMethod = 'hp_FEM')
@@ -251,10 +251,10 @@ t_PML = NaN; % radius to the PML layer for spherical coordinates
 delta = 0.1;    % Distance from the boundary to the internal source points
 
 %% Settings for ROM (reduced order modelling)
-useROM      = false;    % Toggle the usage of ROM
-noVecsArr 	= 8;        % Number of derivatives at each point (including the 0th derivative
-k_ROM    	= 3;        % Points at which to compute derivatives
-useDGP      = true;     % Use a Derivative based Galerkin Projection (instead of interpolating techniques)
+rom.useROM       = false;    % Toggle the usage of ROM
+rom.noVecsArr 	 = 8;        % Number of derivatives at each point (including the 0th derivative
+rom.k_ROM    	 = 3;        % Points at which to compute derivatives
+rom.basisROMcell = {'DGP'};  % Basis for ROM ('Pade','Taylor','DGP','Hermite' or 'Bernstein')
 ```
 
 ## Performing a study

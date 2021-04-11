@@ -355,8 +355,24 @@ for i_b = 1:numel(basisROMcell)
         tasks(i_task,taskROM,i_b).task.varCol{1}.omega_ROM = temp_omega_ROM;
         tasks(i_task,taskROM,i_b).task.varCol{1}.f_ROM = temp_omega_ROM/(2*pi);
         tasks(i_task,taskROM,i_b).task.varCol{1}.k_ROM = temp_omega_ROM/task.varCol{1}.c_f;
-        tasks(i_task,taskROM,i_b).task.noVecs = noVecs;
-        tasks(i_task,taskROM,i_b).task.basisROM = basisROM;
+        tasks(i_task,taskROM,i_b).task.rom.noVecs = noVecs;
+        tasks(i_task,taskROM,i_b).task.rom.basisROM = basisROM;
+        fieldCell = {'misc','msh','sol','err','ffp','iem','pml','bem','rt','mfs','dofs','noRHSs','analyticSolutionExist','isSphericalShell','totNoElems','ffp'};
+        for field = fieldCell
+            tasks(i_task,taskROM,i_b).task.(field{1}) = task.(field{1});
+        end
+            
+        tasks(i_task,taskROM,i_b).task.msh = task.msh;
+        tasks(i_task,taskROM,i_b).task.misc = task.misc;
+        tasks(i_task,taskROM,i_b).task.sol = task.sol;
+        tasks(i_task,taskROM,i_b).task.err = task.err;
+        tasks(i_task,taskROM,i_b).task.ffp = task.ffp;
+        tasks(i_task,taskROM,i_b).task.iem = task.iem;
+        tasks(i_task,taskROM,i_b).task.pml = task.pml;
+        tasks(i_task,taskROM,i_b).task.bem = task.bem;
+        tasks(i_task,taskROM,i_b).task.rt = task.rt;
+        tasks(i_task,taskROM,i_b).task.mfs = task.mfs;
+        tasks(i_task,taskROM,i_b).task.dofs = task.dofs;
     end
 end
 

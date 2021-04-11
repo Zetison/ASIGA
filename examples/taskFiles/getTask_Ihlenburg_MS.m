@@ -114,9 +114,9 @@ for i = 1:numel(applyLoads)
 %         k_ROM = k(1):0.5:k(end);
         k_ROM = sort(unique([k_ROM,k]));
 %         k_ROM = k;
-        k = k(1)+(k(end)-k(1))*(1-cos((2*eqDistr-1)/2/n*pi))/2; % Chebyshev nodes
+%         k = k(1)+(k(end)-k(1))*(1-cos((2*eqDistr-1)/2/n*pi))/2; % Chebyshev nodes
         c_f = varCol{1}.c_f;
-        omega_ROM = k_ROM*c_f;
+        rom.omega_ROM = k_ROM*c_f;
         f = k*c_f/(2*pi);
         misc.omega = 2*pi*f;
         
@@ -126,7 +126,7 @@ for i = 1:numel(applyLoads)
         pml.t = 0.25*varCol{1}.R1; % thickness of PML
         pml.n = 2;            	% polynomial order
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-        pml.C = -log(1e9*eps)*(pml.n+1)/(k(1)*pml.t);     
+        pml.C = -log(pml.eps)*(pml.n+1)/(k(1)*pml.t);     
         
         postPlot(1).xScale = varCol{1}.R1;
 
@@ -152,7 +152,7 @@ for i = 1:numel(applyLoads)
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.M = 5; % 5
+        msh.M = 1; % 5
         
         misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
         
@@ -196,7 +196,7 @@ for i = 1:numel(applyLoads)
         if strcmp(misc.applyLoad,'pointPulsation')
             postPlot(2).xname = postPlot(2).xname(1);
         end
-        misc.omega = omega_ROM;
+        misc.omega = rom.omega_ROM;
         rom.useROM = false;
         if 0 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
@@ -204,10 +204,10 @@ for i = 1:numel(applyLoads)
             para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
             para.extraZetaPts            = '1';   % Extra visualization points in the zeta-direction per element
             para.plotTimeOscillation     = 1;
-            misc.omega = omega_ROM(end);
+            misc.omega = rom.omega_ROM(end);
         else
-            misc.omega = omega_ROM;
-%             misc.omega = omega_ROM(end);
+            misc.omega = rom.omega_ROM;
+%             misc.omega = rom.omega_ROM(end);
         end
         if strcmp(misc.method,'PML')
             misc.formulation = {'GSB'};

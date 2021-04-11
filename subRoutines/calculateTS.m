@@ -9,52 +9,50 @@ v = getFarFieldPoints(task);
 switch task.misc.method
     case {'IE','ABC','IENSG','BA','BEM','PML'}
         if task.ffp.splineBasedNFPcalc
-            warning('This implementation is for testing purposes only!')
-            varColBdry = meshBoundary(task.varCol{1},'Gamma');
+            noElems = task.varCol{1}.noElems;
+            element = task.varCol{1}.element;
+            element2 = task.varCol{1}.element2;
+            index = task.varCol{1}.index;
+            pIndex = task.varCol{1}.pIndex;
 
-            zeta0Nodes = varColBdry.nodes;
-            noElems = varColBdry.noElems;
-            element = varColBdry.element;
-            element2 = varColBdry.element2;
-            index = varColBdry.index;
-            pIndex = varColBdry.pIndex;
-    
-            knotVecs = varColBdry.knotVecs;
-            elRange = varColBdry.elRange;
+            d_p = task.varCol{1}.patches{1}.nurbs.d_p;
+            knotVecs = task.varCol{1}.knotVecs;
+            elRange = task.varCol{1}.elRange;
             controlPts = task.varCol{1}.controlPts;
             weights = task.varCol{1}.weights;
             U = task.varCol{1}.U;
-            noElems = noElems/3;
-            nptsPerEl = round(size(v,1)/noElems);
-            degree = task.varCol{1}.degree(1:2);
-            p_h = complex(zeros(nptsPerEl,noElems));
-            v = zeros(nptsPerEl,noElems,3);
-    %         for e1 = 1:noElems
-            parfor e1 = 1:noElems
-                e = 3*(e1-1)+1;
+            degree = task.varCol{1}.degree;
+            p_h = complex([]);
+            v = [];
+            paramPts = task.ffp.paramPts;
+            for e = 1:noElems
                 patch = pIndex(e);
+                if isempty(paramPts{patch})
+                    continue
+                end
                 knots = knotVecs{patch};
 
-                Xi_e = zeros(2,2);
-                for i = 1:2
+                Xi_e = zeros(d_p,2);
+                for i = 1:d_p
                     Xi_e(i,:) = elRange{i}(index(e,i),:);
                 end
 
-                sctr = zeta0Nodes(element(e,:));
+                sctr = element(e,:);
                 pts = controlPts(sctr,:);
-                wgts = weights(zeta0Nodes(element2(e,:)),:); % New
-                eta = [Xi_e(2,1)+eps,linspace2(Xi_e(2,1),Xi_e(2,2),nptsPerEl-1)].';
-                I = findKnotSpans(degree, [0,eta(1)], knots);
-                xi = [zeros(size(eta)),eta];
-                R = NURBSbasis(I, xi, degree, knots, wgts);
-                p_h(:,e1) = R{1}*U(sctr,:);
-                v(:,e1,:) = R{1}*pts;
+                wgts = weights(element2(e,:),:); % New
+                indices = all(and(Xi_e(:,1).' <= paramPts{patch}(:,1:d_p), paramPts{patch}(:,1:d_p) <= Xi_e(:,2).'),2);
+                if any(indices)
+                    xi = paramPts{patch}(indices,1:d_p);
+                    I = findKnotSpans(degree, xi(1,:), knots);
+                    R = NURBSbasis(I, xi, degree, knots, wgts, 0);
+                    p_h = [p_h; R{1}*U(sctr,:)];
+                    v = [v; R{1}*pts];
+                end
             end
-            p_h = [p_h(:); U(end)];
-            v = reshape(v,[],3);
-            task.ffp.theta = [acos(v(:,3)./norm2(v)).',0];
-            v = [v; -v(1,:)];
+            task.ffp.theta = acos(v(:,3)./norm2(v)).';
+            task.ffp.alpha = atan2(v(:,2),v(:,1));
             task.ffp.beta = pi/2-task.ffp.theta;
+            task.ffp.r = norm2(v);
             task.ffp.plotFarField = false;
         else
             p_h = calculateScatteredPressure(task, v, 0);

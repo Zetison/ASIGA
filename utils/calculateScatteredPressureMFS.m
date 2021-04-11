@@ -11,7 +11,7 @@ switch task.misc.formulation
             theta = acos((P_far(:,3)-y(3))./R);
             phi = atan2(P_far(:,2)-y(2),P_far(:,1)-y(1));
             eta = cos(theta);
-            N = task.ie.N;
+            N = task.mfs.N;
             exp_phi = exp(1i*phi*(-N:N));
             p_h = zeros(size(P_far,1),1);
             for n = 0:N

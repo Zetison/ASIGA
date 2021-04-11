@@ -74,10 +74,10 @@ switch format
         end
 
         if isfield(task,'IEbasis')
-            fprintf(fid, '%% Infinite element basis (in radial shape functions): %s\n', task.ie.IEbasis);
+            fprintf(fid, '%% Infinite element basis (in radial shape functions): %s\n', task.iem.IEbasis);
         end
-        if isfield(task,'N') && ~strcmp(xLoopName,task.ie.N)
-            fprintf(fid, '%% N: %d\n', task.ie.N);
+        if isfield(task,'N') && ~strcmp(xLoopName,task.iem.N)
+            fprintf(fid, '%% N: %d\n', task.iem.N);
         end
         if isfield(task.varCol{1},'totNoElems') && ~strcmp(xLoopName,task.msh.M) && ~strcmp(xLoopName,task.msh.degree)
             fprintf(fid, '%% Total number of elements: %d\n', task.varCol{1}.totNoElems);

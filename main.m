@@ -70,9 +70,9 @@ for i_col = 1:numel(studiesCol)
             end
             studiesCol{i_col}(i_study).tasks = tasks;
             if tasks(i_task).task.rom.useROM
-                studiesCol{i_col}(i_study).loopParameters{end+1} = 'noVecs';
+                studiesCol{i_col}(i_study).loopParameters{end+1} = 'rom.noVecs';
                 studiesCol{i_col}(i_study).loopParametersArr{end+1} = noVecsArr;
-                studiesCol{i_col}(i_study).loopParameters{end+1} = 'basisROM';
+                studiesCol{i_col}(i_study).loopParameters{end+1} = 'rom.basisROM';
                 studiesCol{i_col}(i_study).loopParametersArr{end+1} = basisROMcell;
                 studiesCol{i_col}(i_study).tasks = tasks(:);
             end

@@ -29,7 +29,7 @@ for j = 1:numel(allTaskNames)
             loopParametersArr{idx} = loopParametersArr(idx);
         end
     elseif iscell(eval(['task.' allTaskNames{j}])) && isempty(strfind(allTaskNames{j},'postPlot')) && isempty(strfind(allTaskNames{j},'prePlot')) ...
-            && isempty(strfind(allTaskNames{j},'para')) && ~strcmp(allTaskNames{j},'varCol') % remove redundant cell type
+            && isempty(strfind(allTaskNames{j},'para')) && isempty(strfind(allTaskNames{j},'rom')) && ~strcmp(allTaskNames{j},'varCol') % remove redundant cell type
         temp = eval(['task.' allTaskNames{j}]);
         eval(['task.' allTaskNames{j} ' = temp{1};'])
     end
@@ -40,10 +40,16 @@ studies(counter).loopParametersArr = loopParametersArr;
 studies(counter).runTasksInParallel = runTasksInParallel;
 studies(counter).saveStudies = saveStudies;
 
-if exist('basisROMcell','var')
-    studies(counter).basisROMcell = basisROMcell;
-    studies(counter).omega_ROM = omega_ROM;
-    studies(counter).noVecsArr = rom.noVecsArr;
+task.rom.useGDP = false;
+for i = 1:numel(rom.basisROMcell)
+    if strcmp(rom.basisROMcell{i},'DGP')
+        task.rom.useDGP = true;
+    end
+end
+if task.rom.useROM
+    studies(counter).basisROMcell = task.rom.basisROMcell;
+    studies(counter).omega_ROM = task.rom.omega_ROM;
+    studies(counter).noVecsArr = task.rom.noVecsArr;
 end
 
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);

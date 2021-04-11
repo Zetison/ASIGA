@@ -1,4 +1,4 @@
-function [refinednurbs, newKnotsIns] = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts,dirs,sortImap)
+function [nurbs, newKnotsIns] = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts,dirs,sortImap)
 if nargin < 3
     Imap = {};
 end
@@ -19,7 +19,6 @@ if sortImap
     end
 end
 Eps = 1e-10;
-refinednurbs = nurbs;
 noPatches = numel(nurbs);
 newKnotsIns = cell(1,noPatches);
 I_maxRecord = [];
@@ -48,7 +47,7 @@ for patch = 1:noPatches
         for j = 1:numel(uniqueXi)-1
             I_max = -Inf;
             for i = 1:size(parm_pts,1)
-                I = NURBSarcLength(nurbs{patch},uniqueXi(j),uniqueXi(j+1),parm_pts(i,:),dir);
+                I = NURBSarcLength(nurbs{patch},uniqueXi(j),uniqueXi(j+1),parm_pts(i,:),dir,true);
                 if I_max < I
                     I_max = I;
                 end
@@ -67,6 +66,6 @@ for patch = 1:noPatches
         newKnots{dir} = newXiKnots;
     end
     newKnotsIns{patch} = newKnots;
-    refinednurbs(patch) = insertKnotsInNURBS(refinednurbs(patch),newKnots);
 end
+nurbs = insertKnotsInNURBS(nurbs,newKnotsIns);
 % I_maxRecord

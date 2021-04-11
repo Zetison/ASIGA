@@ -43,7 +43,7 @@ for i = 1:noPatches
         for j = 1:noPatches
             subnurbs_j = subNURBS(nurbs(j));
             for jj = 1:numel(subnurbs_j)
-                matchingFaces = NURBSisEqual(subnurbs_i{ii},subnurbs_j{jj},1);
+                [matchingFaces,orient] = NURBSisEqual(subnurbs_i{ii},subnurbs_j{jj},1);
                 if matchingFaces && ~(i == j && ii == jj)
                     freeFace = false;
                 end
@@ -53,6 +53,7 @@ for i = 1:noPatches
                         geometry.topology.connection{counter}.Attributes.midx = ii;
                         geometry.topology.connection{counter}.Attributes.slave = j;
                         geometry.topology.connection{counter}.Attributes.sidx = jj;
+                        geometry.topology.connection{counter}.Attributes.orient = orient;
                         connectionFound = true;
                         counter = counter + 1;
                     end

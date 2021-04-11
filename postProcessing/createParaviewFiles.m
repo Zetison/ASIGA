@@ -45,10 +45,10 @@ for i_v = 1:noDomains
     para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && splitExteriorFields; 
     para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && splitExteriorFields; 
     para{i_v}.plotAnalytic = options.para_options.plotAnalytic && analyticSolutionExist; 
-    para{i_v}.computeGrad = options.para_options.computeGrad && ~(task.varCol{i_v}.boundaryMethod && ~isSolid);
+    para{i_v}.computeGrad = options.para_options.computeGrad && ~(task.varCol{i_v}.boundaryMethod && ~isSolid) && d_p == 3;
     para{i_v}.plotError = options.para_options.plotError && (analyticSolutionExist && ~options.para_options.plotTimeOscillation); 
-    para{i_v}.plotErrorGrad = para{i_v}.plotError; 
-    para{i_v}.plotErrorEnergy = para{i_v}.plotError; 
+    para{i_v}.plotErrorGrad = para{i_v}.plotError && d_p == 3; 
+    para{i_v}.plotErrorEnergy = para{i_v}.plotError && d_p == 3; 
     
     para{i_v}.plotVonMisesStress = options.para_options.plotVonMisesStress && isSolid;
     para{i_v}.plotStressXX = options.para_options.plotStressXX && isSolid;
@@ -334,10 +334,11 @@ for i_v = 1:noDomains
 end
 fprintf('using %12f seconds.', toc)
 if analyticSolutionExist
-    layer = task.varCol{1}.analyticFunctions(nodes);
+    layer = task.analyticFunctions(nodes);
 end
 
 for i_v = 1:numel(task.varCol)
+    d_p = task.varCol{i_v}.nurbs{1}.d_p;
     fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
     tic
     isOuterDomain = i_v == 1;
@@ -396,7 +397,7 @@ for i_v = 1:numel(task.varCol)
                     p_e2 = abs(p_e).^2;
                     dp_e2 = sum(abs(dp_e).^2,2);
 
-                    k = task.varCol{i_v}.k;
+                    k = omega/task.varCol{i_v}.c_f;
                     data.Error = sqrt(p_e2/max(p2));
                     data.ErrorGrad = sqrt(dp_e2/max(dp2));
                     data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
