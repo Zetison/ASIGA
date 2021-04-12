@@ -37,6 +37,7 @@ ffp.alpha   = 0;                            % Aspect angles of observation point
 ffp.beta = pi/2;   
 ffp.r = 1;                            % radii for near-field evaluation.
 ffp.splineBasedNFPcalc = true;
+warning('off','NURBS:weights')
 
 misc.r_s = 3;
 
