@@ -41,14 +41,17 @@ end
 
 %% Find nodes to remove due to gluing and homogeneous dirichlet conditions
 totNoElems = 0;
+FEdofs = 0;
 for i = 1:task.noDomains
     task.varCol{i} = findDofsToRemove(task.varCol{i});
     totNoElems = totNoElems + task.varCol{i}.noElems;
+    FEdofs = FEdofs + task.varCol{i}.noDofs - numel(task.varCol{i}.dofsToRemove);
 end
 
 if printLog
     fprintf('using %12f seconds.', toc)
     fprintf('\nTotal number of elements = %d', totNoElems)
+    fprintf('\nFinite element dofs = %d', FEdofs)
 end
 task.totNoElems = totNoElems;
 

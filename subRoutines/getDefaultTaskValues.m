@@ -51,7 +51,7 @@ prePlot.useCamlight         = true;        % Toggle camlight on
 
 prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh
 prePlot.plotNormalVectors   = false;       % Plot the normal vectors for the NURBS mesh
-prePlot.plotGeometryInfo    = true;        % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
+prePlot.plotGeometryInfo    = false;       % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.plotArtificialBndry = true;        % Plot the artificial boundary for the IENSG method
 prePlot.resolution       	= [20,20,20];  % Number of evaluation points in the visualization for each element for each parametric direction
 prePlot.plotAt              = true(3,2);   % For solids: toggle which surfaces to visualize

@@ -22,8 +22,7 @@ misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
 BCs = {'SSBC'};
-% BCs = {'NNBC'};
-BCs = {'SHBC','SSBC'};
+% BCs = {'SHBC','SSBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -42,28 +41,33 @@ warning('off','NURBS:weights')
 misc.r_s = 3;
 
 msh.parm = 1;
+exploitAxisSymmetry = 1; % only for msh.parm = 1
 err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
+misc.checkNURBSweightsCompatibility = false;
 
+prePlot.view                = [54,38];     % Set view angle [azimuth,elevation]
+prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
+prePlot.resolution = [400,200,0];
 
 misc.computeCondNumber = 0;
 
 for i = 1:numel(BCs)
     misc.BC = BCs{i};
 %     misc.method = {'IENSG'};
-    misc.method = {'IE'};
-%     misc.method = {'PML'};
+%     misc.method = {'IE'};
+    misc.method = {'PML'};
 
     postPlot(1).xname           = 'k_ROM';
     postPlot(1).yname        	= 'surfaceError';
     postPlot(1).plotResults  	= true;
-    postPlot(1).printResults 	= false;
+    postPlot(1).printResults 	= true;
     postPlot(1).axisType      	= 'semilogy';
     postPlot(1).lineStyle    	= '-';
     postPlot(1).xScale       	= 1;
@@ -97,19 +101,24 @@ for i = 1:numel(BCs)
             noDomains = 1;
         case 'SSBC'
             noDomains = 2;
-        case 'NNBC'
-            noDomains = 3;
     end
     varCol = setHetmaniukParameters(noDomains);
     msh.meshFile = 'createNURBSmesh_EL';
-    msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+    if exploitAxisSymmetry
+        msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+    else
+        msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
+    end
     msh.degree = 3;
-    msh.M = 6; % 6
+    msh.M = 7; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
         if msh.parm == 1
-            varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(2^(M-4)-1,3)];
-%             varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-1)/8-1, max(2^(M-4)-1,3)];
+            if exploitAxisSymmetry
+                varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(2^(M-4)-1,3)];
+            else
+                varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1, max(2^(M-4)-1,3)];
+            end
         else
             varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1, max(2^(M-4)-1,3)];
         end
@@ -120,13 +129,14 @@ for i = 1:numel(BCs)
     misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
     if noDomains > 1
         if msh.parm == 1
-            varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+            if exploitAxisSymmetry
+                varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+            else
+                varCol{2}.refinement = @(M,t,t_fluid) [2^(M-1)-1, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+            end
         else
             varCol{2}.refinement = @(M,t,t_fluid) [3*2^(M-3)-1, 3*2^(M-3)-1, max(round(t/t_fluid)*2^(M-1),0)];
         end
-    end
-    if noDomains > 2
-        varCol{3}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)-1,0)];
     end
     switch misc.BC
         case {'SHBC','NBC'}
@@ -144,12 +154,12 @@ for i = 1:numel(BCs)
                 ffp.beta = pi/2;   
             end
             ffp.paramPts = {[0,1,0], []};
-            postPlot(1).plotResults = true;
-            postPlot(2).plotResults = true;
-            postPlot(3).plotResults = true;
-            postPlot(4).plotResults = false;
-            postPlot(5).plotResults = false;
-            postPlot(6).plotResults = false;
+            for j = 1:3
+                postPlot(i).plotResults = true;
+                postPlot(i).printResults = true;
+                postPlot(3+i).plotResults = false;
+                postPlot(3+i).printResults = false;
+            end
         case {'SSBC','NNBC'}
             f = linspace(1430, 4290, 5);
             omega = 2*pi*f;
@@ -163,12 +173,12 @@ for i = 1:numel(BCs)
                 ffp.beta = -pi/2;   
             end
             ffp.paramPts = {[0,0,0], []};
-            postPlot(1).plotResults = false;
-            postPlot(2).plotResults = false;
-            postPlot(3).plotResults = false;
-            postPlot(4).plotResults = true;
-            postPlot(5).plotResults = true;
-            postPlot(6).plotResults = true;
+            for j = 1:3
+                postPlot(i).plotResults = false;
+                postPlot(i).printResults = false;
+                postPlot(3+i).plotResults = true;
+                postPlot(3+i).printResults = true;
+            end
     end
     misc.omega = omega;
 
@@ -231,7 +241,7 @@ for i = 1:numel(BCs)
     misc.omega = rom.omega_ROM;
     para.plotResultsInParaview = 0;
     misc.method = {'BA'};
-%     misc.formulation = {'SL2E'};
-    misc.formulation = {'VL2E'};
+    misc.formulation = {'SL2E'};
+%     misc.formulation = {'VL2E'};
     collectIntoTasks
 end

@@ -118,6 +118,9 @@ switch options.noXLoopPrms
                 hold on
             end
         end
+        analyticSolutionExist = study.tasks(1).task.analyticSolutionExist;
+        plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || ...
+                                                                            strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
         if plotAnalyticSolution && printResults
             if isrow(y_ref)
                 y_ref = y_ref.';
