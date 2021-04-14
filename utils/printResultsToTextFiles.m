@@ -75,10 +75,13 @@ switch options.noXLoopPrms
                 if isrow(y)
                     y = y.';
                 end
+                if isrow(x)
+                    x = x.';
+                end
                 saveName(saveName == '.') = [];
                 
                 ioOptions.filename = [subFolderName '/' saveName];
-                ioOptions.x = x.';
+                ioOptions.x = x;
                 ioOptions.y = y;
                 ioOptions.xlabel = {fileDataHeaderX};
                 ioOptions.ylabel = {yname};
@@ -125,8 +128,11 @@ switch options.noXLoopPrms
             if isrow(y_ref)
                 y_ref = y_ref.';
             end
+            if isrow(x)
+                x = x.';
+            end
             ioOptions.filename = [subFolderName '/' saveName '_analytic'];
-            ioOptions.x = x.';
+            ioOptions.x = x;
             ioOptions.y = y_ref;
             ioOptions.xlabel = {fileDataHeaderX};
             ioOptions.ylabel = {yname};
@@ -234,9 +240,12 @@ switch options.noXLoopPrms
             if isrow(y_ref)
                 y_ref = y_ref.';
             end
+            if isrow(x)
+                x = x.';
+            end
                 
             ioOptions.filename = [subFolderName '/' saveName '_analytic'];
-            ioOptions.x = x.';
+            ioOptions.x = x;
             ioOptions.y = y_ref;
             ioOptions.xlabel = {fileDataHeaderX};
             ioOptions.ylabel = {yname};
