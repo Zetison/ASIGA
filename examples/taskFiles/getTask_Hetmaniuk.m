@@ -21,8 +21,8 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-BCs = {'SSBC'};
-% BCs = {'SHBC','SSBC'};
+% BCs = {'SSBC'};
+BCs = {'SHBC','SSBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -155,10 +155,10 @@ for i = 1:numel(BCs)
             end
             ffp.paramPts = {[0,1,0], []};
             for j = 1:3
-                postPlot(i).plotResults = true;
-                postPlot(i).printResults = true;
-                postPlot(3+i).plotResults = false;
-                postPlot(3+i).printResults = false;
+                postPlot(j).plotResults = true;
+                postPlot(j).printResults = true;
+                postPlot(3+j).plotResults = false;
+                postPlot(3+j).printResults = false;
             end
         case {'SSBC','NNBC'}
             f = linspace(1430, 4290, 5);
@@ -174,17 +174,17 @@ for i = 1:numel(BCs)
             end
             ffp.paramPts = {[0,0,0], []};
             for j = 1:3
-                postPlot(i).plotResults = false;
-                postPlot(i).printResults = false;
-                postPlot(3+i).plotResults = true;
-                postPlot(3+i).printResults = true;
+                postPlot(j).plotResults = false;
+                postPlot(j).printResults = false;
+                postPlot(3+j).plotResults = true;
+                postPlot(3+j).printResults = true;
             end
     end
     misc.omega = omega;
 
     rom.basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROMcell = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-%     rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     iem.N = 16; % 9
     iem.p_ie = 5;
     iem.s_ie = 2;

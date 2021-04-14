@@ -99,7 +99,7 @@ nurbsPML = makeUniformNURBSDegree(nurbsPML,task.varCol{1}.nurbs{1}.degree);
 noNewKnots = task.varCol{1}.refinement(task.msh.M);
 nurbsPML = insertKnotsInNURBS(nurbsPML,[0,0,noNewKnots(4)]);
 for i = 1:numel(nurbsPML)
-    nurbsPML{i}.isPML = true;
+    nurbsPML{i}.isPML = [false,false,true];
 end
 task.varCol{1}.nurbs = uniteNURBS({task.varCol{1}.nurbs,nurbsPML});
 geometry = getTopology(task.varCol{1}.nurbs);

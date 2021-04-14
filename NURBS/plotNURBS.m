@@ -77,7 +77,7 @@ for patch = 1:noPatches
         displayName = [options.displayName ', patch ' num2str(patch)];
     end
     nurbs = nurbsPatches{patch};
-    if isfield(nurbs,'isPML') && nurbs.isPML
+    if isfield(nurbs,'isPML') && any(nurbs.isPML)
         colorPatch = getColor(11);
     else
         colorPatch = color(patch,:);

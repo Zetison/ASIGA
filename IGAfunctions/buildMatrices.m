@@ -33,9 +33,8 @@ else
 end
 
 extraGP = task.misc.extraGP;
-Q = gaussTensorQuad(degree(1:2)+1+extraGP(1:d_p-1));
 isPML = task.varCol{i_varCol}.isPML;
-usePML = any(isPML) && isfield(task,'pml');
+usePML = any(isPML(:)) && isfield(task,'pml');
 
 if usePML
     pml = task.pml;
@@ -45,44 +44,9 @@ if usePML
     end
     formulation = task.misc.formulation;
     r_a = task.misc.r_a;
-    varColBdry = meshBoundary(task.varCol{i_varCol},'Gamma_a');
-    zeta0Nodes_a = varColBdry.nodes;
-    noElems_a = varColBdry.noElems;
-    element_a = varColBdry.element;
-    element2_a = varColBdry.element2;
-    index_a = varColBdry.index;
-    pIndex_a = varColBdry.pIndex;
-    elemMap = varColBdry.elemMap;
-    knotVecs_a = varColBdry.knotVecs;
-    elRange_a = varColBdry.elRange;
-    nodesProj = varColBdry.nodesProj;
-    
-    J_a = zeros(size(Q,1),3,3,noElems_a);
-    for e = 1:noElems_a
-        patch = pIndex_a(e);
-        knots = knotVecs_a{patch}(1:2);
-        Xi_e = zeros(2,2);
-        for i = 1:2
-            Xi_e(i,:) = elRange_a{i}(index_a(e,i),:);
-        end
-
-        sctr = zeta0Nodes_a(element_a(e,:));
-        pts = controlPts(sctr,:);
-        wgts = weights(element2_a(e,:),:);
-        
-        xi = parent2ParametricSpace(Xi_e, Q);
-        I = findKnotSpans(degree(1:2), xi(1,:), knots);
-        R = NURBSbasis(I, xi, degree(1:2), knots, wgts);
-        J_a(:,:,1,e) = R{2}*pts;
-        J_a(:,:,2,e) = R{3}*pts;
-    end
 else
-    elemMap = zeros(noElems,1);
-    J_a = NaN;
     pml = NaN;
     r_a = NaN;
-    gamma = 0;
-    sigmaType = 0;
     isPML = false(noElems,1);
     formulation = 'GSB';
 end
@@ -153,24 +117,27 @@ parfor e = 1:noElems
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     R = NURBSbasis(I, xi, degree, knots, wgts);
-    if buildStiffnessMatrix   
-        J1 = R{2}*pts;
-        J2 = R{3}*pts;
-        J3 = R{4}*pts;
-        if usePML && strcmp(formulation,'GSB')
-            if isPML(e)
-                zeta = xi(:,3);
-                intSigma = intSigmaPML(zeta,pml)./zeta;
-                D = [intSigma,intSigma,sigmaPML(zeta,pml)];
-                e_a = elemMap(e);
-                J1 = J1 + 1i*(J1 - repmat(J_a(:,:,1,e_a),degree(3)+1+extraGP(3),1)).*D(:,1);
-                J2 = J2 + 1i*(J2 - repmat(J_a(:,:,2,e_a),degree(3)+1+extraGP(3),1)).*D(:,2);
-                J3 = J3 + 1i*J3.*D(:,3);
+    if buildStiffnessMatrix
+        if any(isPML(e,:)) && usePML && strcmp(formulation,'GSB')
+            xi_t = complex(xi);
+
+            for i = 1:d_p
+                if isPML(e,i)
+                    xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
+                end
             end
-            J_1 = sum(J1.*cross(J2,J3,2),2);
+            
+            R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
+            J1 = R_t{2}*pts;
+            J2 = R_t{3}*pts;
+            J3 = R_t{4}*pts;
+            J3 = J3.*(1+1i*sigmaPML(xi(:,3),pml));
         else
-            J_1 = getJacobian(R,pts,d_p);
+            J1 = R{2}*pts;
+            J2 = R{3}*pts;
+            J3 = R{4}*pts;
         end
+        J_1 = sum(J1.*cross(J2,J3,2),2);
     else
         J_1 = getJacobian(R,pts,d_p);
     end

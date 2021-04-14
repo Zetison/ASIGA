@@ -29,8 +29,9 @@ for i = 1:numel(applyLoads)
     prePlot.plot2Dgeometry = 0;
     prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
     % prePlot.colorFun = @(v) abs(norm2(v)-1);
-    prePlot.resolution = [20,20,0];
-%     prePlot.resolution = [0,0,0];
+%     prePlot.resolution = [20,20,0];
+    prePlot.resolution = [400,100,0];
+    prePlot.resolution = [120,40,0];
 
     postPlot(1).yname        	= 'TS';
     postPlot(1).plotResults  	= true;
@@ -119,6 +120,7 @@ for i = 1:numel(applyLoads)
         rom.omega_ROM = k_ROM*c_f;
         f = k*c_f/(2*pi);
         misc.omega = 2*pi*f;
+        msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
         
         %% Settings for the PML (perfectly matched layers)
         pml.eps = 1e0*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
@@ -132,7 +134,7 @@ for i = 1:numel(applyLoads)
 
         msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
         msh.refineThetaOnly = true;
-        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0), max(round(2^(M-1)-1),0)];
+        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-4)-1,0), max(3*2^(M-5)-1,0)];
         if noDomains > 1
             varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
         end
@@ -152,7 +154,7 @@ for i = 1:numel(applyLoads)
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.M = 1; % 5
+        msh.M = 6; % 5
         
         misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
         
@@ -165,7 +167,7 @@ for i = 1:numel(applyLoads)
         rom.noVecsArr = 32;
 %         rom.noVecsArr = 1;
 
-        misc.r_a = 6.3158;
+        misc.r_a = 1.25*varCol{1}.R1;
         
         misc.storeFullVarCol = false;
         if strcmp(misc.scatteringCase, 'Sweep')
@@ -226,7 +228,7 @@ for i = 1:numel(applyLoads)
     end
 end
 function addCommands_()
-T = readtable('miscellaneous/refSolutions/IMS.csv','FileType','text', 'HeaderLines',1);
+T = readtable('miscellaneous/refSolutions/IMS.csv','FileType','text', 'HeaderLines',0);
 x = T.Var1;
 y = T.Var2;
 plot(x,y,'DisplayName','Experiment')

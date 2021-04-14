@@ -8,7 +8,7 @@ studyName = {'Venas2018iao_Figure6','Venas2020asi_Figure21','Venas2018iao_Table2
 % studyName = {'Venas2019asi_FigureA2A3'};
 stringShift = 60;
 noFailedTests = 0;
-for M_0 = 1 % Most test are only availabel for M_0 = 1 and M_0 = 2
+for M_0 = 1:2 % Most test are only availabel for M_0 = 1 and M_0 = 2
     for i = 1:numel(studyName)
         fprintf(['\n%-' num2str(stringShift) 's'], ['Running test ''' studyName{i} ''' (M_0 = ' num2str(M_0) ') ...'])
         testFailed = false;

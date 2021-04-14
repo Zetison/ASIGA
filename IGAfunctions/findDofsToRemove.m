@@ -20,7 +20,7 @@ end
 noCtrlPts = sum(noCtrlPtsPatch);
 noElems = sum(noElemsPatch);
 pIndex = zeros(noElems,1);
-isPML = false(noElems,1);
+isPML = false(noElems,d_p);
 element = zeros(noElems,size(patches{1}.element,2));
 controlPts = zeros(noCtrlPts,size(patches{1}.controlPts,2));
 weights = zeros(noCtrlPts,1);
@@ -36,7 +36,7 @@ jEl = zeros(1,d_p);
 knotVecs = cell(1,noPatches);
 for i = 1:noPatches
     if isfield(varCol.nurbs{i},'isPML')
-        isPML(e:e+noElemsPatch(i)-1) = varCol.nurbs{i}.isPML;
+        isPML(e:e+noElemsPatch(i)-1,:) = repmat(varCol.nurbs{i}.isPML,noElemsPatch(i),1);
     end
     pIndex(e:e+noElemsPatch(i)-1) = i;
     element(e:e+noElemsPatch(i)-1,:) = maxDof + patches{i}.element;

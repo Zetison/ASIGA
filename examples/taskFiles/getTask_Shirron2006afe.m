@@ -42,7 +42,7 @@ msh.meshFile = 'createNURBSmesh_EL';
 msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 if strcmp(misc.method{1},'PML')
     misc.formulation = {'GSB'};
-%     formulation = {'STD'};
+%     misc.formulation = {'STD'};
     varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-1)/8-1, 2^(M-1)/2-1];
     varCol{1}.refinement = @(M) [0, round(pi/0.5*1.5*10/2), 4, M];
 %     varCol{1}.refinement = @(M) [0, 0, 4, M];
