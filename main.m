@@ -54,7 +54,7 @@ for i_col = 1:numel(studiesCol)
                     ppm.increment();
                 end
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,printLog,resultsFolder);
-                if printLog
+                if ~runRegressionTests
                     fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studiesCol{i_col})) 
                 end
             end
