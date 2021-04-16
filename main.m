@@ -42,9 +42,17 @@ for i_col = 1:numel(studiesCol)
         runTasksInParallel = studiesCol{i_col}(i_study).runTasksInParallel;
         printLog = ~runTasksInParallel && ~runRegressionTests;
         if runTasksInParallel
-            ppm = ParforProgMon('Simulating tasks: ', length(tasks));
+            progressBars = tasks(1).task.misc.progressBars;
+            nProgressStepSize = ceil(length(tasks)/1000);
+            if progressBars
+                ppm = ParforProgMon('Simulating tasks: ', length(tasks));
+            else
+                ppm = NaN;
+            end
             parfor i_task = 1:length(tasks)
-                ppm.increment();
+                if progressBars && mod(i_task,nProgressStepSize) == 0
+                    ppm.increment();
+                end
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,printLog,resultsFolder);
                 if printLog
                     fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studiesCol{i_col})) 

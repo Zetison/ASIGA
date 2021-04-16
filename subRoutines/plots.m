@@ -11,9 +11,9 @@ startMatlabPool
 R = 1;
 shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
            'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
-shapes = {'BeTSSiM1'};
+shapes = {'Barrel'};
 for shape = shapes
-    for parm = 1
+    for parm = 2
         close all
         options.parm = parm;
 %         options.theta = 2*pi;r

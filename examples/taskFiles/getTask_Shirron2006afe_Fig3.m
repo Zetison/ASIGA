@@ -29,7 +29,7 @@ ffp.beta = 0;
 ffp.r = 1;                            % radii for near-field evaluation.
 
 a = 1;
-ie.N = 9; % 9
+iem.N = 9; % 9
 varCol{1} = struct('media', 'fluid', ...
                    't', 1, ...
                    'R1', a, ...
@@ -74,9 +74,9 @@ pml.gamma = 5;          % parameter for sigmaType = 1
 pml.t = 0.25*a;         % thickness of PML
 pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
 
-ie.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
-ie.p_ie     = 4;          % Set polynomial order for radial shape functions
-ie.s_ie     = 2;          % Distrubution order for radial shape functions
+iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
+iem.p_ie     = 4;          % Set polynomial order for radial shape functions
+iem.s_ie     = 2;          % Distrubution order for radial shape functions
 
 msh.parm = 1;
 ffp.calculateFarFieldPattern = 1;

@@ -161,7 +161,12 @@ pD = plotBEMGeometry(patches,plot_GP,10,0,0.8);
 nProgressStepSize = ceil(n_cp/1000);
 progressBars = task.misc.progressBars;
 if progressBars
-    ppm = ParforProgMon('Building CHIEF matrix: ', n_cp, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building CHIEF matrix: ', n_cp, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end

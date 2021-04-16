@@ -56,7 +56,12 @@ J_1_values   = zeros(size(W,1),noElems,1);
 progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building BA matrix (1/2): ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building BA matrix (1/2): ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end
@@ -111,7 +116,12 @@ analytic_values = reshape(analytic_values, d_f, size(W,1), noElems);
 Fvalues   = zeros(n_en*d_f,noElems); 
 F_indices = zeros(n_en*d_f,noElems); 
 if progressBars
-    ppm = ParforProgMon('Building BA matrix (2/2): ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building BA matrix (2/2): ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end

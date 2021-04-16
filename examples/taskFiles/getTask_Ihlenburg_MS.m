@@ -25,7 +25,7 @@ for i = 1:numel(applyLoads)
     warning('off','NURBS:weights')
 
     prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
-    prePlot.plot3Dgeometry = 0;
+    prePlot.plot3Dgeometry = 1;
     prePlot.plot2Dgeometry = 0;
     prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
     % prePlot.colorFun = @(v) abs(norm2(v)-1);
@@ -120,7 +120,7 @@ for i = 1:numel(applyLoads)
         rom.omega_ROM = k_ROM*c_f;
         f = k*c_f/(2*pi);
         misc.omega = 2*pi*f;
-        msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
+        msh.explodeNURBS = 1;   % Create patches from all C^0 interfaces
         
         %% Settings for the PML (perfectly matched layers)
         pml.eps = 1e0*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
@@ -154,7 +154,7 @@ for i = 1:numel(applyLoads)
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.M = 6; % 5
+        msh.M = 1; % 7
         
         misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
         

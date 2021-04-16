@@ -84,7 +84,12 @@ extraGP = task.misc.extraGP;
 progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building infinite element matrix: ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building infinite element matrix: ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end

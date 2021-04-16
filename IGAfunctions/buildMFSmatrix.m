@@ -26,7 +26,12 @@ dpdn = task.dpdn_;
 nProgressStepSize = ceil(noElems/1000);
 progressBars = task.misc.progressBars;
 if progressBars
-    ppm = ParforProgMon('Building MFS matrix: ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building MFS matrix: ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end

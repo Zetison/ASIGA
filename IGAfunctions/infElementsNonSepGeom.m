@@ -74,7 +74,12 @@ Avalues = zeros((N*n_en)^2,noElems);
 progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building IE matrix: ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building IE matrix: ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end

@@ -401,7 +401,12 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
         progressBars = numel(omega) > 1 && task.progressBars;
         nProgressStepSize = ceil(numel(omega)/10);
         if progressBars
-            ppm = ParforProgMon('Calculating surface error: ', numel(omega));
+            try
+                ppm = ParforProgMon('Calculating surface error: ', numel(omega));
+            catch
+                progressBars = false;
+                ppm = NaN;
+            end
         else
             ppm = NaN;
         end

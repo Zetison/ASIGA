@@ -57,16 +57,16 @@ switch options.noXLoopPrms
     case 0
         col = LaTeXcolorMap(noTasks);
         for i = 1:noTasks
-            if isfield(study.tasks(i).task.varCol{1},xname)
-                x = study.tasks(i).task.varCol{1}.(xname);
-            else
-                x = study.tasks(i).task.(xname);
+            try 
+                x = eval(['study.tasks(i).task.varCol{1}.' xname]);
+            catch
+                x = eval(['study.tasks(i).task.' xname]);
             end
             x = x*options.xScale;
-            if ~isfield(study.tasks(i).task.results, yname)
+            try 
+                y = eval(['study.tasks(i).task.results.' yname]);
+            catch
                 y = NaN*x';
-            else
-                y = study.tasks(i).task.results.(yname);
             end
             y = y*options.yScale;
             
@@ -158,15 +158,15 @@ switch options.noXLoopPrms
         idxMap = zeros(sizes); % y axis data 
 
         for i = 1:noTasks
-            if isfield(study.tasks(i).task.varCol{1},xname)
-                x(i) = study.tasks(i).task.varCol{1}.(xname);  
-            else
-                x(i) = study.tasks(i).task.(xname);  
-            end  
-            if ~isfield(study.tasks(i).task.results, yname)
-                y(i) = NaN*x(i);
-            else
-                y(i) = study.tasks(i).task.results.(yname);
+            try 
+                x(i) = eval(['study.tasks(i).task.varCol{1}.' xname]);
+            catch
+                x(i) = eval(['study.tasks(i).task.' xname]);
+            end
+            try 
+                y(i) = eval(['study.tasks(i).task.results.' yname]);
+            catch
+                y(i) = NaN;
             end
             if plotAnalyticSolution
                 y_ref(i) = study.tasks(i).task.results.([yname '_ref']);
@@ -293,6 +293,8 @@ if plotResults
             xLabel = 'Time building the system';
         case 'N'
             xLabel = '$$N$$';
+        case 'pml.gamma'
+            xLabel = '$$\gamma$$';
         case 'agpBEM'
             xLabel = '$$s$$';
         otherwise
@@ -363,6 +365,10 @@ if plotResults
         else
             ylim(options.ylim)
         end
+    end
+    idx = find(xname == '.',1,'last');
+    if ~isempty(idx)
+        xname = xname(idx+1:end);
     end
     savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
 end

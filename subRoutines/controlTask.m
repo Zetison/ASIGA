@@ -51,7 +51,7 @@ end
 if strcmp(method,'BA') && strcmp(scatteringCase,'MS')
     error('This is case is not implemented. The best approximation method must be combined with "scatteringCase = BI"')
 end
-if strcmp(method,'PML') && isnan(task.pml.C) && task.rom.useROM
+if strcmp(method,'PML') && isnan(task.pml.gamma) && task.rom.useROM
     error('C is set: C cannot be frequency dependent when using ROM (must be C = NaN)')
 end
 task.misc.storeFullVarCol = task.misc.storeFullVarCol || task.rom.useROM;
@@ -66,6 +66,8 @@ end
 if task.misc.solveForPtot && ~(strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'BA'))
     error('solveForPtot can only be used with method = BEM or method = BA')
 end
-
+if (task.pml.sigmaType == 3 || task.pml.sigmaType == 4) && ~task.pml.dirichlet
+    error('sigmaType == 3 and sigmaType == 4 requires Dirichlet conditions at Gamma_b')
+end
 
 

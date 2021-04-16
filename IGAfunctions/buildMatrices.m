@@ -38,12 +38,20 @@ usePML = any(isPML(:)) && isfield(task,'pml');
 
 if usePML
     pml = task.pml;
-    if isnan(pml.C)
+    if isnan(pml.gamma)
         k = task.misc.omega/task.varCol{i_varCol}.c_f;
-        pml.C = -log(pml.eps)*(pml.n+1)/(k*pml.t);
+        switch pml.sigmaType
+            case 1
+                pml.gamma = 5;
+            case 2
+                pml.gamma = -log(pml.eps)*(pml.n+1)/(k*pml.t);
+            case {3,4}
+                pml.gamma = 1/(k*pml.t);
+        end
     end
     formulation = task.misc.formulation;
     r_a = task.misc.r_a;
+    task.pml = pml;
 else
     pml = NaN;
     r_a = NaN;
@@ -86,7 +94,12 @@ end
 progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building mass/stiffness matrix: ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building mass/stiffness matrix: ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end
@@ -131,7 +144,15 @@ parfor e = 1:noElems
             J1 = R_t{2}*pts;
             J2 = R_t{3}*pts;
             J3 = R_t{4}*pts;
-            J3 = J3.*(1+1i*sigmaPML(xi(:,3),pml));
+            if isPML(e,1)
+                J1 = J1.*(1+1i*sigmaPML(xi(:,1),pml));
+            end
+            if isPML(e,2)
+                J2 = J2.*(1+1i*sigmaPML(xi(:,2),pml));
+            end
+            if isPML(e,3)
+                J3 = J3.*(1+1i*sigmaPML(xi(:,3),pml));
+            end
         else
             J1 = R{2}*pts;
             J2 = R{3}*pts;
@@ -160,7 +181,7 @@ parfor e = 1:noElems
         if usePML && strcmp(formulation,'STD')
             X = R{1}*pts;
             [r, theta, phi] = evaluateProlateCoords(X,0);
-            if isPML(e)
+            if any(isPML(e,:))
                 rs = (r-r_a)/pml.t;
                 intSigma = pml.t*intSigmaPML(rs,pml);
                 D = 1 + 1i*[sigmaPML(rs,pml), intSigma./r, intSigma./r];
@@ -233,31 +254,49 @@ if buildMassMatrix
     task.varCol{i_varCol}.A_M = kron(sparse(double(spIdxRowM),double(spIdxColM),Mvalues,noCtrlPts,noCtrlPts,numel(Mvalues)),eye(d_f));
 end
 
-function sigma = sigmaPML(zeta,pml)
-sigma = zeros(size(zeta));
+function sigma = sigmaPML(xi,pml)
+sigma = zeros(size(xi));
 switch pml.sigmaType
     case 0
         return
     case 1
-        sigma = zeta.*(exp(pml.gamma*zeta)-1);
+        sigma = xi.*(exp(pml.gamma*xi)-1);
     case 2
-        sigma = pml.C*zeta.^pml.n;
+        sigma = pml.gamma*xi.^pml.n;
+    case 3
+        sigma = pml.gamma./(1-xi).^pml.n;
+    case 4
+        sigma = pml.gamma*(1./(1-xi).^pml.n - 1);
     otherwise
         error('Not implemented')
 end
 
-function I = intSigmaPML(zeta,pml)
+function I = intSigmaPML(xi,pml)
 % I = int_0^zeta sigma(xi) dxi
-I = zeros(size(zeta));
+I = zeros(size(xi));
 switch pml.sigmaType
     case 0
         return
     case 1 % sigma(xi) = xi*(exp(gamma*xi)-1)
         gamma = pml.gamma;
-        I = (exp(gamma*zeta).*(gamma*zeta-1) + 1)/gamma^2 - zeta.^2/2;
+        I = (exp(gamma*xi).*(gamma*xi-1) + 1)/gamma^2 - xi.^2/2;
     case 2 % sigma(xi) = gamma*xi^n
         n = pml.n;
-        I = pml.C*zeta.^(n+1)/(n+1);
+        I = pml.gamma*xi.^(n+1)/(n+1);
+    case 3
+        n = pml.n;
+        if n == 1
+            I = -pml.gamma*log(1-xi);
+        else
+            I = pml.gamma*((1-xi).^(1-n)-1)./(n-1);
+        end
+    case 4
+        n = pml.n;
+        if n == 1
+            I = -pml.gamma*(log(1-xi) + xi);
+        else
+            I = pml.gamma*(((1-xi).^(1-n)-1)./(n-1) - xi);
+        end
     otherwise
         error('Not implemented')
 end

@@ -137,7 +137,15 @@ else
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
     end
-    fluid = makeUniformNURBSDegree(fluid,degree);
+    if task.msh.refineThetaOnly
+        if parm ~= 1
+            error('Must have parm = 1 for pure theta refinement')
+        end
+        degreeVec = [2,degree,degree];
+    else
+        degreeVec = degree;
+    end
+    fluid = makeUniformNURBSDegree(fluid,degreeVec);
     if isfield(varCol{1},'refinement')
         fluid = insertKnotsInNURBS(fluid,varCol{1}.refinement(M));
     else
@@ -148,7 +156,7 @@ else
 
     if numel(varCol) > 1
         solid = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
-        solid = makeUniformNURBSDegree(solid,degree);
+        solid = makeUniformNURBSDegree(solid,degreeVec);
         if explodeNURBSpatches
             solid = explodeNURBS(solid,'eta');
             solid = explodeNURBS(solid,'xi');
@@ -163,7 +171,7 @@ else
 
     if numel(varCol) > 2
         fluid_i = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g] - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i, 'Xi', Xi);
-        fluid_i = makeUniformNURBSDegree(fluid_i,degree);
+        fluid_i = makeUniformNURBSDegree(fluid_i,degreeVec);
         if explodeNURBSpatches
             fluid_i = explodeNURBS(fluid_i,'eta');
             fluid_i = explodeNURBS(fluid_i,'xi');

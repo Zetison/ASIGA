@@ -1,5 +1,7 @@
-function nurbs = loftNURBS(nurbsCol)
-% This function only give a linear lofting between curves
+function nurbs = loftNURBS(nurbsCol,p)
+if nargin < 2
+    p = 1;
+end
 for i = 1:numel(nurbsCol)
     nurbsCol{i} = ensure3DNURBS(nurbsCol{i});
 end
@@ -13,7 +15,7 @@ for patch = 1:noPatches
         subs = {[repmat({':'},1,ndims(coeffs)-1),{i}]};
         coeffs = subasgnArr(coeffs,coeffs_i,subs);
     end
-    Eta = 0:(n-1);
-    Eta = [0,Eta/(n-1),1];
+    Eta = 0:(n-p);
+    Eta = [zeros(1,p),Eta/(n-p),ones(1,p)];
     nurbs(patch) = createNURBSobject(coeffs,[nurbsCol{1}{patch}.knots(:)', {Eta}]);
 end

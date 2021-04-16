@@ -158,12 +158,11 @@ iem.Upsilon  = 0;            % Parameter for prolate spheroidal coordinate syste
 
 %% Settings for the PML (perfectly matched layers)
 pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 2;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
-pml.gamma = 5;          % parameter for sigmaType = 1
+pml.sigmaType = 2;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+pml.gamma = NaN;        % If ~isnan(pml.gamma) the matrices will be frequency independent (needed if useROM)
 pml.t = NaN;         	% thickness of PML
 pml.n = 2;            	% polynomial order
 pml.dirichlet = false;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-pml.C = NaN;            % If ~isnan(pml.C) the matrices will be frequency independent (needed if useROM)
 
 %% Settings for the MFS (method of fundamental solution)
 mfs.delta = 0.1;            % Distance from the boundary to the internal source points

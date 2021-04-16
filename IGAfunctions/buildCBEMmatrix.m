@@ -206,7 +206,12 @@ totNoQPprev = 0;
 nProgressStepSize = ceil(n_cp/1000);
 progressBars = task.misc.progressBars;
 if progressBars
-    ppm = ParforProgMon('Building BEM matrix: ', n_cp, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building BEM matrix: ', n_cp, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end

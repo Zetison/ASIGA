@@ -82,7 +82,12 @@ switch task.misc.method
                 progressBars = task.misc.progressBars;
                 nProgressStepSize = ceil(noIncDir/1000);
                 if progressBars
-                    ppm = ParforProgMon('Tracing rays: ', noIncDir, nProgressStepSize);
+                    try
+                        ppm = ParforProgMon('Tracing rays: ', noIncDir, nProgressStepSize);
+                    catch
+                        progressBars = false;
+                        ppm = NaN;
+                    end
                 else
                     ppm = NaN;
                 end
