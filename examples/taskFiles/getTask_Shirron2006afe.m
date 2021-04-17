@@ -113,7 +113,7 @@ postPlot(2).noXLoopPrms   	= 0;
 % postPlot(3).axisType = 'semilogy';
 % postPlot(3).yname = 'error_p';
 
-loopParameters = {'msh.M','misc.method','misc.BC','pml.sigmaType'};
+loopParameters = {'msh.M','misc.method','pml.sigmaType'};
 para.plotResultsInParaview	= 0;
 para.extraXiPts              = '30';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
@@ -121,11 +121,17 @@ para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization point
 % collectIntoTasks
 
 %% PML parameter study
-misc.progressBars = 0;
 msh.degree = 2;
 varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, 2^(M-4)-1];
-msh.M = 7; % 4
+msh.M = 6:7; 
+% msh.M = 2:3; 
 
+k = [5,10]/a;
+f = k*varCol{1}.c_f/(2*pi);
+misc.omega = 2*pi*f;
+misc.r_a = 1.25*a;
+
+misc.progressBars = 0;
 runTasksInParallel = 1;       % Run tasks in parallel
 misc.checkNURBSweightsCompatibility = false;
 
@@ -151,18 +157,17 @@ postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).xLoopName     	= 'pml.gamma';
 postPlot(2) = [];
-loopParameters = {'msh.M','misc.method','misc.BC','pml.sigmaType','pml.n','pml.gamma'};
+loopParameters = {'msh.M','misc.method','pml.gamma','pml.sigmaType','pml.n','misc.omega'};
 collectIntoTasks
-
 
 misc.method = {'IE'};
 misc.formulation = {'BGU'};
 pml.sigmaType = NaN;
 pml.n = NaN;
 pml.gamma = [pml.gamma(1),pml.gamma(end)];
-loopParameters = {'msh.M','misc.method','misc.BC','pml.gamma'};
+loopParameters = {'msh.M','misc.method','pml.gamma'};
 collectIntoTasks
 
 misc.method = {'BA'};
-misc.formulation = {'VL2E'};
+misc.formulation = {'SL2E'};
 collectIntoTasks

@@ -27,7 +27,8 @@ studiesCol = getTasks(studyName,runRegressionTests,M_0);
 %% Perform studies
 for i_col = 1:numel(studiesCol)
     t_start_study = tic;
-    for i_study = 1:numel(studiesCol{i_col})    
+    noStudies = numel(studiesCol{i_col}) ;
+    for i_study = 1:noStudies    
         loopParameters = studiesCol{i_col}(i_study).loopParameters;
         loopParametersArr = studiesCol{i_col}(i_study).loopParametersArr;
         noTasks = length(studiesCol{i_col}(i_study).tasks);
@@ -55,7 +56,7 @@ for i_col = 1:numel(studiesCol)
                 end
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,printLog,resultsFolder);
                 if ~runRegressionTests
-                    fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studiesCol{i_col})) 
+                    fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study, noStudies) 
                 end
             end
             studiesCol{i_col}(i_study).tasks = tasks;
@@ -73,7 +74,7 @@ for i_col = 1:numel(studiesCol)
                     tasks = computeROMsolution(tasks,i_task,basisROMcell,omega_ROM,noVecsArr,printLog);
                 end
                 if printLog
-                    fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study,length(studiesCol{i_col})) 
+                    fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study, noStudies) 
                 end
             end
             studiesCol{i_col}(i_study).tasks = tasks;
