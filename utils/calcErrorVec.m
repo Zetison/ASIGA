@@ -8,15 +8,27 @@ du_hs = cell(noDomains,1);
 for i = 1:noDomains
     U = task.varCol{i}.U;
     %% Extract all needed data from task.varCol
-    index = task.varCol{i}.index;
-    noElems = task.varCol{i}.noElems;
-    elRange = task.varCol{i}.elRange;
-    element = task.varCol{i}.element;
-    element2 = task.varCol{i}.element2;
-    weights = task.varCol{i}.weights;
-    controlPts = task.varCol{i}.controlPts;
-    knotVecs = task.varCol{i}.knotVecs;
-    pIndex = task.varCol{i}.pIndex;
+    if i == 1 && strcmp(task.misc.method,'PML')
+        index = task.varCol{i}.index;
+        noElems = task.varCol{i}.noElems;
+        elRange = task.varCol{i}.elRange;
+        element = task.varCol{i}.element;
+        element2 = task.varCol{i}.element2;
+        weights = task.varCol{i}.weights;
+        controlPts = task.varCol{i}.controlPts;
+        knotVecs = task.varCol{i}.knotVecs;
+        pIndex = task.varCol{i}.pIndex;
+    else
+        index = task.varCol{i}.index;
+        noElems = task.varCol{i}.noElems;
+        elRange = task.varCol{i}.elRange;
+        element = task.varCol{i}.element;
+        element2 = task.varCol{i}.element2;
+        weights = task.varCol{i}.weights;
+        controlPts = task.varCol{i}.controlPts;
+        knotVecs = task.varCol{i}.knotVecs;
+        pIndex = task.varCol{i}.pIndex;
+    end
     d_p = task.varCol{i}.patches{1}.nurbs.d_p;
 
     degree = task.varCol{i}.degree; % assume degree is equal in all patches

@@ -20,6 +20,9 @@ for i = 1:numel(task.varCol)
                 task.varCol = copySet(task.varCol,2, 'outer', 'Gamma');
                 task.varCol = copySet(task.varCol,2, 'outer', 'Neumann');
             end
+            domain.Attributes.name = 'Omega_a';
+            domain.item{1}.Text = num2str(1:numel(task.varCol{i}.nurbs));
+            task.varCol{i}.geometry.domains.domain{1} = domain;
         else
             task.varCol = copySet(task.varCol,i-1, 'inner', 'innerCoupling');
             task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');

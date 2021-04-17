@@ -124,7 +124,7 @@ para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization point
 msh.degree = 2;
 varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, 2^(M-4)-1];
 msh.M = 6:7; 
-% msh.M = 2:3; 
+% msh.M = 1:2; 
 
 k = [5,10]/a;
 f = k*varCol{1}.c_f/(2*pi);
@@ -160,12 +160,13 @@ postPlot(2) = [];
 loopParameters = {'msh.M','misc.method','pml.gamma','pml.sigmaType','pml.n','misc.omega'};
 collectIntoTasks
 
+iem.N = 4;
 misc.method = {'IE'};
 misc.formulation = {'BGU'};
 pml.sigmaType = NaN;
 pml.n = NaN;
 pml.gamma = [pml.gamma(1),pml.gamma(end)];
-loopParameters = {'msh.M','misc.method','pml.gamma'};
+loopParameters = {'msh.M','misc.method','pml.gamma','misc.omega'};
 collectIntoTasks
 
 misc.method = {'BA'};
