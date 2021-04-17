@@ -391,14 +391,16 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
             U_sweep{i_o} = UU;
             task = postProcessSolution(task,UU);
         end
-        if strcmp(task.misc.scatteringCase,'Sweep') && numel(omega) > 1
+        if printLog && strcmp(task.misc.scatteringCase,'Sweep') && numel(omega) > 1
             fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_o, numel(omega), toc(t_freq))  
         end
     end
     if numel(omega) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         tic
-        fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
-        progressBars = numel(omega) > 1 && task.progressBars;
+        if printLog
+            fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
+        end
+        progressBars = numel(omega) > 1 && task.misc.progressBars;
         nProgressStepSize = ceil(numel(omega)/10);
         if progressBars
             try
