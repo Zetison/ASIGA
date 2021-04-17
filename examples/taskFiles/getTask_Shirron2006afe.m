@@ -73,7 +73,7 @@ pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed 
 
 msh.parm = 1;
 err.calculateSurfaceError = 1;
-err.calculateVolumeError  = 0;
+err.calculateVolumeError  = 1;
 
 ffp.calculateFarFieldPattern = 1;
 
@@ -86,7 +86,7 @@ prePlot.resolution = [20,20,0];
 misc.computeCondNumber = 0;
 
 postPlot(1).xname           = 'M';
-postPlot(1).yname        	= 'surfaceError';
+postPlot(1).yname        	= 'L2Error';
 postPlot(1).plotResults  	= 0;
 postPlot(1).printResults 	= false;
 postPlot(1).axisType      	= 'semilogy';
@@ -138,13 +138,13 @@ misc.checkNURBSweightsCompatibility = false;
 pml.sigmaType = 2:4;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
 pml.n = [1,2];
 % pml.gamma = NaN;
-pml.gamma = linspace2(0,5,100); % pml.t*k = 2.5
+pml.gamma = linspace2(0,5,200); % pml.t*k = 2.5
 pml.dirichlet = 1;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
 
 ffp.calculateFarFieldPattern = 0;
 
 postPlot(1).xname           = 'pml.gamma';
-postPlot(1).yname        	= 'surfaceError';
+postPlot(1).yname        	= 'L2Error';
 postPlot(1).plotResults  	= 1;
 postPlot(1).printResults 	= 1;
 postPlot(1).axisType      	= 'semilogy';
@@ -158,7 +158,7 @@ postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).xLoopName     	= 'pml.gamma';
 postPlot(2) = [];
 loopParameters = {'msh.M','misc.method','pml.gamma','pml.sigmaType','pml.n','misc.omega'};
-collectIntoTasks
+% collectIntoTasks
 
 iem.N = 4;
 misc.method = {'IE'};

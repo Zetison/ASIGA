@@ -35,6 +35,9 @@ sizes = zeros(1,length(loopParametersArr));
 for i = 1:length(loopParametersArr)
     sizes(i) = numel(loopParametersArr{i});
 end
+if length(loopParametersArr) == 1
+    sizes = [sizes,1];
+end
 % sizes = fliplr(sizes);
 noTasks = prod(sizes);
 if isempty(options.subFolderName)
@@ -176,15 +179,15 @@ switch options.noXLoopPrms
         % Collect error data
         otherInd = [1:idx-1,idx+1:noParms];
         otherParms = sizes(otherInd);
-        
-        x = permute(x, [setdiff(1:noParms,idx), idx])*options.xScale;
-        y = permute(y, [setdiff(1:noParms,idx), idx])*options.yScale;
-        if plotAnalyticSolution
-            y_ref = permute(y_ref, [setdiff(1:noParms,idx), idx])*options.yScale;
+        if noParms > 1
+            x = permute(x, [setdiff(1:noParms,idx), idx])*options.xScale;
+            y = permute(y, [setdiff(1:noParms,idx), idx])*options.yScale;
+            if plotAnalyticSolution
+                y_ref = permute(y_ref, [setdiff(1:noParms,idx), idx])*options.yScale;
+            end
+            idxMap = permute(idxMap, [setdiff(1:noParms,idx), idx]);
         end
-
-        idxMap = permute(idxMap, [setdiff(1:noParms,idx), idx]);
-
+        
         size1 = sizes(idx);
         size2 = prod(otherParms);
         col = LaTeXcolorMap(size2);

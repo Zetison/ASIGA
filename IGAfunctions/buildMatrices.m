@@ -44,7 +44,7 @@ if usePML
             case 1
                 pml.gamma = 5;
             case 2
-                pml.gamma = -log(pml.eps)*(pml.n+1)/(k*pml.t);
+                pml.gamma = (pml.n+1)/(k*pml.t);
             case {3,4}
                 pml.gamma = 1/(k*pml.t);
         end
@@ -262,7 +262,7 @@ switch pml.sigmaType
     case 1
         sigma = xi.*(exp(pml.gamma*xi)-1);
     case 2
-        sigma = pml.gamma*xi.^pml.n;
+        sigma = -pml.gamma*xi.^pml.n*log(pml.eps);
     case 3
         sigma = pml.gamma./(1-xi).^pml.n;
     case 4
@@ -282,7 +282,7 @@ switch pml.sigmaType
         I = (exp(gamma*xi).*(gamma*xi-1) + 1)/gamma^2 - xi.^2/2;
     case 2 % sigma(xi) = gamma*xi^n
         n = pml.n;
-        I = pml.gamma*xi.^(n+1)/(n+1);
+        I = -pml.gamma*xi.^(n+1)/(n+1)*log(pml.eps);
     case 3
         n = pml.n;
         if n == 1

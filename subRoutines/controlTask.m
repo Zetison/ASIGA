@@ -48,7 +48,7 @@ end
 if strcmp(method, 'PML') && ~(strcmp(formulation, 'GSB') || strcmp(formulation, 'STD'))
 	error('The only "formulation"s available for "method = PML" is GSB (STD is only implemented for testing purposes)')
 end
-if strcmp(method,'BA') && strcmp(scatteringCase,'MS')
+if strcmp(method,'BA') && strcmp(scatteringCase,'MS') && (numel(task.ffp.alpha_s) > 1 || numel(task.ffp.beta_s) > 1)
     error('This is case is not implemented. The best approximation method must be combined with "scatteringCase = BI"')
 end
 if strcmp(method,'PML') && isnan(task.pml.gamma) && task.rom.useROM

@@ -14,6 +14,9 @@ else
         ylimOld = ylim;
     end
 end
+if isempty(legendEntry)
+    legendEntry = '';
+end
 switch axisType
     case 'plot'
         h = plot(x,y,lineStyle,'color',color,'DisplayName',legendEntry);

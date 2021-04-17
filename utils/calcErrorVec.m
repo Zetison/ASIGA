@@ -9,15 +9,27 @@ for i = 1:noDomains
     U = task.varCol{i}.U;
     %% Extract all needed data from task.varCol
     if i == 1 && strcmp(task.misc.method,'PML')
-        index = task.varCol{i}.index;
-        noElems = task.varCol{i}.noElems;
-        elRange = task.varCol{i}.elRange;
-        element = task.varCol{i}.element;
-        element2 = task.varCol{i}.element2;
-        weights = task.varCol{i}.weights;
-        controlPts = task.varCol{i}.controlPts;
-        knotVecs = task.varCol{i}.knotVecs;
-        pIndex = task.varCol{i}.pIndex;
+        varCol_dummy = task.varCol{1};
+        domain = varCol_dummy.geometry.domains.domain;
+        [j,setFound] = findSet(domain,'Omega_a');
+        if ~setFound
+            error('Omega_a is not defined')
+        end
+        varCol_dummy.nurbs = varCol_dummy.nurbs(str2num(domain{j}.item{1}.Text));
+        [j,setFound] = findSet(varCol_dummy.geometry.topologysets.set,'homDirichlet');
+        if setFound
+            varCol_dummy.geometry.topologysets.set(j) = [];
+        end
+        varCol_dummy = findDofsToRemove(generateIGAmesh(convertNURBS(varCol_dummy)));
+        index = varCol_dummy.index;
+        noElems = varCol_dummy.noElems;
+        elRange = varCol_dummy.elRange;
+        element = varCol_dummy.element;
+        element2 = varCol_dummy.element2;
+        weights = varCol_dummy.weights;
+        controlPts = varCol_dummy.controlPts;
+        knotVecs = varCol_dummy.knotVecs;
+        pIndex = varCol_dummy.pIndex;
     else
         index = task.varCol{i}.index;
         noElems = task.varCol{i}.noElems;
