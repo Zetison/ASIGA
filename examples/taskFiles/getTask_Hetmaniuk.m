@@ -208,7 +208,7 @@ for i = 1:numel(BCs)
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.4;
     end
-    pml.C = -log(pml.eps)*(pml.n+1)/(k(1)*pml.t);
+    pml.gamma = -log(pml.eps)*(pml.n+1)/(k(1)*pml.t);
     
     rom.useROM = true;
 

@@ -25,7 +25,7 @@ for i = 1:numel(applyLoads)
     warning('off','NURBS:weights')
 
     prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
-    prePlot.plot3Dgeometry = 1;
+    prePlot.plot3Dgeometry = 0;
     prePlot.plot2Dgeometry = 0;
     prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
     % prePlot.colorFun = @(v) abs(norm2(v)-1);
@@ -42,7 +42,7 @@ for i = 1:numel(applyLoads)
     postPlot(1).legendEntries 	= {};
     postPlot(1).subFolderName 	= '';
     postPlot(1).fileDataHeaderX	= [];
-    postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_();
+    postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(study);
 
     ffp.alpha_s = 0;
     ffp.beta_s = 0;   
@@ -120,15 +120,16 @@ for i = 1:numel(applyLoads)
         rom.omega_ROM = k_ROM*c_f;
         f = k*c_f/(2*pi);
         misc.omega = 2*pi*f;
-        msh.explodeNURBS = 1;   % Create patches from all C^0 interfaces
+        msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
         
         %% Settings for the PML (perfectly matched layers)
         pml.eps = 1e0*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-        pml.sigmaType = 2;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
-        pml.t = 0.25*varCol{1}.R1; % thickness of PML
-        pml.n = 2;            	% polynomial order
+        pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+        pml.t = 0.1*varCol{1}.R1; % thickness of PML
+        pml.n = 1;            	% polynomial order
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-        pml.C = -log(pml.eps)*(pml.n+1)/(k(1)*pml.t);     
+        pml.gamma = -log(pml.eps)*(pml.n+1)/(k(1)*pml.t);     
+        pml.gamma = 1/(k(1)*pml.t);     
         
         postPlot(1).xScale = varCol{1}.R1;
 
@@ -154,7 +155,7 @@ for i = 1:numel(applyLoads)
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.M = 1; % 7
+        msh.M = 7; % 7
         
         misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
         
@@ -227,7 +228,8 @@ for i = 1:numel(applyLoads)
     %     collectIntoTasks
     end
 end
-function addCommands_()
+
+function addCommands_(study)
 T = readtable('miscellaneous/refSolutions/IMS.csv','FileType','text', 'HeaderLines',0);
 x = T.Var1;
 y = T.Var2;

@@ -8,7 +8,6 @@ function studiesCol = main(studyName,runRegressionTests,M_0)
 % Release date: 29/07/2020
 
 startup
-startMatlabPool
 if nargin < 1
     studyName = availableStudies();
 end
@@ -23,6 +22,8 @@ if ~iscell(studyName)
     studyName = {studyName};
 end
 studiesCol = getTasks(studyName,runRegressionTests,M_0);
+
+startMatlabPool
 
 %% Perform studies
 for i_col = 1:numel(studiesCol)
@@ -101,6 +102,15 @@ for i_col = 1:numel(studiesCol)
                 if isa(study.postPlot(i).addCommands,'function_handle') && i_study == numel(studiesCol{i_col}) 
                     figure(i)
                     study.postPlot(i).addCommands(study,i_study,studiesCol{i_col})
+                    if isempty(study.postPlot(i).subFolderName)
+                        subFolderName = study.resultsFolder;
+                    else
+                        subFolderName = study.postPlot(i).subFolderName;
+                    end
+                    xname = study.postPlot(i).xname;
+                    yname = study.postPlot(i).yname;
+                    model = study.tasks(1).task.misc.model;
+                    savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
                 end
             end
         end
