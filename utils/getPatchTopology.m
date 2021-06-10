@@ -1,5 +1,6 @@
 function patchTop = getPatchTopology(patches)
-
+% This routine assumes all patches have same orientation in the sense that
+% the normal vector points in the same direction
 noPatches = numel(patches);
 patchData = cell(noPatches,1);
 Eps = 1e7*eps;

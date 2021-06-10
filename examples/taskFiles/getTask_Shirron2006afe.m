@@ -118,7 +118,7 @@ para.plotResultsInParaview	= 0;
 para.extraXiPts              = '30';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'round(20/2^(M-1))';  % Extra visualization points in the eta-direction per element
 para.extraZetaPts            = 'round(1/2^(M-1))';   % Extra visualization points in the zeta-direction per element
-% collectIntoTasks
+collectIntoTasks
 
 %% PML parameter study
 msh.degree = 2;
@@ -167,8 +167,8 @@ pml.sigmaType = NaN;
 pml.n = NaN;
 pml.gamma = [pml.gamma(1),pml.gamma(end)];
 loopParameters = {'msh.M','misc.method','pml.gamma','misc.omega'};
-collectIntoTasks
+% collectIntoTasks
 
 misc.method = {'BA'};
 misc.formulation = {'SL2E'};
-collectIntoTasks
+% collectIntoTasks

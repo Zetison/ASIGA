@@ -1,4 +1,4 @@
-function [nurbs, newKnotsIns] = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts,dirs,sortImap)
+function [nurbs, newKnotsIns] = refineNURBSevenly(nurbs,n,Imap,noExtraEvalPts,dirs,sortImap,useFloor)
 if nargin < 3
     Imap = {};
 end
@@ -12,6 +12,9 @@ if nargin < 5
 end
 if nargin < 6
     sortImap = true;
+end
+if nargin < 7
+    useFloor = false;
 end
 if sortImap
     for i = 1:numel(Imap)
@@ -61,7 +64,12 @@ for patch = 1:noPatches
             if ~any(abs(I_maxRecord-I_max) < Eps)
                 I_maxRecord = [I_maxRecord, I_max];
             end
-            newXiKnots = [newXiKnots, linspace2(uniqueXi(j),uniqueXi(j+1),round(I_max*n))];
+            if useFloor
+                noNewKnots = floor(I_max*n+Eps);
+            else
+                noNewKnots = round(I_max*n);
+            end
+            newXiKnots = [newXiKnots, linspace2(uniqueXi(j),uniqueXi(j+1),noNewKnots)];
         end
         newKnots{dir} = newXiKnots;
     end

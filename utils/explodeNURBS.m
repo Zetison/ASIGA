@@ -1,10 +1,18 @@
-function nurbs = explodeNURBS(nurbs,dir)
+function nurbs = explodeNURBS(nurbs,dir,reverseDir)
 
 d_p = nurbs{1}.d_p;
 if nargin < 2
     dir = 1:d_p;
 end
-for j = 1:numel(dir)
+if nargin < 3
+    reverseDir = false;
+end
+if reverseDir
+    j_dirs = numel(dir):-1:1;
+else
+    j_dirs = 1:numel(dir);
+end
+for j = j_dirs
     nurbs = explodeNURBSdir(nurbs,dir(j),d_p);
 end
 
@@ -41,7 +49,13 @@ for i = 1:numel(nurbs)
                         controlPts = nurbs_i.coeffs(:,:,:,idxPrev-1:idx+p-1);
                 end
             end
-            nurbs2(end+1) = createNURBSobject(controlPts,knots);
+            nurbs2{end+1} = nurbs_i;
+            
+            nurbs2{end}.coeffs = controlPts;
+            nurbs2{end}.knots = knots;
+            np = size(controlPts);
+            nurbs2{end}.number = np(2:end);
+    
             idx = idx+p-1;
             idxPrev = idx+1;
         end

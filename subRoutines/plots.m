@@ -8,61 +8,62 @@ startMatlabPool
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot all shapes
-R = 1;
-shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
-           'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
-shapes = {'Barrel'};
-for shape = shapes
-    for parm = 2
-        close all
-        options.parm = parm;
-%         options.theta = 2*pi;r
-%         options.theta_eta = 0.9*2*pi;
-%         options.R = 2;
-        nurbs = eval(['get' shape{1} 'Data(options)']);
-        resolution = 10*[1,1,1];
-        M = 1;
-        noNewKnots = 2^(M-1)-1;
-        nurbs = insertKnotsInNURBS(nurbs,noNewKnots*ones(1,nurbs{1}.d_p));
-%         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
-        
-        plotNURBS(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
-        axis equal
-        grid off
-        axis off
-        view(getView(0))
-%         view(getView(1))
-        camlight
-        material dull
-        ax = gca;               % get the current axis
-        ax.Clipping = 'off';    % turn clipping off
-        axis on
-%         figureFullScreen(gcf)
-%         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
-    end
-end
+% R = 1;
+% shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
+%            'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
+% shapes = {'Barrel'};
+% for shape = shapes
+%     for parm = 2
+%         close all
+%         options.parm = parm;
+% %         options.theta = 2*pi;r
+% %         options.theta_eta = 0.9*2*pi;
+% %         options.R = 2;
+%         nurbs = eval(['get' shape{1} 'Data(options)']);
+%         resolution = 10*[1,1,1];
+%         M = 1;
+%         noNewKnots = 2^(M-1)-1;
+%         nurbs = insertKnotsInNURBS(nurbs,noNewKnots*ones(1,nurbs{1}.d_p));
+% %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
+%         
+%         plotNURBS(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
+%         axis equal
+%         grid off
+%         axis off
+%         view(getView(0))
+% %         view(getView(1))
+%         camlight
+%         material dull
+%         ax = gca;               % get the current axis
+%         ax.Clipping = 'off';    % turn clipping off
+%         axis on
+% %         figureFullScreen(gcf)
+% %         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
+%     end
+% end
 % nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test normalBasedSurface2volume
-% close all
-% C = 1;
-% C = [1,1,3];
-% nurbs = getEllipsoidData('C',C,'parm',2);
-% M = 4;
-% nurbs = insertKnotsInNURBS(nurbs,(2^(M-1)-1)*[1,1]);
-% t_PML = 2;
-% [nurbsVol,nurbs2] = normalBasedSurface2volume(nurbs,t_PML);
-% 
-% I = 1:6;
-% % I = 1;
-% prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
-% prePlot.resolution = [50,50,0];
+close all
+C = 1;
+C = [1,2,3];
+nurbs = getEllipsoidData('C',C,'parm',2);
+M = 1;
+nurbs = insertKnotsInNURBS(nurbs,(2^(M-1)-1)*[1,1]);
+t_PML = 2;
+
+I = 1:6;
+% I = 1;
+prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
+prePlot.resolution = [50,50,0];
+prePlot.plotControlPolygon = true;
 % plotNURBS(nurbs(I), prePlot);
-% C = C+t_PML;
-% prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
-% plotNURBS(nurbs2(I), prePlot);
-% camlight
+C = C+t_PML;
+[nurbsVol,nurbs2] = normalBasedSurface2volume(nurbs,t_PML);
+prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
+plotNURBS(nurbs2(I), prePlot);
+camlight
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find NURBS representation of part of sphere

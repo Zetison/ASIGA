@@ -230,7 +230,12 @@ for patch = 1:noPatches
             end
             if plotParmDir
                 for i = 1:d_p
-                    quiver3(X(:,:,1),X(:,:,2),X(:,:,3),Up{1,i},Up{2,i},Up{3,i},'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                    if isfield(nurbs,'isPML') && nurbs.isPML(i)
+                        colorParm = [1,0,0];
+                    else
+                        colorParm = colorParmDirs{i};
+                    end
+                    quiver3(X(:,:,1),X(:,:,2),X(:,:,3),Up{1,i},Up{2,i},Up{3,i},'color',colorParm,'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
             end
             if plotElementEdges
@@ -302,7 +307,7 @@ for patch = 1:noPatches
             end
             if plotParmDir
                 for i = 1:d_p
-                    quiver3(X(:,:,1),X(:,:,2),X(:,:,3),dX(:,:,1,i),dX(:,:,2,i),dX(:,:,3,i),'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                    quiver3(X(:,:,1),X(:,:,2),X(:,:,3),dX(:,:,1,i),dX(:,:,2,i),dX(:,:,3,i),'LineWidth',4,'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
             end
         elseif d_p == 2 && d == 2
@@ -451,6 +456,7 @@ else
     axis off
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
+    camproj('perspective')
     view(options.view)
 end
 axis equal

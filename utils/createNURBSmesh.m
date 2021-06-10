@@ -13,23 +13,20 @@ for i = 1:numel(task.varCol)
     end
     if ~task.varCol{1}.boundaryMethod
         if i == 1
-            task.varCol = copySet(task.varCol,1, 'inner', 'Gamma');
-            task.varCol = copySet(task.varCol,1, 'outer', 'Gamma_a');
-            task.varCol = copySet(task.varCol,1, 'inner', 'Neumann');
-            if numel(task.varCol) > 1
-                task.varCol = copySet(task.varCol,2, 'outer', 'Gamma');
-                task.varCol = copySet(task.varCol,2, 'outer', 'Neumann');
-            end
-            domain.Attributes.name = 'Omega_a';
-            domain.item{1}.Text = num2str(1:numel(task.varCol{i}.nurbs));
-            task.varCol{i}.geometry.domains.domain{1} = domain;
+            task = defineDomains(task);
         else
             task.varCol = copySet(task.varCol,i-1, 'inner', 'innerCoupling');
             task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');
         end
     end
 end
-if strcmp(task.misc.method,'PML')
+PMLpatchFound = false;
+for i = 1:numel(task.varCol{1}.nurbs)
+    if isfield(task.varCol{1}.nurbs{i},'isPML') && any(task.varCol{1}.nurbs{i}.isPML)
+        PMLpatchFound = true;
+    end
+end
+if strcmp(task.misc.method,'PML') && ~PMLpatchFound
     task = createPML(task);
 end
 if ~task.varCol{1}.boundaryMethod
@@ -70,19 +67,6 @@ for j = 1:3
     end
 end
 
-function varCol = copySet(varCol,domain, source, target)
-if ~isfield(varCol{domain},'geometry')
-    varCol{domain}.geometry = getTopology(varCol{domain}.nurbs);
-end
-topset = varCol{domain}.geometry.topologysets.set;
-idx = findSet(topset,source);
-[~,setFound] = findSet(topset,target);
-if ~setFound
-    topset{end+1} = topset{idx};
-    topset{end}.Attributes.name = target;
-end
-varCol{domain}.geometry.topologysets.set = topset;
-
 
 function task = createPML(task)
 topset = task.varCol{1}.geometry.topologysets.set;
@@ -105,18 +89,7 @@ for i = 1:numel(nurbsPML)
     nurbsPML{i}.isPML = [false,false,true];
 end
 task.varCol{1}.nurbs = uniteNURBS({task.varCol{1}.nurbs,nurbsPML});
-geometry = getTopology(task.varCol{1}.nurbs);
-topset = geometry.topologysets.set;
-idx = findSet(topset,'outer');
-setOuter = geometry.topologysets.set{idx};
-geometry.topologysets = task.varCol{1}.geometry.topologysets;
-geometry.topologysets.set{idx} = setOuter;
-
-task.varCol{1}.geometry.topologysets = geometry.topologysets;
-task.varCol{1}.geometry.topology = geometry.topology;
-if task.pml.dirichlet
-    task.varCol = copySet(task.varCol,1, 'outer', 'homDirichlet');
-end
+task = addPMLtopology(task);
 
 
 % task.varCol = copySet(task.varCol,1, 'Gamma_a', 'Gamma_a_PML');

@@ -61,4 +61,5 @@ end
 task.analyticSolutionExist = analyticSolutionExist;
 task.isSphericalShell = isSphericalShell;
 task.noDomains = noDomains;
+task.boundaryMethod = boundaryMethod;
     

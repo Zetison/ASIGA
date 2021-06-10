@@ -550,6 +550,7 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
                 [~,setFound] = findSet(task.varCol{i_v}.geometry.topologysets.set,bdryName);
                 if setFound
                     taskBdry = task;
+                    taskBdry.varCol{i_v} = rmfield(taskBdry.varCol{i_v},'geometry');
                     varColBdry = meshBoundary(task.varCol{i_v},bdryName);
                     taskBdry.varCol{i_v}.nurbs = varColBdry.nurbs;
                     taskBdry = collectVariables(taskBdry);

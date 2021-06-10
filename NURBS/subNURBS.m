@@ -30,6 +30,12 @@ for patch = 1:noPatches
     number = nurbs{patch}.number;
     if isfield(options,'at')
         at = options.at{patch};
+        if numel(at) == 1
+            atv = at;
+            at = false(d_p,2).';
+            at(atv) = true;
+            at = at.';
+        end
     else
         at = true(d_p,2);
     end

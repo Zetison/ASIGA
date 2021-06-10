@@ -3,7 +3,10 @@ function write_g2(nurbs,outputFileName)
 if ~(size(nurbs{1}.coeffs,1) == 1) % this is then not supplementary data
     nurbs = cleanNURBS(nurbs,[]);
 end
-fid = fopen([outputFileName '.g2'],'wt+','b');
+if ~strcmp(outputFileName(end-2:end),'.g2')
+    outputFileName = [outputFileName, '.g2'];
+end
+fid = fopen(outputFileName,'wt+','b');
 for patch = 1:numel(nurbs)
     d_p = nurbs{patch}.d_p;
     controlPts = nurbs{patch}.coeffs;  
@@ -27,7 +30,7 @@ for patch = 1:numel(nurbs)
             Xi = nurbs{patch}.knots{i};
             fprintf(fid,'%d %d\n',n,p+1);
             for j = 1:length(Xi)
-                fprintf(fid, '%20.15f ',Xi(j));
+                fprintf(fid, '%20.15g ',Xi(j));
             end
             fprintf(fid, '\n');
         end
@@ -39,7 +42,7 @@ for patch = 1:numel(nurbs)
     controlPts = reshape(controlPts,d+1,[]);
 
     for i = 1:size(controlPts,2)
-        fprintf(fid, [repmat('%20.15f',1,size(controlPts,1)) '\n'], controlPts(:,i));
+        fprintf(fid, [repmat('%20.15g ',1,size(controlPts,1)) '\n'], controlPts(:,i));
     end
 end
 fclose(fid);

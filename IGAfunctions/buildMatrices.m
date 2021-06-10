@@ -139,7 +139,7 @@ parfor e = 1:noElems
                     xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
                 end
             end
-            
+
             R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
             J1 = R_t{2}*pts;
             J2 = R_t{3}*pts;
@@ -272,7 +272,7 @@ switch pml.sigmaType
 end
 
 function I = intSigmaPML(xi,pml)
-% I = int_0^zeta sigma(xi) dxi
+% I = int_0^xi sigma(zeta) dzeta
 I = zeros(size(xi));
 switch pml.sigmaType
     case 0

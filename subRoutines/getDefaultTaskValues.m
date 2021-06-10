@@ -49,8 +49,10 @@ prePlot.export_fig_name2D   = '';          % Name of exported figure using expor
 prePlot.export_fig_name3D   = '';          % Name of exported figure using export_fig for 3D plots
 prePlot.useCamlight         = true;        % Toggle camlight on
 
+plotParmDir = 1;
 prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh
 prePlot.plotNormalVectors   = false;       % Plot the normal vectors for the NURBS mesh
+prePlot.plotParmDir         = false;       % Plot arrows indication parametric directions
 prePlot.plotGeometryInfo    = false;       % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.plotArtificialBndry = true;        % Plot the artificial boundary for the IENSG method
 prePlot.resolution       	= [20,20,20];  % Number of evaluation points in the visualization for each element for each parametric direction

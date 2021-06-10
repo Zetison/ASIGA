@@ -14,7 +14,7 @@ if nargin > 0
 end
 
 % If the centerCoordinate is not given, the prism is placed with its center
-% at the origin
+% at the options.L/2
 
 Xi = [0 0 1 1];
 Eta = [0 0 1 1];
@@ -24,6 +24,9 @@ coeffs = ones(4,2,2,2);
 X = options.X;
 if isnan(X)
     L = options.L;
+    if numel(L) == 1
+        L = L*ones(1,3);
+    end
     X = [  0,   0,   0;
            L(1),0,   0;
            0,   L(2),0;

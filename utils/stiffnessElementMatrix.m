@@ -28,7 +28,7 @@ switch operator
             for i = 1:numel(fact)
                 dRdx = [dRdX{1}(i,:); dRdX{2}(i,:); dRdX{3}(i,:)];
                 B = strainDispMatrix(n_en,dRdx);
-                k_e = k_e + B' * C * B * fact(i); 
+                k_e = k_e + B.' * C * B * fact(i); 
             end
             temp = zeros(d_f*n_en,d_f*n_en);
             for i = 1:d_f
