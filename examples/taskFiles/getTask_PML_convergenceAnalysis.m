@@ -9,6 +9,7 @@ getDefaultTaskValues
 
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'IL';
+noCoresToUse = 12;
 
 msh.meshFile = 'createNURBSmesh_EL';
 msh.parm = 1;
@@ -18,10 +19,10 @@ msh.parm = 1;
 % BC = {'SHBC', 'SSBC','NNBC'};
 % for BC = {'SHBC', 'SSBC','NNBC'}
 
-prePlot.plotControlPolygon  = 1;       % Plot the control polygon for the NURBS mesh
-prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;
+prePlot.plotControlPolygon  = 1;       % Plot the control polygon for the NURBS mesh
+prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 % prePlot.colorFun = @(v) abs(norm2(v)-(r_a+t_PML));
 prePlot.resolution = [20,20,0];
 
@@ -50,12 +51,11 @@ for method = {'PML'} %{'IE','PML'}
         misc.formulation = {'BGU'};
     end
 
-
-    M_max = 7; % 7
+    M_max = 6; % 7
     for BC = {'SHBC'}
         misc.BC = BC{1};
         misc.coreMethod = {'IGA'};
-    %     misc.coreMethod = {'hp_FEM'};
+%         misc.coreMethod = {'hp_FEM'};
         misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
 %         misc.coreMethod = {'C0_IGA','IGA'};
         c_f = 1524;
@@ -73,7 +73,7 @@ for method = {'PML'} %{'IE','PML'}
             msh.M = 1:M_max-2; %1:5
         end
 %         msh.M = (M_max-1):M_max; %1:5
-%         msh.M = 1;
+%         msh.M = 5;
         iem.N = 6;
         pml.t = 0.25*varCol{1}.R_i;         % thickness of PML
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)

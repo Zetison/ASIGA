@@ -269,16 +269,24 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
         end
         switch task.misc.method
             case {'IE','IENSG','BEM','BA','ABC','MFS','PML'}
+                tic
+                if printLog
+                    fprintf(['\n%-' num2str(stringShift) 's'], 'Collecting matrices ... ')
+                end
                 [task,FF,A0,A1,A2,A4] = collectMatrices(task);
                 if strcmp(task.misc.method,'BA')
                     A = A2;
                 else
                     A = A0 + omega_i*A1 + omega_i^2*A2 + omega_i^4*A4;
                 end
+                task.varCol{1}.timeCollectingMatrices = toc;
+                if printLog
+                    fprintf('using %12f seconds.', task.varCol{1}.timeCollectingMatrices)
+                end
                 
                 if printLog
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Total time building system ... ')
-                    fprintf(' was  %12f seconds.', task.varCol{1}.timeBuildSystem)
+                    fprintf(' was  %12f seconds.', task.varCol{1}.timeBuildSystem+task.varCol{1}.timeCollectingMatrices)
                 end
                 
                 %% SOLVE SYSTEM

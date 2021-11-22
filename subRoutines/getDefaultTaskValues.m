@@ -5,6 +5,7 @@ loopParameters     = {'msh.M'};   % parameter study array to be investigated
 runTasksInParallel = false;       % Run tasks in parallel
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
 saveStudies        = false;       % save ASIGA-struct into a .mat file
+noCoresToUse       = Inf;         % Number of processors for parallel computations (Inf uses all available cores)
     
 %% Miscellaneous settings
 misc.scatteringCase      = 'BI';        % Bistatic scattering

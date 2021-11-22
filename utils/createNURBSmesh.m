@@ -89,6 +89,8 @@ for i = 1:numel(nurbsPML)
     nurbsPML{i}.isPML = [false,false,true];
 end
 task.varCol{1}.nurbs = uniteNURBS({task.varCol{1}.nurbs,nurbsPML});
+task = repeatKnots(task);
+task = degenerateIGAtoFEM(task);
 task = addPMLtopology(task);
 
 

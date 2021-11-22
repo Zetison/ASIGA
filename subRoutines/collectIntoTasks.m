@@ -38,6 +38,7 @@ end
 studies(counter).loopParameters = loopParameters;
 studies(counter).loopParametersArr = loopParametersArr;
 studies(counter).runTasksInParallel = runTasksInParallel;
+studies(counter).noCoresToUse = noCoresToUse;
 studies(counter).saveStudies = saveStudies;
 
 task.rom.useGDP = false;

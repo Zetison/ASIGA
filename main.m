@@ -23,7 +23,6 @@ if ~iscell(studyName)
 end
 studiesCol = getTasks(studyName,runRegressionTests,M_0);
 
-startMatlabPool
 
 %% Perform studies
 for i_col = 1:numel(studiesCol)
@@ -41,7 +40,9 @@ for i_col = 1:numel(studiesCol)
         end
         diary([resultsFolder '/ASIGA.log'])
 
+        noCoresToUse = studiesCol{i_col}(i_study).noCoresToUse;
         runTasksInParallel = studiesCol{i_col}(i_study).runTasksInParallel;
+        startMatlabPool
         printLog = ~runTasksInParallel && ~runRegressionTests;
         if runTasksInParallel
             progressBars = tasks(1).task.misc.progressBars;
