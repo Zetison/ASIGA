@@ -157,11 +157,11 @@ normalizationL2 = 0;
 for i = 1:noDomains  
     switch layer{i}.media
         case 'solid'
-            u = [layer{i}.u_x,layer{i}.u_y,layer{i}.u_z];
-            du = [layer{i}.du_xdx,layer{i}.du_xdy,layer{i}.du_xdz,...
-                  layer{i}.du_ydx,layer{i}.du_ydy,layer{i}.du_ydz,...
-                  layer{i}.du_zdx,layer{i}.du_zdy,layer{i}.du_zdz];
-            sigma = [layer{i}.sigma_xx,layer{i}.sigma_yy,layer{i}.sigma_zz,layer{i}.sigma_yz,layer{i}.sigma_xz,layer{i}.sigma_xy];
+            u = [layer{i}.u{1},layer{i}.u{2},layer{i}.u{3}];
+            du = [layer{i}.du{1,1},layer{i}.du{1,2},layer{i}.du{1,3},...
+                  layer{i}.du{2,1},layer{i}.du{2,2},layer{i}.du{2,3},...
+                  layer{i}.du{3,1},layer{i}.du{3,2},layer{i}.du{3,3}];
+            sigma = [layer{i}.sigma{1},layer{i}.sigma{2},layer{i}.sigma{3},layer{i}.sigma{4},layer{i}.sigma{5},layer{i}.sigma{6}];
 
             C = task.varCol{i}.C;
             strain_vec = (C\sigma.').';
@@ -191,7 +191,7 @@ for i = 1:noDomains
             normalizationL2 = normalizationL2 + sum(u2.*factors{i});
         case 'fluid'
             p = layer{i}.p;
-            dp = [layer{i}.dpdx, layer{i}.dpdy, layer{i}.dpdz];
+            dp = [layer{i}.dp{1}, layer{i}.dp{2}, layer{i}.dp{3}];
             p_e = p-u_hs{i};
             dp_e = dp-du_hs{i};
 

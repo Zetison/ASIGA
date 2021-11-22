@@ -82,6 +82,8 @@ switch options.noXLoopPrms
                     x = x.';
                 end
                 saveName(saveName == '.') = [];
+                saveName(saveName == '\') = [];
+                saveName(saveName == '/') = [];
                 
                 ioOptions.filename = [subFolderName '/' saveName];
                 ioOptions.x = x;
@@ -126,7 +128,7 @@ switch options.noXLoopPrms
         end
         analyticSolutionExist = study.tasks(1).task.analyticSolutionExist;
         plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || ...
-                                                                            strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
+                                                                             strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
         if plotAnalyticSolution && printResults
             if isrow(y_ref)
                 y_ref = y_ref.';
@@ -202,6 +204,8 @@ switch options.noXLoopPrms
             [legendName, saveName] = constructStrings(legendEntries,i,idxMap,study,model,noParms,loopParameters,yname,fileDataHeaderX,otherInd);
             if printResults
                 saveName(saveName == '.') = [];
+                saveName(saveName == '\') = [];
+                saveName(saveName == '/') = [];
                 
                 ioOptions.filename = [subFolderName '/' saveName];
                 ioOptions.x = x_temp(:);

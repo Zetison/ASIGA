@@ -22,6 +22,7 @@ if nargin > 0
     end
     options = updateOptions(options,newOptions);
 end
+% Fix invalid file names
 
 
 x = options.x;
