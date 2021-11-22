@@ -25,6 +25,7 @@ prePlot.plotControlPolygon  = 1;       % Plot the control polygon for the NURBS 
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 % prePlot.colorFun = @(v) abs(norm2(v)-(r_a+t_PML));
 prePlot.resolution = [20,20,0];
+warning('off','NURBS:weights')
 
 % postPlot(1).xname       	= 'nepw';
 postPlot(1).xname       	= 'dofs';
