@@ -13,6 +13,9 @@ noCoresToUse = 12;
 
 msh.meshFile = 'createNURBSmesh_EL';
 msh.parm = 1;
+msh.explodeNURBS = false;   % Create patches from all C^0 interfaces
+misc.checkNURBSweightsCompatibility = false;
+prePlot.plotGeometryInfo    = 1;       % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 % misc.method = 'BA';
 % misc.method = {'IENSG'};
 % misc.method = {'BEM'};
@@ -21,10 +24,10 @@ msh.parm = 1;
 
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;
-prePlot.plotControlPolygon  = 1;       % Plot the control polygon for the NURBS mesh
+prePlot.plotControlPolygon  = 0;       % Plot the control polygon for the NURBS mesh
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 % prePlot.colorFun = @(v) abs(norm2(v)-(r_a+t_PML));
-prePlot.resolution = [20,20,0];
+prePlot.resolution = [100,100,0];
 warning('off','NURBS:weights')
 
 % postPlot(1).xname       	= 'nepw';
@@ -38,9 +41,9 @@ postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 
-
 msh.meshFile = 'createNURBSmesh_EL';
-msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+% msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.refineThetaOnly = false;
 
 for method = {'PML'} %{'IE','PML'}
@@ -56,9 +59,7 @@ for method = {'PML'} %{'IE','PML'}
     for BC = {'SHBC'}
         misc.BC = BC{1};
         misc.coreMethod = {'IGA'};
-%         misc.coreMethod = {'hp_FEM'};
-        misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
-%         misc.coreMethod = {'C0_IGA','IGA'};
+%         misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
         c_f = 1524;
         k = 1;
         misc.omega = k*c_f;
@@ -74,7 +75,7 @@ for method = {'PML'} %{'IE','PML'}
             msh.M = 1:M_max-2; %1:5
         end
 %         msh.M = (M_max-1):M_max; %1:5
-%         msh.M = 5;
+%         msh.M = 6;
         iem.N = 6;
         pml.t = 0.25*varCol{1}.R_i;         % thickness of PML
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
