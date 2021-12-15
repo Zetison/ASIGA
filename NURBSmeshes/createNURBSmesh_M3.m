@@ -83,7 +83,7 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
-    if ~strcmp(task.misc.method,'PML')
+    if ~(strcmp(task.misc.method,'PML'))
         if strcmp(task.misc.model,'MS')
             Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
             c_z = 1.2*(L+2*R1)/2; % 30
@@ -140,7 +140,7 @@ else
     end
     
     refLength = R_max*pi/2;
-    if strcmp(task.misc.method,'PML')
+    if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'IENSG')
         t_fluid = task.misc.r_a-R2;
         [Gamma_a,RR] = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi);
         if numel(Xi) == 12

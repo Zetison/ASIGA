@@ -29,7 +29,9 @@ end
 switch task.misc.method
     case {'IE','ABC','PML'}
         boundaryMethod = false;
-    case {'IENSG','BEM','KDT','MFS','RT'}
+    case {'IENSG'}
+        boundaryMethod = task.iem.boundaryMethod;
+    case {'BEM','KDT','MFS','RT'}
         boundaryMethod = true;
     case 'BA'
         switch task.misc.formulation

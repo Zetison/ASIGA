@@ -46,7 +46,7 @@ msh.meshFile = 'createNURBSmesh_EL';
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.refineThetaOnly = false;
 
-for method = {'PML'} %{'IE','PML'}
+for method = {'IE','PML'}
     misc.method = method{1};
 
     if strcmp(method{1},'PML')
@@ -55,11 +55,11 @@ for method = {'PML'} %{'IE','PML'}
         misc.formulation = {'BGU'};
     end
 
-    M_max = 6; % 7
+    M_max = 4; % 7
     for BC = {'SHBC'}
         misc.BC = BC{1};
-        misc.coreMethod = {'IGA'};
-%         misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
+%         misc.coreMethod = {'IGA'};
+        misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
         c_f = 1524;
         k = 1;
         misc.omega = k*c_f;
@@ -108,17 +108,17 @@ for method = {'PML'} %{'IE','PML'}
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.coreMethod = 'IGA';
         msh.degree = 3:4;
-    %     collectIntoTasks
+        collectIntoTasks
 
     %     misc.method = {'BA'};
     %     formulation = {'VL2E'};
-    % %     collectIntoTasks    
+    %     collectIntoTasks    
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.coreMethod = 'linear_FEM';
         msh.degree = 1;
 
-        collectIntoTasks
+%         collectIntoTasks
 
     %     misc.method = 'BA';
     %     formulation = 'VL2E';

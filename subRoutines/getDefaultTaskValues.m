@@ -158,14 +158,15 @@ iem.s_ie     = NaN;          % Distrubution order for radial shape functions
 iem.x_0      = zeros(1,3);   % The center of the prolate coordinate system of the infinite elemenets
 iem.A_2      = eye(3);       % Rotation matrix for the prolate coordinate system 
 iem.Upsilon  = 0;            % Parameter for prolate spheroidal coordinate system
+iem.boundaryMethod = true;   % Attach infinite elements directly onto the scatterer for the IENSG formulation
 
 %% Settings for the PML (perfectly matched layers)
 pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 2;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
 pml.gamma = NaN;        % If ~isnan(pml.gamma) the matrices will be frequency independent (needed if useROM)
 pml.t = NaN;         	% thickness of PML
-pml.n = 2;            	% polynomial order
-pml.dirichlet = false;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+pml.n = 1;            	% polynomial order
+pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
 
 %% Settings for the MFS (method of fundamental solution)
 mfs.delta = 0.1;            % Distance from the boundary to the internal source points
