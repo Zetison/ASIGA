@@ -1,19 +1,19 @@
 % addpath('/usr/local/AdvanpixMCT/4.6.0.13135')
+addpath(genpath('utils'))
 addpath(genpath('IGAfunctions'))
 addpath(genpath('NURBS'))
 addpath SEM
 addpath(genpath('NURBSgeometries'))
 addpath NURBSmeshes
-addpath(genpath('utils'))
 if ~exist('../e3Dss', 'dir')
     error('The e3Dss repository must be downloaded (can be obtained from GitHub: https://github.com/Zetison/e3Dss) and placed at the same level as ASIGA (as ../ASIGA)');
 end
-addpath(genpath('../e3Dss'))
 addpath(genpath('postProcessing'))
 addpath(genpath('examples'))
 addpath(genpath('integration'))
 addpath subRoutines
-addpath(genpath('../export_fig'))
+addpath(genpath2('../e3Dss','.git'))
+addpath(genpath2('../export_fig','.git'))
 if ~exist('../export_fig', 'dir')
     warning('The export_fig repository must be downloaded (can be obtained from GitHub: https://github.com/altmany/export_fig) and placed at the same level as ASIGA (as ../ASIGA)');
 end

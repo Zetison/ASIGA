@@ -6,7 +6,9 @@ runTasksInParallel = false;       % Run tasks in parallel
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
 saveStudies        = false;       % save ASIGA-struct into a .mat file
 noCoresToUse       = Inf;         % Number of processors for parallel computations (Inf uses all available cores)
-    
+connectedParameters = {{}};       % Define set of loop parameters to be connected (i.e. connectedParameters = {{'msh.M','iem.N'}} assumes the arrays msh.M and iem.N to be of same size and loops through the elements in pairs)
+
+
 %% Miscellaneous settings
 misc.scatteringCase      = 'BI';        % Bistatic scattering
 misc.applyLoad           = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
@@ -41,6 +43,9 @@ msh.explodeNURBS        = false;   % Create patches from all C^0 interfaces
 msh.x_0                 = [0,0,0]; % Translate center of model
 
 %% Settings for pre plotting (geometry and mesh visualisation)
+prePlot.plotFullDomain      = true;        % Plot volumetric domains
+prePlot.plotSubsets         = {};          % Plot (surface) subsets (i.e. the artificial boundary Gamma_a) in paraview 
+                                           % (examples include: 'Gamma','Gamma_a','yz','xz','xy','innerCoupling','outerCoupling','outer','inner','homDirichlet')
 prePlot.plot2Dgeometry      = false;       % Plot cross section of mesh and geometry
 prePlot.plot3Dgeometry      = false;       % Plot visualization of mesh and geometry in 3D
 prePlot.storeFig            = false;       % Store pre plotted figure
@@ -123,7 +128,8 @@ para.plotAnalytic            = true;
 para.plotTimeOscillation     = false;
 para.computeGrad             = true;
 para.plotError               = true; 
-para.plotSubsets             = {'Gamma','Gamma_a'}; % Plot subsets (i.e. the artificial boundary Gamma_a) in paraview
+para.plotSubsets             = {'Gamma','Gamma_a'}; % Plot (surface) subsets (i.e. the artificial boundary Gamma_a) in paraview 
+                                                    % (examples include: 'Gamma','Gamma_a','yz','xz','xy','innerCoupling','outerCoupling','outer','inner','homDirichlet')
 para.plotFullDomain          = true;
 para.plotDisplacementVectors = true;
 para.plotVonMisesStress      = true;

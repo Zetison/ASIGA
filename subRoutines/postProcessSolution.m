@@ -28,12 +28,10 @@ if ~isempty(allDofsToRemove)
 end
 
 if isfield(task.varCol{1},'c_f')
-    k = task.misc.omega/task.varCol{1}.c_f;
-    lambda = 2*pi/k;
-    task.varCol{1}.h_max = h_max;
-    task.varCol{1}.nepw = lambda./h_max;
-    task.varCol{1}.surfDofs = getNoSurfDofs(task);
+    task.h_max = h_max;
+    task.nepw = task.varCol{1}.lambda./h_max;
+    task.surfDofs = getNoSurfDofs(task);
     if task.varCol{1}.boundaryMethod
-        task.varCol{1}.tau = computeTau(task);
+        task.tau = computeTau(task);
     end
 end

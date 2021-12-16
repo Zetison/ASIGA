@@ -40,11 +40,13 @@ postPlot(1).lineStyle   	= '*-';
 postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
+postPlot(1).legendEntries 	= {'msh.degree','pml.sigmaType','pml.n','misc.method','misc.coreMethod','misc.formulation'};
 
 msh.meshFile = 'createNURBSmesh_EL';
 % msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.refineThetaOnly = false;
+connectedParameters = {{'msh.M','iem.N'},{'pml.sigmaType','pml.n'}};
 
 for method = {'IE','PML'}
     misc.method = method{1};
@@ -58,8 +60,6 @@ for method = {'IE','PML'}
     M_max = 4; % 7
     for BC = {'SHBC'}
         misc.BC = BC{1};
-%         misc.coreMethod = {'IGA'};
-        misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
         c_f = 1524;
         k = 1;
         misc.omega = k*c_f;
@@ -76,15 +76,8 @@ for method = {'IE','PML'}
         end
 %         msh.M = (M_max-1):M_max; %1:5
 %         msh.M = 6;
-        iem.N = 6;
         pml.t = 0.25*varCol{1}.R_i;         % thickness of PML
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-        pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
-        if pml.sigmaType == 3
-            pml.n = 1;            	% polynomial order
-        else
-            pml.n = 2;            	% polynomial order
-        end
         misc.r_a = 1.25*varCol{1}.R_i;
 %         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(iem.N - msh.degree,2^(M-3)-1)];
 %         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, 2^(M-4)-1];
@@ -96,9 +89,28 @@ for method = {'IE','PML'}
         ffp.calculateFarFieldPattern = 0;
         err.calculateVolumeError = 1;
         err.calculateSurfaceError = 1;
-        loopParameters = {'msh.M','msh.degree','misc.method','misc.coreMethod','misc.formulation','misc.BC'};
+        loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','misc.formulation','misc.BC'};
 
 
+        for coreMethod = {'IGA'}
+%         for coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'}
+            misc.coreMethod = coreMethod{1};
+            if strcmp(coreMethod{1},'IGA')
+                if strcmp(method{1},'PML')
+                    pml.sigmaType = 1:3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+                    pml.n = [2,2,1];
+                else
+                    pml.sigmaType = 3;
+                    pml.n = 1;
+                end
+            	iem.N = floor(abs(2.^(msh.M-4)-1)) + msh.degree;
+            else
+                pml.sigmaType = 3;
+                pml.n = 1;
+            	iem.N = (floor(abs(2.^(msh.M-4)-1)) + 1)*msh.degree;
+            end
+        end
+%         misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
         collectIntoTasks
 
     %     misc.method = {'BA'};
@@ -106,10 +118,12 @@ for method = {'IE','PML'}
     % %     collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        misc.coreMethod = 'IGA';
-        msh.degree = 3:4;
-        collectIntoTasks
-
+        for degree = 3:4
+            iem.N = floor(abs(2.^(msh.M-4)-1)) + msh.degree;
+            msh.degree = degree;
+            misc.coreMethod = 'IGA';
+%             collectIntoTasks
+        end
     %     misc.method = {'BA'};
     %     formulation = {'VL2E'};
     %     collectIntoTasks    
@@ -117,6 +131,7 @@ for method = {'IE','PML'}
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.coreMethod = 'linear_FEM';
         msh.degree = 1;
+        iem.N = floor(abs(2.^(msh.M-4)-1)) + 1;
 
 %         collectIntoTasks
 

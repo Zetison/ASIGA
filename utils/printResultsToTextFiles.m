@@ -61,15 +61,16 @@ switch options.noXLoopPrms
         col = LaTeXcolorMap(noTasks);
         for i = 1:noTasks
             try 
-                x = eval(['study.tasks(i).task.varCol{1}.' xname]);
-            catch
                 x = eval(['study.tasks(i).task.' xname]);
+            catch
+                warning('ASIGA:xDataNotFound', [xname ' was not found in the structure.'])
             end
             x = x*options.xScale;
             try 
                 y = eval(['study.tasks(i).task.results.' yname]);
             catch
                 y = NaN*x';
+                warning('ASIGA:yDataNotFound', [yname ' was not found in the structure.'])
             end
             y = y*options.yScale;
             
@@ -104,7 +105,7 @@ switch options.noXLoopPrms
                     if ~isempty(prevGrafs)
                         for j = 1:numel(prevGrafs)
                             y_ref = study.tasks(i).task.results.([yname '_ref']);
-                            x = study.tasks(i).task.varCol{1}.(xname);
+                            x = eval(['study.tasks(1).task.' xname]);
                             x = x*options.xScale;
                             y_ref = y_ref*options.yScale;
                             if numel(y_ref) == numel(prevGrafs(j).YData) && all(y_ref(:) == prevGrafs(j).YData(:))
@@ -114,7 +115,7 @@ switch options.noXLoopPrms
                     end
                     if ~analyticPlotted
                         y_ref = study.tasks(i).task.results.([yname '_ref']);
-                        x = study.tasks(i).task.varCol{1}.(xname);
+                        x = eval(['study.tasks(1).task.' xname]);
                         x = x*options.xScale;
                         y_ref = y_ref*options.yScale;
                         plotXY(x,y_ref,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
@@ -164,14 +165,15 @@ switch options.noXLoopPrms
 
         for i = 1:noTasks
             try 
-                x(i) = eval(['study.tasks(i).task.varCol{1}.' xname]);
-            catch
                 x(i) = eval(['study.tasks(i).task.' xname]);
+            catch
+                warning('ASIGA:xDataNotFound', [xname ' was not found in the structure.'])
             end
             try 
                 y(i) = eval(['study.tasks(i).task.results.' yname]);
             catch
                 y(i) = NaN;
+                warning('ASIGA:yDataNotFound', [yname ' was not found in the structure.'])
             end
             if plotAnalyticSolution
                 y_ref(i) = study.tasks(i).task.results.([yname '_ref']);
@@ -266,25 +268,25 @@ if plotResults
     intrprtrX = 'latex';
     intrprtrY = 'latex';
     switch xname
-        case 'alpha'
+        case 'ffp.alpha'
             xLabel = '$$\alpha$$';
-        case {'omega','omega_ROM'}
+        case {'misc.omega','misc.omega_ROM'}
             xLabel = '$$\omega$$';
-        case {'f','f_ROM'}
+        case {'misc.f','misc.f_ROM'}
             xLabel = '$$f$$';
-        case {'k','k_ROM'}
+        case {'varCol{1}.k','varCol{1}.k_ROM'}
             if options.xScale == 1
                 xLabel = '$$k$$';
             else
                 xLabel = '$$ka$$';
             end
-        case 'beta'
+        case 'ffp.beta'
             xLabel = '$$\beta$$';
-        case 's_ie'
+        case 'iem.s_ie'
             xLabel = '$$s$$';
         case 'dofs'
             xLabel = 'Degrees of freedom';
-        case {'surfDofs'}
+        case 'surfDofs'
             xLabel = 'Dofs at $$\Gamma$$';
         case 'dofsAlg'
             xLabel = 'Degrees of freedom in algebraic scale $$N^{1/3}$$';
@@ -298,11 +300,11 @@ if plotResults
             xLabel = 'Time solving the system';
         case 'timeBuildSystem'
             xLabel = 'Time building the system';
-        case 'N'
+        case 'iem.N'
             xLabel = '$$N$$';
         case 'pml.gamma'
             xLabel = '$$\gamma$$';
-        case 'agpBEM'
+        case 'bem.agpBEM'
             xLabel = '$$s$$';
         otherwise
             xLabel = xname;
@@ -388,7 +390,11 @@ if isempty(legendEntries)
     if nargin > 9
         for j = otherInd
             temp2 = loopParameters{j};
-            temp = eval(['study.tasks(idxMap(i)).task.' loopParameters{j}]);
+            if numel(idxMap) > 1
+                temp = eval(['study.tasks(idxMap(i)).task.' loopParameters{j}]);
+            else
+                temp = eval(['study.tasks(idxMap).task.' loopParameters{j}]);
+            end
             if isnumeric(temp) || islogical(temp)
                 temp = num2str(temp);
             end
@@ -421,7 +427,11 @@ else
     for j = 1:length(legendEntries)
         temp2 = legendEntries{j};
         try
-            eval(['temp = study.tasks(i).task.' legendEntries{j} ';']);
+            if numel(idxMap) > 1
+                temp = eval(['study.tasks(idxMap(i)).task.' loopParameters{j}]);
+            else
+                temp = eval(['study.tasks(idxMap).task.' loopParameters{j}]);
+            end
             if strcmp(temp,'NaN')
                 continue
             end

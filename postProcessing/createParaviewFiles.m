@@ -389,7 +389,7 @@ for i_v = 1:numel(task.varCol)
                 p_e2 = abs(p_e).^2;
                 data.Error = sqrt(p_e2/max(p2));
                 if d_p == 3
-                    dp = [layer{i_v}.dpdx, layer{i_v}.dpdy, layer{i_v}.dpdz];
+                    dp = [layer{i_v}.dp{1}, layer{i_v}.dp{2}, layer{i_v}.dp{3}];
                     dp_e = dp-gScalarField_p{i_v};
 
                     p2 = abs(p).^2;
@@ -408,13 +408,13 @@ for i_v = 1:numel(task.varCol)
 
         case 'solid'
             if analyticSolutionExist
-                u = [layer{2}.u_x,layer{2}.u_y,layer{2}.u_z];                
+                u = [layer{i_v}.u{1},layer{i_v}.u{2},layer{i_v}.u{3}];                
                 u_e = u-displacement{i_v};
 
                 u2 = sum(abs(u).^2,2);
                 u_e2 = sum(abs(u_e).^2,2);
 
-                sigma = [layer{2}.sigma_xx,layer{2}.sigma_yy,layer{2}.sigma_zz,layer{2}.sigma_yz,layer{2}.sigma_xz,layer{2}.sigma_xy];
+                sigma = [layer{i_v}.sigma{1},layer{2}.sigma{2},layer{i_v}.sigma{3},layer{i_v}.sigma{4},layer{i_v}.sigma{5},layer{i_v}.sigma{6}];
                 C = task.varCol{i_v}.C;
 
                 strain_vec = (C\sigma.').';
