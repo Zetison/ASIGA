@@ -36,7 +36,7 @@ jEl = zeros(1,d_p);
 knotVecs = cell(1,noPatches);
 for i = 1:noPatches
     if isfield(varCol.nurbs{i},'isPML')
-        isPML(e:e+noElemsPatch(i)-1,:) = repmat(varCol.nurbs{i}.isPML,noElemsPatch(i),1);
+        isPML(e:e+noElemsPatch(i)-1,:) = repmat(varCol.nurbs{i}.isPML(:,1:d_p),noElemsPatch(i),1);
     end
     pIndex(e:e+noElemsPatch(i)-1) = i;
     element(e:e+noElemsPatch(i)-1,:) = maxDof + patches{i}.element;

@@ -54,6 +54,9 @@ for patch = 1:noPatches
                 knots = nurbs{patch}.knots(idx);
 
                 subnurbs(counter) = createNURBSobject(controlPts,knots);
+                if isfield(nurbs{patch},'isPML')
+                    subnurbs{counter}.isPML = nurbs{patch}.isPML;
+                end
                 if options.outwardPointingNormals && j == 1
                     if options.useFlipping
                         subnurbs(counter) = flipNURBSparametrization(subnurbs(counter));

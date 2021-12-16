@@ -1,6 +1,6 @@
 function task = setAndDefineParameters(task)
 switch task.misc.model
-    case {'SS', 'PS', 'S1', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL', 'FreeCADsphere','Shirron2006afe','Hetmaniuk2012raa','PMLstudy'}
+    case {'SS', 'PS', 'S1', 'S1_P2', 'S3', 'S5', 'S13', 'S15', 'S35', 'IL', 'FreeCADsphere','Shirron2006afe','Hetmaniuk2012raa','PMLstudy','Mi2021ilc'}
         analyticSolutionExist = true;
         isSphericalShell = true;
     case {'Safjan2002tdi'}
@@ -29,7 +29,9 @@ end
 switch task.misc.method
     case {'IE','ABC','PML'}
         boundaryMethod = false;
-    case {'IENSG','BEM','KDT','MFS','RT'}
+    case {'IENSG'}
+        boundaryMethod = task.iem.boundaryMethod;
+    case {'BEM','KDT','MFS','RT'}
         boundaryMethod = true;
     case 'BA'
         switch task.misc.formulation
@@ -45,12 +47,16 @@ if strcmp(task.misc.scatteringCase,'MS')
     task.ffp.alpha_s = task.ffp.alpha;
     task.ffp.beta_s = task.ffp.beta;
 end
+task.misc.f = task.misc.omega/(2*pi);
 
 for i = 1:noDomains
-    if mod(i,2)
-        task.varCol{i}.boundaryMethod = boundaryMethod; % Assume only 3D elasticity is implemented
-    else
-        task.varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
+    switch task.varCol{i}.media
+        case 'fluid'
+            task.varCol{i}.k = task.misc.omega/task.varCol{i}.c_f;
+            task.varCol{i}.lambda = 2*pi./task.varCol{i}.k;
+            task.varCol{i}.boundaryMethod = boundaryMethod; % Assume only 3D elasticity is implemented
+        case 'solid'
+            task.varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
     end
     if task.rom.useROM
         task.noRHSs = max(task.rom.noVecsArr);

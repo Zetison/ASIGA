@@ -20,7 +20,7 @@ misc.checkNURBSweightsCompatibility = false;
 err.calculateSurfaceError = 0;
 
 prePlot.plot2Dgeometry = 0;
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.resolution = [80,60,0];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
@@ -42,6 +42,7 @@ msh.explodeNURBS = ~prePlot.plot2Dgeometry;
 msh.M = 2;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
+iem.boundaryMethod = false;   % Attach infinite elements directly onto the scatterer for the IENSG formulation
 
 ffp.beta = 0;
 ffp.alpha = (0:0.1:360)*pi/180;
@@ -97,7 +98,7 @@ misc.formulation = {'MS1'};
 % misc.coreMethod = 'linear_FEM';
 msh.M = 5; % 5
 
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
@@ -111,7 +112,7 @@ msh.degree = 4:5;
 msh.parm = 2;
 % msh.M = 1;
 loopParameters = {'misc.BC','misc.scatteringCase','misc.formulation','msh.M','msh.degree','misc.method','misc.omega'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation

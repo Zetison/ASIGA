@@ -35,24 +35,23 @@ if prePlot.plot3Dgeometry
         end
         if isfield(task.varCol{j},'geometry') && ~isempty(prePlot.plotSubsets)
             topset = task.varCol{j}.geometry.topologysets.set;
-            noTopsets = numel(prePlot.plotSubsets);
+            noTopsets = numel(topset);
             colors = jet(noTopsets);
             for i = 1:noTopsets
-                idx = findSet(topset,prePlot.plotSubsets{i});
-                noPatches = numel(topset{idx}.item);
+                noPatches = numel(topset{i}.item);
                 nurbs = cell(1,noPatches);
-                for ii = 1:numel(topset{idx}.item)
+                for ii = 1:numel(topset{i}.item)
                     at = zeros(2,3,'logical');
-                    patch = topset{idx}.item{ii}.Attributes.patch;
-                    midx = topset{idx}.item{ii}.Text;
+                    patch = topset{i}.item{ii}.Attributes.patch;
+                    midx = topset{i}.item{ii}.Text;
                     at(midx) = true;
-                    outwardPointingNormals = strcmp(topset{idx}.Attributes.normal, 'outward');
-                    inwardPointingNormals = strcmp(topset{idx}.Attributes.normal, 'inward');
+                    outwardPointingNormals = strcmp(topset{i}.Attributes.normal, 'outward');
+                    inwardPointingNormals = strcmp(topset{i}.Attributes.normal, 'inward');
     
                     nurbs(ii) = subNURBS(task.varCol{j}.nurbs(patch),'at',at.','outwardPointingNormals',outwardPointingNormals,'inwardPointingNormals',inwardPointingNormals);
                 end
-                prePlot.displayName = ['Domain ' num2str(j) ', ' topset{idx}.Attributes.name];
-                if strcmp(topset{idx}.Attributes.name,'Gamma')
+                prePlot.displayName = ['Domain ' num2str(j) ', ' topset{i}.Attributes.name];
+                if strcmp(topset{i}.Attributes.name,'Gamma')
                     prePlot.color = getColor(1);
                 else
                     prePlot.color = colors(i,:);

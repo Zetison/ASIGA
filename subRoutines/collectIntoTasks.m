@@ -21,6 +21,13 @@ for j = 1:numel(taskNames)
         allTaskNames(end+1,1) = taskNames(j);
     end
 end
+childrenParameters = cell(size(connectedParameters));
+for i = 1:numel(connectedParameters)
+    childrenParameters{i} = cell(size(connectedParameters{i}));
+    for j = 1:numel(connectedParameters{i})
+        eval(['childrenParameters{i}{j} = task.' connectedParameters{i}{j} ';'])
+    end
+end
 for j = 1:numel(allTaskNames)
     idx = find(strcmp(allTaskNames{j},loopParameters));
     if ~isempty(idx)
@@ -34,6 +41,8 @@ for j = 1:numel(allTaskNames)
         eval(['task.' allTaskNames{j} ' = temp{1};'])
     end
 end
+
+        
 
 studies(counter).loopParameters = loopParameters;
 studies(counter).loopParametersArr = loopParametersArr;
@@ -53,7 +62,7 @@ if task.rom.useROM
     studies(counter).noVecsArr = task.rom.noVecsArr;
 end
 
-studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);
+studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr, connectedParameters, childrenParameters);
 if isempty(studies(counter).tasks)
     error('loopParameters contains invalid parameters')
 end
