@@ -76,13 +76,13 @@ if useSolidDomain && ~exteriorProblem
 else
     if solveForPtot
         p_inc = task.p_inc_;
-        dp_inc = task.dp_inc_;
+        dp_inc = task.dp_incdn_;
         dpdn = @(x,n) 0;
     else
         p_inc = NaN;
         dp_inc = NaN;
         if strcmp(task.misc.BC, 'SHBC')
-            dpdn = @(x,n) -task.dp_inc_(x,n);
+            dpdn = @(x,n) -task.dp_incdn_(x,n);
         else
             dpdn = task.varCol{i_domain}.dpdn_;
         end

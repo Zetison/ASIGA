@@ -71,13 +71,13 @@ end
 solveForPtot = task.misc.solveForPtot;
 if solveForPtot
     p_inc = task.p_inc_;
-    dp_inc = task.dp_inc_;
+    dp_inc = task.dp_incdn_;
     dpdn = @(x,n) 0;
 else
     p_inc = NaN;
     dp_inc = task.dp_inc_;
     if SHBC
-        dpdn = @(x,n) -dp_inc_(x,n);
+        dpdn = @(x,n) -dp_incdn_(x,n);
     else
         dpdn = task.dpdn_;
     end

@@ -14,7 +14,7 @@ SHBC = strcmp(task.misc.BC, 'SHBC');
 if SHBC
     no_angles = length(task.ffp.alpha_s);
     p_inc = task.p_inc_;
-    dp_inc = task.dp_inc_;
+    dp_inc = task.dp_incdn_;
 else
     no_angles = 1;
     p_inc = NaN;

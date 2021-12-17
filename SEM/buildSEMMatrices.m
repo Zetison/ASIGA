@@ -17,7 +17,7 @@ r_a = task.misc.r_a;
 noDofs = task.varCol{1}.noDofs;
 noSurfDofs = noPatches*Nxi*Neta;
 no_angles = length(task.ffp.alpha_s);
-dp_dinc = task.dp_inc_;
+dp_inc_ = task.dp_incdn_;
 
 
 Dxi = derivativeMatrix(patches{1}.nurbs.GLL{1},Nxi); % assume Nxi to be the same for all patches
@@ -337,7 +337,7 @@ for patch = 1:noPatches
     normals = reshape(cross(dCdxi(:,:,:,1),dCdeta(:,:,:,1),1),3,Nxi*Neta);
     H = reshape(norm2(normals.'),Nxi,Neta);
     
-    g = reshape(-dp_dinc(reshape(c(:,:,:,1),3,Nxi*Neta).', -(normals./repmat(reshape(H,1,Nxi*Neta),3,1)).'),Nxi,Neta);
+    g = reshape(-dp_inc_(reshape(c(:,:,:,1),3,Nxi*Neta).', -(normals./repmat(reshape(H,1,Nxi*Neta),3,1)).'),Nxi,Neta);
     F = multiplyByWeightsAtBoundary(g.*H,rho,Nxi,Neta);
     
     %% Collect matrices

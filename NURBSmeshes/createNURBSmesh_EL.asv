@@ -42,6 +42,8 @@ parm = task.msh.parm;
 if varCol{1}.boundaryMethod
     solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
     solid = makeUniformNURBSDegree(solid,degree);
+%     solid = explodeNURBS(solid,'eta');
+%     solid = explodeNURBS(solid,'xi');
     if parm == 1
         refLength = c_z*pi/2;
     else

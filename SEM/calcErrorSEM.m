@@ -102,7 +102,7 @@ normalizationH1s = 0;
 normalizationL2 = 0;
 
 p = analyticFunctions{1}.p;
-dp = [analyticFunctions{1}.dpdx, analyticFunctions{1}.dpdy, analyticFunctions{1}.dpdz];
+dp = [analyticFunctions{1}.dp{1}, analyticFunctions{1}.dp{2}, analyticFunctions{1}.dp{3}];
 p_e = p-u_hs;
 dp_e = dp-du_hs;
 
