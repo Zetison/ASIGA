@@ -29,7 +29,7 @@ if task.analyticSolutionExist
     task.analyticFunctions = @(X) analytic(X,layer);
 end
 task.p_inc_ = @(X) analytic({X},layer,NaN,'p_inc',1);
-task.dp_inc_ = @(X,n) analytic({X},layer,n,'dp_inc',1);
+task.dp_incdn_ = @(X,n) analytic({X},layer,n,'dp_incdn',1);
 if splitExteriorFields
     task.dp_incdx_ = @(X) analytic({X},layer,NaN,'dp_incdx',1);
     task.dp_incdy_ = @(X) analytic({X},layer,NaN,'dp_incdy',1);
@@ -56,7 +56,7 @@ for i = 1:noDomains
 end
 task.p_0_ = @(X) analytic({X},layer,NaN,'p_0',1);
 task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,task.p_inc_);
-task.dp_inc_ROM_ = @(X,n) dp_inc_ROM(X,n,layer,task.dp_inc_);
+task.dp_incdn_ROM_ = @(X,n) dp_incdn_ROM(X,n,layer,task.dp_incdn_);
 
 
 
@@ -201,41 +201,63 @@ switch applyLoad
                 varCol{1}.dp_incdz = varCol{1}.p_inc.*(1i*k-1./R).*xms(:,3)./R;
             end
         else
-            options.BC = varCol{1}.BC;
-            options.d_vec = d_vec;
-            options.N_max = N_max;
-            options.P_inc = P_inc;
-            options.omega = varCol{1}.omega;
-            options.applyLoad = applyLoad;
-            options.Display = 'none';
-            if nargin < 3
-                calc_p_0 = false;
-            else
-                calc_p_0 = strcmp(func,'p_0');
-            end
-            varCol{1}.calc_p_0 = calc_p_0 && isSphericalShell && ~isempty(X{1});      % Toggle calculation of the far field pattern
-            for m = 1:M
-                varCol{m}.X = X{m};
-
-                % Parameters in layer m for options{i}.media = 'fluid'
-                switch varCol{m}.media
-                    case 'fluid'
-                        varCol{m}.calc_p       	 = isSphericalShell.*~calc_p_0;      % Toggle calculation of the scattered pressure
-                        varCol{m}.calc_dp      	 = isSphericalShell.*true(1,3).*~calc_p_0; % Toggle calculation of the three components of the gradient of the pressure
-                        varCol{m}.calc_p_laplace = isSphericalShell.*~calc_p_0;      % Toggle calculation of the Laplace operator of the scattered pressure fields
-                        varCol{m}.calc_errHelm	 = isSphericalShell.*~calc_p_0;      % Toggle calculation of the errors for the Helmholtz equation
-                        varCol{m}.calc_p_inc     = true.*~calc_p_0;      % Toggle calculation of the incident pressure
-                        varCol{m}.calc_dp_inc    = true(1,3).*~calc_p_0; % Toggle calculation of the three components of the gradient of the incident pressure
-                    case 'solid'
-                        % Parameters in layer m for options{i}.media = 'solid' or 'viscoelastic'
-                        varCol{m}.calc_u       = isSphericalShell.*true(1,3).*~calc_p_0; % Toggle calculation of the three components of the displacement
-                        varCol{m}.calc_du      = isSphericalShell.*true(3,3).*~calc_p_0; % Toggle calculation of the three cartesian derivatives of the three components of the displacement [du_xdx du_xdy du_xdz; 
-                                                                              %                                                                                                    du_ydx du_ydy du_ydz; 
-                                                                              %                                                                                                    du_zdx du_zdy du_zdz]
-                        varCol{m}.calc_sigma   = isSphericalShell.*true(1,6).*~calc_p_0; % Toggle calculation of the six components of the stress field (cartesian coordinates) [sigma_xx sigma_yy sigma_zz sigma_yz sigma_xz sigma_xy]
+            if isinf(N_max) && nargin >= 3 && (strcmp(func,'p_inc') || strcmp(func,'dp_incdn'))
+                for m = 1:M
+                    k = varCol{1}.omega/varCol{1}.c_f;
+                    if strcmp(applyLoad,'planeWave')
+                        k_vec = k*d_vec.';
+                        varCol{1}.p_inc = P_inc*exp(1i*k_vec*X{m}.').';
+                        for ii = 1:3
+                            varCol{m}.dp_inc{ii} = 1i*k_vec(:,ii).*varCol{1}.p_inc;
+                        end
+                    else
+                        x_s = r_s*d_vec.';
+                        Xxms = X{m}-x_s;
+                        nXxms = norm2(Xxms);
+                        p_inc = P_inc.*exp(1i*k.*nXxms)./nXxms;
+                        varCol{m}.p_inc = p_inc;
+                        for ii = 1:3
+                            varCol{m}.dp_inc{ii} = p_inc.*(1i*k - 1./nXxms).*Xxms(:,ii)./nXxms;
+                        end
+                    end
                 end
+            else
+                options.BC = varCol{1}.BC;
+                options.d_vec = d_vec;
+                options.N_max = N_max;
+                options.P_inc = P_inc;
+                options.omega = varCol{1}.omega;
+                options.applyLoad = applyLoad;
+                options.Display = 'none';
+                if nargin < 3
+                    calc_p_0 = false;
+                else
+                    calc_p_0 = strcmp(func,'p_0');
+                end
+                varCol{1}.calc_p_0 = calc_p_0 && isSphericalShell && ~isempty(X{1});      % Toggle calculation of the far field pattern
+                for m = 1:M
+                    varCol{m}.X = X{m};
+
+                    % Parameters in layer m for options{i}.media = 'fluid'
+                    switch varCol{m}.media
+                        case 'fluid'
+                            varCol{m}.calc_p       	 = isSphericalShell.*~calc_p_0;      % Toggle calculation of the scattered pressure
+                            varCol{m}.calc_dp      	 = isSphericalShell.*true(1,3).*~calc_p_0; % Toggle calculation of the three components of the gradient of the pressure
+                            varCol{m}.calc_p_laplace = isSphericalShell.*~calc_p_0;      % Toggle calculation of the Laplace operator of the scattered pressure fields
+                            varCol{m}.calc_errHelm	 = isSphericalShell.*~calc_p_0;      % Toggle calculation of the errors for the Helmholtz equation
+                            varCol{m}.calc_p_inc     = true.*~calc_p_0;      % Toggle calculation of the incident pressure
+                            varCol{m}.calc_dp_inc    = true(1,3).*~calc_p_0; % Toggle calculation of the three components of the gradient of the incident pressure
+                        case 'solid'
+                            % Parameters in layer m for options{i}.media = 'solid' or 'viscoelastic'
+                            varCol{m}.calc_u       = isSphericalShell.*true(1,3).*~calc_p_0; % Toggle calculation of the three components of the displacement
+                            varCol{m}.calc_du      = isSphericalShell.*true(3,3).*~calc_p_0; % Toggle calculation of the three cartesian derivatives of the three components of the displacement [du_xdx du_xdy du_xdz; 
+                                                                                  %                                                                                                    du_ydx du_ydy du_ydz; 
+                                                                                  %                                                                                                    du_zdx du_zdy du_zdz]
+                            varCol{m}.calc_sigma   = isSphericalShell.*true(1,6).*~calc_p_0; % Toggle calculation of the six components of the stress field (cartesian coordinates) [sigma_xx sigma_yy sigma_zz sigma_yz sigma_xz sigma_xy]
+                    end
+                end
+                varCol = e3Dss(varCol, options);
             end
-            varCol = e3Dss(varCol, options);
         end
     case 'Cartesian'
         k = varCol{1}.omega/varCol{1}.c_f;
@@ -260,14 +282,14 @@ end
 
 if nargin > 2 && ~any(isnan(n(:)))
     if isfield(varCol{1},'dpdx')
-        varCol{1}.dpdn = varCol{1}.dpdx.*n(:,1)+varCol{1}.dpdy.*n(:,2)+varCol{1}.dpdz.*n(:,3);
+        varCol{1}.dpdn = varCol{1}.dp{1}.*n(:,1)+varCol{1}.dp{2}.*n(:,2)+varCol{1}.dp{3}.*n(:,3);
     end
-    if ~isfield(varCol{1},'dp_inc')
+    if ~isfield(varCol{1},'dp_incdn')
         if varCol{1}.splitExteriorFields
-            varCol{1}.dp_inc = varCol{1}.dp_incdx.*n(:,1)+varCol{1}.dp_incdy.*n(:,2)+varCol{1}.dp_incdz.*n(:,3);
+            varCol{1}.dp_incdn = varCol{1}.dp_inc{1}.*n(:,1)+varCol{1}.dp_inc{2}.*n(:,2)+varCol{1}.dp_inc{3}.*n(:,3);
 %             varCol{1}.dp_inc = -varCol{1}.dpdn;
         else
-            varCol{1}.dp_inc = -varCol{1}.dpdn;
+            varCol{1}.dp_incdn = -varCol{1}.dpdn;
         end
     end
 end
@@ -302,7 +324,7 @@ end
 
 
 
-function dp_inc_ROM = dp_inc_ROM(X,n,varCol,dp_inc_)
+function dp_inc_ROM = dp_inc_ROM(X,n,varCol,dp_incdn_)
 
 m = 0:(varCol{1}.noRHSs-1);
 switch varCol{1}.applyLoad
@@ -320,7 +342,7 @@ temp = zeros(numel(d_vecX),varCol{1}.noRHSs);
 c_f = varCol{1}.c_f;
 k = varCol{1}.omega/c_f;
 temp(:,2:end) = (1i./d_vecX)*m(2:end)/k;
-dp_inc_ROM = dp_inc_(X,n).*(1i*d_vecX/c_f).^m.*(1-temp);
+dp_inc_ROM = dp_incdn_(X,n).*(1i*d_vecX/c_f).^m.*(1-temp);
 
 function p_inc_ROM = p_inc_ROM(X,varCol,p_inc_)
 

@@ -56,7 +56,7 @@ BC = task.misc.BC;
 omega = task.misc.omega;
 k = omega/task.varCol{1}.c_f;
 
-dp_inc = task.dp_inc_;
+dp_inc = task.dp_incdn_;
 
 Phi_k = task.varCol{1}.Phi_k;
 solveForPtot = task.misc.solveForPtot;

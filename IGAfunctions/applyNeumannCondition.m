@@ -11,9 +11,9 @@ noRHSs = task.noRHSs;
 switch media
     case 'fluid' 
         if useROM
-            dp_inc = task.dp_inc_ROM_;  
+            dp_inc = task.dp_incdn_ROM_;  
         else
-            dp_inc = task.dp_inc_;  
+            dp_inc = task.dp_incdn_;  
         end
         p_inc = NaN; % for for-loop transparency
     case 'solid'

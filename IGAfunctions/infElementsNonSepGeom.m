@@ -82,11 +82,11 @@ else
     ppm = NaN;
 end
 
-max_r_a_recorded = -inf;
-min_r_a_recorded = inf;
+% max_r_a_recorded = -inf;
+% min_r_a_recorded = inf;
 % totArea = 0;
-for e = 1:noElems
-% parfor e = 1:noElems
+% for e = 1:noElems
+parfor e = 1:noElems
 	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
@@ -177,12 +177,12 @@ for e = 1:noElems
         if r_a > chimax || r_a < chimin
             error('chi is not in range [chimin chimax]')
         end
-        if r_a < min_r_a_recorded
-            min_r_a_recorded = r_a;
-        end
-        if r_a > max_r_a_recorded
-            max_r_a_recorded = r_a;
-        end
+%         if r_a < min_r_a_recorded
+%             min_r_a_recorded = r_a;
+%         end
+%         if r_a > max_r_a_recorded
+%             max_r_a_recorded = r_a;
+%         end
         DPDX = dPdX(Xt(gp,:),Upsilon,r_a,c1,c2)*A_2;
         
         J3 = DPDX(2:3,:)*J;
@@ -300,8 +300,8 @@ for e = 1:noElems
 end
 % errorInTotArea = totArea-2*pi^2;
 
-max_r_a_recorded
-min_r_a_recorded
+% max_r_a_recorded
+% min_r_a_recorded
 noDofs_new = noDofs*N;
 
 spIdxRow = reshape(spIdxRow,numel(spIdxRow),1);
