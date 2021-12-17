@@ -1,14 +1,14 @@
 %% Regression tests
 % A successful run of this script should be performed prior to any push to git
 startup
-Eps = 1e-10;
+Eps = 1e-8;
 testFolder = 'examples/taskFiles/tests/';
 studyName = {'Venas2018iao_Figure6','Venas2020asi_Figure21','Venas2018iao_Table2','Venas2020asi_Figure7','Venas2019asi_Figure4','Venas2019asi_FigureB10B11B12',...
              'Venas2019asi_FigureA2A3'};
-% studyName = {'Venas2019asi_FigureA2A3'};
+% studyName = {'Venas2018iao_Table2'};
 stringShift = 60;
 noFailedTests = 0;
-for M_0 = 1:2 % Most test are only availabel for M_0 = 1 and M_0 = 2
+for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
     for i = 1:numel(studyName)
         fprintf(['\n%-' num2str(stringShift) 's'], ['Running test ''' studyName{i} ''' (M_0 = ' num2str(M_0) ') ...'])
         testFailed = false;
@@ -27,14 +27,22 @@ for M_0 = 1:2 % Most test are only availabel for M_0 = 1 and M_0 = 2
                         if any(isnan(entry_ref(:)))
                             continue
                         end
-                        if norm(entry(:)-entry_ref(:))/norm(entry_ref) > Eps
+                        reg_error = norm(entry(:)-entry_ref(:))/norm(entry_ref);
+                        if reg_error > Eps
                             testFailed = true;
+                            break
                         end
                     end
+                    if testFailed
+                        break
+                    end
+                end
+                if testFailed
+                    break
                 end
             end
             if testFailed
-                fprintf('test failed due to incorrect results!')
+                fprintf('test failed due to incorrect results (i_study=%d, i_task=%d)! (relative error = %g)', i_study, i_task, reg_error)
                 noFailedTests = noFailedTests + 1;
             else
                 fprintf('successfully!')

@@ -47,6 +47,8 @@ if usePML
                 pml.gamma = (pml.n+1)/(k*pml.t);
             case {3,4}
                 pml.gamma = 1/(k*pml.t);
+            case 5
+                pml.gamma = pml.alpha/k/pml.n/pml.t.^(pml.n-1);
         end
     end
     formulation = task.misc.formulation;
@@ -267,6 +269,8 @@ switch pml.sigmaType
         sigma = pml.gamma./(1-xi).^pml.n;
     case 4
         sigma = pml.gamma*(1./(1-xi).^pml.n - 1);
+    case 5
+        sigma = pml.gamma*xi.^pml.n;
     otherwise
         error('Not implemented')
 end
@@ -283,20 +287,23 @@ switch pml.sigmaType
     case 2 % sigma(xi) = gamma*xi^n
         n = pml.n;
         I = -pml.gamma*xi.^(n+1)/(n+1)*log(pml.eps);
-    case 3
+    case 3 % sigma(xi) = gamma/(1-xi)^n
         n = pml.n;
         if n == 1
             I = -pml.gamma*log(1-xi);
         else
             I = pml.gamma*((1-xi).^(1-n)-1)./(n-1);
         end
-    case 4
+    case 4 % sigma(xi) = gamma*(1/(1-xi)^n - 1)
         n = pml.n;
         if n == 1
             I = -pml.gamma*(log(1-xi) + xi);
         else
             I = pml.gamma*(((1-xi).^(1-n)-1)./(n-1) - xi);
         end
+    case 5 % sigma(xi) = gamma*xi^n
+        n = pml.n;
+        I = pml.gamma*xi.^(n+1)/(n+1);
     otherwise
         error('Not implemented')
 end

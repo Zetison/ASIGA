@@ -205,10 +205,10 @@ switch applyLoad
                 for m = 1:M
                     k = varCol{1}.omega/varCol{1}.c_f;
                     if strcmp(applyLoad,'planeWave')
-                        k_vec = k*d_vec.';
+                        k_vec = k.'*d_vec.';
                         varCol{1}.p_inc = P_inc*exp(1i*k_vec*X{m}.').';
                         for ii = 1:3
-                            varCol{m}.dp_inc{ii} = 1i*k_vec(:,ii).*varCol{1}.p_inc;
+                            varCol{m}.dp_inc{ii} = 1i*k_vec(:,ii).'.*varCol{1}.p_inc;
                         end
                     else
                         x_s = r_s*d_vec.';
@@ -229,6 +229,7 @@ switch applyLoad
                 options.omega = varCol{1}.omega;
                 options.applyLoad = applyLoad;
                 options.Display = 'none';
+                options.p_inc_fromSeries = ~isinf(N_max);
                 if nargin < 3
                     calc_p_0 = false;
                 else

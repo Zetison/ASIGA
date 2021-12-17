@@ -39,13 +39,15 @@ warning('off','NURBS:weights')
 postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'abs_p';
 postPlot(1).plotResults  	= 1;
-postPlot(1).printResults 	= 0;
+postPlot(1).printResults 	= 1;
 postPlot(1).axisType        = 'plot';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale       	= 180/pi;
 postPlot(1).legendEntries 	= {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','varCol{1}.k'};
+postPlot(2) = postPlot(1);
+postPlot(2).yname        	= 'error_p';
 
 msh.meshFile = 'createNURBSmesh_EL';
 % msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
@@ -63,6 +65,7 @@ R = 1;
 r = 0.2;
 c_f = 340;
 msh.M = 3:4; % 4
+% msh.M = 1; % 4
 varCol{1}.media = 'fluid'; % Media; % solid or fluid (Navier equation or Helmholtz equation)
 varCol{1}.R_i = r;
 varCol{1}.c_f = c_f;
@@ -117,6 +120,8 @@ pml.n = 1;
 ffp.alpha_s = pi;
 postPlot(1).plotResults  	= 0;
 postPlot(1).printResults  	= 0;
+postPlot(2).plotResults  	= 0;
+postPlot(2).printResults  	= 0;
 ffp.calculateFarFieldPattern = 0;
 para.plotResultsInParaview = 1;
 para.plotSubsets             = {'xy'};
@@ -125,7 +130,7 @@ para.plotFullDomain          = false;
 para.extraXiPts              = 'round(2^(5-M)-1)';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'round(2^(5-M)-1)';  % Extra visualization points in the eta-direction per element
 para.extraZetaPts            = 'round(2^(5-M)-1)';  % Extra visualization points in the zeta-direction per element
-collectIntoTasks
+% collectIntoTasks
 
 
 
@@ -142,17 +147,21 @@ ffp.alpha_s = pi;
 ffp.alpha = [0,pi];
 % ffp.alpha = 0;
 ffp.r = R;
-pml.sigmaType = [2,3];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+pml.sigmaType = [5,3];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
 pml.n = [2,1];
 % pml.sigmaType = 3;  
 % pml.n = 1;
 para.plotResultsInParaview = 0;
 ffp.calculateFarFieldPattern = 1;
-postPlot(1).plotResults  	= 1;
-postPlot(1).printResults 	= 0;
-postPlot(1).xname       	= 'misc.f';
-postPlot(1).xScale          = 1;
-postPlot(1).legendEntries 	= {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','ffp.alpha'};
+postPlot(3) = postPlot(1);
+postPlot(3).plotResults  	= 1;
+postPlot(3).printResults 	= 0;
+postPlot(3).xname       	= 'misc.f';
+postPlot(3).xScale          = 1;
+postPlot(3).legendEntries 	= {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','ffp.alpha'};
+
+postPlot(4)	= postPlot(3);
+postPlot(4).yname        	= 'error_p';
 % collectIntoTasks
 
 misc.coreMethod = {'hp_FEM'};
