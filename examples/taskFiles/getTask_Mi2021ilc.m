@@ -97,8 +97,8 @@ err.calculateVolumeError = 0;
 err.calculateSurfaceError = 0;
 loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','misc.omega'};
 
-pml.sigmaType = [2,3];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
-pml.n = [2,1];
+pml.sigmaType = [2,5,3];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+pml.n = [2,2,1];
 % pml.sigmaType = 3;  
 % pml.n = 1;
 collectIntoTasks
@@ -147,8 +147,8 @@ ffp.alpha_s = pi;
 ffp.alpha = [0,pi];
 % ffp.alpha = 0;
 ffp.r = R;
-pml.sigmaType = [5,3];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
-pml.n = [2,1];
+pml.sigmaType = [2,5,3];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+pml.n = [2,2,1];
 % pml.sigmaType = 3;  
 % pml.n = 1;
 para.plotResultsInParaview = 0;
