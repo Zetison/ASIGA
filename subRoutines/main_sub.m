@@ -155,7 +155,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                             fprintf('using %12f seconds.', toc)
                         end
                         task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
-                    end  
+                    end
 
                     % Apply Neumann conditions
                     tic
