@@ -8,9 +8,6 @@ eval(['task = ' task.msh.meshFile '(task);'])
 task = repeatKnots(task);
 task = degenerateIGAtoFEM(task);
 for i = 1:numel(task.varCol)
-    if task.msh.explodeNURBS
-        task.varCol{i}.nurbs = explodeNURBS(task.varCol{i}.nurbs);
-    end
     if ~task.varCol{1}.boundaryMethod
         if i == 1
             task = defineDomains(task);

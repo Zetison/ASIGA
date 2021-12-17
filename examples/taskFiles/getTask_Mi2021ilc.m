@@ -10,7 +10,7 @@ getDefaultTaskValues
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'Mi2021ilc';
 noCoresToUse = 4;
-msh.explodeNURBS = true;   % Create patches from all C^0 interfaces
+msh.explodeNURBS = false;   % Create patches from all C^0 interfaces
 
 msh.meshFile = 'createNURBSmesh_EL';
 msh.parm = 1;
@@ -106,6 +106,7 @@ collectIntoTasks
 
 %% Plot results in paraview
 misc.coreMethod = {'IGA'};
+msh.explodeNURBS = true;   % Create patches from all C^0 interfaces
 varCol{1}.refinement = @(M) [2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1, 2^(M-1)-1];
 kr = 3*pi;
 k = kr/r;
@@ -127,6 +128,7 @@ collectIntoTasks
 
 
 %% Plot frequency sweep
+msh.explodeNURBS = false;   % Create patches from all C^0 interfaces
 misc.scatteringCase = 'Sweep';
 loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','ffp.alpha'};
 noFreqs = 100;
@@ -145,11 +147,11 @@ postPlot(1).printResults 	= 0;
 postPlot(1).xname       	= 'misc.f';
 postPlot(1).xScale          = 1;
 postPlot(1).legendEntries 	= {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','ffp.alpha'};
-collectIntoTasks
+% collectIntoTasks
 
 misc.coreMethod = {'hp_FEM'};
 varCol{1}.refinement = @(M) floor([(2^(M+1)-1+msh.degree)/msh.degree-1, (2^(M+1)-1+msh.degree)/msh.degree-1, (2^(M+1)-1+msh.degree)/msh.degree-1, (2^(M+1)-1+msh.degree)/msh.degree/4-1]);
-collectIntoTasks
+% collectIntoTasks
 
 
 
