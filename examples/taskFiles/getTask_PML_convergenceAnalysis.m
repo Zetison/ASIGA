@@ -48,16 +48,18 @@ msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.refineThetaOnly = false;
 connectedParameters = {{'msh.M','iem.N'},{'pml.sigmaType','pml.n'}};
 
-for method = {'IE','PML'}
+for method = {'IE','PML', 'BA'}
     misc.method = method{1};
-
-    if strcmp(method{1},'PML')
-        misc.formulation = {'GSB'};
-    else
-        misc.formulation = {'BGU'};
+    switch method{1}
+        case 'IE'
+            misc.formulation = {'BGU'};
+        case 'PML'
+            misc.formulation = {'GSB'};
+        case 'BA'
+            misc.formulation = {'VL2E'};
     end
 
-    M_max = 4; % 7
+    M_max = 6; % 7
     for BC = {'SHBC'}
         misc.BC = BC{1};
         c_f = 1524;
@@ -92,8 +94,8 @@ for method = {'IE','PML'}
         loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','misc.formulation','misc.BC'};
 
 
-        for coreMethod = {'IGA'}
-%         for coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'}
+%         for coreMethod = {'IGA'}
+        for coreMethod = {'IGA','hp_FEM','h_FEM','C0_IGA'}
             misc.coreMethod = coreMethod{1};
             if strcmp(coreMethod{1},'IGA')
                 if strcmp(method{1},'PML')
@@ -109,34 +111,22 @@ for method = {'IE','PML'}
                 pml.n = 1;
             	iem.N = (floor(abs(2.^(msh.M-4)-1)) + 1)*msh.degree;
             end
+            collectIntoTasks
         end
-%         misc.coreMethod = {'hp_FEM','h_FEM','C0_IGA','IGA'};
-        collectIntoTasks
-
-    %     misc.method = {'BA'};
-    %     formulation = {'VL2E'};
-    % %     collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         for degree = 3:4
-            iem.N = floor(abs(2.^(msh.M-4)-1)) + msh.degree;
+            iem.N = floor(abs(2.^(msh.M-4)-1)) + degree;
             msh.degree = degree;
             misc.coreMethod = 'IGA';
-%             collectIntoTasks
-        end
-    %     misc.method = {'BA'};
-    %     formulation = {'VL2E'};
-    %     collectIntoTasks    
+            collectIntoTasks
+        end 
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.coreMethod = 'linear_FEM';
         msh.degree = 1;
         iem.N = floor(abs(2.^(msh.M-4)-1)) + 1;
 
-%         collectIntoTasks
-
-    %     misc.method = 'BA';
-    %     formulation = 'VL2E';
-    % %     collectIntoTasks    
+        collectIntoTasks 
     end
 end
