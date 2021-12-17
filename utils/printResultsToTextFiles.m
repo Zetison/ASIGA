@@ -428,9 +428,9 @@ else
         temp2 = legendEntries{j};
         try
             if numel(idxMap) > 1
-                temp = eval(['study.tasks(idxMap(i)).task.' loopParameters{j}]);
+                temp = eval(['study.tasks(idxMap(i)).task.' legendEntries{j}]);
             else
-                temp = eval(['study.tasks(idxMap).task.' loopParameters{j}]);
+                temp = eval(['study.tasks(idxMap).task.' legendEntries{j}]);
             end
             if strcmp(temp,'NaN')
                 continue
