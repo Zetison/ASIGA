@@ -15,7 +15,7 @@ N = 3;
 
 M = 1;
 degree = 2:3;
-loopParameters = {'f','M','degree','N','alpha','misc.method'};
+loopParameters = {'misc.f','M','degree','N','alpha','misc.method'};
 alpha = [90,180]*pi/180;
 
 alpha_s = 240*pi/180;

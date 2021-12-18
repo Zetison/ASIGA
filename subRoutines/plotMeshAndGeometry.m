@@ -18,15 +18,17 @@ if prePlot.plot3Dgeometry
         if strcmp(task.misc.coreMethod, 'linear_FEM')
             prePlot.resolution = [0,0,0];
         end
-        switch task.varCol{j}.media
-            case 'fluid'
-                if task.varCol{j}.boundaryMethod
+        if isempty(prePlot.color)
+            switch task.varCol{j}.media
+                case 'fluid'
+                    if task.varCol{j}.boundaryMethod
+                        prePlot.color = getColor(1);
+                    else
+                        prePlot.color = getColor(10);
+                    end
+                case 'solid'
                     prePlot.color = getColor(1);
-                else
-                    prePlot.color = getColor(10);
-                end
-            case 'solid'
-                prePlot.color = getColor(1);
+            end
         end
         nurbs = task.varCol{j}.nurbs;
         prePlot.displayName = ['Domain ' num2str(j)];
@@ -37,8 +39,13 @@ if prePlot.plot3Dgeometry
             topset = task.varCol{j}.geometry.topologysets.set;
             noTopsets = numel(prePlot.plotSubsets);
             colors = jet(noTopsets);
+            colors(1:size(prePlot.color,1),:) = prePlot.color;
             for i = 1:noTopsets
                 idx = findSet(topset,prePlot.plotSubsets{i});
+                if isnan(idx)
+                    warning(['Subset ' prePlot.plotSubsets{i} ' does not exist in structure'])
+                    break
+                end
                 noPatches = numel(topset{idx}.item);
                 nurbs = cell(1,noPatches);
                 for ii = 1:numel(topset{idx}.item)

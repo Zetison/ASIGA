@@ -28,7 +28,8 @@ function studyName = availableStudies()
 % studyName = 'PMLstudy'; %getTask_PMLstudy
 % studyName = 'Prism'; %getTask_Prism
 % studyName = 'PML_convergenceAnalysis'; %getTask_PML_convergenceAnalysis
-studyName = 'Mi2021ilc'; %getTask_Mi2021ilc
+% studyName = 'Mi2021ilc'; %getTask_Mi2021ilc
+studyName = 'unitTest'; %getTask_unitTest
 
 %% Venas2020ibe
 % studyName = 'articleBEM_S1_quadVis'; %getTask_articleBEM_S1_quadVis

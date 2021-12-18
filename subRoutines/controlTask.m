@@ -69,22 +69,8 @@ end
 if (task.pml.sigmaType == 3 || task.pml.sigmaType == 4) && ~task.pml.dirichlet
     error('sigmaType == 3 and sigmaType == 4 requires Dirichlet conditions at Gamma_b')
 end
-switch task.misc.method
-    case {'IE','ABC','PML'}
-        boundaryMethod = false;
-    case {'IENSG','BEM','KDT','MFS','RT'}
-        boundaryMethod = true;
-    case 'BA'
-        switch task.misc.formulation
-            case {'SL2E','SL2Etot'}
-                boundaryMethod = true;
-            case {'VL2E','VL2Etot'}
-                boundaryMethod = false;
-            otherwise
-                error('Not implemented')
-        end
-end
-if task.err.calculateVolumeError && boundaryMethod
+
+if task.err.calculateVolumeError && isBoundaryMethod(task)
     warning('There is no volumetric errors to compute for boundary methods')
 end
 

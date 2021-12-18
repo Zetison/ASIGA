@@ -40,7 +40,7 @@ iem.N = 3;
 loopParameters = {'msh.M','misc.formulation','misc.method'};
 msh.parm = 1;
 
-postPlot(1).xname       	= 'alpha';
+postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;

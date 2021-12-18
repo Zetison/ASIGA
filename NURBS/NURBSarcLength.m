@@ -1,11 +1,14 @@
-function I = NURBSarcLength(nurbs,a,b,parm_pt,dir,pp1qp)
+function I = NURBSarcLength(nurbs,a,b,parm_pt,dir,pp1qp,noQP)
 if nargin < 6
     pp1qp = false;
+end
+if nargin < 7
+    noQP = 12;
 end
 if pp1qp
     [Q, W] = gaussTensorQuad(nurbs.degree(dir)+3);
 else
-    [Q, W] = gaussTensorQuad(50);
+    [Q, W] = gaussTensorQuad(noQP);
 end
 uniqueKnots = unique(nurbs.knots{dir});
 I = 0;

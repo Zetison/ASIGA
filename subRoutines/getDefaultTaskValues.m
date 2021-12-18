@@ -78,6 +78,7 @@ prePlot.xlabel              = 'x';         % Set x-axis label
 prePlot.ylabel              = 'y';         % Set y-axis label
 prePlot.zlabel              = 'z';         % Set z-axis label
 prePlot.pngResolution       = '-r200';     % Resolution of exported png images
+prePlot.color               = [];          % Nx3 array with colors to use
 
 %% Solver settings
 sol.solver = 'LU';              % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'

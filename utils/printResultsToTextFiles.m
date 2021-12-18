@@ -310,7 +310,7 @@ if plotResults
             xLabel = xname;
             intrprtrX = 'none';
     end
-    if (strcmp(xname,'alpha') || strcmp(xname,'beta')) && (options.xScale == 180/pi)
+    if (strcmp(xname,'ffp.alpha') || strcmp(xname,'ffp.beta')) && (options.xScale == 180/pi)
         if strcmp(options.axisType,'polar')
             thetatickformat('degrees')
         else
