@@ -31,8 +31,6 @@ else
     c_z = varCol{1}.R_i;
     Upsilon = sqrt(c_z^2-c_x^2);
 end
-chimin = c_z*(1-10*eps);
-chimax = c_z*(1+10*eps);
 if numel(varCol) == 1
     t = eps;
 else
@@ -178,6 +176,8 @@ else
         end
     end
 end
+chimin = c_z*(1-10*eps);
+chimax = c_z*(1+10*eps);
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
@@ -189,6 +189,11 @@ if numel(varCol) > 2
     varCol{3}.nurbs = fluid_i;
 end
 
+if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
+    varCol{1}.c_z = c_z;
+    varCol{1}.c_xy = c_x;
+end
+varCol{1}.chimax = chimax;
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;

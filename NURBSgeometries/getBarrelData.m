@@ -30,7 +30,7 @@ if d_p == 2
     nurbsDisk = getDiskData('Xi',Xi,'R',R,'parm',parm,'t',0);
     nurbsTop = translateNURBS(nurbsDisk,[0,0,L]);
     nurbsCyl = getCylinderData('Xi',Xi,'R', R, 'parm', parm, 'L', L, 'd_p', d_p);
-    nurbs = [rotateNURBS(nurbsDisk,'rotAxis','Yaxis','theta',pi),nurbsCyl,nurbsTop];
+    nurbs = [flipNURBSparametrization(nurbsDisk,1),nurbsCyl,nurbsTop];
 else
     nurbsDisk = [getDiskData('Xi',Xi,'R',R-t,'parm',parm,'t',t), ...
                  getDiskData('Xi',Xi,'R',[R,R-t],'parm',1,'t',t)];

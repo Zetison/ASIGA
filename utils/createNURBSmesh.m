@@ -8,13 +8,11 @@ eval(['task = ' task.msh.meshFile '(task);'])
 task = repeatKnots(task);
 task = degenerateIGAtoFEM(task);
 for i = 1:numel(task.varCol)
-    if ~task.varCol{1}.boundaryMethod
-        if i == 1
-            task = defineDomains(task);
-        else
-            task.varCol = copySet(task.varCol,i-1, 'inner', 'innerCoupling');
-            task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');
-        end
+    if i == 1
+        task = defineDomains(task);
+    else
+        task.varCol = copySet(task.varCol,i-1, 'inner', 'innerCoupling');
+        task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');
     end
 end
 PMLpatchFound = false;
@@ -26,10 +24,8 @@ end
 if strcmp(task.misc.method,'PML') && ~PMLpatchFound
     task = createPML(task);
 end
-if ~task.varCol{1}.boundaryMethod
-    for i = 1:numel(task.varCol)
-        task.varCol = findCartesianAlignedBdry(task.varCol,i);
-    end
+for i = 1:numel(task.varCol)
+    task.varCol = findCartesianAlignedBdry(task.varCol,i);
 end
 
 function varCol = findCartesianAlignedBdry(varCol,domain)

@@ -75,7 +75,7 @@ if solveForPtot
     dpdn = @(x,n) 0;
 else
     p_inc = NaN;
-    dp_inc = task.dp_inc_;
+    dp_inc = task.dp_incdn_;
     if SHBC
         dpdn = @(x,n) -dp_incdn_(x,n);
     else

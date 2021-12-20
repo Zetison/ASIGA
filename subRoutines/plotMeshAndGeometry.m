@@ -7,12 +7,22 @@ if prePlot.plot3Dgeometry
         c_xy = task.varCol{1}.c_xy;
         alignWithAxis = task.varCol{1}.alignWithAxis;
         x_0 = task.iem.x_0;
-        ellipsoid = getEllipsoidData('C',[c_xy,c_xy,c_z]*task.iem.A_2,'alignWithAxis', alignWithAxis, 'x_0', x_0);
-        alphaValue = 0.6;
+        ellipsoid = getEllipsoidData('C',[c_xy,c_xy,c_z]*task.iem.A_2,'alignWithAxis', alignWithAxis, 'x_0', x_0,'Xi',task.msh.Xi);
         if prePlot.alphaValue == 1
             prePlot.alphaValue = 0.8;
         end
-        plotNURBS(ellipsoid,'resolution',[20 40],'alphaValue',0.6,'color','blue');
+        if prePlot.plotFullDomain
+            plotNURBS(ellipsoid,'resolution',[100 100],'alphaValue',0.6,'color','blue');
+        end
+        noTopsets = numel(prePlot.plotSubsets);
+        for i = 1:noTopsets
+            if strcmp(prePlot.plotSubsets{i},'xy')
+                theta = linspace(0,2*pi,10000);
+                x = c_z*cos(theta);
+                y = c_xy*sin(theta);
+                plot(x,y,'black','DisplayName','Ellipse')
+            end
+        end
     end
     for j = 1:numel(task.varCol)
         if strcmp(task.misc.coreMethod, 'linear_FEM')

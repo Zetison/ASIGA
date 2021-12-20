@@ -14,17 +14,17 @@ misc.scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic sc
 misc.model = 'M3';
 misc.BC = {'SHBC'};
 % misc.BC = {'NBC'};
-misc.method = {'IENSG'};
-misc.formulation = 'BGU';
+misc.method = {'PML','IENSG'};
+misc.formulation = {'GSB','BGU'};
 misc.checkNURBSweightsCompatibility = false;
 err.calculateSurfaceError = 0;
 
 prePlot.plotFullDomain = 0;        % Plot volumetric domains
-prePlot.plotSubsets = {'xz'};
+prePlot.plotSubsets = {'xy'};
 prePlot.plot2Dgeometry = 0;
-prePlot.plot3Dgeometry = 1;
-prePlot.view = [0,0];
-prePlot.resolution = [80,60,0];
+prePlot.plot3Dgeometry = 0;
+prePlot.view = [0,90];
+% prePlot.resolution = [20,20,0];
 prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
 prePlot.plotParmDir = 0;
@@ -40,22 +40,25 @@ varCol = setM3Parameters(1);
 % varCol{1}.L = 5;
 varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-1)/8-1, 2^(M-1)/4-1];
 msh.meshFile = 'createNURBSmesh_M3';
-msh.degree = 4;
+msh.degree = 2;
 % msh.degree = 5; % use and odd degree > 4 if parm = 2 and misc.method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
 msh.parm = 1;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = prePlot.plot3Dgeometry;
-msh.M = 6;
+msh.M = 1;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 misc.r_a = 1.25*varCol{1}.R2;
-iem.boundaryMethod = 1;   % Attach infinite elements directly onto the scatterer for the IENSG formulation
+iem.boundaryMethod = 0;   % Attach infinite elements directly onto the scatterer for the IENSG formulation
+iem.N = round(2^(msh.M-1)/4+msh.degree-1); 
+pml.t = 0.25*varCol{1}.R2;         % thickness of PML
 
 ffp.beta = 0;
 ffp.alpha = (0:0.1:360)*pi/180;
 
 warning('off','NURBS:weights')
-loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation'};
+connectedParameters = {{'misc.method','misc.formulation'}};
+loopParameters = {'msh.M','msh.parm','misc.omega','misc.method'};
 misc.solveForPtot = false;
 
 para.plotResultsInParaview = false;
@@ -96,7 +99,7 @@ end
 ffp.beta_s = 0;
 ffp.alpha_s = 240*pi/180;
 
-% collectIntoTasks
+collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
@@ -119,7 +122,7 @@ msh.degree = 4:5;
 msh.parm = 2;
 % msh.M = 1;
 loopParameters = {'misc.BC','misc.scatteringCase','misc.formulation','msh.M','msh.degree','misc.method','misc.omega'};
-collectIntoTasks
+% collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
@@ -152,7 +155,6 @@ msh.degree = 2;
 % msh.M = 5;
 msh.parm = 1;
 
-pml.t = 0.25*varCol{1}.R2;         % thickness of PML
 
 para.plotResultsInParaview	 = 0;	% Only if misc.scatteringCase == 'Bi'
 para.extraXiPts              = 'round(60/2^(M-1))';  % Extra visualization points in the xi-direction per element

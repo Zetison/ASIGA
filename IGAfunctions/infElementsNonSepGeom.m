@@ -10,6 +10,7 @@ knotVecs = task.varCol{1}.knotVecs;
 extraGP = task.misc.extraGP;
 
 N = task.iem.N;
+Ntot = task.iem.N;
 formulation = task.misc.formulation;
 
 noDofs = task.varCol{1}.noDofs;
@@ -122,8 +123,9 @@ parfor e = 1:noElems
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     
-    sctr = element(e,:);
-    pts = controlPts(sctr,:);
+    sctrLocal = element(e,:);
+    sctrGlobal = nodes(sctrLocal);
+    pts = controlPts(sctrGlobal,:);
     wgts = weights(element2(e,:)); % New  
             
     Rs = NURBSbasis(I, xi, degree, knots, wgts);
@@ -308,8 +310,8 @@ parfor e = 1:noElems
         for m = 1:N
             indices = counter:(counter+n_en^2-1);
             A_inf_values_temp(indices) = reshape(temp(:,:,n,m),n_en^2,1);
-            spIdxRow_temp(indices) = copyVector(sctr+(noDofs*(n-1)),n_en,1);
-            spIdxCol_temp(indices) = copyVector(sctr+(noDofs*(m-1)),n_en,2);
+            spIdxRow_temp(indices) = copyVector(sctrLocal+(noSurfDofs*(n-1)),n_en,1);
+            spIdxCol_temp(indices) = copyVector(sctrLocal+(noSurfDofs*(m-1)),n_en,2);
             counter = counter + n_en^2;
         end
     end
@@ -329,12 +331,6 @@ Avalues = reshape(Avalues,numel(Avalues),1);
 
 [spIdx,~,IuniqueIdx] = unique([spIdxRow, spIdxCol],'rows');
 Avalues = accumarray(IuniqueIdx,Avalues);
-
-
-
-
-
-
 
 dofsToRemove = setdiff(1:noSurfDofs,unique(spIdx(:,1)));
 noDofsToRemove = numel(dofsToRemove);

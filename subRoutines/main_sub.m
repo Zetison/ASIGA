@@ -81,7 +81,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
             case {'IE','ABC','IENSG','PML'}
                 task.varCol{1}.timeBuildSystem = 0;
                 for i_domain = 1:task.noDomains
-                    if ~(strcmp(task.misc.method,'IENSG') && i_domain == 1)
+                    if ~(strcmp(task.misc.method,'IENSG') && task.iem.boundaryMethod) && i_domain == 1
                         tic          
                         if printLog
                             fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i_domain) ' ... '])
@@ -120,7 +120,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         end
                         chimax = task.varCol{1}.chimax;
                         chimin = task.varCol{1}.chimin;
-                        if abs(chimax - chimin)/abs(chimax) < 100*eps
+                        if abs(chimax - chimin)/abs(chimax) < 100*eps % Exploit tensor product structure of IEM
                             task.misc.r_a = mean([chimax,chimin]);
                             task = buildIEmatrix(task);
                         else

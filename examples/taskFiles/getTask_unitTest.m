@@ -10,16 +10,17 @@ misc.model = 'S1';
 varCol = setS1Parameters();
 varCol = varCol(1);
 noCoresToUse = 4;
-msh.explodeNURBS = false;   % Create patches from all C^0 interfaces
+msh.explodeNURBS = 1;   % Create patches from all C^0 interfaces
 
 msh.meshFile = 'createNURBSmesh_EL';
 msh.parm = 1;
 misc.checkNURBSweightsCompatibility = 0;
 prePlot.plotGeometryInfo    = 0;       % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
-err.calculateVolumeError    = true;
+err.calculateVolumeError    = 0;
+err.calculateSurfaceError = 1;
 
-prePlot.plotFullDomain   = false;        % Plot volumetric domains
-prePlot.view             = [0,90];
+prePlot.plotFullDomain   = 1;        % Plot volumetric domains
+% prePlot.view             = [0,90];
 prePlot.plotSubsets      = {'xy'};
 % prePlot.plotSubsets      = {};
 prePlot.plot3Dgeometry = 0;
@@ -40,15 +41,16 @@ msh.refineThetaOnly = 1;
 connectedParameters = {};
 % misc.method = {'IENSG','IE'};
 misc.method = {'IE'};
+% misc.method = {'IENSG'};
 misc.formulation = {'BGU'};
 misc.coreMethod = {'IGA'};
 
-msh.M = 5; % 4
+msh.M = 4; % 4
 misc.omega = 1000;
 misc.BC = 'SHBC';
 msh.degree = 2;
 iem.boundaryMethod = 0;
-iem.N = 64;
+iem.N = 6;
 
 % misc.r_a = varCol{1}.R_i;
 misc.r_a = varCol{1}.R_i*(1+2*pi/(32-pi));
@@ -59,10 +61,25 @@ ffp.alpha_s = 0;
 ffp.beta_s = pi/2;
 
 ffp.calculateFarFieldPattern = 0;
-err.calculateVolumeError = 1;
 loopParameters = {'msh.M','misc.method'};
 
+% collectIntoTasks
+
+
+%% This unit test should produce errors down to epsilon precision independent of M and N (as the solution is allways in the numerical solution space)
+% misc.applyLoad = ;
+misc.applyLoad = {'radialPulsation','pointPulsation'};
+connectedParameters = {{'misc.applyLoad','misc.BC'}};
+misc.BC = {'SHBC','NBC'};
+% misc.formulation = {'BGU'};
+misc.formulation = {'PGU','BGU','BGC','PGC'};
+msh.M = 1:2; % 4
+iem.N = 1:3;
+% msh.M = 1; % 4
+% iem.N = 1;
+loopParameters = {'msh.M','misc.method','iem.N','misc.formulation','misc.applyLoad'};
 collectIntoTasks
+
 
 
 

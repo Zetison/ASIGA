@@ -14,13 +14,13 @@ if strcmp(method,'PML') && ~isfield(task.varCol{1},'refinement')
     error('The refinement field must be specified using PML')
 end
 if strcmp(task.misc.method,'BEM') && ~task.misc.solveForPtot && ~strcmp(task.misc.BC,'NBC')...
-        && ~strcmp(task.applyLoad,'radialPulsation')
+        && ~strcmp(task.misc.applyLoad,'radialPulsation')
     warning('It is reccomended to use solveForPtot = true for BEM')
 end
 if task.misc.solveForPtot && ~strcmp(task.misc.applyLoad,'planeWave')
     error('p_inc does not solve the interior problem in the case applyLoad=radialPulsation. For this reason one must have solveForPtot=false here.')
 end
-    
+
 
 if strcmp(method, 'BEM') && ~(strcmp(formulation, 'CCBIE') || strcmp(formulation, 'GCBIE') || ...
                               strcmp(formulation, 'CHBIE') || strcmp(formulation, 'GHBIE') ||  ...

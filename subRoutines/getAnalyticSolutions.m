@@ -82,15 +82,15 @@ switch applyLoad
         dtheta = [cos(theta).*cos(phi), cos(theta).*sin(phi), -sin(theta)]./r(:,[1,1,1]);
         varCol{1}.p = hankel_s(1,k*r,1).*cos(theta);
         varCol{1}.p_0 = -cos(theta);
-        varCol{1}.dpdx = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,1) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,1);
-        varCol{1}.dpdy = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,2) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,2);
-        varCol{1}.dpdz = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,3) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,3);
+        varCol{1}.dp{1} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,1) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,1);
+        varCol{1}.dp{2} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,2) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,2);
+        varCol{1}.dp{3} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,3) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,3);
     case 'SimpsonTorus'
         varCol{1}.p = prod(sin(k*X{1}/sqrt(3)),2);
         varCol{1}.p_0 = NaN;
-        varCol{1}.dpdx = k/sqrt(3)*cos(k*X{1}(:,1)/sqrt(3)).*sin(k*X{1}(:,2)/sqrt(3)).*sin(k*X{1}(:,3)/sqrt(3));
-        varCol{1}.dpdy = k/sqrt(3)*sin(k*X{1}(:,1)/sqrt(3)).*cos(k*X{1}(:,2)/sqrt(3)).*sin(k*X{1}(:,3)/sqrt(3));
-        varCol{1}.dpdz = k/sqrt(3)*sin(k*X{1}(:,1)/sqrt(3)).*sin(k*X{1}(:,2)/sqrt(3)).*cos(k*X{1}(:,3)/sqrt(3));
+        varCol{1}.dp{1} = k/sqrt(3)*cos(k*X{1}(:,1)/sqrt(3)).*sin(k*X{1}(:,2)/sqrt(3)).*sin(k*X{1}(:,3)/sqrt(3));
+        varCol{1}.dp{2} = k/sqrt(3)*sin(k*X{1}(:,1)/sqrt(3)).*cos(k*X{1}(:,2)/sqrt(3)).*sin(k*X{1}(:,3)/sqrt(3));
+        varCol{1}.dp{3} = k/sqrt(3)*sin(k*X{1}(:,1)/sqrt(3)).*sin(k*X{1}(:,2)/sqrt(3)).*cos(k*X{1}(:,3)/sqrt(3));
     case 'pointPulsation'
         C_n = @(n) cos(n-1);
         switch varCol{1}.model
@@ -98,8 +98,9 @@ switch applyLoad
                 R_i = varCol{1}.R_i;
                 y = R_i*[1,1,1]/4;
             case 'Barrel'
-                R_i = varCol{1}.R;
-                y = R_i*[1,1,1]/4;
+%                 R_i = varCol{1}.R;
+%                 y = R_i*[1,1,1]/4;
+                y = [0,0,0];
             case {'BC','BCA'}
                 L = varCol{1}.L;
                 b = varCol{1}.b;
@@ -157,9 +158,9 @@ switch applyLoad
         end
         varCol{1}.p = p;
         varCol{1}.p_0 = p_0;
-        varCol{1}.dpdx = dpdx;
-        varCol{1}.dpdy = dpdy;
-        varCol{1}.dpdz = dpdz;
+        varCol{1}.dp{1} = dpdx;
+        varCol{1}.dp{2} = dpdy;
+        varCol{1}.dp{3} = dpdz;
     case {'planeWave','radialPulsation','pointCharge'}
         d_vec = varCol{1}.d_vec;
         if strcmp(applyLoad,'pointCharge')
@@ -169,36 +170,27 @@ switch applyLoad
         
         isSphericalShell = varCol{1}.isSphericalShell;
         N_max = varCol{1}.N_max;
-        if ~(nargin < 3) && (strcmp(func,'p_inc') || strcmp(func,'dp_inc') || strcmp(func,'dp_incdx') || strcmp(func,'dp_incdy') || strcmp(func,'dp_incdz')) && isinf(N_max)
+        if ~(nargin < 3) && (strcmp(func,'p_inc') || strcmp(func,'dp_inc') || strcmp(func,'dp_incdn')) && isinf(N_max)
             if strcmp(applyLoad,'planeWave')
                 varCol{1}.p_inc = P_inc*exp(1i*(X{1}*d_vec).*k);
-                if nargin > 2 && ~any(isnan(n(:)))
-                    varCol{1}.dp_inc = 1i*(n*d_vec).*k.*varCol{1}.p_inc;
+                for i = 1:3
+                    varCol{1}.dp_inc{i} = 1i*k.*varCol{1}.p_inc.*d_vec(i,:);
                 end
-                varCol{1}.dp_incdx = 1i*k.*varCol{1}.p_inc.*d_vec(1,:);
-                varCol{1}.dp_incdy = 1i*k.*varCol{1}.p_inc.*d_vec(2,:);
-                varCol{1}.dp_incdz = 1i*k.*varCol{1}.p_inc.*d_vec(3,:);
             elseif strcmp(applyLoad,'radialPulsation')
                 R_i = varCol{1}.R_i;
                 varCol{1}.p_inc = P_inc*R_i.*exp(-1i*k.*(norm2(X{1})-R_i))./norm2(X{1});
                 R = norm2(X{1});
-                if nargin > 2 && ~any(isnan(n(:)))
-                    varCol{1}.dp_inc = -varCol{1}.p_inc.*(1i*k+1./R).*sum(X{1}.*n,2)./R;
+                for i = 1:3
+                    varCol{1}.dp_inc{i} = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,i)./R;
                 end
-                varCol{1}.dp_incdx = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,1)./R;
-                varCol{1}.dp_incdy = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,2)./R;
-                varCol{1}.dp_incdz = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,3)./R;
             elseif strcmp(applyLoad,'pointCharge')
                 x_s = r_s*d_vec.';
                 xms = X{1}-x_s;
                 R = norm2(xms);
                 varCol{1}.p_inc = P_inc*r_s.*exp(1i*k.*R)./R;
-                if nargin > 2 && ~any(isnan(n(:)))
-                    varCol{1}.dp_inc = varCol{1}.p_inc.*(1i*k-1./R).*sum(xms.*n,2)./R;
+                for i = 1:3
+                    varCol{1}.dp_inc{i} = varCol{1}.p_inc.*(1i*k-1./R).*xms(:,i)./R;
                 end
-                varCol{1}.dp_incdx = varCol{1}.p_inc.*(1i*k-1./R).*xms(:,1)./R;
-                varCol{1}.dp_incdy = varCol{1}.p_inc.*(1i*k-1./R).*xms(:,2)./R;
-                varCol{1}.dp_incdz = varCol{1}.p_inc.*(1i*k-1./R).*xms(:,3)./R;
             end
         else
             if isinf(N_max) && nargin >= 3 && (strcmp(func,'p_inc') || strcmp(func,'dp_incdn'))
@@ -276,13 +268,13 @@ switch applyLoad
                   1i,    -1];
         [p,dpdx,dpdy,dpdz] = general3DSolutionHelmholtz(X{1}, k, Acoeff,Bcoeff,Ccoeff,Dcoeff,Ecoeff,Fcoeff);
         varCol{1}.p = p;
-        varCol{1}.dpdx = dpdx;
-        varCol{1}.dpdy = dpdy;
-        varCol{1}.dpdz = dpdz;
+        varCol{1}.dp{1} = dpdx;
+        varCol{1}.dp{2} = dpdy;
+        varCol{1}.dp{3} = dpdz;
 end
 
 if nargin > 2 && ~any(isnan(n(:)))
-    if isfield(varCol{1},'dpdx')
+    if isfield(varCol{1},'dp')
         varCol{1}.dpdn = varCol{1}.dp{1}.*n(:,1)+varCol{1}.dp{2}.*n(:,2)+varCol{1}.dp{3}.*n(:,3);
     end
     if ~isfield(varCol{1},'dp_incdn')

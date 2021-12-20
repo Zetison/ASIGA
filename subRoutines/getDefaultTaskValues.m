@@ -41,6 +41,7 @@ msh.refineThetaOnly     = 0;       % For the ellipsoidal/spherical geometries, r
 msh.degree              = 2;       % NURBS polynomial degree
 msh.explodeNURBS        = false;   % Create patches from all C^0 interfaces
 msh.x_0                 = [0,0,0]; % Translate center of model
+msh.Xi                  = [0,0,0,1,1,2,2,3,3,3]/3;
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plotFullDomain      = true;        % Plot volumetric domains

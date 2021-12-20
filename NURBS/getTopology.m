@@ -90,6 +90,7 @@ freeBdries(counterFree:end,:) = [];
 if isempty(geometry)
     return
 end
+geometry.topologysets.set = {};
 if ~isempty(freeBdries)
     % Find connected surfaces
     nurbsFaces = subNURBS(nurbs(freeBdries(:,1)),'at',num2cell(freeBdries(:,2).'));

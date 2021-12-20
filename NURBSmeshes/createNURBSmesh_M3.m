@@ -35,8 +35,6 @@ R_max = max(R1,R2);
 if varCol{1}.boundaryMethod
     c_z = (L+R1+R2)/2;
     c_xy = sqrt(R1*R2*(L^2 - (R2 - R1)^2))/L;
-    varCol{1}.c_z = c_z;
-    varCol{1}.c_xy = c_xy;
 
     Upsilon = sqrt(c_z^2-c_xy^2);
     if isfield(varCol{1},'chimin')
@@ -83,7 +81,8 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
-    if ~(strcmp(task.misc.method,'PML'))
+    t_fluid = task.misc.r_a-R2;
+    if ~(strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'IENSG'))
         if strcmp(task.misc.model,'MS')
             Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
             c_z = 1.2*(L+2*R1)/2; % 30
@@ -112,13 +111,9 @@ else
             eta2 = theta2/pi;
         end
         task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
-        varCol{1}.c_z = c_z;
-        varCol{1}.c_xy = c_xy;
     end
 
     
-    chimin = NaN;
-    chimax = NaN;
 
     solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi);
     if numel(Xi) == 12
@@ -141,8 +136,10 @@ else
     
     refLength = R_max*pi/2;
     if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'IENSG')
-        t_fluid = task.misc.r_a-R2;
-        [Gamma_a,RR] = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi);
+        [Gamma_a,RR,c_xy,c_z] = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi);
+        Upsilon = sqrt(c_z^2-c_xy^2);
+        chimin = 25.7;
+        chimax = 27.2;
         if numel(Xi) == 12
             Gamma_a = [glueNURBS(Gamma_a(1:4),1),glueNURBS(Gamma_a(5:8),1),glueNURBS(Gamma_a(9:12),1)];
         else
@@ -159,6 +156,8 @@ else
         end
         solid = insertKnotsInNURBS(solid,newKnotsIns);
     else
+        chimin = NaN;
+        chimax = NaN;
         ellipsoid = getEllipsoidData('C',[c_z,c_xy,c_xy],'alignWithAxis',alignWithAxis,'x_0',x_0, 'alpha', 0, ...
                                      'Xi', Xi, 'Eta', [0,0,0,eta1,eta1,eta2,eta2,1,1,1]);
         if strcmp(task.misc.model,'MS')
@@ -231,6 +230,8 @@ end
 if ~strcmp(task.misc.method,'PML')
     varCol{1}.chimin = chimin;
     varCol{1}.chimax = chimax;
+    varCol{1}.c_z = c_z;
+    varCol{1}.c_xy = c_xy;
     task.iem.Upsilon = Upsilon;
 end
 varCol{1}.L_gamma = L + R1 + R2;
