@@ -1,4 +1,4 @@
-function solid = getSphericalShellData2(R_i, R_o,alignWithAxis, phi)
+function solid = getSphericalShellData2(R, R_o,alignWithAxis, phi)
 error('Use getEllipsoidData() instead')
 if nargin < 3
     alignWithAxis = 'Zaxis';
@@ -14,55 +14,55 @@ w2 = cos((pi-phi)/2);
 tn2 = tan(phi/2);
 
 % inner surface
-controlPts(:,1,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,2,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,3,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,4,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,5,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,6,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,7,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,8,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,9,1,1) = [ 0     0      -R_i   1           ];
+controlPts(:,1,1,1) = [ 0     0      -R   1           ];
+controlPts(:,2,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,3,1,1) = [ 0     0      -R   1           ];
+controlPts(:,4,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,5,1,1) = [ 0     0      -R   1           ];
+controlPts(:,6,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,7,1,1) = [ 0     0      -R   1           ];
+controlPts(:,8,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,9,1,1) = [ 0     0      -R   1           ];
 
-controlPts(:,1,2,1) = [  R_i/tn2    0           -R_i    w2   ];
-controlPts(:,2,2,1) = [  R_i/tn2	R_i/tn2   	-R_i    1/sqrt(2)*w2         ];
-controlPts(:,3,2,1) = [  0          R_i/tn2 	-R_i    w2   ];
-controlPts(:,4,2,1) = [ -R_i/tn2    R_i/tn2   	-R_i    1/sqrt(2)*w2         ];
-controlPts(:,5,2,1) = [ -R_i/tn2    0           -R_i    w2   ];
-controlPts(:,6,2,1) = [ -R_i/tn2   -R_i/tn2  	-R_i    1/sqrt(2)*w2         ];
-controlPts(:,7,2,1) = [  0         -R_i/tn2   	-R_i    w2   ];
-controlPts(:,8,2,1) = [  R_i/tn2   -R_i/tn2   	-R_i    1/sqrt(2)*w2         ];
-controlPts(:,9,2,1) = [  R_i/tn2    0           -R_i    w2   ];
+controlPts(:,1,2,1) = [  R/tn2    0           -R    w2   ];
+controlPts(:,2,2,1) = [  R/tn2	R/tn2   	-R    1/sqrt(2)*w2         ];
+controlPts(:,3,2,1) = [  0          R/tn2 	-R    w2   ];
+controlPts(:,4,2,1) = [ -R/tn2    R/tn2   	-R    1/sqrt(2)*w2         ];
+controlPts(:,5,2,1) = [ -R/tn2    0           -R    w2   ];
+controlPts(:,6,2,1) = [ -R/tn2   -R/tn2  	-R    1/sqrt(2)*w2         ];
+controlPts(:,7,2,1) = [  0         -R/tn2   	-R    w2   ];
+controlPts(:,8,2,1) = [  R/tn2   -R/tn2   	-R    1/sqrt(2)*w2         ];
+controlPts(:,9,2,1) = [  R/tn2    0           -R    w2   ];
 
-controlPts(:,1,3,1) = [  R_i*sin(phi)   0               R_i*cos(phi)	1           ];
-controlPts(:,2,3,1) = [  R_i*sin(phi)   R_i*sin(phi)   	R_i*cos(phi) 	1/sqrt(2)   ];
-controlPts(:,3,3,1) = [	 0              R_i*sin(phi)  	R_i*cos(phi)  	1           ];
-controlPts(:,4,3,1) = [	-R_i*sin(phi)   R_i*sin(phi)  	R_i*cos(phi) 	1/sqrt(2)   ];
-controlPts(:,5,3,1) = [	-R_i*sin(phi)   0               R_i*cos(phi) 	1           ];
-controlPts(:,6,3,1) = [	-R_i*sin(phi)  -R_i*sin(phi)   	R_i*cos(phi)	1/sqrt(2)   ];
-controlPts(:,7,3,1) = [	 0             -R_i*sin(phi)   	R_i*cos(phi)	1           ];
-controlPts(:,8,3,1) = [	 R_i*sin(phi)  -R_i*sin(phi)   	R_i*cos(phi)	1/sqrt(2)   ];
-controlPts(:,9,3,1) = [	 R_i*sin(phi)   0               R_i*cos(phi)	1           ];
+controlPts(:,1,3,1) = [  R*sin(phi)   0               R*cos(phi)	1           ];
+controlPts(:,2,3,1) = [  R*sin(phi)   R*sin(phi)   	R*cos(phi) 	1/sqrt(2)   ];
+controlPts(:,3,3,1) = [	 0              R*sin(phi)  	R*cos(phi)  	1           ];
+controlPts(:,4,3,1) = [	-R*sin(phi)   R*sin(phi)  	R*cos(phi) 	1/sqrt(2)   ];
+controlPts(:,5,3,1) = [	-R*sin(phi)   0               R*cos(phi) 	1           ];
+controlPts(:,6,3,1) = [	-R*sin(phi)  -R*sin(phi)   	R*cos(phi)	1/sqrt(2)   ];
+controlPts(:,7,3,1) = [	 0             -R*sin(phi)   	R*cos(phi)	1           ];
+controlPts(:,8,3,1) = [	 R*sin(phi)  -R*sin(phi)   	R*cos(phi)	1/sqrt(2)   ];
+controlPts(:,9,3,1) = [	 R*sin(phi)   0               R*cos(phi)	1           ];
 
-controlPts(:,1,4,1) = [  R_i*tn2 	0           R_i     w1   ];
-controlPts(:,2,4,1) = [  R_i*tn2 	R_i*tn2   	R_i     1/sqrt(2)*w1         ];
-controlPts(:,3,4,1) = [  0          R_i*tn2  	R_i     w1   ];
-controlPts(:,4,4,1) = [ -R_i*tn2    R_i*tn2  	R_i     1/sqrt(2)*w1         ];
-controlPts(:,5,4,1) = [ -R_i*tn2    0           R_i     w1   ];
-controlPts(:,6,4,1) = [ -R_i*tn2   -R_i*tn2 	R_i     1/sqrt(2)*w1         ];
-controlPts(:,7,4,1) = [  0         -R_i*tn2  	R_i     w1   ];
-controlPts(:,8,4,1) = [  R_i*tn2   -R_i*tn2  	R_i     1/sqrt(2)*w1         ];
-controlPts(:,9,4,1) = [  R_i*tn2    0           R_i     w1   ];
+controlPts(:,1,4,1) = [  R*tn2 	0           R     w1   ];
+controlPts(:,2,4,1) = [  R*tn2 	R*tn2   	R     1/sqrt(2)*w1         ];
+controlPts(:,3,4,1) = [  0          R*tn2  	R     w1   ];
+controlPts(:,4,4,1) = [ -R*tn2    R*tn2  	R     1/sqrt(2)*w1         ];
+controlPts(:,5,4,1) = [ -R*tn2    0           R     w1   ];
+controlPts(:,6,4,1) = [ -R*tn2   -R*tn2 	R     1/sqrt(2)*w1         ];
+controlPts(:,7,4,1) = [  0         -R*tn2  	R     w1   ];
+controlPts(:,8,4,1) = [  R*tn2   -R*tn2  	R     1/sqrt(2)*w1         ];
+controlPts(:,9,4,1) = [  R*tn2    0           R     w1   ];
 
-controlPts(:,1,5,1) = [  0     0      R_i   1           ];
-controlPts(:,2,5,1) = [  0     0      R_i   1/sqrt(2)   ];
-controlPts(:,3,5,1) = [  0     0      R_i   1           ];
-controlPts(:,4,5,1) = [  0     0      R_i   1/sqrt(2)   ];
-controlPts(:,5,5,1) = [  0     0      R_i   1           ];
-controlPts(:,6,5,1) = [  0     0      R_i   1/sqrt(2)   ];
-controlPts(:,7,5,1) = [  0     0      R_i   1           ];
-controlPts(:,8,5,1) = [  0     0      R_i   1/sqrt(2)   ];
-controlPts(:,9,5,1) = [  0     0      R_i   1           ];
+controlPts(:,1,5,1) = [  0     0      R   1           ];
+controlPts(:,2,5,1) = [  0     0      R   1/sqrt(2)   ];
+controlPts(:,3,5,1) = [  0     0      R   1           ];
+controlPts(:,4,5,1) = [  0     0      R   1/sqrt(2)   ];
+controlPts(:,5,5,1) = [  0     0      R   1           ];
+controlPts(:,6,5,1) = [  0     0      R   1/sqrt(2)   ];
+controlPts(:,7,5,1) = [  0     0      R   1           ];
+controlPts(:,8,5,1) = [  0     0      R   1/sqrt(2)   ];
+controlPts(:,9,5,1) = [  0     0      R   1           ];
 
 % outer surface
 controlPts(:,1,1,2) = [ 0     0      -R_o   1           ];

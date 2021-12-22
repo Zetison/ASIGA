@@ -12,7 +12,7 @@ x_0 = [0; 0; L/2+(R_o1-R_o2)/2]; % The origin of the model
 x_0wave = x_0; % Point at which the wave is directed (has purely real part here)
 
 
-solid = getModel3Data(R_o1, R_o2, R_i1, R_i2, L, alignWithAxis, eta1, eta2, x_0);
+solid = getModel3Data(R_o1, R_o2, R1, R2, L, alignWithAxis, eta1, eta2, x_0);
 if true
     chimin = 24.4;
     chimax = 25.7;
@@ -49,7 +49,7 @@ fluid_o = insertKnotsInNURBS(fluid_o,{insertUniform2(fluid_o.knots{1}, noNewXiKn
 
 
 if useInnerFluidDomain
-    fluid_i = getModel3InternalWaterData(R_i1,R_i2,L,alignWithAxis, eta1, eta2, x_0);
+    fluid_i = getModel3InternalWaterData(R1,R2,L,alignWithAxis, eta1, eta2, x_0);
     fluid_i = elevateNURBSdegree(fluid_i,[0 0 1]);
     fluid_i = elevateNURBSdegree(fluid_i,[1 1 1]*degreeElev);
     fluid_i = insertKnotsInNURBS(fluid_i,{insertUniform2(fluid_i.knots{1}, noNewXiKnots) ...

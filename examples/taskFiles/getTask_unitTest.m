@@ -52,8 +52,8 @@ msh.degree = 2;
 iem.boundaryMethod = 0;
 iem.N = 6;
 
-% misc.r_a = varCol{1}.R_i;
-misc.r_a = varCol{1}.R_i*(1+2*pi/(32-pi));
+% misc.r_a = varCol{1}.R;
+misc.r_a = varCol{1}.R*(1+2*pi/(32-pi));
 
 varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-41)-1, 2^(M-4)-1];
 % varCol{1}.refinement = @(M) [2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1];

@@ -310,7 +310,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         U_A = D_SSOR-omega_SSOR*F_SSOR;
 %                         P = L_A*U_A;
                     case 'diag'
-                        Pinv = spdiags(1./diag(A),0,size(A,1),size(A,2));
+                        Pinv = spdiags(1./diag(A),0,size(A,2),size(A,2));
                 end
                 if printLog
                     fprintf('using %12f seconds.', toc)
@@ -547,44 +547,45 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
             createParaviewFiles(task, 'para_options', para);
         end
 
-        if ~isempty(para.plotSubsets)
-            name = para.name;
-            i_v = 1;
-            for i = 1:numel(para.plotSubsets)
-                bdryName = para.plotSubsets{i};
-                if printLog
-                    fprintf(['\n%-' num2str(stringShift) 's'], ['Creating paraview files for ' bdryName ' ... '])
-                end
-                [~,setFound] = findSet(task.varCol{i_v}.geometry.topologysets.set,bdryName);
-                if setFound
-                    taskBdry = task;
-                    taskBdry.varCol{i_v} = rmfield(taskBdry.varCol{i_v},'geometry');
-                    varColBdry = meshBoundary(task.varCol{i_v},bdryName);
-                    taskBdry.varCol{i_v}.nurbs = varColBdry.nurbs;
-                    taskBdry = collectVariables(taskBdry);
-                    taskBdry.varCol{i_v} = findDofsToRemove(generateIGAmesh(taskBdry.varCol{i_v}));
-%                     fieldNames = fields(varColBdry);
-%                     for j = 1:numel(fieldNames)
-%                         taskBdry.varCol{i_v}.(fieldNames{j}) = varColBdry.(fieldNames{j});
-%                     end
-                    nodes = varColBdry.nodes;
-                    
-                    d_f = task.varCol{i_v}.dimension;
-                    nodesField = zeros(1,d_f*numel(nodes));
-                    for j = 1:d_f
-                        nodesField(j:d_f:end) = d_f*(nodes-1)+j;
+        for i_v = 1:numel(task.varCol)
+            if ~isempty(para.plotSubsets) && ~task.varCol{i_v}.boundaryMethod
+                name = para.name;
+                for i = 1:numel(para.plotSubsets)
+                    bdryName = para.plotSubsets{i};
+                    if printLog
+                        fprintf(['\n%-' num2str(stringShift) 's'], ['Creating paraview files for ' bdryName ' ... '])
                     end
-                    taskBdry.varCol{i_v}.U = task.varCol{i_v}.U(nodesField,:);
-                    
-                    para.name = [name, '_', bdryName];
-                    
-                    createParaviewFiles(taskBdry, 'para_options', para);
-                else
-                    switch bdryName
-                        case {'xy','yz','xz'}
-                            warning(['The set ' bdryName ' was not found, and is thus not plotted in paraview. For xy, yz and xz; setting msh.explodeNURBS = true might help.'])
-                        otherwise
-                            warning(['The set ' bdryName ' was not found, and is thus not plotted in paraview.'])
+                    [~,setFound] = findSet(task.varCol{i_v}.geometry.topologysets.set,bdryName);
+                    if setFound
+                        taskBdry = task;
+                        taskBdry.varCol{i_v} = rmfield(taskBdry.varCol{i_v},'geometry');
+                        varColBdry = meshBoundary(task.varCol{i_v},bdryName);
+                        taskBdry.varCol{i_v}.nurbs = varColBdry.nurbs;
+                        taskBdry = collectVariables(taskBdry);
+                        taskBdry.varCol{i_v} = findDofsToRemove(generateIGAmesh(taskBdry.varCol{i_v}));
+    %                     fieldNames = fields(varColBdry);
+    %                     for j = 1:numel(fieldNames)
+    %                         taskBdry.varCol{i_v}.(fieldNames{j}) = varColBdry.(fieldNames{j});
+    %                     end
+                        nodes = varColBdry.nodes;
+
+                        d_f = task.varCol{i_v}.dimension;
+                        nodesField = zeros(1,d_f*numel(nodes));
+                        for j = 1:d_f
+                            nodesField(j:d_f:end) = d_f*(nodes-1)+j;
+                        end
+                        taskBdry.varCol{i_v}.U = task.varCol{i_v}.U(nodesField,:);
+
+                        para.name = [name, '_', bdryName];
+
+                        createParaviewFiles(taskBdry, 'para_options', para);
+                    else
+                        switch bdryName
+                            case {'xy','yz','xz'}
+                                warning(['The set ' bdryName ' was not found, and is thus not plotted in paraview. For xy, yz and xz; setting msh.explodeNURBS = true might help.'])
+                            otherwise
+                                warning(['The set ' bdryName ' was not found, and is thus not plotted in paraview.'])
+                        end
                     end
                 end
             end

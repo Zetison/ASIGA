@@ -5,6 +5,7 @@ options = struct('Xi', [0,0,0,1,1,2,2,3,3,3]/3, ...  % knot vector for azimuthal
                  'parm', 1, ...
                  'L', pi, ...
                  't', 0.1, ...
+                 'pmlFill', false, ...
                  'd_p', 3, ...
                  'phi', 120*pi/180, ...
                  's_trans', 0.9);
@@ -27,18 +28,29 @@ else
     Xi = options.Xi;
 end
 if d_p == 2
-    nurbsDisk = getDiskData('Xi',Xi,'R',R,'parm',parm,'t',0);
+    nurbsDisk = permuteNURBS(getDiskData('Xi',Xi,'R',R,'parm',parm,'t',0),[2,1]);
     nurbsTop = translateNURBS(nurbsDisk,[0,0,L]);
     nurbsCyl = getCylinderData('Xi',Xi,'R', R, 'parm', parm, 'L', L, 'd_p', d_p);
-    nurbs = [flipNURBSparametrization(nurbsDisk,1),nurbsCyl,nurbsTop];
+    nurbs = [nurbsDisk,nurbsCyl,flipNURBSparametrization(nurbsTop,2)];
 else
-    nurbsDisk = [getDiskData('Xi',Xi,'R',R-t,'parm',parm,'t',t), ...
-                 getDiskData('Xi',Xi,'R',[R,R-t],'parm',1,'t',t)];
+    nurbsDisk = getDiskData('Xi',Xi,'R',R-t,'parm',parm,'t',t);
+                 
+    if options.pmlFill
+        torus = explodeNURBS(getTorusData('Xi', [0 0 0 1 1 2 2 3 3 4 4 4]/4, 'Eta', Xi, 'R', R-t, 'r', t), 1);
+        nurbsDisk = [nurbsDisk, torus(2)];
+    else
+        nurbsDisk = [nurbsDisk, getDiskData('Xi',Xi,'R',[R,R-t],'parm',1,'t',t)];
+    end
+    nurbsBot = translateNURBS(mirrorNURBS(nurbsDisk,'z'),[0,0,t]);
     nurbsTop = translateNURBS(nurbsDisk,[0,0,L-t]);
     nurbsCyl = getCylinderData('Xi',Xi,'R',[R,R-t],'parm',1,'L',L-2*t);
     nurbsCyl = translateNURBS(nurbsCyl,[0,0,t]);
-    nurbs = [nurbsDisk,nurbsCyl,nurbsTop];
+    nurbs = [permuteNURBS(nurbsBot,[3,2,1]),nurbsCyl,nurbsTop];
+    nurbs = permuteNURBS(nurbs,[2,3,1]);
 end
-nurbs = explodeNURBS(nurbs);
 nurbs = translateNURBS(nurbs,[0,0,-L/2]);
 nurbs = rotateNURBS(nurbs,'rotAxis','Yaxis');
+nurbs = rotateNURBS(nurbs,'rotAxis','Xaxis', 'theta', pi);
+if parm == 2
+    nurbs = explodeNURBS(nurbs);
+end

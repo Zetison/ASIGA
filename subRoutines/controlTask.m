@@ -3,7 +3,11 @@ function task = controlTask(task)
 formulation = task.misc.formulation;
 scatteringCase = task.misc.scatteringCase;
 method = task.misc.method;
+applyLoad = task.misc.applyLoad;
 
+if task.ffp.calculateFarFieldPattern && task.msh.refineThetaOnly && max(task.ffp.extraGP) < 7
+    warning('Consider using more integration points (ffp.extrGP) in the parametric direction not refined to ensure the fundamental functions (which are not necessarily axisymmetric) are integrated properly in the far field calculation routine')
+end
 if strcmp(method,'PML') && isnan(task.pml.t) 
     error('The PML thickness pml.t must be set')
 end
@@ -14,13 +18,15 @@ if strcmp(method,'PML') && ~isfield(task.varCol{1},'refinement')
     error('The refinement field must be specified using PML')
 end
 if strcmp(task.misc.method,'BEM') && ~task.misc.solveForPtot && ~strcmp(task.misc.BC,'NBC')...
-        && ~strcmp(task.misc.applyLoad,'radialPulsation')
+        && ~strcmp(applyLoad,'radialPulsation')
     warning('It is reccomended to use solveForPtot = true for BEM')
 end
-if task.misc.solveForPtot && ~strcmp(task.misc.applyLoad,'planeWave')
+if task.misc.solveForPtot && ~strcmp(applyLoad,'planeWave')
     error('p_inc does not solve the interior problem in the case applyLoad=radialPulsation. For this reason one must have solveForPtot=false here.')
 end
-
+if strcmp(scatteringCase,'MS') && ~strcmp(applyLoad,'planeWave')
+    error('MS only applies for planeWave')
+end
 
 if strcmp(method, 'BEM') && ~(strcmp(formulation, 'CCBIE') || strcmp(formulation, 'GCBIE') || ...
                               strcmp(formulation, 'CHBIE') || strcmp(formulation, 'GHBIE') ||  ...
@@ -60,7 +66,7 @@ if strcmp(task.misc.scatteringCase,'MS') && (~isnan(task.ffp.alpha_s(1)) || ~isn
     warning(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
            'The given variables will be overwritten as alpha_s = alpha and beta_s = beta.'])
 end
-if (isnan(task.ffp.alpha_s(1)) || isnan(task.ffp.beta_s(1))) && ~strcmp(task.misc.scatteringCase,'MS') && strcmp(task.misc.applyLoad,'planeWave')
+if (isnan(task.ffp.alpha_s(1)) || isnan(task.ffp.beta_s(1))) && ~strcmp(task.misc.scatteringCase,'MS') && strcmp(applyLoad,'planeWave')
     error('Incident direction is not set: alpha_s = NaN and/or beta_s = NaN')
 end
 if task.misc.solveForPtot && ~(strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'BA'))

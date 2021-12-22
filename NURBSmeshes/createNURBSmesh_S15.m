@@ -114,8 +114,8 @@ else
     end
 
     if numel(varCol) > 2
-        t_ifluid = R_i(1)-R_o(2);
-        solid = getEllipsoidalData({'R', R_i(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_ifluid});
+        t_ifluid = R(1)-R_o(2);
+        solid = getEllipsoidalData({'R', R(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_ifluid});
         solid = makeUniformNURBSDegree(solid);
         nurbsDegree = fluid_i{1}.degree(1); % assume all degrees are equal
         fluid_i = elevateDegreeInPatches(fluid_i,[1 1 1]*(degree-nurbsDegree));

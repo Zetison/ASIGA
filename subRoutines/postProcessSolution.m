@@ -35,3 +35,8 @@ if isfield(task.varCol{1},'c_f')
         task.tau = computeTau(task);
     end
 end
+for field = {'a','R','L'}
+    if isfield(task.varCol{1},field{1})
+        task.varCol{1}.(['k' field{1}]) = task.varCol{1}.(field{1})*task.varCol{1}.k;
+    end
+end

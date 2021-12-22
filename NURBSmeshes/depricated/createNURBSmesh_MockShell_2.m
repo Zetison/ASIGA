@@ -16,7 +16,7 @@ chimin = 5.93;
 chimax = 6.2;
 
 
-solid = getModel3Data(R_o, R_o, R_i, R_i, L, alignWithAxis, eta1, eta2, x_0);
+solid = getModel3Data(R_o, R_o, R, R, L, alignWithAxis, eta1, eta2, x_0);
 solid = elevateNURBSdegree(solid,[0 0 1]);
 solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
 
@@ -35,7 +35,7 @@ solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, noNewXiKnots) .
 
 
 if useInnerFluidDomain
-    fluid_i = getModel3InternalWaterData(R_i,R_i,L,alignWithAxis, eta1, eta2, x_0);
+    fluid_i = getModel3InternalWaterData(R,R,L,alignWithAxis, eta1, eta2, x_0);
     fluid_i = elevateNURBSdegree(fluid_i,[0 0 1]);
     fluid_i = elevateNURBSdegree(fluid_i,[1 1 1]*degreeElev);
     fluid_i = insertKnotsInNURBS(fluid_i,{insertUniform2(fluid_i.knots{1}, noNewXiKnots) ...

@@ -1,4 +1,4 @@
-function solid = getSolidCylinderData2(R_i, R_o, L)
+function solid = getSolidCylinderData2(R, R_o, L)
 
 error('Use getCylinderData() instead')
 % Quaarter of the full cylinder
@@ -9,13 +9,13 @@ Zeta = [0 0 1 1];
 
 controlPts = zeros(4,3,2,2);
 
-controlPts(:,1,1,1) = [  R_i	0       0	 1           ];
-controlPts(:,2,1,1) = [  R_i	R_i     0	 1/sqrt(2)   ];
-controlPts(:,3,1,1) = [  0      R_i     0    1           ];
+controlPts(:,1,1,1) = [  R	0       0	 1           ];
+controlPts(:,2,1,1) = [  R	R     0	 1/sqrt(2)   ];
+controlPts(:,3,1,1) = [  0      R     0    1           ];
 
-controlPts(:,1,2,1) = [  R_i	0       L    1           ];
-controlPts(:,2,2,1) = [  R_i	R_i     L    1/sqrt(2)   ];
-controlPts(:,3,2,1) = [  0  	R_i     L    1           ];
+controlPts(:,1,2,1) = [  R	0       L    1           ];
+controlPts(:,2,2,1) = [  R	R     L    1/sqrt(2)   ];
+controlPts(:,3,2,1) = [  0  	R     L    1           ];
 
 controlPts(:,1,1,2) = [  R_o	0       0    1           ];
 controlPts(:,2,1,2) = [  R_o	R_o     0    1/sqrt(2)   ];

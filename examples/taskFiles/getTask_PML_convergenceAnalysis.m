@@ -21,13 +21,19 @@ prePlot.plotGeometryInfo    = 1;       % Plot domain boundaries (i.e. Gamma, Gam
 % misc.method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
 % for BC = {'SHBC', 'SSBC','NNBC'}
+% ffp.alpha_s = 0;
+% ffp.beta_s = -pi/2;
+ffp.alpha_s = pi;
+ffp.beta_s = 0;
 
-prePlot.plot3Dgeometry = 0;
-prePlot.plot2Dgeometry = 0;
+prePlot.plot3Dgeometry   = 0;
+prePlot.plotFullDomain   = 0;        % Plot volumetric domains
+prePlot.view             = [0,0];
+prePlot.plotSubsets      = {'xz'};
 prePlot.plotControlPolygon  = 0;       % Plot the control polygon for the NURBS mesh
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 % prePlot.colorFun = @(v) abs(norm2(v)-(r_a+t_PML));
-prePlot.resolution = [100,100,0];
+% prePlot.resolution = [100,100,0];
 warning('off','NURBS:weights')
 
 % postPlot(1).xname       	= 'nepw';
@@ -40,15 +46,20 @@ postPlot(1).lineStyle   	= '*-';
 postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
-postPlot(1).legendEntries 	= {'msh.degree','pml.sigmaType','pml.n','misc.method','misc.coreMethod','misc.formulation'};
+postPlot(1).legendEntries 	= {'msh.degree','pml.sigmaType','pml.n','misc.method','misc.coreMethod','misc.formulation','pml.t'};
+msh.explodeNURBS = prePlot.plot3Dgeometry;
 
 msh.meshFile = 'createNURBSmesh_EL';
-% msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
-msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
-msh.refineThetaOnly = false;
+msh.refineThetaOnly = ffp.beta_s == -pi/2;
+    
+if msh.refineThetaOnly 
+    msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+else
+    msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
+end
 connectedParameters = {{'msh.M','iem.N'},{'pml.sigmaType','pml.n'}};
 
-for method = {'IE','PML', 'BA'}
+for method = {'PML','IE','BA'}
     misc.method = method{1};
     switch method{1}
         case 'IE'
@@ -77,21 +88,28 @@ for method = {'IE','PML', 'BA'}
             msh.M = 1:M_max-2; %1:5
         end
 %         msh.M = (M_max-1):M_max; %1:5
-%         msh.M = 6;
-        pml.t = 0.25*varCol{1}.R_i;         % thickness of PML
+%         msh.M = 4;
+        if strcmp(method{1}, 'PML')
+            pml.t = [varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
+        else
+            pml.t = 0.25*varCol{1}.R;         % thickness of PML
+        end
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-        misc.r_a = 1.25*varCol{1}.R_i;
+        misc.r_a = 1.25*varCol{1}.R;
 %         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(iem.N - msh.degree,2^(M-3)-1)];
 %         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, 2^(M-4)-1];
-        varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1, 2^(M-4)-1];
-        ffp.alpha_s = 0;
-        ffp.beta_s = -pi/2;
+        pml.refinement = @(M,t) round(t/(0.25*varCol{1}.R)*2^(M-4)-1);
+        if msh.refineThetaOnly
+            varCol{1}.refinement = @(M,t) [0, 2^(M-1)-1, 2^(M-4)-1];
+        else
+            varCol{1}.refinement = @(M,t) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1];
+        end
 
         para.plotResultsInParaview = 0;
         ffp.calculateFarFieldPattern = 0;
         err.calculateVolumeError = 1;
         err.calculateSurfaceError = 1;
-        loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','misc.formulation','misc.BC'};
+        loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','misc.formulation','misc.BC','pml.t'};
 
 
 %         for coreMethod = {'IGA'}

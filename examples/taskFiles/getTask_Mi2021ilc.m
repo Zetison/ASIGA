@@ -67,7 +67,7 @@ c_f = 340;
 msh.M = 3:4; % 4
 % msh.M = 1; % 4
 varCol{1}.media = 'fluid'; % Media; % solid or fluid (Navier equation or Helmholtz equation)
-varCol{1}.R_i = r;
+varCol{1}.R = r;
 varCol{1}.c_f = c_f;
 varCol{1}.rho = 1.225;
 
@@ -162,6 +162,7 @@ postPlot(3).legendEntries 	= {'msh.M','msh.degree','pml.sigmaType','misc.method'
 
 postPlot(4)	= postPlot(3);
 postPlot(4).yname        	= 'error_p';
+postPlot(4).axisType        = 'semilogy';
 % collectIntoTasks
 
 misc.coreMethod = {'hp_FEM'};

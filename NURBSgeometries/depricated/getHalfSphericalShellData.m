@@ -1,4 +1,4 @@
-function solid = getHalfSphericalShellData(R_i, R_o,alignWithAxis)
+function solid = getHalfSphericalShellData(R, R_o,alignWithAxis)
 error('Depricated use getHalfSphereData')
 
 if nargin < 3
@@ -11,35 +11,35 @@ Zeta = [0 0 1 1];
 controlPts = zeros(4,9,3,2);
 
 % inner surface
-controlPts(:,1,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,2,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,3,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,4,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,5,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,6,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,7,1,1) = [ 0     0      -R_i   1           ];
-controlPts(:,8,1,1) = [ 0     0      -R_i   1/sqrt(2)   ];
-controlPts(:,9,1,1) = [ 0     0      -R_i   1           ];
+controlPts(:,1,1,1) = [ 0     0      -R   1           ];
+controlPts(:,2,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,3,1,1) = [ 0     0      -R   1           ];
+controlPts(:,4,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,5,1,1) = [ 0     0      -R   1           ];
+controlPts(:,6,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,7,1,1) = [ 0     0      -R   1           ];
+controlPts(:,8,1,1) = [ 0     0      -R   1/sqrt(2)   ];
+controlPts(:,9,1,1) = [ 0     0      -R   1           ];
 
-controlPts(:,1,2,1) = [  R_i    0    	-R_i    1/sqrt(2)   ];
-controlPts(:,2,2,1) = [  R_i	R_i   	-R_i    1/2         ];
-controlPts(:,3,2,1) = [  0      R_i 	-R_i    1/sqrt(2)   ];
-controlPts(:,4,2,1) = [ -R_i    R_i   	-R_i    1/2         ];
-controlPts(:,5,2,1) = [ -R_i    0    	-R_i    1/sqrt(2)   ];
-controlPts(:,6,2,1) = [ -R_i   -R_i  	-R_i    1/2         ];
-controlPts(:,7,2,1) = [  0     -R_i   	-R_i    1/sqrt(2)   ];
-controlPts(:,8,2,1) = [  R_i   -R_i   	-R_i    1/2         ];
-controlPts(:,9,2,1) = [  R_i    0   	-R_i    1/sqrt(2)   ];
+controlPts(:,1,2,1) = [  R    0    	-R    1/sqrt(2)   ];
+controlPts(:,2,2,1) = [  R	R   	-R    1/2         ];
+controlPts(:,3,2,1) = [  0      R 	-R    1/sqrt(2)   ];
+controlPts(:,4,2,1) = [ -R    R   	-R    1/2         ];
+controlPts(:,5,2,1) = [ -R    0    	-R    1/sqrt(2)   ];
+controlPts(:,6,2,1) = [ -R   -R  	-R    1/2         ];
+controlPts(:,7,2,1) = [  0     -R   	-R    1/sqrt(2)   ];
+controlPts(:,8,2,1) = [  R   -R   	-R    1/2         ];
+controlPts(:,9,2,1) = [  R    0   	-R    1/sqrt(2)   ];
 
-controlPts(:,1,3,1) = [  R_i   0    	0	1           ];
-controlPts(:,2,3,1) = [  R_i   R_i   	0 	1/sqrt(2)   ];
-controlPts(:,3,3,1) = [	 0     R_i  	0  	1           ];
-controlPts(:,4,3,1) = [	-R_i   R_i  	0 	1/sqrt(2)   ];
-controlPts(:,5,3,1) = [	-R_i   0    	0 	1           ];
-controlPts(:,6,3,1) = [	-R_i  -R_i   	0	1/sqrt(2)   ];
-controlPts(:,7,3,1) = [	 0    -R_i   	0	1           ];
-controlPts(:,8,3,1) = [	 R_i  -R_i   	0	1/sqrt(2)   ];
-controlPts(:,9,3,1) = [	 R_i   0    	0	1           ];
+controlPts(:,1,3,1) = [  R   0    	0	1           ];
+controlPts(:,2,3,1) = [  R   R   	0 	1/sqrt(2)   ];
+controlPts(:,3,3,1) = [	 0     R  	0  	1           ];
+controlPts(:,4,3,1) = [	-R   R  	0 	1/sqrt(2)   ];
+controlPts(:,5,3,1) = [	-R   0    	0 	1           ];
+controlPts(:,6,3,1) = [	-R  -R   	0	1/sqrt(2)   ];
+controlPts(:,7,3,1) = [	 0    -R   	0	1           ];
+controlPts(:,8,3,1) = [	 R  -R   	0	1/sqrt(2)   ];
+controlPts(:,9,3,1) = [	 R   0    	0	1           ];
 
 
 % outer surface

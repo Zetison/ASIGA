@@ -1,12 +1,10 @@
 function task = buildCHIEFmatrix(task)
 
-p_xi = task.varCol{1}.degree(1); % assume p_xi is equal in all patches
-p_eta = task.varCol{1}.degree(2); % assume p_eta is equal in all patches
+degree = task.varCol{1}.degree; % assume degree is equal in all patches
 
 index = task.varCol{1}.index;
 noElems = task.varCol{1}.noElems;
-elRangeXi = task.varCol{1}.elRange{1};
-elRangeEta = task.varCol{1}.elRange{2};
+elRange = task.varCol{1}.elRange;
 element = task.varCol{1}.element;
 element2 = task.varCol{1}.element2;
 weights = task.varCol{1}.weights;
@@ -25,7 +23,7 @@ quadMethodBEM = task.bem.quadMethodBEM;
 
 Eps = 10*eps;
 
-k = task.varCol{1}.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 
 useCBIE = true;
 useHBIE = false;
@@ -48,16 +46,16 @@ else
 end
 solveForPtot = task.misc.solveForPtot;
 if solveForPtot
-    p_inc = task.p_inc;
-    dp_inc = task.dp_inc;
+    p_inc = task.p_inc_;
+    dp_inc = task.dp_incdn_;
     dpdn = @(x,n) 0;
 else
     p_inc = NaN;
     dp_inc = NaN;
     if SHBC
-        dpdn = @(x,n) -task.dp_inc(x,n);
+        dpdn = @(x,n) -task.dp_incdn_(x,n);
     else
-        dpdn = task.dpdn;
+        dpdn = task.dpdn_;
     end
 end
 
@@ -76,7 +74,7 @@ centerPts = findCenterPoints(patches);
 %% Create source points:
 if exteriorProblem
     switch model
-        case 'S1'
+        case 'Barrel'
             Xarr = linspace(-1,1,4)/4;
             Yarr = linspace(-1,1,4)/4;
             Zarr = linspace(-1,1,4)/4;
@@ -126,7 +124,12 @@ if exteriorProblem
                 cp = [cp; X(:),Y(:), Z(:)];
             end
         otherwise
-            error('Not implemented')
+            Xarr = linspace(-1,1,4)/4;
+            Yarr = linspace(-1,1,4)/4;
+            Zarr = linspace(-1,1,4)/4;
+            [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
+            cp = [X(:),Y(:), Z(:)];
+            warning('The collocation points may not be optimal')
     end            
 else
     error('Not implemented')
@@ -140,9 +143,8 @@ else
     U = NaN;
     dU = NaN;
 end
-n_en = (p_xi+1)*(p_eta+1);
-
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP(1:2),extraGPBEM,quadMethodBEM);
+n_en = prod(degree+1);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:2),extraGPBEM,quadMethodBEM);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
@@ -186,7 +188,7 @@ parfor i = 1:n_cp
         [BIE, integrals, FF_temp, sctr_y, noGp] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                 x,NaN,NaN,NaN,NaN,constants,psiType,useRegul,...
-                p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
+                degree,pIndex,knotVecs,index,elRange,element,element2,controlPts,weights,...
                 patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
         for j = 1:n_en
             A_row(sctr_y(j)) = A_row(sctr_y(j)) + BIE(j);
@@ -197,7 +199,7 @@ parfor i = 1:n_cp
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,NaN,NaN,x,NaN,...
                 U,dU,p_inc,dp_inc,dpdn,NaN,NaN,NaN,NaN,sgn);
 end
-task.varCol{1}.A = [task.varCol{1}{1}.A; A];
-task.varCol{1}.FF = [task.varCol{1}{1}.FF; FF];
+task.varCol{1}.A_K = [task.varCol{1}.A_K; A];
+task.varCol{1}.FF = [task.varCol{1}.FF; FF];
 % totNoQP
 task.varCol{1}.totNoQP = task.varCol{1}.totNoQP + totNoQP;

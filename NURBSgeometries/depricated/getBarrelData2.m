@@ -1,4 +1,4 @@
-function nurbs = getBarrelData2(R_o, R_i, L)
+function nurbs = getBarrelData2(R_o, R, L)
 error('Depricated use getBarrelData')
 
 nurbs(1:3) = flipNURBSparametrization(getQuarterDiskData(R_o,'Xaxis',-[1,0,0]*L/2),'eta');

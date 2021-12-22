@@ -1,4 +1,4 @@
-function solid = getSphericalShellData_2D(R_i, R_o,alignWithAxis)
+function solid = getSphericalShellData_2D(R, R_o,alignWithAxis)
 error('Use getEllipsoidData() instead')
 if nargin < 3
     alignWithAxis = 'Xaxis';
@@ -9,15 +9,15 @@ Eta = [0 0 1 1];
 controlPts = zeros(3,9,2);
 
 % inner surface
-controlPts(:,1,1) = [  R_i    0    	1   ];
-controlPts(:,2,1) = [  R_i	R_i   	1/sqrt(2)         ];
-controlPts(:,3,1) = [  0      R_i 	1   ];
-controlPts(:,4,1) = [ -R_i    R_i   1/sqrt(2)         ];
-controlPts(:,5,1) = [ -R_i    0    	1   ];
-controlPts(:,6,1) = [ -R_i   -R_i  	1/sqrt(2)         ];
-controlPts(:,7,1) = [  0     -R_i   1   ];
-controlPts(:,8,1) = [  R_i   -R_i   1/sqrt(2)         ];
-controlPts(:,9,1) = [  R_i    0   	1   ];
+controlPts(:,1,1) = [  R    0    	1   ];
+controlPts(:,2,1) = [  R	R   	1/sqrt(2)         ];
+controlPts(:,3,1) = [  0      R 	1   ];
+controlPts(:,4,1) = [ -R    R   1/sqrt(2)         ];
+controlPts(:,5,1) = [ -R    0    	1   ];
+controlPts(:,6,1) = [ -R   -R  	1/sqrt(2)         ];
+controlPts(:,7,1) = [  0     -R   1   ];
+controlPts(:,8,1) = [  R   -R   1/sqrt(2)         ];
+controlPts(:,9,1) = [  R    0   	1   ];
 
 % outer surface
 controlPts(:,1,2) = [  R_o    0    	1   ];

@@ -101,6 +101,7 @@ ffp.beta_s  = NaN;                          % Elevation angle of incident wave
 ffp.alpha   = (0:0.5:360)*pi/180;           % Aspect angles of observation points
 ffp.beta    = 0;                        	% Elevation angle of observation points
 ffp.r       = 1;                            % radii for near-field evaluation. Assume by default plotFarField = true
+ffp.extraGP = [0,0,0];                      % Extra Gauss points used for the integration routine
 
 %% Settings for post plotting 
 postPlot(1).xname        	= 'alpha';

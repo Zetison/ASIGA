@@ -9,7 +9,7 @@ task.results.TS = 20*log10(abs(p_h/task.misc.P_inc));
 if task.analyticSolutionExist
     if task.ffp.plotFarField
         p_ref = task.p_0_(v);
-%         p_ref = exactKDT(task.misc.omega/task.varCol{1}.c_f,task.misc.P_inc,task.varCol{1}.R_i);
+%         p_ref = exactKDT(task.misc.omega/task.varCol{1}.c_f,task.misc.P_inc,task.varCol{1}.R);
     else
         p_ref = task.varCol{1}.p_(v);
     end

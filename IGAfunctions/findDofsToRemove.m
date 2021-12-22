@@ -74,28 +74,14 @@ else
     childrenNodes = zeros(1,noChildrenNodes);
 
     counter = 1;
-    if false % use slow method
-        for i = 1:length(gluedNodes)
-            parentIdx = gluedNodes{i}(1);
-            for j = 2:length(gluedNodes{i})
-                childrenIdx = gluedNodes{i}(j);
-                indices = (element == childrenIdx);
-                element(indices) = parentIdx;
-                nodesMap(nodesMap == childrenIdx) = parentIdx;
-                childrenNodes(counter) = childrenIdx;        
-                counter = counter + 1;
-            end
-        end
-    else % use fast method
-        for i = 1:length(gluedNodes)
-            childrenNodes_i = gluedNodes{i}(2:end);
-            noChildrenNodes_i = numel(childrenNodes_i);
-            nodesMap(childrenNodes_i) = gluedNodes{i}(1);
-            childrenNodes(counter:counter+noChildrenNodes_i-1) = childrenNodes_i;
-            counter = counter + noChildrenNodes_i;
-        end
-        element = nodesMap(element);
+    for i = 1:length(gluedNodes)
+        childrenNodes_i = gluedNodes{i}(2:end);
+        noChildrenNodes_i = numel(childrenNodes_i);
+        nodesMap(childrenNodes_i) = gluedNodes{i}(1);
+        childrenNodes(counter:counter+noChildrenNodes_i-1) = childrenNodes_i;
+        counter = counter + noChildrenNodes_i;
     end
+    element = nodesMap(element);
 
     dofsToRemove = zeros(1,length(childrenNodes)*d);
     for i = 1:d

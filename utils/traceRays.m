@@ -11,7 +11,7 @@ O(:,:,1) = task.varCol{1}.o;
 % plotRays = 1;
 switch task.misc.model
     case 'S1'
-        R = task.varCol{1}.R_i;
+        R = task.varCol{1}.R;
         d = zeros(N,3);
         for n = 1:size(O,1)
         % parfor n = 1:size(O,1)

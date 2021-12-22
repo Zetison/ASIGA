@@ -35,7 +35,7 @@ if splitExteriorFields
     task.dp_incdy_ = @(X) analytic({X},layer,NaN,'dp_incdy',1);
     task.dp_incdz_ = @(X) analytic({X},layer,NaN,'dp_incdz',1);
 end
-task.dpdn_ = @(X,n) analytic({X},layer,NaN,'dpdn',1);
+task.dpdn_ = @(X,n) analytic({X},layer,n,'dpdn',1);
 for i = 1:noDomains
     switch task.varCol{i}.media
         case 'fluid'
@@ -82,25 +82,31 @@ switch applyLoad
         dtheta = [cos(theta).*cos(phi), cos(theta).*sin(phi), -sin(theta)]./r(:,[1,1,1]);
         varCol{1}.p = hankel_s(1,k*r,1).*cos(theta);
         varCol{1}.p_0 = -cos(theta);
-        varCol{1}.dp{1} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,1) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,1);
-        varCol{1}.dp{2} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,2) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,2);
-        varCol{1}.dp{3} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,3) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,3);
+        varCol{1}.dp = cell(1,3);
+        for i = 1:3
+            varCol{1}.dp{i} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,i) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,i);
+        end
     case 'SimpsonTorus'
         varCol{1}.p = prod(sin(k*X{1}/sqrt(3)),2);
         varCol{1}.p_0 = NaN;
+        
         varCol{1}.dp{1} = k/sqrt(3)*cos(k*X{1}(:,1)/sqrt(3)).*sin(k*X{1}(:,2)/sqrt(3)).*sin(k*X{1}(:,3)/sqrt(3));
         varCol{1}.dp{2} = k/sqrt(3)*sin(k*X{1}(:,1)/sqrt(3)).*cos(k*X{1}(:,2)/sqrt(3)).*sin(k*X{1}(:,3)/sqrt(3));
         varCol{1}.dp{3} = k/sqrt(3)*sin(k*X{1}(:,1)/sqrt(3)).*sin(k*X{1}(:,2)/sqrt(3)).*cos(k*X{1}(:,3)/sqrt(3));
+        
     case 'pointPulsation'
         C_n = @(n) cos(n-1);
         switch varCol{1}.model
             case 'MS'
-                R_i = varCol{1}.R_i;
-                y = R_i*[1,1,1]/4;
+                R = varCol{1}.R;
+                y = R*[1,1,1]/4;
             case 'Barrel'
-%                 R_i = varCol{1}.R;
-%                 y = R_i*[1,1,1]/4;
-                y = [0,0,0];
+                R = varCol{1}.R;
+                Xarr = linspace(-1,1,3)*R/4;
+                Yarr = linspace(-1,1,3)*R/4;
+                Zarr = linspace(-1,1,3)*R/4;
+                [XX,YY,ZZ] = ndgrid(Xarr,Yarr,Zarr);
+                y = [XX(:),YY(:), ZZ(:)];
             case {'BC','BCA'}
                 L = varCol{1}.L;
                 b = varCol{1}.b;
@@ -116,8 +122,8 @@ switch applyLoad
                 y = [0,0,0];
 %                 y = [1,1,1]/4;
             case 'S1_P2'
-                R_i = varCol{1}.R;
-                y = R_i/4*[  1,1,1;
+                R = varCol{1}.R;
+                y = R/4*[  1,1,1;
                             -1,1,1;
                             1,-1,1;
                             -1,-1,1;
@@ -135,22 +141,23 @@ switch applyLoad
             otherwise
                 y = [0,0,0];
         end
-        if ~all(y == 0) && varCol{1}.useROM
-            error('Not implemented')
-        end
+%         if ~all(y(:) == 0) && varCol{1}.rom.useROM
+%             error('Not implemented')
+%         end
         Phi_k = @(r) exp(1i*k.*r)./(4*pi*r);
         p = zeros(size(X{1},1),numel(k));
-        dpdx = zeros(size(X{1},1),numel(k));
-        dpdy = zeros(size(X{1},1),numel(k));
-        dpdz = zeros(size(X{1},1),numel(k));
+        dp = cell(1,3);
+        for i = 1:3
+            dp{i} = zeros(size(X{1},1),numel(k));
+        end
         for i = 1:size(y,1)
             xms = X{1}-y(i,:);
             R = norm2(xms);
             p_i = C_n(i)*Phi_k(R);
             p = p + p_i;
-            dpdx = dpdx + p_i.*(1i*k - 1./R)./R.*xms(:,1);
-            dpdy = dpdy + p_i.*(1i*k - 1./R)./R.*xms(:,2);
-            dpdz = dpdz + p_i.*(1i*k - 1./R)./R.*xms(:,3);
+            for i = 1:3
+                dp{i} = dp{i} + p_i.*(1i*k - 1./R)./R.*xms(:,i);
+            end
         end
         p_0 = zeros(size(X{1},1),1);
         for i = 1:size(y,1)
@@ -158,9 +165,7 @@ switch applyLoad
         end
         varCol{1}.p = p;
         varCol{1}.p_0 = p_0;
-        varCol{1}.dp{1} = dpdx;
-        varCol{1}.dp{2} = dpdy;
-        varCol{1}.dp{3} = dpdz;
+        varCol{1}.dp = dp;
     case {'planeWave','radialPulsation','pointCharge'}
         d_vec = varCol{1}.d_vec;
         if strcmp(applyLoad,'pointCharge')
@@ -177,8 +182,8 @@ switch applyLoad
                     varCol{1}.dp_inc{i} = 1i*k.*varCol{1}.p_inc.*d_vec(i,:);
                 end
             elseif strcmp(applyLoad,'radialPulsation')
-                R_i = varCol{1}.R_i;
-                varCol{1}.p_inc = P_inc*R_i.*exp(-1i*k.*(norm2(X{1})-R_i))./norm2(X{1});
+                R = varCol{1}.R;
+                varCol{1}.p_inc = P_inc*R.*exp(-1i*k.*(norm2(X{1})-R))./norm2(X{1});
                 R = norm2(X{1});
                 for i = 1:3
                     varCol{1}.dp_inc{i} = -varCol{1}.p_inc.*(1i*k+1./R).*X{1}(:,i)./R;

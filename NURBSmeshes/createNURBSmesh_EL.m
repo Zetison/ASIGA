@@ -26,15 +26,15 @@ if isfield(varCol{1},'c_z')
     c_z = varCol{1}.c_z;
     Upsilon = sqrt(c_z^2-c_x^2);
 else
-    c_x = varCol{1}.R_i;
-    c_y = varCol{1}.R_i;
-    c_z = varCol{1}.R_i;
+    c_x = varCol{1}.R;
+    c_y = varCol{1}.R;
+    c_z = varCol{1}.R;
     Upsilon = sqrt(c_z^2-c_x^2);
 end
 if numel(varCol) == 1
     t = eps;
 else
-    t = c_z - varCol{2}.R_i;
+    t = c_z - varCol{2}.R;
 end
 parm = task.msh.parm;
 if varCol{1}.boundaryMethod
@@ -62,8 +62,8 @@ if varCol{1}.boundaryMethod
     fluid = subNURBS(solid,options);
     varCol{1}.patchTop = getPatchTopology(fluid);
     if numel(varCol) > 2
-        if varCol{3}.R_i > 0
-            fluid_i = getEllipsoidData('C', varCol{2}.R_i, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i, 'Xi', Xi);
+        if varCol{3}.R > 0
+            fluid_i = getEllipsoidData('C', varCol{2}.R, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi);
             fluid_i_inner = flipNURBSparametrization(subNURBS(fluid_i,'at',[0,0;0,0;1,0]),1);
             fluid_i_outer = subNURBS(solid,'at',[0,0;0,0;1,0]);
             fluid_i_inner = refineNURBSevenly(fluid_i_inner,(2^(M-1)-1)/(c_z*pi/2),{},0);
@@ -163,7 +163,7 @@ else
     end
 
     if numel(varCol) > 2
-        fluid_i = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g] - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R_i-varCol{3}.R_i, 'Xi', Xi);
+        fluid_i = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g] - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi);
         fluid_i = makeUniformNURBSDegree(fluid_i,degreeVec);
         if task.msh.explodeNURBS
             fluid_i = explodeNURBS(fluid_i);

@@ -8,11 +8,11 @@ for i = 1:numel(model)
     switch model{i}
         case 'S1'
             varCol = setS1Parameters;
-            t = varCol{1}.R_i - varCol{2}.R_i;
+            t = varCol{1}.R - varCol{2}.R;
             nurbs = getEllipsoidData();
         case 'S1patched'
             varCol = setS1Parameters;
-            t = varCol{1}.R_i - varCol{2}.R_i;
+            t = varCol{1}.R - varCol{2}.R;
             nurbs = getEllipsoidData('parm',2); 
         case 'M1'
             nurbs = getBeTSSiM1Data();

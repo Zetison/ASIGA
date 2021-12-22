@@ -103,8 +103,8 @@ else
     ppm = NaN;
 end
 
-% max_r_a_recorded = -inf;
-% min_r_a_recorded = inf;
+max_r_a_recorded = -inf;
+min_r_a_recorded = inf;
 % totArea = 0;
 % for e = 1:noElems
 parfor e = 1:noElems

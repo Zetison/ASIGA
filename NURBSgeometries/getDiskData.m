@@ -18,19 +18,19 @@ end
 R = options.R;
 R1 = options.R(1);
 if numel(R) == 1
-    R_i = 0;
+    R = 0;
 else
-    R_i = options.R(2);
+    R = options.R(2);
 end
 parm = options.parm;
-if R_i ~= 0 && parm ~=1
+if R ~= 0 && parm ~=1
     error('This combination does not exist')
 end
 
 w = 1/sqrt(2);
 switch parm
     case 1
-        nurbs1D = getLineData('x',[R_i,R1]);
+        nurbs1D = getLineData('x',[R,R1]);
         nurbs = revolveNURBS(nurbs1D,options);
     case 2
         r = R1*options.s_trans;
