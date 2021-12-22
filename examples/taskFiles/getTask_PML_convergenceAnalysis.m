@@ -77,7 +77,7 @@ for method = {'PML','IE','BA'}
             misc.formulation = {'VL2E'};
     end
 
-    M_max = 2; % 7
+    M_max = 6; % 7
     for BC = {'SHBC'}
         misc.BC = BC{1};
         c_f = 1524;
@@ -96,11 +96,6 @@ for method = {'PML','IE','BA'}
         end
 %         msh.M = (M_max-1):M_max; %1:5
 %         msh.M = 4;
-        if strcmp(method{1}, 'PML')
-            pml.t = [varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
-        else
-            pml.t = 0.25*varCol{1}.R;         % thickness of PML
-        end
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
         misc.r_a = 1.25*varCol{1}.R;
 %         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(iem.N - msh.degree,2^(M-3)-1)];
@@ -123,6 +118,11 @@ for method = {'PML','IE','BA'}
         for coreMethod = {'IGA','hp_FEM','h_FEM','C0_IGA'}
             misc.coreMethod = coreMethod{1};
             if strcmp(coreMethod{1},'IGA')
+                if strcmp(method{1}, 'PML')
+                    pml.t = [varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
+                else
+                    pml.t = 0.25*varCol{1}.R;         % thickness of PML
+                end
                 if strcmp(method{1},'PML')
                     pml.sigmaType = [3,5];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
                     pml.n = [1,2];
@@ -132,6 +132,7 @@ for method = {'PML','IE','BA'}
                 end
             	iem.N = floor(abs(2.^(msh.M-4)-1)) + msh.degree;
             else
+                pml.t = 0.25*varCol{1}.R;         % thickness of PML
                 pml.sigmaType = 3;
                 pml.n = 1;
             	iem.N = (floor(abs(2.^(msh.M-4)-1)) + 1)*msh.degree;
