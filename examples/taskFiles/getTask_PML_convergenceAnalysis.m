@@ -15,16 +15,21 @@ msh.meshFile = 'createNURBSmesh_EL';
 msh.parm = 1;
 msh.explodeNURBS = false;   % Create patches from all C^0 interfaces
 misc.checkNURBSweightsCompatibility = false;
+misc.computeCondNumber = true;       % Compute the condition number of the global matrix
 prePlot.plotGeometryInfo    = 1;       % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 % misc.method = 'BA';
 % misc.method = {'IENSG'};
 % misc.method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
 % for BC = {'SHBC', 'SSBC','NNBC'}
-% ffp.alpha_s = 0;
-% ffp.beta_s = -pi/2;
-ffp.alpha_s = pi;
-ffp.beta_s = 0;
+axiSymmetricCase = false;
+if axiSymmetricCase
+    ffp.alpha_s = 0;
+    ffp.beta_s = -pi/2;
+else
+    ffp.alpha_s = pi;
+    ffp.beta_s = 0;
+end
 
 prePlot.plot3Dgeometry   = 0;
 prePlot.plotFullDomain   = 0;        % Plot volumetric domains
@@ -47,6 +52,8 @@ postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).legendEntries 	= {'msh.degree','pml.sigmaType','pml.n','misc.method','misc.coreMethod','misc.formulation','pml.t'};
+postPlot(2) = postPlot(1);
+postPlot(2).yname       	= 'cond_number';
 msh.explodeNURBS = prePlot.plot3Dgeometry;
 
 msh.meshFile = 'createNURBSmesh_EL';
@@ -70,7 +77,7 @@ for method = {'PML','IE','BA'}
             misc.formulation = {'VL2E'};
     end
 
-    M_max = 6; % 7
+    M_max = 2; % 7
     for BC = {'SHBC'}
         misc.BC = BC{1};
         c_f = 1524;

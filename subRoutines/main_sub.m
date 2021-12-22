@@ -366,10 +366,6 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 end
                 dofs = size(A,1);
                 task.dofs = dofs;
-                if task.misc.clearGlobalMatrices
-                    task.varCol = rmfields(task.varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
-                    clear A FF A0 A1 A2 A4 Pinv dA dAdomega d2Adomega2 b
-                end
                 if printLog
                     fprintf('using %12f seconds.', toc)
                 end
@@ -392,6 +388,10 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
 
                 if printLog
                     fprintf('\nNumber of degrees of freedom = %d', dofs)
+                end
+                if task.misc.clearGlobalMatrices
+                    task.varCol = rmfields(task.varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
+                    clear A FF A0 A1 A2 A4 Pinv dA dAdomega d2Adomega2 b
                 end
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
         end
