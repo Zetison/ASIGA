@@ -81,9 +81,10 @@ msh.degree = 2;
 
 pml.t = (R-r)/4;         % thickness of PML
 pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-misc.r_a = R;
-varCol{1}.refinement = @(M) [2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1, 2^(M-1)-1];
-% varCol{1}.refinement = @(M) [2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1];
+misc.r_a = R; 
+pml.refinement = @(M) 2^(M-1)-1;
+varCol{1}.refinement = @(M) [2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1];
+% varCol{1}.refinement = @(M) [2^(M+1)-1, 2^(M+1)-1, 2^(M+1)-1];
 ffp.alpha_s = 0; % This is incorrectly set to pi in the paper
 ffp.beta_s = 0;
 ffp.r = R;
