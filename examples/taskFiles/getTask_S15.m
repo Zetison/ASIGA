@@ -14,7 +14,7 @@ formulation = {'BGU'};
 varCol = setS15Parameters();
 varCol = varCol(1:2);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
-% varCol{3}.R_i = 0;
+% varCol{3}.R = 0;
 f = 1e2;             % Frequency
 
 M = 4;

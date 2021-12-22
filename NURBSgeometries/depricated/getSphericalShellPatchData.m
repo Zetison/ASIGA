@@ -4,7 +4,7 @@ error('Use getEllipsoidData()')
 Xi = [0 0 0 0 0 1 1 1 1 1];
 Eta = [0 0 0 0 0 1 1 1 1 1];
 Zeta = [0 0 1 1];
-R_i = R_o-t;
+R = R_o-t;
 
 nurbs = cell(1,6);
 if isa(R_o,'sym')
@@ -86,5 +86,5 @@ for i = 1:5
 end  
 controlPts(1:3,:,:,2) = controlPts(1:3,:,:,1)*R_o;  
 controlPts(4,:,:,2) = controlPts(4,:,:,1);  
-controlPts(1:3,:,:,1) = controlPts(1:3,:,:,1)*R_i; 
+controlPts(1:3,:,:,1) = controlPts(1:3,:,:,1)*R; 
 nurbs{1} = createNURBSobject(controlPts,{Xi, Eta, Zeta}); 

@@ -62,7 +62,7 @@ fluid_o = insertKnotsInNURBS(fluid_o,{insertUniform2(fluid_o.knots{1}, noNewXiKn
 
 
 if useSolidDomain
-    solid = getSphericalShellData(R_i, R_o, alignWithAxis);
+    solid = getSphericalShellData(R, R_o, alignWithAxis);
     solid = elevateNURBSdegree(solid,[0 0 1]);
     solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
     if i_mesh == 1
@@ -77,7 +77,7 @@ if useSolidDomain
 end
 
 if useInnerFluidDomain
-    fluid_i = getSolidSphereData(R_i, alignWithAxis);
+    fluid_i = getSolidSphereData(R, alignWithAxis);
     fluid_i = elevateNURBSdegree(fluid_i,[0 0 1]);
     fluid_i = elevateNURBSdegree(fluid_i,[1 1 1]*degreeElev);
     if i_mesh == 1

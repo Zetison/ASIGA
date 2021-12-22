@@ -50,7 +50,7 @@ for patch = 1:noPatches
         for j = 1:numel(uniqueXi)-1
             I_max = -Inf;
             for i = 1:size(parm_pts,1)
-                I = NURBSarcLength(nurbs{patch},uniqueXi(j),uniqueXi(j+1),parm_pts(i,:),dir,true);
+                I = NURBSarcLength(nurbs{patch},uniqueXi(j),uniqueXi(j+1),parm_pts(i,:),dir,false);
                 if I_max < I
                     I_max = I;
                 end

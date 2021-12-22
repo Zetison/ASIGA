@@ -1162,10 +1162,10 @@ camlight
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Solid cylinder
 % L = 5;  % Height
-% R_i = 1;    % Inner surface radius
+% R = 1;    % Inner surface radius
 % R_o = 2;    % Outer surface radius
 % 
-% solid = getSolidCylinderData(R_i, R_o, L);
+% solid = getSolidCylinderData(R, R_o, L);
 % 
 % plotNURBS(solid,[100 0 0])
 % grid off
@@ -1179,9 +1179,9 @@ camlight
 % for M = 6 %[1 2 3 6]
 %     t = 0.04;  % Thickness
 %     R = 10; % Mid surface radius
-%     R_i = R-t/2;
+%     R = R-t/2;
 %     R_o = R+t/2;
-%     solid = getPinchedHemisphereData(R_i, R_o);
+%     solid = getPinchedHemisphereData(R, R_o);
 %     solid = insertKnotsInNURBS(solid,{linspace2(0,1,2^(M-1)-1) linspace2(0,1,2^(M-1)-1) 0.5});
 %     plotNURBS(solid,[100 100 0])
 %     
@@ -1201,10 +1201,10 @@ camlight
 % for M = 7 %[1 2 3 7]
 %     t = 3;  % Thickness
 %     R = 300; % Mid surface radius
-%     R_i = R-t/2;
+%     R = R-t/2;
 %     R_o = R+t/2;
 %     L = 600;    % Length
-%     solid = getPinchedCylinderData(R_i, R_o, L/2);
+%     solid = getPinchedCylinderData(R, R_o, L/2);
 % 
 %     solid = insertKnotsInNURBS(solid,{linspace2(0,1,2^(M-1)-1) linspace2(0,1,2^(M-1)-1) 0.5});
 %     
@@ -1227,10 +1227,10 @@ camlight
 %     phi = 40*pi/180;
 %     t = 0.25;
 %     
-%     R_i = R-t/2;
+%     R = R-t/2;
 %     R_o = R+t/2;
 % 
-%     solid = getScordeliLoRoofData(R_i, R_o, L/2, phi);
+%     solid = getScordeliLoRoofData(R, R_o, L/2, phi);
 %     solid = insertKnotsInNURBS(solid,{linspace2(0,1,2^(M-1)-1) linspace2(0,1,2^(M-1)-1) 0.5});
 %     
 %     plotNURBS(solid,[100 0 0])
@@ -1277,10 +1277,10 @@ camlight
 %% Solid circular cylinder
 % for M = 1
 %     L = 5;  % Height
-%     R_i = 1;    % Inner surface radius
+%     R = 1;    % Inner surface radius
 %     R_o = 2;    % Outer surface radius
 % 
-%     solid = getSolidCylinderData(R_i, R_o, L);
+%     solid = getSolidCylinderData(R, R_o, L);
 % 
 %     solid = insertKnotsInNURBS(solid,{[] [] 0.5});
 %     solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, 2^(M-1)-1)...
@@ -1303,10 +1303,10 @@ camlight
 %% Kneaded cylinder
 % for M = 4
 %     L = 5;  % Height
-%     R_i = 1;    % Inner surface radius
+%     R = 1;    % Inner surface radius
 %     R_o = 2;    % Outer surface radius
 % 
-%     solid = getSolidCylinderData(R_i, R_o, L);
+%     solid = getSolidCylinderData(R, R_o, L);
 % 
 %     solid = insertKnotsInNURBS(solid,{[] [1 2 3 4]/5 []});
 %     solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, 2^(M-1)-1)...
@@ -1390,7 +1390,7 @@ camlight
 % 
 % R = 5;  % Mid surface radius
 % t = 0.15;   % Thickness
-% R_i = R-t/2; % Inner radius
+% R = R-t/2; % Inner radius
 % R_o = R+t/2; % Outer radius
 % degenerateNURBS = 1;
 % M = 3;
@@ -1402,7 +1402,7 @@ camlight
 %         close all
 %         figure(1)
 % %         set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
-%         solid = getSphericalShellData(R_i, R_o);
+%         solid = getSphericalShellData(R, R_o);
 %         fluid = extractOuterSurface(solid);
 %         fluid = elevateNURBSdegree(fluid,degElev*[1 1]);
 % 
@@ -1442,10 +1442,10 @@ camlight
 % %% Half spherical shell
 % R = 5;  % Mid surface radius
 % t = 0.15;   % Thickness
-% R_i = R-t/2; % Inner radius
+% R = R-t/2; % Inner radius
 % R_o = R+t/2; % Outer radius
 % 
-% solid = getHalfSphericalShellData(R_i, R_o,'Xaxis');
+% solid = getHalfSphericalShellData(R, R_o,'Xaxis');
 % 
 % plotNURBS(solid,[200 200 0], 1, getColor(1), 1)
 % view(-40+180,30)    
@@ -1460,10 +1460,10 @@ camlight
 %% Plot NURBS mock shell
 % t = 0.0406;   % Thickness
 % R_o = 4.686; % Outer radius
-% R_i = R_o-t; % Inner radius
+% R = R_o-t; % Inner radius
 % L = 68;
 % 
-% solid = getMockShellData(R_i, R_o, L,'Xaxis');
+% solid = getMockShellData(R, R_o, L,'Xaxis');
 % plotNURBS(solid,[100 100 0])
 % view(40,30)    
 % camlight
@@ -1477,14 +1477,14 @@ camlight
 % 
 % t = 0.02;   % Thickness
 % R_o = 3;
-% R_i = R_o - t;
+% R = R_o - t;
 % L = 43-R_o;
 % 
 % % t = 0.5;   % Thickness
 % % R_o = 10;
-% % R_i = R_o - t;
+% % R = R_o - t;
 % % L = 10;
-% solid = getModel1Data(R_i, R_o, L);
+% solid = getModel1Data(R, R_o, L);
 % fluid = extractOuterSurface(solid);
 % plotNURBS(fluid,[200 200], 1, getColor(1), 1);
 % % plotNURBS(solid,[100 100 0])
@@ -1703,9 +1703,9 @@ camlight
 % 
 % t = 0.008;   % Thickness
 % R_o = 2.5; % Outer radius
-% R_i = R_o-t; % Outer radius
+% R = R_o-t; % Outer radius
 % L = 20;
-% nurbs = getBarrelData(R_o,R_i,L,'Xaxis', [0 0 0]);
+% nurbs = getBarrelData(R_o,R,L,'Xaxis', [0 0 0]);
 % 
 % plotNURBS(nurbs,[100 100 0])
 % 
@@ -1719,13 +1719,13 @@ camlight
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot NURBS spherical shell in water
-% % R_i = 4;
+% % R = 4;
 % % R_o = 5;
-% R_i = 0.8;
+% R = 0.8;
 % R_o = 0.9;
 % M = 1;
 % 
-% nurbs = getSphericalShellData(R_i, R_o,'Xaxis');
+% nurbs = getSphericalShellData(R, R_o,'Xaxis');
 % nurbs = insertKnotsInNURBS(nurbs,{insertUniform2(nurbs.knots{1}, 2^(M-1)-1) ...
 %                                   insertUniform2(nurbs.knots{2}, 2^(M-1)-1) ...
 %                                   insertUniform2(nurbs.knots{3}, 0)});
@@ -1735,12 +1735,12 @@ camlight
 % 
 % hold on 
 % % % 
-% % R_i = 5;
+% % R = 5;
 % % R_o = 6;
-% R_i = 0.9;
+% R = 0.9;
 % R_o = 1;
 % 
-% nurbs = getSphericalShellData(R_i, R_o,'Xaxis');
+% nurbs = getSphericalShellData(R, R_o,'Xaxis');
 % nurbs = insertKnotsInNURBS(nurbs,{insertUniform2(nurbs.knots{1}, 2^(M-1)-1) ...
 %                                   insertUniform2(nurbs.knots{2}, 2^(M-1)-1) ...
 %                                   insertUniform2(nurbs.knots{3}, 0)});
@@ -1891,16 +1891,16 @@ camlight
 % t = 0.5;
 % R = 1;
 % R_o = R+t/2;
-% R_i = R-t/2;
+% R = R-t/2;
 % controlPts = zeros(3,8,3);
-% controlPts(:,1,1) = [R_i 0 1];
-% controlPts(:,2,1) = [R_i R_i 1];
-% controlPts(:,3,1) = [0 R_i 1];
-% controlPts(:,4,1) = [R_i/2 R_i 1];
-% controlPts(:,5,1) = [-R_i R_i 1];
-% controlPts(:,6,1) = [-R_i/2 0 1];
-% controlPts(:,7,1) = [R_i -R_i 1];
-% controlPts(:,8,1) = [R_i 0 1];
+% controlPts(:,1,1) = [R 0 1];
+% controlPts(:,2,1) = [R R 1];
+% controlPts(:,3,1) = [0 R 1];
+% controlPts(:,4,1) = [R/2 R 1];
+% controlPts(:,5,1) = [-R R 1];
+% controlPts(:,6,1) = [-R/2 0 1];
+% controlPts(:,7,1) = [R -R 1];
+% controlPts(:,8,1) = [R 0 1];
 % 
 % controlPts(:,1,2) = [R 0 1];
 % controlPts(:,2,2) = [R R 1];
@@ -2029,14 +2029,14 @@ camlight
 % 
 % t = 0.02;   % Thickness
 % R_o = 3;
-% R_i = R_o - t;
+% R = R_o - t;
 % L = 43-R_o;
 % L1 = 1;
 % % t = 2;   % Thickness
 % % R_o = 10;
-% % R_i = R_o - t;
+% % R = R_o - t;
 % % L = 10-R_o;
-% solid = getModel1Data(R_i, R_o, L, [0 0 L/2], 'Zaxis');
+% solid = getModel1Data(R, R_o, L, [0 0 L/2], 'Zaxis');
 % 
 % intermediateLayer = getModel1Data2(R_o+L1,L, [0 0 0],  'Xaxis', L1);
 % 
@@ -2089,8 +2089,8 @@ camlight
 % t = 0.008;   % Thickness
 % R_o1 = 5; % Outer radius
 % R_o2 = 3; % Outer radius
-% R_i1 = R_o1-t; % Inner radius
-% R_i2 = R_o2-t; % Inner radius
+% R1 = R_o1-t; % Inner radius
+% R2 = R_o2-t; % Inner radius
 % L = 49-R_o1-R_o2;
 % 
 % 
@@ -2102,10 +2102,10 @@ camlight
 % c_z = 30; % 30
 % c_xy = c_z/2.8; % 12
 % L1 = c_z/19;
-% nurbs = getModel3Data(R_o1, R_o2, R_i1, R_i2, L, eta1, eta2);
-% nurbs2 = getModel3Data(L1/2+R_o1, L1/2+R_o2, R_i1, R_i2, L, eta1, eta2);
-% nurbs3 = getModel3Data(L1+R_o1, L1+R_o2, R_i1, R_i2, L, eta1, eta2);
-% nurbs4 = getModel3Data(s2*L1+R_o1, s2*L1+R_o2, R_i1, R_i2, L, eta1, eta2);
+% nurbs = getModel3Data(R_o1, R_o2, R1, R2, L, eta1, eta2);
+% nurbs2 = getModel3Data(L1/2+R_o1, L1/2+R_o2, R1, R2, L, eta1, eta2);
+% nurbs3 = getModel3Data(L1+R_o1, L1+R_o2, R1, R2, L, eta1, eta2);
+% nurbs4 = getModel3Data(s2*L1+R_o1, s2*L1+R_o2, R1, R2, L, eta1, eta2);
 % 
 % f = sqrt(c_z^2-c_xy^2);
 % [R_a, ~, ~] = evaluateProlateCoords(0,c_xy,0,f);
@@ -2167,11 +2167,11 @@ camlight
 %% Degenerate IGA to FEM
 % 
 % for M = 2 %:4
-%     R_i = 5.075;
+%     R = 5.075;
 %     R_o = 6;
 %     alignWithAxis = 'Zaxis';
 % 
-%     nurbs = getSphericalShellData(R_i, R_o, alignWithAxis);
+%     nurbs = getSphericalShellData(R, R_o, alignWithAxis);
 %     elevateFEM = true;
 %     if elevateFEM
 %         nurbs = elevateNURBSdegree(nurbs,[1 1 2]);
@@ -2453,15 +2453,15 @@ camlight
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot half of S1, S3, S5
 % setS3Parameters
-% R_i = R_o - t;
+% R = R_o - t;
 % % resolution = [20 20,0];
 % resolution = [200 200,0];
 % solidColor = [173, 178, 189]/255;
 % R_a = 1.2*R_o;
 % alignWithAxis = 'Yaxis';
 % fluid = getHalfSphericalShellData(R_o, R_a,alignWithAxis);
-% solid = getHalfSphericalShellData(R_i, R_o,alignWithAxis);
-% fluid_i = getHalfSolidSphereData(R_i,alignWithAxis);
+% solid = getHalfSphericalShellData(R, R_o,alignWithAxis);
+% fluid_i = getHalfSolidSphereData(R,alignWithAxis);
 % 
 % plotAt = [0, 0;
 %                  0, 1;
@@ -2488,18 +2488,18 @@ camlight
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot half of S13, S35, S15
 % setS13Parameters
-% R_i = R_o-t;
+% R = R_o-t;
 % % resolution = [20 20,0];
 % resolution = [200 200,0];
 % solidColor = [173, 178, 189]/255;
 % R_a = 1.2*R_o(1);
 % alignWithAxis = 'Yaxis';
 % fluid = getHalfSphericalShellData(R_o(1), R_a,alignWithAxis);
-% solid = getHalfSphericalShellData(R_i(1), R_o(1),alignWithAxis);
+% solid = getHalfSphericalShellData(R(1), R_o(1),alignWithAxis);
 % 
-% fluid_2 = getHalfSphericalShellData(R_o(2), R_i(1),alignWithAxis);
-% solid_2 = getHalfSphericalShellData(R_i(2), R_o(2),alignWithAxis);
-% fluid_i = getHalfSolidSphereData(R_i(2),alignWithAxis);
+% fluid_2 = getHalfSphericalShellData(R_o(2), R(1),alignWithAxis);
+% solid_2 = getHalfSphericalShellData(R(2), R_o(2),alignWithAxis);
+% fluid_i = getHalfSolidSphereData(R(2),alignWithAxis);
 % 
 % plotAt = [0, 0;
 %                  0, 1;
@@ -2538,17 +2538,17 @@ camlight
 % % solidColor = getColor(1);
 % solidColor = [173, 178, 189]/255;
 % setS135Parameters
-% R_i = R_o-t;
+% R = R_o-t;
 % R_a = 1.2*R_o(1);
 % alignWithAxis = 'Yaxis';
 % fluid = getHalfSphericalShellData(R_o(1), R_a,alignWithAxis);
-% solid = getHalfSphericalShellData(R_i(1), R_o(1),alignWithAxis);
+% solid = getHalfSphericalShellData(R(1), R_o(1),alignWithAxis);
 % % 
-% fluid_2 = getHalfSphericalShellData(R_o(2), R_i(1),alignWithAxis);
-% solid_2 = getHalfSphericalShellData(R_i(2), R_o(2),alignWithAxis);
-% fluid_3 = getHalfSphericalShellData(R_o(3), R_i(2),alignWithAxis);
-% solid_3 = getHalfSphericalShellData(R_i(3), R_o(3),alignWithAxis);
-% fluid_i = getHalfSolidSphereData(R_i(3),alignWithAxis);
+% fluid_2 = getHalfSphericalShellData(R_o(2), R(1),alignWithAxis);
+% solid_2 = getHalfSphericalShellData(R(2), R_o(2),alignWithAxis);
+% fluid_3 = getHalfSphericalShellData(R_o(3), R(2),alignWithAxis);
+% solid_3 = getHalfSphericalShellData(R(3), R_o(3),alignWithAxis);
+% fluid_i = getHalfSolidSphereData(R(3),alignWithAxis);
 % 
 % plotAt = [0, 0;
 %                  0, 1;
@@ -2588,16 +2588,16 @@ camlight
 %% Plot half of S13_ESBC and S15_ESBC
 
 % setS15Parameters
-% R_i = R_o-t;
+% R = R_o-t;
 % % resolution = [20 20,0];
 % resolution = [200 200,0];
 % solidColor = [173, 178, 189]/255;
 % R_a = 1.2*R_o(1);
 % alignWithAxis = 'Yaxis';
 % fluid = getHalfSphericalShellData(R_o(1), R_a,alignWithAxis);
-% solid = getHalfSphericalShellData(R_i(1), R_o(1),alignWithAxis);
+% solid = getHalfSphericalShellData(R(1), R_o(1),alignWithAxis);
 % 
-% fluid_2 = getHalfSphericalShellData(R_o(2), R_i(1),alignWithAxis);
+% fluid_2 = getHalfSphericalShellData(R_o(2), R(1),alignWithAxis);
 % solid_2 = getHalfSolidSphereData(R_o(2),alignWithAxis);
 % 
 % plotAt = [0, 0;
@@ -2638,26 +2638,26 @@ camlight
 % resolution = [200 200,0];
 % % solidColor = getColor(1);
 % solidColor = [173, 178, 189]/255;
-% % R_i = [5.8, 3.2, 1.9];
+% % R = [5.8, 3.2, 1.9];
 % % R_o = [6, 4, 2];
 % setTripleShellParameters
-% R_i = R_o-t;
+% R = R_o-t;
 % R_a = 7;
 % for withSolidSphere = 1
 %     close all
 %     alignWithAxis = 'Yaxis';
 %     fluid = getHalfSphericalShellData(R_o(1), R_a,alignWithAxis);
-%     solid = getHalfSphericalShellData(R_i(1), R_o(1),alignWithAxis);
+%     solid = getHalfSphericalShellData(R(1), R_o(1),alignWithAxis);
 %     % setS2Parameters
-%     fluid_2 = getHalfSphericalShellData(R_o(2), R_i(1),alignWithAxis);
-%     solid_2 = getHalfSphericalShellData(R_i(2), R_o(2),alignWithAxis);
-%     fluid_3 = getHalfSphericalShellData(R_o(3), R_i(2),alignWithAxis);
+%     fluid_2 = getHalfSphericalShellData(R_o(2), R(1),alignWithAxis);
+%     solid_2 = getHalfSphericalShellData(R(2), R_o(2),alignWithAxis);
+%     fluid_3 = getHalfSphericalShellData(R_o(3), R(2),alignWithAxis);
 %     if withSolidSphere
 %         solid_3 = getHalfSolidSphereData(R_o(3), alignWithAxis);
 %     else
-%         solid_3 = getHalfSphericalShellData(R_i(3), R_o(3), alignWithAxis);
+%         solid_3 = getHalfSphericalShellData(R(3), R_o(3), alignWithAxis);
 %     end
-%     fluid_i = getHalfSolidSphereData(R_i(3),alignWithAxis);
+%     fluid_i = getHalfSolidSphereData(R(3),alignWithAxis);
 % 
 %     plotAt = [0, 0;
 %              0, 1;
@@ -2902,8 +2902,8 @@ camlight
 % t = 0.008;   % Thickness
 % R_o1 = 5; % Outer radius
 % R_o2 = 3; % Outer radius
-% R_i1 = R_o1-t; % Inner radius
-% R_i2 = R_o2-t; % Inner radius
+% R1 = R_o1-t; % Inner radius
+% R2 = R_o2-t; % Inner radius
 % L = 49-R_o1-R_o2;
 % 
 % 

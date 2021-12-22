@@ -7,26 +7,38 @@ if prePlot.plot3Dgeometry
         c_xy = task.varCol{1}.c_xy;
         alignWithAxis = task.varCol{1}.alignWithAxis;
         x_0 = task.iem.x_0;
-        ellipsoid = getEllipsoidData('C',[c_xy,c_xy,c_z]*task.iem.A_2,'alignWithAxis', alignWithAxis, 'x_0', x_0);
-        alphaValue = 0.6;
+        ellipsoid = getEllipsoidData('C',[c_xy,c_xy,c_z]*task.iem.A_2,'alignWithAxis', alignWithAxis, 'x_0', x_0,'Xi',task.msh.Xi);
         if prePlot.alphaValue == 1
             prePlot.alphaValue = 0.8;
         end
-        plotNURBS(ellipsoid,'resolution',[20 40],'alphaValue',0.6,'color','blue');
+        if prePlot.plotFullDomain
+            plotNURBS(ellipsoid,'resolution',[100 100],'alphaValue',0.6,'color','blue');
+        end
+        noTopsets = numel(prePlot.plotSubsets);
+        for i = 1:noTopsets
+            if strcmp(prePlot.plotSubsets{i},'xy')
+                theta = linspace(0,2*pi,10000);
+                x = c_z*cos(theta);
+                y = c_xy*sin(theta);
+                plot(x,y,'black','DisplayName','Ellipse')
+            end
+        end
     end
     for j = 1:numel(task.varCol)
         if strcmp(task.misc.coreMethod, 'linear_FEM')
             prePlot.resolution = [0,0,0];
         end
-        switch task.varCol{j}.media
-            case 'fluid'
-                if task.varCol{j}.boundaryMethod
+        if isempty(prePlot.color)
+            switch task.varCol{j}.media
+                case 'fluid'
+                    if task.varCol{j}.boundaryMethod
+                        prePlot.color = getColor(1);
+                    else
+                        prePlot.color = getColor(10);
+                    end
+                case 'solid'
                     prePlot.color = getColor(1);
-                else
-                    prePlot.color = getColor(10);
-                end
-            case 'solid'
-                prePlot.color = getColor(1);
+            end
         end
         nurbs = task.varCol{j}.nurbs;
         prePlot.displayName = ['Domain ' num2str(j)];
@@ -37,8 +49,13 @@ if prePlot.plot3Dgeometry
             topset = task.varCol{j}.geometry.topologysets.set;
             noTopsets = numel(prePlot.plotSubsets);
             colors = jet(noTopsets);
+            colors(1:size(prePlot.color,1),:) = prePlot.color;
             for i = 1:noTopsets
                 idx = findSet(topset,prePlot.plotSubsets{i});
+                if isnan(idx)
+                    warning(['Subset ' prePlot.plotSubsets{i} ' does not exist in structure'])
+                    break
+                end
                 noPatches = numel(topset{idx}.item);
                 nurbs = cell(1,noPatches);
                 for ii = 1:numel(topset{idx}.item)

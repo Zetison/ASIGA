@@ -27,11 +27,11 @@ eta1 = 0.265;
 t = 0.008;   % Thickness
 R_o1 = 5; % Outer radius
 R_o2 = 3; % Outer radius
-R_i1 = R_o1-t; % Inner radius
-R_i2 = R_o2-t; % Inner radius
+R1 = R_o1-t; % Inner radius
+R2 = R_o2-t; % Inner radius
 L = 49-R_o1-R_o2;
 x_0 = [L/2+(R_o1-R_o2)/2; 0; 0];
-nurbs = getModel3Data(R_o1, R_o2, R_i1, R_i2, L, 'Xaxis', eta1, eta2, x_0);
+nurbs = getModel3Data(R_o1, R_o2, R1, R2, L, 'Xaxis', eta1, eta2, x_0);
 
 R_far = 1.6*max(max(max(max(abs(nurbs.coeffs(1:3,:,:,:))))));
 for alpha_f_Nr = 1:length(alpha_f_arr)

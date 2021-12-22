@@ -1,4 +1,4 @@
-function solid = getPartedCylinderData(R_i, R_o, L, theta, phi)
+function solid = getPartedCylinderData(R, R_o, L, theta, phi)
 error('Depricated use getCylinderData')
 
 
@@ -10,14 +10,14 @@ Eta = [0 0 1 1];
 Zeta = [0 0 1 1];
 
 
-x_1i = R_i*cos(theta);
-z_1i = R_i*sin(theta);
+x_1i = R*cos(theta);
+z_1i = R*sin(theta);
 
-x_2i = R_i*(cos(theta)-sin(theta)*tan(phi/2));
-z_2i = R_i*(sin(theta)+cos(theta)*tan(phi/2));
+x_2i = R*(cos(theta)-sin(theta)*tan(phi/2));
+z_2i = R*(sin(theta)+cos(theta)*tan(phi/2));
 
-x_3i = -R_i*cos(phi+theta);
-z_3i = R_i*sin(phi+theta);
+x_3i = -R*cos(phi+theta);
+z_3i = R*sin(phi+theta);
 
 x_1o = R_o*cos(theta);
 z_1o = R_o*sin(theta);

@@ -63,6 +63,7 @@ switch options.noXLoopPrms
             try 
                 x = eval(['study.tasks(i).task.' xname]);
             catch
+                x = NaN;
                 warning('ASIGA:xDataNotFound', [xname ' was not found in the structure.'])
             end
             x = x*options.xScale;
@@ -306,11 +307,17 @@ if plotResults
             xLabel = '$$\gamma$$';
         case 'bem.agpBEM'
             xLabel = '$$s$$';
+        case 'varCol{1}.kL'
+            xLabel = '$$kL$$';
+        case 'varCol{1}.ka'
+            xLabel = '$$ka$$';
+        case 'varCol{1}.kR'
+            xLabel = '$$kR$$';
         otherwise
             xLabel = xname;
             intrprtrX = 'none';
     end
-    if (strcmp(xname,'alpha') || strcmp(xname,'beta')) && (options.xScale == 180/pi)
+    if (strcmp(xname,'ffp.alpha') || strcmp(xname,'ffp.beta')) && (options.xScale == 180/pi)
         if strcmp(options.axisType,'polar')
             thetatickformat('degrees')
         else

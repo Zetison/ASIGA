@@ -2,7 +2,7 @@ function createParaviewFiles_exact2(extraPts, vtfFileName, options)
 
 SSBC = options.SSBC;
 HWBC = options.HWBC;
-R_i = options.R_i;
+R = options.R;
 R_o = options.R_o;
 R_a = options.R_a;
 r_s = options.r_s;
@@ -29,8 +29,8 @@ for m = 1:M+1-SSBC-HWBC-VFBC
             t_solid = R_o(m);
             R_solid = R_o(m);
         else
-            solid = getSphericalShellData(R_i(m), R_o(m),'Xaxis');
-            t_solid = R_o(m)-R_i(m);
+            solid = getSphericalShellData(R(m), R_o(m),'Xaxis');
+            t_solid = R_o(m)-R(m);
             R_solid = R_o(m);
         end
         Xi = solid.knots{1};
@@ -45,7 +45,7 @@ for m = 1:M+1-SSBC-HWBC-VFBC
         [visElements{2*m-1}, nodes{2*m-1}] = meshRectangleWcircHole([-1.3*R_a, -R_a],[1.3*R_a, R_a],R_o(1),round(extraPts*1.3*R_a));
         nodes{2*m-1} = [nodes{2*m-1}, zeros(size(nodes{2*m-1},1),1)];
     elseif m < M+1
-        [visElements{2*m-1}, nodes{2*m-1}] = mesh2DDonut(R_i(m-1),R_o(m),round(1.18*extraPts*2*R_i(m-1)));
+        [visElements{2*m-1}, nodes{2*m-1}] = mesh2DDonut(R(m-1),R_o(m),round(1.18*extraPts*2*R(m-1)));
         nodes{2*m-1} = [nodes{2*m-1}, zeros(size(nodes{2*m-1},1),1)];
     else
         [visElements{2*m-1}, nodes{2*m-1}] = mesh2DDisk(R_o(m),round(1.18*extraPts*2*R_o(m)));

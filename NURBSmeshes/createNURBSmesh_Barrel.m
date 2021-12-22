@@ -10,7 +10,7 @@ switch task.misc.method
         task.iem.A_2 = [0 1 0;
                       0 0 1;
                       1 0 0];
-        varCol{1}.alignWithAxis = alignWithAxis;
+        varCol{1}.alignWithAxis = 'Xaxis';
 end
 
 if isfield(varCol{1},'Xi')
@@ -26,8 +26,14 @@ if varCol{1}.boundaryMethod
     c_z = L/2; % 30
     c_xy = R; % 12
     Upsilon = sqrt(c_z^2 - c_xy^2);
-    chimin = 9.8;
-    chimax = 11.2;
+    chimin = 1.5;
+    chimax = 2.1;
+    d_p = 2;
+    if task.msh.refineThetaOnly
+        dirs = 2:d_p;
+    else
+        dirs = 1:d_p;
+    end
 
     if numel(varCol) == 1
         fluid = getBarrelData('R', R, 't', t, 'parm', parm, 'L', L, 'd_p', 2, 'Xi', Xi);
@@ -35,7 +41,7 @@ if varCol{1}.boundaryMethod
         
         if parm == 1
             Imap{1} = [];
-            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap);
+            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap,0,dirs);
         else
             Imap{1} = [R*pi/2, R*1.414057108745095];
             fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
@@ -46,7 +52,7 @@ if varCol{1}.boundaryMethod
         fluid = getFreeNURBS(solid);
         if parm == 1
             Imap{1} = [R*2*pi/3, (R-t)*2*pi/3, R*1.272651397870586, R*1.155553578414605];
-            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap);
+            fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap,0,dirs);
         else
             Imap{1} = [R*pi/2, (R-t)*pi/2, R*1.272651397870586, R*1.155553578414605];
             fluid = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
@@ -65,61 +71,46 @@ if varCol{1}.boundaryMethod
     varCol{1}.noDofsInner = 0;
     varCol{1}.noElemsInner = 0;
 else
-    error('This is not implemented')
-
-    eta2 = 0.765;
-    eta1 = 0.235;
-
-    c_z = 15; % 30
-    c_xy = c_z/2.8; % 12
-    L1 = c_z/19;
-    fluid = getBarrelData(R,R_i,eta1,eta2,L);
-    intermediateLayer = getBarrelData(L1+R,R_i,eta1,eta2,L+2*L1);
-
-    Upsilon = sqrt(c_z^2-c_xy^2);
-    [R_a, ~, ~] = evaluateProlateCoords(c_xy,0,0,Upsilon);
-    rm = zeros(N+2,1);
-    for m = 1:N+2
-        rm(m) = R_a + (m-1)*R_a;
+    d_p = 3;
+    if task.msh.refineThetaOnly
+        dirs = 2:d_p;
+    else
+        dirs = 1:d_p;
     end
-
-    fluid = embedSolidInProlateSpheroid3(fluid,intermediateLayer,c_z,c_xy,'Xaxis',x_0);
-
-    X = evaluateNURBS(fluid, [0, eta1, 1])';
-    xt = A_2*(X-x_0)';
-    [~, theta_eta1, ~] = evaluateProlateCoords(xt(1),xt(2),xt(3),Upsilon);
-
-    totArcLength1 = findArcLength(R_a,Upsilon,theta_eta1,pi);
-    X = evaluateNURBS(fluid, [0, eta2, 1])';
-    xt = A_2*(X-x_0)';
-    [~, theta_eta3, ~] = evaluateProlateCoords(xt(1),xt(2),xt(3),Upsilon);
-
-    X = evaluateNURBS(fluid, [0, 0.5, 1])';
-    xt = A_2*(X-x_0)';
-    [~, theta_eta2, ~] = evaluateProlateCoords(xt(1),xt(2),xt(3),Upsilon);
-
-    totArcLength2 = findArcLength(R_a,Upsilon,0,theta_eta3);
-
-    totArcLengthIntermediate1 = findArcLength(R_a,Upsilon,theta_eta2,theta_eta1);
-    totArcLengthIntermediate2 = findArcLength(R_a,Upsilon,theta_eta3,theta_eta2);
-    
-    noNewXiKnots = ceil(0.55*c_xy*pi/2*M);  
-    noNewZetaKnots = ceil(0.6364*(c_z-L/2-R)*M);
-    i_M1 = ceil(0.55*totArcLength1*M);
-    i_M2_1 = ceil(0.55*totArcLengthIntermediate1*M);
-    i_M2_2 = ceil(0.55*totArcLengthIntermediate2*M);
-    i_M3 = ceil(0.55*totArcLength2*M);
-
-    findEtaKnots
-
-    fluid = elevateNURBSdegree(fluid,[1 1 1]*(degree-2));
-
-    fluid = insertKnotsInNURBS(fluid,{insertUniform2(fluid.knots{1}, noNewXiKnots) ...
-                                      [newEtaValues1 ...
-                                      insertUniform2([eta1 0.5], i_M2_1)' insertUniform2([0.5 eta2], i_M2_2)' newEtaValues2]' ...
-                                      insertUniform2(fluid.knots{3}, noNewZetaKnots).^stretchingFact});
-
-
+    if numel(varCol) > 1
+        error('not implemented')
+    end
+    t_fluid = task.misc.r_a - R;
+    t_pml = task.pml.t;
+    c_z = L/2+t_fluid;
+    c_xy = R+t_fluid; % 12
+    Upsilon = sqrt(c_z^2 - c_xy^2);
+    chimin = 1.8;
+    chimax = 2.7;
+    fluid = getBarrelData('R', R+t_fluid, 't', t_fluid, 'parm', parm, 'L', L+2*t_fluid, 'd_p', 3, 'Xi', Xi);
+    if strcmp(task.misc.method,'PML')
+        pmlLayer = getBarrelData('R', R+2*t_fluid, 't', t_pml, 'parm', parm, 'L', L+4*t_fluid, 'd_p', 3, 'Xi', Xi,'pmlFill', task.msh.pmlFill);
+        pmlLayer{1}.isPML = [0,0,1];
+        pmlLayer{2}.isPML = [0,1,1];
+        pmlLayer{3}.isPML = [0,0,1];
+        pmlLayer{4}.isPML = [0,1,0];
+        pmlLayer{5}.isPML = [0,1,1];
+        if task.msh.pmlFill
+            pmlLayer{2}.isPML = [0,0,1];
+            pmlLayer{5}.isPML = [0,1,0];
+        end
+        pmlLayer = insertKnotsInNURBS(pmlLayer,{{[] R/(R+t_fluid) []}, {}, {[] [t_fluid/(L+2*t_fluid), (L+t_fluid)/(L+2*t_fluid)] []}, {[] [] R/(R+t_fluid)}, {}});
+        fluid = explodeNURBS([fluid,pmlLayer]);
+    end
+    fluid = makeUniformNURBSDegree(fluid,degree);
+    if parm == 1
+        Imap{1} = [];
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap,0,dirs);
+    else
+        Imap{1} = [R*pi/2, R*1.414057108745095];
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+    end
+    task.iem.N = min(numel(newKnotsIns{1}{3})+degree(1),9);
 end
 varCol{1}.nurbs = fluid;
 if numel(varCol) > 1
@@ -129,6 +120,10 @@ if numel(varCol) > 2
     varCol{3}.nurbs = fluid_i;
 end
 
+if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
+    varCol{1}.c_z = c_z;
+    varCol{1}.c_xy = c_xy;
+end
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L;

@@ -112,38 +112,36 @@ noSurfDofs = numel(nodes);
 
 element2 = element;
 % Glue nodes in 2D mesh
-if 0 % use slow method
-    gluedNodes = varCol.gluedNodes;
-    for i = 1:length(gluedNodes)
-        indices = (nodes(element(:)) == gluedNodes{i}(1));
-        if any(indices)
-            parentIdx = element(indices);
-            for j = 1:length(gluedNodes{i})
-                indices = (nodes(element(:)) == gluedNodes{i}(j));
-                element(indices) = parentIdx(1);
-            end
-        end
-    end
-else % use fast method
-    Eps = 1e7*eps;
-    controlPts = varCol.controlPts(nodes,:);
-    nodesMapBdry = 1:size(controlPts,1);
-    [~, gluedNodes] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)), 'OutputAllIndices', true);
-    repeatedNode = zeros(numel(gluedNodes),1);
-    for i = 1:numel(gluedNodes)
-        repeatedNode(i) = numel(gluedNodes{i}) - 1;
-    end
-    gluedNodes(repeatedNode == 0) = [];
-
-    counter = 1;
-    for i = 1:length(gluedNodes)
-        childrenNodes_i = gluedNodes{i}(2:end);
-        noChildrenNodes_i = numel(childrenNodes_i);
-        nodesMapBdry(childrenNodes_i) = gluedNodes{i}(1);
-        counter = counter + noChildrenNodes_i;
-    end
-    element = nodesMapBdry(element);
+Eps = 1e7*eps;
+controlPts = varCol.controlPts(nodes,:);
+nodesMapBdry = 1:size(controlPts,1);
+[~, gluedNodes] = uniquetol(controlPts,Eps,'ByRows',true, 'DataScale',max(norm2(controlPts)), 'OutputAllIndices', true);
+repeatedNode = zeros(numel(gluedNodes),1);
+for i = 1:numel(gluedNodes)
+    repeatedNode(i) = numel(gluedNodes{i}) - 1;
 end
+gluedNodes(repeatedNode == 0) = [];
+noChildrenNodes = sum(repeatedNode);
+childrenNodes = zeros(1,noChildrenNodes);
+
+counter = 1;
+for i = 1:length(gluedNodes)
+    childrenNodes_i = gluedNodes{i}(2:end);
+    noChildrenNodes_i = numel(childrenNodes_i);
+    nodesMapBdry(childrenNodes_i) = gluedNodes{i}(1);
+    childrenNodes(counter:counter+noChildrenNodes_i-1) = childrenNodes_i;
+    counter = counter + noChildrenNodes_i;
+end
+element = nodesMapBdry(element);
+
+d = varCol.dimension;
+dofsToRemove = zeros(1,length(childrenNodes)*d);
+for i = 1:d
+    dofsToRemove(i:d:end) = d*(childrenNodes-1)+i;
+end
+
+dofsToRemove = sort(unique(dofsToRemove));
+
 varColBdry.nodes = nodes;
 varColBdry.noElems = noElemsBdry;
 varColBdry.element = element;
@@ -158,6 +156,7 @@ varColBdry.degree = degree;
 varColBdry.elRange = elRange;
 varColBdry.pIndex = pIndex;
 varColBdry.nodesProj = nodesProj;
+varColBdry.dofsToRemove = dofsToRemove;
 
 function bdryNodes = extractBdryNodes(nurbs,midx,outwardPointingNormals,inwardPointingNormals)
 n_xi = nurbs.number(1);

@@ -39,7 +39,7 @@ prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 prePlot.abortAfterPlotting  = 1;                % Abort simulation after pre plotting
 
-postPlot(1).xname       	= 'alpha';
+postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;

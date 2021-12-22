@@ -21,7 +21,7 @@ for i = 1:noPatches
         compSum = sum(abs(subnurbs{i}{ii}.coeffs(1:d,:)),2);
         bdryMeasure = dot(compSum/norm(compSum),compScaling/norm(compScaling));
         keys{i}(ii) = int32(bdryMeasure*1e6);
-        % Skip adding bdries that has zero measure
+        % Skip adding bdries that have zero measure
         for iii = 1:d_p
             zeroMeasure = true;
             temp = reshape(permute(coeffs,[1,iii+1,setdiff(indices,iii)+1]),d+1,subnurbs{i}{ii}.number(iii),[]);
@@ -90,6 +90,7 @@ freeBdries(counterFree:end,:) = [];
 if isempty(geometry)
     return
 end
+geometry.topologysets.set = {};
 if ~isempty(freeBdries)
     % Find connected surfaces
     nurbsFaces = subNURBS(nurbs(freeBdries(:,1)),'at',num2cell(freeBdries(:,2).'));

@@ -1,14 +1,14 @@
-function solid = getModel1Data(R_i, R_o, L, eta1, eta2)
+function solid = getModel1Data(R, R_o, L, eta1, eta2)
 error('Depricated use getBeTSSiM1Data')
 
 if nargin < 4
     eta1 = 0.327581905944480;
     eta2 = 0.8;
 end
-t = R_o-R_i;
+t = R_o-R;
 
 if R_o/2 <= t
-    error('Input must satisfy R_i/2 <= t!')
+    error('Input must satisfy R/2 <= t!')
 end
 
 %% Parameters for outer surface
@@ -20,9 +20,9 @@ theta_1 = acos(4*y_1/(3*R_o));
 w_1 = cos(theta_1/2);
 
 %% Parameters for inner surface
-z_5 = sqrt(R_i^2-t^2);
-z_6 = z_5 - t/z_5*(R_i-t);
-y_4 = (R_o/2+R_i)/2;
+z_5 = sqrt(R^2-t^2);
+z_6 = z_5 - t/z_5*(R-t);
+y_4 = (R_o/2+R)/2;
 
 a = 1+(2*z_5/(R_o-2*t))^2;
 b =  -(2*z_5/(R_o-2*t))^2*R_o;
@@ -34,11 +34,11 @@ z_3 = sqrt(y_4^2-y_3^2);
 z_4 = z_3-y_3/z_3*(y_4-y_3);
 theta_2 = acos(y_3/y_4);
 w_2 = cos(theta_2/2);
-theta_3 = acos(t/R_i);
+theta_3 = acos(t/R);
 w_3 = cos(theta_3/2);
 
-x_1 = sqrt(R_i^2-t^2);
-x_2 = x_1 - t/x_1*(R_i-t);
+x_1 = sqrt(R^2-t^2);
+x_2 = x_1 - t/x_1*(R-t);
 
 Xi = [0 0 0 1 1 2 2 3 3 3]/3;
 Eta = [0 0 0 eta1 eta1 eta2 eta2 1 1 1];
@@ -63,37 +63,37 @@ controlPts(:,5,2,1) = [	t-L     y_3     -z_3   	   1           ];
 controlPts(:,6,2,1) = [ t-L     y_4     -z_4   	   w_2         ];
 controlPts(:,7,2,1) = [ t-L     y_4      0          1           ];
 
-controlPts(:,1,3,1) = [ t-L     R_i   0          1           ];
-controlPts(:,2,3,1) = [ t-L     R_i   z_6        w_3         ];
+controlPts(:,1,3,1) = [ t-L     R   0          1           ];
+controlPts(:,2,3,1) = [ t-L     R   z_6        w_3         ];
 controlPts(:,3,3,1) = [	t-L     t   	 z_5        1           ];
 controlPts(:,4,3,1) = [	t-L     t     0          1           ];
 controlPts(:,5,3,1) = [	t-L     t    -z_5        1           ];
-controlPts(:,6,3,1) = [ t-L     R_i  -z_6        w_3         ];
-controlPts(:,7,3,1) = [ t-L     R_i   0          1           ];
+controlPts(:,6,3,1) = [ t-L     R  -z_6        w_3         ];
+controlPts(:,7,3,1) = [ t-L     R   0          1           ];
 
-controlPts(:,1,4,1) = [  -L/2     R_i   0          1           ];
-controlPts(:,2,4,1) = [  -L/2     R_i   z_6        w_3         ];
+controlPts(:,1,4,1) = [  -L/2     R   0          1           ];
+controlPts(:,2,4,1) = [  -L/2     R   z_6        w_3         ];
 controlPts(:,3,4,1) = [	 -L/2     t   	 z_5        1           ];
 controlPts(:,4,4,1) = [	 -L/2     t     0          1           ];
 controlPts(:,5,4,1) = [	 -L/2     t    -z_5        1           ];
-controlPts(:,6,4,1) = [  -L/2     R_i  -z_6        w_3         ];
-controlPts(:,7,4,1) = [  -L/2     R_i   0          1           ];
+controlPts(:,6,4,1) = [  -L/2     R  -z_6        w_3         ];
+controlPts(:,7,4,1) = [  -L/2     R   0          1           ];
 
-controlPts(:,1,5,1) = [ 0     R_i   0          1           ];
-controlPts(:,2,5,1) = [ 0     R_i   z_6        w_3         ];
+controlPts(:,1,5,1) = [ 0     R   0          1           ];
+controlPts(:,2,5,1) = [ 0     R   z_6        w_3         ];
 controlPts(:,3,5,1) = [	0     t     z_5        1           ];
 controlPts(:,4,5,1) = [	0     t     0          1           ];
 controlPts(:,5,5,1) = [	0     t    -z_5        1           ];
-controlPts(:,6,5,1) = [ 0     R_i  -z_6        w_3         ];
-controlPts(:,7,5,1) = [ 0     R_i   0          1           ];
+controlPts(:,6,5,1) = [ 0     R  -z_6        w_3         ];
+controlPts(:,7,5,1) = [ 0     R   0          1           ];
 
-controlPts(:,1,6,1) = [ x_2     R_i   0          w_3           ];
-controlPts(:,2,6,1) = [ x_2     R_i   z_6        w_3*w_3       ];
+controlPts(:,1,6,1) = [ x_2     R   0          w_3           ];
+controlPts(:,2,6,1) = [ x_2     R   z_6        w_3*w_3       ];
 controlPts(:,3,6,1) = [	x_2     t     z_5        w_3           ];
 controlPts(:,4,6,1) = [	x_2     t     0          w_3           ];
 controlPts(:,5,6,1) = [	x_2     t    -z_5        w_3           ];
-controlPts(:,6,6,1) = [ x_2     R_i  -z_6        w_3*w_3       ];
-controlPts(:,7,6,1) = [ x_2     R_i   0          w_3           ];
+controlPts(:,6,6,1) = [ x_2     R  -z_6        w_3*w_3       ];
+controlPts(:,7,6,1) = [ x_2     R   0          w_3           ];
 
 controlPts(:,1,7,1) = [ x_1   t     0      1           ];
 controlPts(:,2,7,1) = [ x_1   t     0      w_3         ];

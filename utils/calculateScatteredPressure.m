@@ -62,7 +62,7 @@ Phi_k = task.varCol{1}.Phi_k;
 solveForPtot = task.misc.solveForPtot;
 exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(task.varCol) == 1;
 
-extraGP = task.misc.extraGP;
+extraGP = max(task.misc.extraGP,task.ffp.extraGP);
 if useExtraQuadPts
     noGp = degree+1+5;
 else
@@ -74,8 +74,8 @@ if numel(k) > 1 && size(P_far,1) > 1
 end
 p_h = zeros(max([size(P_far,1),numel(k)]),1);
 
-for e = 1:noElems %
-% parfor e = 1:noElems
+% for e = 1:noElems %
+parfor e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(2,2);

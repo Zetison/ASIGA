@@ -4,6 +4,9 @@ if ~isfield(varCol{domain},'geometry')
 end
 topset = varCol{domain}.geometry.topologysets.set;
 idx = findSet(topset,source);
+if isnan(idx)
+    return
+end
 [~,setFound] = findSet(topset,target);
 if ~setFound
     topset{end+1} = topset{idx};

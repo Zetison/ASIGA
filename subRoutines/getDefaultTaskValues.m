@@ -41,6 +41,7 @@ msh.refineThetaOnly     = 0;       % For the ellipsoidal/spherical geometries, r
 msh.degree              = 2;       % NURBS polynomial degree
 msh.explodeNURBS        = false;   % Create patches from all C^0 interfaces
 msh.x_0                 = [0,0,0]; % Translate center of model
+msh.Xi                  = [0,0,0,1,1,2,2,3,3,3]/3;
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plotFullDomain      = true;        % Plot volumetric domains
@@ -78,6 +79,7 @@ prePlot.xlabel              = 'x';         % Set x-axis label
 prePlot.ylabel              = 'y';         % Set y-axis label
 prePlot.zlabel              = 'z';         % Set z-axis label
 prePlot.pngResolution       = '-r200';     % Resolution of exported png images
+prePlot.color               = [];          % Nx3 array with colors to use
 
 %% Solver settings
 sol.solver = 'LU';              % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
@@ -99,6 +101,7 @@ ffp.beta_s  = NaN;                          % Elevation angle of incident wave
 ffp.alpha   = (0:0.5:360)*pi/180;           % Aspect angles of observation points
 ffp.beta    = 0;                        	% Elevation angle of observation points
 ffp.r       = 1;                            % radii for near-field evaluation. Assume by default plotFarField = true
+ffp.extraGP = [0,0,0];                      % Extra Gauss points used for the integration routine
 
 %% Settings for post plotting 
 postPlot(1).xname        	= 'alpha';

@@ -8,13 +8,11 @@ eval(['task = ' task.msh.meshFile '(task);'])
 task = repeatKnots(task);
 task = degenerateIGAtoFEM(task);
 for i = 1:numel(task.varCol)
-    if ~task.varCol{1}.boundaryMethod
-        if i == 1
-            task = defineDomains(task);
-        else
-            task.varCol = copySet(task.varCol,i-1, 'inner', 'innerCoupling');
-            task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');
-        end
+    if i == 1
+        task = defineDomains(task);
+    else
+        task.varCol = copySet(task.varCol,i-1, 'inner', 'innerCoupling');
+        task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');
     end
 end
 PMLpatchFound = false;
@@ -26,10 +24,8 @@ end
 if strcmp(task.misc.method,'PML') && ~PMLpatchFound
     task = createPML(task);
 end
-if ~task.varCol{1}.boundaryMethod
-    for i = 1:numel(task.varCol)
-        task.varCol = findCartesianAlignedBdry(task.varCol,i);
-    end
+for i = 1:numel(task.varCol)
+    task.varCol = findCartesianAlignedBdry(task.varCol,i);
 end
 
 function varCol = findCartesianAlignedBdry(varCol,domain)
@@ -80,8 +76,12 @@ for i = 1:numel(item)
 end
 nurbsPML = normalBasedSurface2volume(nurbsPML,task.pml.t);
 nurbsPML = makeUniformNURBSDegree(nurbsPML,task.varCol{1}.nurbs{1}.degree);
-noNewKnots = task.varCol{1}.refinement(task.msh.M);
-nurbsPML = insertKnotsInNURBS(nurbsPML,[0,0,noNewKnots(4)]);
+if nargin(task.pml.refinement) > 1
+    noNewKnots = task.pml.refinement(task.msh.M,task.pml.t);
+else
+    noNewKnots = task.pml.refinement(task.msh.M);
+end
+nurbsPML = insertKnotsInNURBS(nurbsPML,[0,0,noNewKnots]);
 for i = 1:numel(nurbsPML)
     nurbsPML{i}.isPML = [false,false,true];
 end

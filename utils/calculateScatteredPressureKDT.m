@@ -28,7 +28,7 @@ centerPts = findCenterPoints(patches);
 
 p_inc = task.p_inc_;
 
-extraGP = task.misc.extraGP;
+extraGP = max(task.misc.extraGP,task.ffp.extraGP);
 [Q,W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
 p_h = complex(zeros(max([size(P_far,1),numel(k)]),1));

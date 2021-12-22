@@ -13,8 +13,8 @@ for i = 1:numel(copyFields)
     end
 end
 for m = 1:M
-    if isfield(task.varCol{m},'R_i')
-        layer{m}.R_i = task.varCol{m}.R_i; % Inner radius of layer
+    if isfield(task.varCol{m},'R')
+        layer{m}.R = task.varCol{m}.R; % Inner radius of layer
     end
     layer{m}.rho   = task.varCol{m}.rho;    % Mass density
     layer{m}.media = task.varCol{m}.media;

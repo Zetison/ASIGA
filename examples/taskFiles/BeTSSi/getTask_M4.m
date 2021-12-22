@@ -44,7 +44,7 @@ prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plot
 
 para.plotResultsInParaview = false;
 
-postPlot(1).xname       	= 'alpha';
+postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= 0;

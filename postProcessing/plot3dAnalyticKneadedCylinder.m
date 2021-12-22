@@ -18,7 +18,7 @@ for analyticFunction = 1:3
     end
     R = 1.5; % Mid surface radius
     t = 1;  % Thickness
-    R_i = R-t/2;    % Inner surface radius
+    R = R-t/2;    % Inner surface radius
     R_o = R+t/2;    % Outer surface radius
     L = 5;  % Height
     p_i = 1;
@@ -30,7 +30,7 @@ for analyticFunction = 1:3
 
     getAnalyticFunctions_kneadedCylinder
 
-    solid = getSolidCylinderData(R_i, R_o, L);
+    solid = getSolidCylinderData(R, R_o, L);
 
     [Xi, Eta, Zeta, ...
      p, q, r, ...

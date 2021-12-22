@@ -15,7 +15,7 @@ x_0wave = x_0; % Point at which the wave is directed (has purely real part here)
 
 
 
-solid = getModel1Data(R_i,R_o,L, x_0, alignWithAxis, eta1, eta2);
+solid = getModel1Data(R,R_o,L, x_0, alignWithAxis, eta1, eta2);
 solid = elevateNURBSdegree(solid,[0 0 1]);
 solid = elevateNURBSdegree(solid,[1 1 1]*degreeElev);
 
@@ -34,7 +34,7 @@ solid = insertKnotsInNURBS(solid,{insertUniform2(solid.knots{1}, noNewXiKnots) .
 
 
 if useInnerFluidDomain
-    fluid_i = getModel1InternalWaterData(R_i1,R_i2,L,alignWithAxis, eta1, eta2, x_0);
+    fluid_i = getModel1InternalWaterData(R1,R2,L,alignWithAxis, eta1, eta2, x_0);
     fluid_i = elevateNURBSdegree(fluid_i,[0 0 1]);
     fluid_i = elevateNURBSdegree(fluid_i,[1 1 1]*degreeElev);
     fluid_i = insertKnotsInNURBS(fluid_i,{insertUniform2(fluid_i.knots{1}, noNewXiKnots) ...

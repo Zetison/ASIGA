@@ -13,7 +13,7 @@ if isfield(task,'dofs')
 end
 
 varCol2{1}.totNoElems = task.totNoElems;    
-fieldCell = {'noElems', 'tot_time', 'nepw', 'tau', 'h_max', 'surfDofs', 'dofs', 'N', 'timeBuildSystem', 'timeSolveSystem','totNoQP','totNoQPnonPolar','boundaryMethod'};
+fieldCell = {'noElems', 'tot_time', 'nepw', 'tau', 'h_max', 'surfDofs', 'dofs', 'N', 'timeBuildSystem', 'timeSolveSystem','totNoQP','totNoQPnonPolar','boundaryMethod','kL','ka','kR'};
 
 for field = fieldCell
     if isfield(varCol{1},field{1})

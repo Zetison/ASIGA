@@ -141,8 +141,8 @@ for i_coreM = 1:length(misc.coreMethods) %{'IGA'}
                 varCol{3}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, max(2^(M-2)-1,0)];
             end
         end
-        postPlot(1).xScale = varCol{1}.R_i;
-        postPlot(2).xScale = varCol{1}.R_i;
+        postPlot(1).xScale = varCol{1}.R;
+        postPlot(2).xScale = varCol{1}.R;
 %         specialValues = [];
         k = linspace(0.001, 2, npts);
         k = unique(sort([k'; specialValues; 1]'));
