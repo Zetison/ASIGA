@@ -117,8 +117,8 @@ for method = {'PML','IE','BA'}
             misc.coreMethod = coreMethod{1};
             if strcmp(coreMethod{1},'IGA')
                 if strcmp(method{1},'PML')
-                    pml.sigmaType = 1:3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
-                    pml.n = [2,2,1];
+                    pml.sigmaType = [3,5];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+                    pml.n = [1,2];
                 else
                     pml.sigmaType = 3;
                     pml.n = 1;
