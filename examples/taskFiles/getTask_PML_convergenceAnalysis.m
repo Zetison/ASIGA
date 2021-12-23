@@ -146,6 +146,11 @@ for method = {'PML','IE','BA'}
             msh.degree = degree;
             misc.coreMethod = 'IGA';
             collectIntoTasks
+            if strcmp(method{1}, 'PML')
+                pml.t = [varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
+            else
+                pml.t = 0.25*varCol{1}.R;         % thickness of PML
+            end
         end 
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
