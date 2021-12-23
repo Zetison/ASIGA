@@ -74,7 +74,7 @@ centerPts = findCenterPoints(patches);
 %% Create source points:
 if exteriorProblem
     switch model
-        case 'Barrel'
+        case {'Barrel','Barrel_Sweep'}
             Xarr = linspace(-1,1,4)/4;
             Yarr = linspace(-1,1,4)/4;
             Zarr = linspace(-1,1,4)/4;
