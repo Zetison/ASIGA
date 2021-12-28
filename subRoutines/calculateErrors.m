@@ -13,7 +13,7 @@ if task.varCol{1}.boundaryMethod
         surfaceError = calcSurfErrorBndryMethodVec(task);
         if printLog
             fprintf('using %12f seconds.', toc)   
-            fprintf('\nSurface error = %.16g', max(surfaceError))
+            fprintf('\nSurface error = %.16g%%', max(surfaceError))
         end
     end
     if task.err.calculateSurfEnrgErr
@@ -24,7 +24,7 @@ if task.varCol{1}.boundaryMethod
         energyError = calcEnergyErrorBEM(task,1);
         if printLog
             fprintf('using %12f seconds.', toc)   
-            fprintf('\nSurface energy error = %.16g', max(energyError))
+            fprintf('\nSurface energy error = %.16g%%', max(energyError))
         end
     end
 else
@@ -40,7 +40,7 @@ else
         end
         if printLog
             fprintf('using %12f seconds.', toc) 
-            fprintf('\nSurface error = %.16g', max(surfaceError))
+            fprintf('\nSurface error = %.16g%%', max(surfaceError))
         end
     end
     if task.err.calculateVolumeError
@@ -55,9 +55,9 @@ else
         end
         if printLog
             fprintf('using %12f seconds.', toc)
-            fprintf('\nVolume L2-error = %.16g', max(L2Error))
-            fprintf('\nVolume H1-error = %.16g', max(H1Error))
-            fprintf('\nVolume Energy-error = %.16g', max(energyError))
+            fprintf('\nVolume L2-error = %.16g%%', max(L2Error))
+            fprintf('\nVolume H1-error = %.16g%%', max(H1Error))
+            fprintf('\nVolume Energy-error = %.16g%%', max(energyError))
         end
     end  
 end

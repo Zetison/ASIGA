@@ -11,6 +11,7 @@ varCol = setBarrelParameters(1);
 R = varCol{1}.R;
 L = varCol{1}.L;
 msh.meshFile = 'createNURBSmesh_Barrel';
+msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 pml.refinement = @(M) round((2^(M-1)-1)*pml.t/(R*2*pi/3));
 ffp.calculateFarFieldPattern = false;
 ffp.alpha_s = pi;

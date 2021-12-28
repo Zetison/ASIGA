@@ -25,6 +25,7 @@ L = varCol{1}.L;
 misc.r_a = 1.25*R;
 pml.t = 0.25*R;
 msh.meshFile = 'createNURBSmesh_Barrel';
+msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 varCol{1}.refinement = @(M) [NaN,NaN,NaN,round((2^(M-1)-1)*pml.t/(R*2*pi/3))];
 k = 100;
 % k = 10;

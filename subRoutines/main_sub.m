@@ -81,7 +81,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
             case {'IE','ABC','IENSG','PML'}
                 task.varCol{1}.timeBuildSystem = 0;
                 for i_domain = 1:task.noDomains
-                    if ~(strcmp(task.misc.method,'IENSG') && task.iem.boundaryMethod) && i_domain == 1
+                    if ~(strcmp(task.misc.method,'IENSG') && task.iem.boundaryMethod && i_domain == 1)
                         tic          
                         if printLog
                             fprintf(['\n%-' num2str(stringShift) 's'], ['Building matrices for domain ' num2str(i_domain) ' ... '])
@@ -186,7 +186,9 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 end
                 if strcmp(task.misc.formulation(end),'C')
                     tic
-                    fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
+                    if printLog
+                        fprintf(['\n%-' num2str(stringShift) 's'], 'Building CHIEF matrix ... ')
+                    end
                     task = buildCHIEFmatrix(task);
                     if printLog
                         fprintf('using %12f seconds.', toc)
