@@ -62,8 +62,8 @@ misc.solveForPtot = ~strcmp(misc.applyLoad,'pointPulsation');
 misc.BC = 'NBC';
 msh.M = 4;
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-% noPts = 20;
-noPts = 1000;
+noPts = 20;
+% noPts = 1000;
 kL_max = 10*pi/2;
 kL = linspace(kL_max/noPts,kL_max,noPts);
 % Zeros of besselfunctions are found by utils/findBesselZeros.m
@@ -75,8 +75,9 @@ eigenValuesCBIE = sort(unique(eigenValuesCBIE(:)));
 eigenValuesCBIE(eigenValuesCBIE(:) > kL_max/L) = [];
 load('miscellaneous/besselZeros/dbesselJZeros.mat')
 n3 = 0:100;
+noFuncs = size(dbesselJZeros,1);
 dbesselJZeros = [0, dbesselJZeros(1,1:end-1); dbesselJZeros(2,:); [zeros(noFuncs-2,1), dbesselJZeros(3:end,1:end-1)]];
-dbesselJZeros = reshape(dbesselJZeros,1,size(dbesselJZeros,1),size(dbesselJZeros,2));
+dbesselJZeros = reshape(dbesselJZeros,1,noFuncs,size(dbesselJZeros,2));
 eigenValuesHBIE = sqrt((dbesselJZeros/R).^2 + (n3.'*pi/L).^2);
 eigenValuesHBIE = sort(unique(eigenValuesHBIE(:)));
 eigenValuesHBIE(eigenValuesHBIE(:) > kL_max/L) = [];
