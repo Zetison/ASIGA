@@ -130,46 +130,12 @@ misc.applyLoad = 'pointPulsation';
 ffp.alpha = 0;
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE','CHBIE','CBM','CCBIEC'};
-% misc.formulation = {'CCBIE','CHBIE'};
+misc.formulation = {'CCBIE'};
 misc.applyLoad = 'pointPulsation';
 err.calculateSurfaceError = strcmp(misc.applyLoad,'pointPulsation');
 misc.solveForPtot = ~strcmp(misc.applyLoad,'pointPulsation');
 misc.BC = 'NBC';
 msh.M = 4;
-misc.scatteringCase = 'Sweep'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-noPts = 10;
-% noPts = 1000;
-kL_max = 10;
-kL = linspace(kL_max/noPts,kL_max,noPts);
-load('miscellaneous/besselZeros/besselJZeros.mat')
-n3 = 1:100;
-eigenValuesCBIE = sqrt((reshape( besselJZeros,1,size( besselJZeros,1),size( besselJZeros,2))/R).^2 + (n3.'*pi/L).^2);
-eigenValuesCBIE = sort(eigenValuesCBIE(:));
-eigenValuesCBIE(eigenValuesCBIE(:) > kL_max/L) = [];
-load('miscellaneous/besselZeros/dbesselJZeros.mat')
-n3 = 0:100;
-eigenValuesHBIE = sqrt((reshape(dbesselJZeros,1,size(dbesselJZeros,1),size(dbesselJZeros,2))/R).^2 + (n3.'*pi/L).^2);
-eigenValuesHBIE = sort(eigenValuesHBIE(:));
-eigenValuesHBIE(eigenValuesHBIE(:) > kL_max/L) = [];
-eigenValues = sort([eigenValuesCBIE; eigenValuesHBIE]);
-k = kL/L;
-% k = [k, linspace(0.01,delta/2,round(noPts/10))];
-for i = 1:numel(eigenValues)
-%     delta = 10/noPts*3;
-%     k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
-    delta = 1e-2*kL_max/L;
-    k = [k, eigenValues(i)+linspace(-delta/2,delta/2,2)];
-end
-k = sort(unique(k));
-
-misc.omega = k*varCol{1}.c_f;
-loopParameters = {'msh.M','msh.parm','misc.method','misc.formulation','msh.pmlFill'};
-collectIntoTasks
-
-
-misc.method = {'BA'};
-misc.formulation = {'SL2E'};
-collectIntoTasks
 
 %% Run convergence analysis
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering

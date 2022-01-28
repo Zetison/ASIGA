@@ -4,7 +4,7 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 runTasksInParallel = 1;
-noCoresToUse = 8;
+noCoresToUse = 16;
 
 misc.model = 'Barrel_Sweep';
 
@@ -43,7 +43,7 @@ msh.refineThetaOnly = false;
 postPlot(1).xname       	= 'varCol{1}.kL';
 postPlot(1).yname        	= 'surfaceError';
 postPlot(1).plotResults  	= true;
-postPlot(1).printResults 	= false;
+postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'semilogy';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).fileDataHeaderX	= [];
@@ -55,7 +55,7 @@ msh.degree = 2;
 misc.applyLoad = 'pointPulsation';
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE','CHBIE','CBM','CCBIEC'};
-% misc.formulation = {'CCBIE','CHBIE'};
+misc.formulation = {'CCBIE'};
 misc.applyLoad = 'pointPulsation';
 err.calculateSurfaceError = strcmp(misc.applyLoad,'pointPulsation');
 misc.solveForPtot = ~strcmp(misc.applyLoad,'pointPulsation');
@@ -66,25 +66,30 @@ misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scat
 noPts = 1000;
 kL_max = 10*pi/2;
 kL = linspace(kL_max/noPts,kL_max,noPts);
+% Zeros of besselfunctions are found by utils/findBesselZeros.m
 load('miscellaneous/besselZeros/besselJZeros.mat')
 n3 = 1:100;
-eigenValuesCBIE = sqrt((reshape( besselJZeros,1,size( besselJZeros,1),size( besselJZeros,2))/R).^2 + (n3.'*pi/L).^2);
-eigenValuesCBIE = sort(eigenValuesCBIE(:));
+besselJZeros = reshape(besselJZeros,1,size(besselJZeros,1),size(besselJZeros,2));
+eigenValuesCBIE = sqrt((besselJZeros/R).^2 + (n3.'*pi/L).^2);
+eigenValuesCBIE = sort(unique(eigenValuesCBIE(:)));
 eigenValuesCBIE(eigenValuesCBIE(:) > kL_max/L) = [];
 load('miscellaneous/besselZeros/dbesselJZeros.mat')
 n3 = 0:100;
-eigenValuesHBIE = sqrt((reshape(dbesselJZeros,1,size(dbesselJZeros,1),size(dbesselJZeros,2))/R).^2 + (n3.'*pi/L).^2);
-eigenValuesHBIE = sort(eigenValuesHBIE(:));
+dbesselJZeros = [0, dbesselJZeros(1,1:end-1); dbesselJZeros(2,:); [zeros(noFuncs-2,1), dbesselJZeros(3:end,1:end-1)]];
+dbesselJZeros = reshape(dbesselJZeros,1,size(dbesselJZeros,1),size(dbesselJZeros,2));
+eigenValuesHBIE = sqrt((dbesselJZeros/R).^2 + (n3.'*pi/L).^2);
+eigenValuesHBIE = sort(unique(eigenValuesHBIE(:)));
 eigenValuesHBIE(eigenValuesHBIE(:) > kL_max/L) = [];
-eigenValues = sort([eigenValuesCBIE; eigenValuesHBIE]);
+eigenValues = sort(unique([eigenValuesCBIE; eigenValuesHBIE]));
 k = kL/L;
 delta = 10/noPts*3;
 % delta = 1e-2*kL_max/L;
-k = [k, linspace(0.01,delta/2,round(noPts/10))];
+k = [k, eigenValues.'];
 for i = 1:numel(eigenValues)
     k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
 %     k = [k, eigenValues(i)+linspace(-delta/2,delta/2,2)];
 end
+k(k <= 0) = [];
 k = sort(unique(k));
 
 misc.omega = k*varCol{1}.c_f;
