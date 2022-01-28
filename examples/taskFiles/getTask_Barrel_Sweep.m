@@ -55,14 +55,14 @@ msh.degree = 2;
 misc.applyLoad = 'pointPulsation';
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE','CHBIE','CBM','CCBIEC'};
-misc.formulation = {'CCBIE'};
+misc.formulation = {'CCBIE','CHBIE'};
 misc.applyLoad = 'pointPulsation';
 err.calculateSurfaceError = strcmp(misc.applyLoad,'pointPulsation');
 misc.solveForPtot = ~strcmp(misc.applyLoad,'pointPulsation');
 misc.BC = 'NBC';
 msh.M = 4;
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-noPts = 20;
+noPts = 100;
 % noPts = 1000;
 kL_max = 10*pi/2;
 kL = linspace(kL_max/noPts,kL_max,noPts);
@@ -91,6 +91,7 @@ for i = 1:numel(eigenValues)
 %     k = [k, eigenValues(i)+linspace(-delta/2,delta/2,2)];
 end
 k(k <= 0) = [];
+k(k > kL_max/L) = [];
 k = sort(unique(k));
 
 misc.omega = k*varCol{1}.c_f;
