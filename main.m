@@ -90,7 +90,7 @@ for i_col = 1:numel(studiesCol)
             studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
         end 
         if studiesCol{i_col}(i_study).saveStudies
-            save([resultsFolder '/studies'], 'studies')
+            save([resultsFolder '/studiesCol'], 'studiesCol')
         end
     end
     close all

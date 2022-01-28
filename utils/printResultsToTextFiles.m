@@ -449,7 +449,8 @@ else
         end
     end
 end
-saveName = [saveName '_' yname 'VS' xname];
+idx = find(xname == '.',1,'last');
+saveName = [saveName '_' yname 'VS' xname(idx+1:end)];
 
 function [saveName, legendName] = updateStrings(saveName, legendName, j, legendEntries, mathematicalLegend, legendEntriesMath, scale, postfix,temp,temp2)
 if isnumeric(temp) || islogical(temp)
