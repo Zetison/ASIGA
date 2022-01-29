@@ -5,6 +5,7 @@ studies = cell(0,1);
 getDefaultTaskValues
 runTasksInParallel = 1;
 noCoresToUse = 16;
+saveStudies = false;
 
 misc.model = 'Barrel_Sweep';
 
