@@ -56,16 +56,16 @@ msh.degree = 2;
 misc.applyLoad = 'pointPulsation';
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE','CHBIE','CBM','CCBIEC'};
-misc.formulation = {'CCBIE','CHBIE'};
+% misc.formulation = {'CCBIE','CHBIE'};
 misc.applyLoad = 'pointPulsation';
 err.calculateSurfaceError = strcmp(misc.applyLoad,'pointPulsation');
 misc.solveForPtot = ~strcmp(misc.applyLoad,'pointPulsation');
 misc.BC = 'NBC';
 msh.M = 4;
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-noPts = 100;
-% noPts = 1000;
-kL_max = 10*pi/2;
+% noPts = 100;
+noPts = 1000;
+kL_max = 15;
 kL = linspace(kL_max/noPts,kL_max,noPts);
 % Zeros of besselfunctions are found by utils/findBesselZeros.m
 load('miscellaneous/besselZeros/besselJZeros.mat')
