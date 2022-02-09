@@ -3,7 +3,6 @@ function studies = getTask_Barrel_Sweep()
 counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
-runTasksInParallel = 1;
 noCoresToUse = 16;
 saveStudies = false;
 
@@ -26,17 +25,20 @@ misc.solveForPtot = false;
 misc.checkNURBSweightsCompatibility = false; 
 warning('off','NURBS:weights')
 
-prePlot.plot3Dgeometry = 0;
-prePlot.resolution = [20,20,20];
-% prePlot.resolution = [0,0,0];
+prePlot.plot3Dgeometry = 1;
+% prePlot.resolution = [20,20,20];
+prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
+prePlot.view = [42,10];
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 prePlot.coarseLinearSampling = prePlot.plotParmDir;
 prePlot.plotFullDomain       = 1;
+
+runTasksInParallel = ~prePlot.plot3Dgeometry;
 
 msh.parm = 2;
 msh.refineThetaOnly = false;
