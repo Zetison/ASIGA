@@ -15,7 +15,7 @@ else
     misc.BC = 'SHBC';
 end
 misc.method = {'BEM'};
-misc.formulation = {'CCBIE'};
+misc.formulation = {'CCBIEC'};
 % misc.formulation = {'CCBIE','GBM'};
 % misc.formulation = {'GBM'};
 
@@ -24,16 +24,16 @@ R = varCol{1}.R;
 L = varCol{1}.L;
 misc.r_a = 1.25*R;
 pml.t = 0.25*R;
+pml.refinement = @(M) round((2^(M-1)-1)*pml.t/(R*2*pi/3));
 msh.meshFile = 'createNURBSmesh_Barrel';
 msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
-varCol{1}.refinement = @(M) [NaN,NaN,NaN,round((2^(M-1)-1)*pml.t/(R*2*pi/3))];
 k = 100;
 % k = 10;
 misc.omega = k*varCol{1}.c_f;
 msh.refineThetaOnly = true;
 msh.pmlFill = true;
 msh.M = 8:9;
-% msh.M = 8; % 8
+% msh.M = 1; % 8
 msh.degree = 2;
 msh.parm = [1,2];
 msh.parm = 1;
@@ -79,12 +79,12 @@ postPlot(1).xScale          = 180/pi;
 
 para.plotFullDomain          = false;
 para.plotResultsInParaview	 = 1;
-para.extraXiPts              = 'round(2^(M-6)-1)';  % Extra visualization points in the xi-direction per element
-para.extraEtaPts             = 'round(2^(M-6)-1)';  % Extra visualization points in the eta-direction per element
-para.extraZetaPts            = 'round(2^(M-6)-1)';  % Extra visualization points in the zeta-direction per element
-para.plotSubsets             = {'xz'}; % Plot (surface) subsets (i.e. the artificial boundary Gamma_a) in paraview 
+para.extraXiPts              = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the xi-direction per element
+para.extraEtaPts             = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the eta-direction per element
+para.extraZetaPts            = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the zeta-direction per element
+para.plotSubsets             = {'xz','Gamma','Gamma_a'}; % Plot (surface) subsets (i.e. the artificial boundary Gamma_a) in paraview 
                                                     % (examples include: 'Gamma','Gamma_a','yz','xz','xy','innerCoupling','outerCoupling','outer','inner','homDirichlet')
-msh.pmlFill = 1;
+msh.pmlFill = false; % Use rounded corners for PML domain
 misc.method = {'PML'};
 misc.solveForPtot = false;
 misc.formulation = {'GSB'};
@@ -97,13 +97,14 @@ misc.formulation = {'BGC'};
 % collectIntoTasks
 
 para.plotResultsInParaview = 0;
-msh.M = 4;
+msh.M = 7:8;
 msh.parm = 2;
-msh.degree = 4;
+msh.degree = 2;
 msh.refineThetaOnly = false;
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE'};
 for applyLoad = {'pointPulsation','planeWave'}
+    err.calculateSurfaceError = strcmp(applyLoad,'pointPulsation');
     misc.applyLoad = applyLoad{1};
     if strcmp(misc.applyLoad,'pointPulsation')
         misc.BC = 'NBC';
@@ -111,7 +112,7 @@ for applyLoad = {'pointPulsation','planeWave'}
         misc.BC = 'SHBC';
     end
     misc.solveForPtot = strcmp(misc.applyLoad,'planeWave');
-%     collectIntoTasks
+    collectIntoTasks
 end
 
 %% Do frequency analysis for BEM
