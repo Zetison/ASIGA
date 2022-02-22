@@ -26,14 +26,15 @@ misc.r_a = 1.25*R;
 pml.t = 0.25*R;
 pml.refinement = @(M) round((2^(M-1)-1)*pml.t/(R*2*pi/3));
 msh.meshFile = 'createNURBSmesh_Barrel';
-msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+% varCol{1}.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+varCol{1}.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 k = 100;
 % k = 10;
 misc.omega = k*varCol{1}.c_f;
 msh.refineThetaOnly = true;
 msh.pmlFill = true;
 msh.M = 8:9;
-% msh.M = 1; % 8
+msh.M = 1; % 8
 msh.degree = 2;
 msh.parm = [1,2];
 msh.parm = 1;
@@ -51,7 +52,7 @@ warning('off','NURBS:weights')
 loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation','misc.applyLoad','msh.pmlFill'};
 
 prePlot.plot3Dgeometry = 0;
-prePlot.resolution = [20,20,20];
+prePlot.resolution = [100,0,20];
 % prePlot.resolution = [0,0,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
@@ -60,16 +61,19 @@ prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 prePlot.coarseLinearSampling = prePlot.plotParmDir;
-prePlot.plotSubsets          = {'xz'};
-prePlot.plotFullDomain       = 1;
+prePlot.plotSubsets          = {'xz','Gamma'};
+prePlot.plotSubsets          = {'Gamma'};
+prePlot.plotFullDomain       = 0;
 prePlot.view = [0,0];
+prePlot.camproj = 'orthographic';
+prePlot.useCamlight = false;
 
 err.calculateSurfaceError = strcmp(misc.applyLoad,'pointPulsation');
 
 postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
-postPlot(1).printResults 	= false;
+postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'msh.M';
@@ -97,7 +101,8 @@ misc.formulation = {'BGC'};
 % collectIntoTasks
 
 para.plotResultsInParaview = 0;
-msh.M = 7:8;
+msh.M = 6:7;
+% msh.M = 1;
 msh.parm = 2;
 msh.degree = 2;
 msh.refineThetaOnly = false;

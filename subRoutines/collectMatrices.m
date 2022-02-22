@@ -40,17 +40,10 @@ else
     allDofsToRemove = task.varCol{1}.allDofsToRemove;
 end
 % Collect all matrices
-if noDomains == 1 && (strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'MFS'))
-    A0 = complex(zeros(noRows_tot,noCols_tot));
-    A1 = complex(zeros(noRows_tot,noCols_tot));
-    A2 = complex(zeros(noRows_tot,noCols_tot));
-    A4 = complex(zeros(noRows_tot,noCols_tot));
-else
-    A0 = sparse(noRows_tot,noCols_tot);
-    A1 = sparse(noRows_tot,noCols_tot);
-    A2 = sparse(noRows_tot,noCols_tot);
-    A4 = sparse(noRows_tot,noCols_tot);
-end
+A0 = sparse(noRows_tot,noCols_tot);
+A1 = sparse(noRows_tot,noCols_tot);
+A2 = sparse(noRows_tot,noCols_tot);
+A4 = sparse(noRows_tot,noCols_tot);
 FF = complex(zeros(noRows_tot,size(task.varCol{1}.FF,2)));
 for i = 1:noDomains
     if isfield(task.varCol{i},'rho')
@@ -81,10 +74,12 @@ for i = 1:noDomains
     end
     if isfield(task.varCol{i},'A_K')
         A0(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
+        task.varCol{i} = rmfield(task.varCol{i},'A_K');
     end
     
     if isfield(task.varCol{i},'A_M')
         A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+        task.varCol{i} = rmfield(task.varCol{i},'A_M');
     end
     if isfield(task.varCol{i},'A_C') && i > 1
         Cindices1 = Aindices{i,1}(end)+(1:size(task.varCol{i}.A_C,1));
@@ -101,21 +96,25 @@ for i = 1:noDomains
             case 'solid'
                 A0(Cindices2,Cindices1) = A0(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
         end
+        task.varCol{i} = rmfield(task.varCol{i},'A_C');
     end
     if isfield(task.varCol{i},'FF')
         FF(Aindices{i,1},:) = eqScale*task.varCol{i}.FF;
+        task.varCol{i} = rmfield(task.varCol{i},'FF');
     end
 end
 if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
     if isfield(task.varCol{1},'Ainf')
     	A0(AindicesInf,AindicesInf) = A0(AindicesInf,AindicesInf) + task.varCol{1}.Ainf/task.varCol{1}.rho; 
+        task.varCol{1} = rmfield(task.varCol{1},'Ainf');
         if task.rom.useROM
             A1(AindicesInf,AindicesInf) = A1(AindicesInf,AindicesInf) + task.varCol{1}.Ainf1/task.varCol{1}.rho/task.varCol{1}.c_f; 
+            task.varCol{1} = rmfield(task.varCol{1},'Ainf1');
             A2(AindicesInf,AindicesInf) = A2(AindicesInf,AindicesInf) + task.varCol{1}.Ainf2/task.varCol{1}.rho/task.varCol{1}.c_f^2; 
+            task.varCol{1} = rmfield(task.varCol{1},'Ainf2');
         end  
     end
 end
-
 if ~(strcmp(task.misc.method,'BEM') && strcmp(task.misc.formulation(1),'C'))
     A0(allDofsToRemove,:) = [];
     A1(allDofsToRemove,:) = [];

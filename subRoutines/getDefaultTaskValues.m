@@ -56,6 +56,7 @@ prePlot.view                = getView;     % Set view angle [azimuth,elevation]
 prePlot.export_fig_name2D   = '';          % Name of exported figure using export_fig for 2D plots
 prePlot.export_fig_name3D   = '';          % Name of exported figure using export_fig for 3D plots
 prePlot.useCamlight         = true;        % Toggle camlight on
+preplot.camproj             = 'perspective'; % 'perspective' or 'orthographic'
 
 plotParmDir = 1;
 prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh
