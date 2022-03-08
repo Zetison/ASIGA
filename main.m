@@ -58,7 +58,7 @@ for i_col = 1:numel(studiesCol)
                 end
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,printLog,resultsFolder);
                 if ~runRegressionTests
-                    fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study, noStudies) 
+                    fprintf('\nCase %s: Completed task %d/%d in study %d/%d in %f seconds.\n\n', studyName{i_col}, i_task, noTasks, i_study, noStudies, tasks(i_task).task.varCol{1}.tot_time) 
                 end
             end
             studiesCol{i_col}(i_study).tasks = tasks;
@@ -90,7 +90,7 @@ for i_col = 1:numel(studiesCol)
             studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
         end 
         if studiesCol{i_col}(i_study).saveStudies
-            save([resultsFolder '/studies'], 'studies')
+            save([resultsFolder '/studiesCol'], 'studiesCol')
         end
     end
     close all

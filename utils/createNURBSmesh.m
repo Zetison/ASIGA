@@ -28,6 +28,17 @@ for i = 1:numel(task.varCol)
     task.varCol = findCartesianAlignedBdry(task.varCol,i);
 end
 
+if task.msh.nonLinearParam
+    task = convertAllToNonLinearParam(task);
+end
+
+
+function task = convertAllToNonLinearParam(task)
+
+for i = 1:numel(task.varCol)
+    task.varCol{i}.nurbs = convertToNonLinearParam(task.varCol{i}.nurbs);
+end
+
 function varCol = findCartesianAlignedBdry(varCol,domain)
 
 connection = varCol{domain}.geometry.topology.connection;

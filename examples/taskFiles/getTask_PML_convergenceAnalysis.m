@@ -15,14 +15,14 @@ msh.meshFile = 'createNURBSmesh_EL';
 msh.parm = 1;
 msh.explodeNURBS = false;   % Create patches from all C^0 interfaces
 misc.checkNURBSweightsCompatibility = false;
-misc.computeCondNumber = true;       % Compute the condition number of the global matrix
+misc.computeCondNumber = 0;       % Compute the condition number of the global matrix
 prePlot.plotGeometryInfo    = 1;       % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 % misc.method = 'BA';
 % misc.method = {'IENSG'};
 % misc.method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
 % for BC = {'SHBC', 'SSBC','NNBC'}
-axiSymmetricCase = false;
+axiSymmetricCase = 1;
 if axiSymmetricCase
     ffp.alpha_s = 0;
     ffp.beta_s = -pi/2;
@@ -31,7 +31,7 @@ else
     ffp.beta_s = 0;
 end
 
-prePlot.plot3Dgeometry   = 0;
+prePlot.plot3Dgeometry   = 1;
 prePlot.plotFullDomain   = 0;        % Plot volumetric domains
 prePlot.view             = [0,0];
 prePlot.plotSubsets      = {'xz'};
@@ -52,9 +52,9 @@ postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 postPlot(1).legendEntries 	= {'msh.degree','pml.sigmaType','pml.n','misc.method','misc.coreMethod','misc.formulation','pml.t'};
-postPlot(2) = postPlot(1);
-postPlot(2).yname       	= 'cond_number';
-msh.explodeNURBS = prePlot.plot3Dgeometry;
+% postPlot(2) = postPlot(1);
+% postPlot(2).yname       	= 'cond_number';
+% msh.explodeNURBS = prePlot.plot3Dgeometry;
 
 msh.meshFile = 'createNURBSmesh_EL';
 msh.refineThetaOnly = ffp.beta_s == -pi/2;
@@ -65,8 +65,9 @@ else
     msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 end
 connectedParameters = {{'msh.M','iem.N'},{'pml.sigmaType','pml.n'}};
+% misc.extraGP = [3,3,3];
 
-for method = {'PML','IE','BA'}
+for method = {'PML'} %,'IE','BA'}
     misc.method = method{1};
     switch method{1}
         case 'IE'
@@ -95,9 +96,10 @@ for method = {'PML','IE','BA'}
             msh.M = 1:M_max-2; %1:5
         end
 %         msh.M = (M_max-1):M_max; %1:5
-%         msh.M = 4;
+        msh.M = 6;
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
         misc.r_a = 1.25*varCol{1}.R;
+%         misc.r_a = 1.5*varCol{1}.R;
 %         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(iem.N - msh.degree,2^(M-3)-1)];
 %         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, 2^(M-4)-1];
         pml.refinement = @(M,t) round(t/(0.25*varCol{1}.R)*2^(M-4)-1);
@@ -111,7 +113,7 @@ for method = {'PML','IE','BA'}
         ffp.calculateFarFieldPattern = 0;
         err.calculateVolumeError = 1;
         err.calculateSurfaceError = 1;
-        loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','misc.formulation','misc.BC','pml.t'};
+        loopParameters = {'msh.M','msh.degree','pml.sigmaType','misc.method','misc.coreMethod','misc.formulation','misc.BC','pml.t','misc.r_a'};
 
 
 %         for coreMethod = {'IGA'}
@@ -119,7 +121,7 @@ for method = {'PML','IE','BA'}
             misc.coreMethod = coreMethod{1};
             if strcmp(coreMethod{1},'IGA')
                 if strcmp(method{1}, 'PML')
-                    pml.t = [varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
+                    pml.t = [0.5*varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
                 else
                     pml.t = 0.25*varCol{1}.R;         % thickness of PML
                 end
@@ -137,20 +139,22 @@ for method = {'PML','IE','BA'}
                 pml.n = 1;
             	iem.N = (floor(abs(2.^(msh.M-4)-1)) + 1)*msh.degree;
             end
-            collectIntoTasks
+%             collectIntoTasks
         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        for degree = 3:4
+        for degree = 4 %3:4
             iem.N = floor(abs(2.^(msh.M-4)-1)) + degree;
             msh.degree = degree;
             misc.coreMethod = 'IGA';
+            pml.t = 0.25*varCol{1}.R;         % thickness of PML
+%             pml.t = [0.5*varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
+%             if strcmp(method{1}, 'PML')
+%                 pml.t = [0.5*varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
+%             else
+%                 pml.t = 0.25*varCol{1}.R;         % thickness of PML
+%             end
             collectIntoTasks
-            if strcmp(method{1}, 'PML')
-                pml.t = [varCol{1}.R, 0.25*varCol{1}.R];         % thickness of PML
-            else
-                pml.t = 0.25*varCol{1}.R;         % thickness of PML
-            end
         end 
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -158,6 +162,6 @@ for method = {'PML','IE','BA'}
         msh.degree = 1;
         iem.N = floor(abs(2.^(msh.M-4)-1)) + 1;
 
-        collectIntoTasks 
+%         collectIntoTasks 
     end
 end

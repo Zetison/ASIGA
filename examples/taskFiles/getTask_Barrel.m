@@ -15,7 +15,7 @@ else
     misc.BC = 'SHBC';
 end
 misc.method = {'BEM'};
-misc.formulation = {'CCBIE'};
+misc.formulation = {'CCBIEC'};
 % misc.formulation = {'CCBIE','GBM'};
 % misc.formulation = {'GBM'};
 
@@ -24,15 +24,17 @@ R = varCol{1}.R;
 L = varCol{1}.L;
 misc.r_a = 1.25*R;
 pml.t = 0.25*R;
+pml.refinement = @(M) round((2^(M-1)-1)*pml.t/(R*2*pi/3));
 msh.meshFile = 'createNURBSmesh_Barrel';
-varCol{1}.refinement = @(M) [NaN,NaN,NaN,round((2^(M-1)-1)*pml.t/(R*2*pi/3))];
+% varCol{1}.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+varCol{1}.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 k = 100;
 % k = 10;
 misc.omega = k*varCol{1}.c_f;
 msh.refineThetaOnly = true;
 msh.pmlFill = true;
 msh.M = 8:9;
-% msh.M = 8; % 8
+msh.M = 1; % 8
 msh.degree = 2;
 msh.parm = [1,2];
 msh.parm = 1;
@@ -43,14 +45,14 @@ ffp.extraGP = [7,0,0];
 ffp.beta = 0;
 ffp.alpha = (0:0.05:360)*pi/180;
 
-% misc.solveForPtot = true;
+% misc.solveForPtot = true;8
 misc.solveForPtot = false;
 misc.checkNURBSweightsCompatibility = false; 
 warning('off','NURBS:weights')
 loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation','misc.applyLoad','msh.pmlFill'};
 
 prePlot.plot3Dgeometry = 0;
-prePlot.resolution = [20,20,20];
+prePlot.resolution = [100,0,20];
 % prePlot.resolution = [0,0,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
@@ -59,16 +61,19 @@ prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
 prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 prePlot.coarseLinearSampling = prePlot.plotParmDir;
-prePlot.plotSubsets          = {'xz'};
-prePlot.plotFullDomain       = 1;
+prePlot.plotSubsets          = {'xz','Gamma'};
+prePlot.plotSubsets          = {'Gamma'};
+prePlot.plotFullDomain       = 0;
 prePlot.view = [0,0];
+prePlot.camproj = 'orthographic';
+prePlot.useCamlight = false;
 
 err.calculateSurfaceError = strcmp(misc.applyLoad,'pointPulsation');
 
 postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
-postPlot(1).printResults 	= false;
+postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'msh.M';
@@ -78,12 +83,12 @@ postPlot(1).xScale          = 180/pi;
 
 para.plotFullDomain          = false;
 para.plotResultsInParaview	 = 1;
-para.extraXiPts              = 'round(2^(M-6)-1)';  % Extra visualization points in the xi-direction per element
-para.extraEtaPts             = 'round(2^(M-6)-1)';  % Extra visualization points in the eta-direction per element
-para.extraZetaPts            = 'round(2^(M-6)-1)';  % Extra visualization points in the zeta-direction per element
-para.plotSubsets             = {'xz'}; % Plot (surface) subsets (i.e. the artificial boundary Gamma_a) in paraview 
+para.extraXiPts              = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the xi-direction per element
+para.extraEtaPts             = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the eta-direction per element
+para.extraZetaPts            = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the zeta-direction per element
+para.plotSubsets             = {'xz','Gamma','Gamma_a'}; % Plot (surface) subsets (i.e. the artificial boundary Gamma_a) in paraview 
                                                     % (examples include: 'Gamma','Gamma_a','yz','xz','xy','innerCoupling','outerCoupling','outer','inner','homDirichlet')
-msh.pmlFill = 1;
+msh.pmlFill = false; % Use rounded corners for PML domain
 misc.method = {'PML'};
 misc.solveForPtot = false;
 misc.formulation = {'GSB'};
@@ -96,13 +101,15 @@ misc.formulation = {'BGC'};
 % collectIntoTasks
 
 para.plotResultsInParaview = 0;
-msh.M = 4;
+msh.M = 6:7;
+% msh.M = 1;
 msh.parm = 2;
-msh.degree = 4;
+msh.degree = 2;
 msh.refineThetaOnly = false;
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE'};
 for applyLoad = {'pointPulsation','planeWave'}
+    err.calculateSurfaceError = strcmp(applyLoad,'pointPulsation');
     misc.applyLoad = applyLoad{1};
     if strcmp(misc.applyLoad,'pointPulsation')
         misc.BC = 'NBC';
@@ -110,7 +117,7 @@ for applyLoad = {'pointPulsation','planeWave'}
         misc.BC = 'SHBC';
     end
     misc.solveForPtot = strcmp(misc.applyLoad,'planeWave');
-%     collectIntoTasks
+    collectIntoTasks
 end
 
 %% Do frequency analysis for BEM
@@ -129,46 +136,12 @@ misc.applyLoad = 'pointPulsation';
 ffp.alpha = 0;
 misc.method = {'BEM'};
 misc.formulation = {'CCBIE','CHBIE','CBM','CCBIEC'};
-% misc.formulation = {'CCBIE','CHBIE'};
+misc.formulation = {'CCBIE'};
 misc.applyLoad = 'pointPulsation';
 err.calculateSurfaceError = strcmp(misc.applyLoad,'pointPulsation');
 misc.solveForPtot = ~strcmp(misc.applyLoad,'pointPulsation');
 misc.BC = 'NBC';
 msh.M = 4;
-misc.scatteringCase = 'Sweep'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-noPts = 10;
-% noPts = 1000;
-kL_max = 10;
-kL = linspace(kL_max/noPts,kL_max,noPts);
-load('miscellaneous/besselZeros/besselJZeros.mat')
-n3 = 1:100;
-eigenValuesCBIE = sqrt((reshape( besselJZeros,1,size( besselJZeros,1),size( besselJZeros,2))/R).^2 + (n3.'*pi/L).^2);
-eigenValuesCBIE = sort(eigenValuesCBIE(:));
-eigenValuesCBIE(eigenValuesCBIE(:) > kL_max/L) = [];
-load('miscellaneous/besselZeros/dbesselJZeros.mat')
-n3 = 0:100;
-eigenValuesHBIE = sqrt((reshape(dbesselJZeros,1,size(dbesselJZeros,1),size(dbesselJZeros,2))/R).^2 + (n3.'*pi/L).^2);
-eigenValuesHBIE = sort(eigenValuesHBIE(:));
-eigenValuesHBIE(eigenValuesHBIE(:) > kL_max/L) = [];
-eigenValues = sort([eigenValuesCBIE; eigenValuesHBIE]);
-k = kL/L;
-% k = [k, linspace(0.01,delta/2,round(noPts/10))];
-for i = 1:numel(eigenValues)
-%     delta = 10/noPts*3;
-%     k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
-    delta = 1e-2*kL_max/L;
-    k = [k, eigenValues(i)+linspace(-delta/2,delta/2,2)];
-end
-k = sort(unique(k));
-
-misc.omega = k*varCol{1}.c_f;
-loopParameters = {'msh.M','msh.parm','misc.method','misc.formulation','msh.pmlFill'};
-collectIntoTasks
-
-
-misc.method = {'BA'};
-misc.formulation = {'SL2E'};
-collectIntoTasks
 
 %% Run convergence analysis
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering

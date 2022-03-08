@@ -42,8 +42,9 @@ for j = 1:numel(allTaskNames)
     end
 end
 
-        
-
+if saveStudies && runTasksInParallel
+    error('This may generate errors due to large memory consumption of studiesCol')
+end
 studies(counter).loopParameters = loopParameters;
 studies(counter).loopParametersArr = loopParametersArr;
 studies(counter).runTasksInParallel = runTasksInParallel;

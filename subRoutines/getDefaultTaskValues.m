@@ -4,7 +4,7 @@
 loopParameters     = {'msh.M'};   % parameter study array to be investigated
 runTasksInParallel = false;       % Run tasks in parallel
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
-saveStudies        = false;       % save ASIGA-struct into a .mat file
+saveStudies        = true;       % save ASIGA-struct into a .mat file
 noCoresToUse       = Inf;         % Number of processors for parallel computations (Inf uses all available cores)
 connectedParameters = {{}};       % Define set of loop parameters to be connected (i.e. connectedParameters = {{'msh.M','iem.N'}} assumes the arrays msh.M and iem.N to be of same size and loops through the elements in pairs)
 
@@ -41,7 +41,8 @@ msh.refineThetaOnly     = 0;       % For the ellipsoidal/spherical geometries, r
 msh.degree              = 2;       % NURBS polynomial degree
 msh.explodeNURBS        = false;   % Create patches from all C^0 interfaces
 msh.x_0                 = [0,0,0]; % Translate center of model
-msh.Xi                  = [0,0,0,1,1,2,2,3,3,3]/3;
+msh.Xi                  = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
+msh.nonLinearParam      = false;   % Use a non-linear parametrization to have equidistant control points (only implemented in the zeta-dir, and for geometrically linear parametrization)
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plotFullDomain      = true;        % Plot volumetric domains
@@ -55,6 +56,7 @@ prePlot.view                = getView;     % Set view angle [azimuth,elevation]
 prePlot.export_fig_name2D   = '';          % Name of exported figure using export_fig for 2D plots
 prePlot.export_fig_name3D   = '';          % Name of exported figure using export_fig for 3D plots
 prePlot.useCamlight         = true;        % Toggle camlight on
+preplot.camproj             = 'perspective'; % 'perspective' or 'orthographic'
 
 plotParmDir = 1;
 prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh
@@ -171,12 +173,12 @@ iem.boundaryMethod = true;   % Attach infinite elements directly onto the scatte
 
 %% Settings for the PML (perfectly matched layers)
 pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = gamma*xi^n, sigmaType = 3: sigma(xi) = gamma/(1-xi)^n, sigmaType = 4: sigma(xi) = gamma*(1/(1-xi)^n - 1), sigmaType = 5: sigma from Mi2021ilc
+pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = gamma*xi^n, sigmaType = 3: sigma(xi) = gamma/(1-xi)^n, sigmaType = 4: sigma(xi) = gamma*(1/(1-xi)^n - 1), sigmaType = 5: sigma from Mi2021ilc: sigma(xi) = gamma*xi^n
 pml.gamma = NaN;        % If ~isnan(pml.gamma) the matrices will be frequency independent (needed if useROM)
 pml.t = NaN;         	% thickness of PML
 pml.n = 1;            	% polynomial order
 pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-pml.alpha = 10;         % constant used for the stretching function sigma(xi) for sigmaType = 5
+pml.alpha = 30;         % constant used for the stretching function sigma(xi) for sigmaType = 5
 
 %% Settings for the MFS (method of fundamental solution)
 mfs.delta = 0.1;            % Distance from the boundary to the internal source points

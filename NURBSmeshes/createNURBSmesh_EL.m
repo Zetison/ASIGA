@@ -136,14 +136,16 @@ else
             error('Must have parm = 1 for pure theta refinement')
         end
         degreeVec = [2,degree,degree];
+        dirs = 2:3;
     else
         degreeVec = degree;
+        dirs = 1:3;
     end
     fluid = makeUniformNURBSDegree(fluid,degreeVec);
     if isfield(varCol{1},'refinement')
         fluid = insertKnotsInNURBS(fluid,varCol{1}.refinement(M));
     else
-        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0);
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0,dirs);
     end
     
     task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);

@@ -100,6 +100,9 @@ else
             pmlLayer{5}.isPML = [0,1,0];
         end
         pmlLayer = insertKnotsInNURBS(pmlLayer,{{[] R/(R+t_fluid) []}, {}, {[] [t_fluid/(L+2*t_fluid), (L+t_fluid)/(L+2*t_fluid)] []}, {[] [] R/(R+t_fluid)}, {}});
+        fluid = explodeNURBS(fluid);
+        varCol{1}.nurbs = fluid;
+        varCol = copySet(varCol,1, 'outer', 'Gamma_a');
         fluid = explodeNURBS([fluid,pmlLayer]);
     end
     fluid = makeUniformNURBSDegree(fluid,degree);

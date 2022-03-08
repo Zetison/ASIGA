@@ -90,8 +90,7 @@ if prePlot.plot3Dgeometry
         title(prePlot.title)
     end
     drawnow
-    camproj('perspective')
-%     camproj('orthographic')
+    camproj(prePlot.camproj)
     
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off

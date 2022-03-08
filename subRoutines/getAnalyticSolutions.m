@@ -100,7 +100,7 @@ switch applyLoad
             case 'MS'
                 R = varCol{1}.R;
                 y = R*[1,1,1]/4;
-            case 'Barrel'
+            case {'Barrel','Barrel_Sweep'}
                 R = varCol{1}.R;
                 Xarr = linspace(-1,1,3)*R/4;
                 Yarr = linspace(-1,1,3)*R/4;

@@ -48,7 +48,7 @@ for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
                 fprintf('successfully!')
             end
         catch ME
-    %         rethrow(ME)
+            rethrow(ME)
             fprintf('Test failed due to runtime error!')
             noFailedTests = noFailedTests + 1;
         end
