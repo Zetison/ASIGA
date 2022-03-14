@@ -15,7 +15,8 @@ misc.model = 'M3';
 misc.BC = {'SHBC'};
 % misc.BC = {'NBC'};
 misc.method = {'PML','IENSG'};
-misc.formulation = {'GSB','BGU'};
+misc.method = {'PML'};
+misc.formulation = {'GSB'};
 misc.checkNURBSweightsCompatibility = false;
 err.calculateSurfaceError = 0;
 
@@ -38,20 +39,21 @@ prePlot.color = getColor(10);
 
 varCol = setM3Parameters(1);
 % varCol{1}.L = 5;
-varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-1)/8-1, 2^(M-1)/4-1];
+varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-1)/8-1];
 msh.meshFile = 'createNURBSmesh_M3';
 msh.degree = 2;
 % msh.degree = 5; % use and odd degree > 4 if parm = 2 and misc.method = 'IENSG' (singular evaluation at poles not yet implemented for 'IENSG')
 msh.parm = 1;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = prePlot.plot3Dgeometry;
-msh.M = 1;
+msh.M = 5:6;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 misc.r_a = 1.25*varCol{1}.R2;
 iem.boundaryMethod = 0;   % Attach infinite elements directly onto the scatterer for the IENSG formulation
-iem.N = round(2^(msh.M-1)/4+msh.degree-1); 
+iem.N = round(2.^(msh.M-1)/4+msh.degree-1); 
 pml.t = 0.25*varCol{1}.R2;         % thickness of PML
+pml.refinement = @(M) 2^(M-1)/4-1;
 
 ffp.beta = 0;
 ffp.alpha = (0:0.1:360)*pi/180;
