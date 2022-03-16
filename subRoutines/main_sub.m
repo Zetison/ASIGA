@@ -275,11 +275,21 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 if printLog
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Collecting matrices ... ')
                 end
-                [task,FF,A0,A1,A2,A4] = collectMatrices(task);
-                if strcmp(task.misc.method,'BA')
-                    A = A2;
+                useA = ~(task.noDomains == 1 || strcmp(task.misc.method,'BEM'));
+                if useA
+                    [task,FF,A0,A1,A2,A4] = collectMatrices(task);
+                    if strcmp(task.misc.method,'BA')
+                        A = A2;
+                    else
+                        A = A0 + omega_i*A1 + omega_i^2*A2 + omega_i^4*A4;
+                    end
                 else
-                    A = A0 + omega_i*A1 + omega_i^2*A2 + omega_i^4*A4;
+                    allDofsToRemove = task.varCol{1}.dofsToRemove;
+                    if ~(strcmp(task.misc.method,'BEM') && strcmp(task.misc.formulation(1),'C'))
+                        task.varCol{1}.A_K(allDofsToRemove,:) = [];
+                        task.varCol{1}.FF(allDofsToRemove,:) = [];
+                    end
+                    task.varCol{1}.A_K(:,allDofsToRemove) = [];
                 end
                 task.varCol{1}.timeCollectingMatrices = toc;
                 if printLog
@@ -296,23 +306,21 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 if printLog
                     fprintf(['\n%-' num2str(stringShift) 's'], ['Creating preconditioner (' task.sol.preconditioner ') ... '])
                 end
-                switch task.sol.preconditioner
-                    case 'ilu'
-    %                     [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-4));
-            %             [L_A,U_A] = ilu(A,struct('type','ilutp', 'droptol', 1e-3));
-                        [L_A,U_A] = ilu(A,struct('type','nofill'));
-                    %     [L_A,U_A] = lu(A);
-                    case 'SSOR'
-                        D_SSOR = spdiags(spdiags(A,0),0,size(A,1),size(A,2));
-                        D_SSORinv = spdiags(1./spdiags(A,0),0,size(A,1),size(A,2));
-                        F_SSOR = -triu(A);
-                        E_SSOR = -tril(A);
-                        omega_SSOR = 1.5;
-                        L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
-                        U_A = D_SSOR-omega_SSOR*F_SSOR;
-%                         P = L_A*U_A;
-                    case 'diag'
-                        Pinv = spdiags(1./diag(A),0,size(A,2),size(A,2));
+                if useA
+                    switch task.sol.preconditioner
+                        case 'ilu'
+                            [L_A,U_A] = ilu(A,struct('type','nofill'));
+                        case 'SSOR'
+                            D_SSOR = spdiags(spdiags(A,0),0,size(A,1),size(A,2));
+                            D_SSORinv = spdiags(1./spdiags(A,0),0,size(A,1),size(A,2));
+                            F_SSOR = -triu(A);
+                            E_SSOR = -tril(A);
+                            omega_SSOR = 1.5;
+                            L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
+                            U_A = D_SSOR-omega_SSOR*F_SSOR;
+                        case 'diag'
+                            Pinv = spdiags(1./diag(A),0,size(A,2),size(A,2));
+                    end
                 end
                 if printLog
                     fprintf('using %12f seconds.', toc)
@@ -354,19 +362,34 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                                 UU(:,i) = Pinv*(dA\b);
                             end
                         else
-                            if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
-                                UU = zeros(size(A,1),numel(omega));
-                            end
-                            if strcmp(task.misc.scatteringCase,'Sweep')
-                                UU(:,i_o) = Pinv*((A*Pinv)\FF);
+                            if useA
+                                if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
+                                    UU = zeros(size(A,1),numel(omega));
+                                end
+                                if strcmp(task.misc.scatteringCase,'Sweep')
+                                    UU(:,i_o) = Pinv*((A*Pinv)\FF);
+                                else
+                                    UU = Pinv*((A*Pinv)\FF);
+                                end
                             else
-                                UU = Pinv*((A*Pinv)\FF);
+                                if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
+                                    UU = zeros(size(task.varCol{1}.A_K,1),numel(omega));
+                                end
+                                if strcmp(task.misc.scatteringCase,'Sweep')
+                                    UU(:,i_o) = task.varCol{1}.A_K\task.varCol{1}.FF;
+                                else
+                                    UU = task.varCol{1}.A_K\task.varCol{1}.FF;
+                                end
                             end
                         end
                     otherwise
                         eval(['[UU,~,~,it1,rv1] = cgs' task.sol.solver '(A,FF,1e-20,1000,L_A,U_A);'])
                 end
-                dofs = size(A,1);
+                if useA
+                    dofs = size(A,1);
+                else
+                    dofs = size(task.varCol{1}.A_K,1);
+                end
                 task.dofs = dofs;
                 if printLog
                     fprintf('using %12f seconds.', toc)
