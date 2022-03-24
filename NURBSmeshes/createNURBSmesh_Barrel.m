@@ -90,15 +90,43 @@ else
     fluid = getBarrelData('R', R+t_fluid, 't', t_fluid, 'parm', parm, 'L', L+2*t_fluid, 'd_p', 3, 'Xi', Xi);
     if strcmp(task.misc.method,'PML')
         pmlLayer = getBarrelData('R', R+2*t_fluid, 't', t_pml, 'parm', parm, 'L', L+4*t_fluid, 'd_p', 3, 'Xi', Xi,'pmlFill', task.msh.pmlFill);
-        pmlLayer{1}.isPML = [0,0,1];
-        pmlLayer{2}.isPML = [0,1,1];
-        pmlLayer{3}.isPML = [0,0,1];
-        pmlLayer{4}.isPML = [0,1,0];
-        pmlLayer{5}.isPML = [0,1,1];
-        if task.msh.pmlFill
-            pmlLayer{2}.isPML = [0,0,1];
-            pmlLayer{5}.isPML = [0,1,0];
+        if parm == 1
+            pmlLayer{1}.isPML = [0,0,1];
+            pmlLayer{2}.isPML = [0,1,1];
+            pmlLayer{3}.isPML = [0,0,1];
+            pmlLayer{4}.isPML = [0,1,0];
+            pmlLayer{5}.isPML = [0,1,1];
+            if task.msh.pmlFill
+                pmlLayer{2}.isPML = [0,0,1];
+                pmlLayer{5}.isPML = [0,1,0];
+            end
+        else
+            error('Not properly implemented: Needs to make an anulus around special parametrization in the pmlLayer')
+            for i = 1:5
+                pmlLayer{i}.isPML = [0,0,1];
+            end
+            for i = 6:9
+                pmlLayer{i}.isPML = [0,1,1];
+            end
+            for i = 10:13
+                pmlLayer{i}.isPML = [0,0,1];
+            end
+            for i = 14:18
+                pmlLayer{i}.isPML = [0,1,0];
+            end
+            for i = 19:22
+                pmlLayer{i}.isPML = [0,1,1];
+            end
+            if task.msh.pmlFill
+                for i = 6:9
+                    pmlLayer{i}.isPML = [0,0,1];
+                end
+                for i = 19:22
+                    pmlLayer{i}.isPML = [0,1,0];
+                end
+            end
         end
+            
         pmlLayer = insertKnotsInNURBS(pmlLayer,{{[] R/(R+t_fluid) []}, {}, {[] [t_fluid/(L+2*t_fluid), (L+t_fluid)/(L+2*t_fluid)] []}, {[] [] R/(R+t_fluid)}, {}});
         fluid = explodeNURBS(fluid);
         varCol{1}.nurbs = fluid;

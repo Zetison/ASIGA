@@ -45,7 +45,7 @@ ffp.extraGP = [7,0,0];
 ffp.beta = 0;
 ffp.alpha = (0:0.05:360)*pi/180;
 
-% misc.solveForPtot = true;8
+% misc.solveForPtot = true;
 misc.solveForPtot = false;
 misc.checkNURBSweightsCompatibility = false; 
 warning('off','NURBS:weights')
