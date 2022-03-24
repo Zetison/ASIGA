@@ -53,7 +53,7 @@ loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulatio
 
 prePlot.plot3Dgeometry = 0;
 prePlot.resolution = [100,0,20];
-% prePlot.resolution = [0,0,0];
+% prePlot.resolution = [100,100,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
 prePlot.plotParmDir = 0;
@@ -102,7 +102,7 @@ misc.formulation = {'BGC'};
 
 para.plotResultsInParaview = 0;
 msh.M = 6:7;
-% msh.M = 1;
+% msh.M = 2;
 msh.parm = 2;
 msh.degree = 2;
 msh.refineThetaOnly = false;
