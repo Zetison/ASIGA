@@ -275,7 +275,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 if printLog
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Collecting matrices ... ')
                 end
-                useA = ~(task.noDomains == 1 || strcmp(task.misc.method,'BEM'));
+                useA = ~(task.noDomains == 1 && strcmp(task.misc.method,'BEM'));
                 if useA
                     [task,FF,A0,A1,A2,A4] = collectMatrices(task);
                     if strcmp(task.misc.method,'BA')

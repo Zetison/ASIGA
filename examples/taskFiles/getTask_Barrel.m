@@ -28,19 +28,19 @@ pml.refinement = @(M) round((2^(M-1)-1)*pml.t/(R*2*pi/3));
 msh.meshFile = 'createNURBSmesh_Barrel';
 % varCol{1}.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 varCol{1}.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
-k = 100;
+k = 50;
 % k = 10;
 misc.omega = k*varCol{1}.c_f;
 msh.refineThetaOnly = true;
-msh.pmlFill = true;
+msh.pmlFill = 0;
 msh.M = 8:9;
-msh.M = 1; % 8
+msh.M = 7:9; % 8
 msh.degree = 2;
 msh.parm = [1,2];
 msh.parm = 1;
 ffp.alpha_s = pi;
 ffp.beta_s = 0;
-ffp.extraGP = [7,0,0];
+ffp.extraGP = [60,60,0];
 
 ffp.beta = 0;
 ffp.alpha = (0:0.05:360)*pi/180;
@@ -53,18 +53,18 @@ loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulatio
 
 prePlot.plot3Dgeometry = 0;
 prePlot.resolution = [100,0,20];
-% prePlot.resolution = [100,100,0];
+prePlot.resolution = [30,30,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
 prePlot.plotParmDir = 0;
-prePlot.plotNormalVectors = 0;
+prePlot.plotNormalVectors = 1;
 prePlot.plotControlPolygon = 0;
 prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 prePlot.coarseLinearSampling = prePlot.plotParmDir;
 prePlot.plotSubsets          = {'xz','Gamma'};
 prePlot.plotSubsets          = {'Gamma'};
-prePlot.plotFullDomain       = 0;
-prePlot.view = [0,0];
+prePlot.plotFullDomain       = 1;
+% prePlot.view = [0,0];
 prePlot.camproj = 'orthographic';
 prePlot.useCamlight = false;
 
@@ -82,7 +82,7 @@ postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 
 para.plotFullDomain          = false;
-para.plotResultsInParaview	 = 1;
+para.plotResultsInParaview	 = 0;
 para.extraXiPts              = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the xi-direction per element
 para.extraEtaPts             = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the eta-direction per element
 para.extraZetaPts            = 'max(round(2^(M-6)-1),1)';  % Extra visualization points in the zeta-direction per element
@@ -93,7 +93,7 @@ misc.method = {'PML'};
 misc.solveForPtot = false;
 misc.formulation = {'GSB'};
 
-% collectIntoTasks
+collectIntoTasks
 
 iem.boundaryMethod = 0;
 misc.method = {'IENSG'};
@@ -117,7 +117,7 @@ for applyLoad = {'pointPulsation','planeWave'}
         misc.BC = 'SHBC';
     end
     misc.solveForPtot = strcmp(misc.applyLoad,'planeWave');
-    collectIntoTasks
+%     collectIntoTasks
 end
 
 %% Do frequency analysis for BEM
@@ -130,6 +130,7 @@ postPlot(1).lineStyle   	= '-';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 1;
+postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
 msh.degree = 2;
 misc.applyLoad = 'pointPulsation';
@@ -169,4 +170,20 @@ misc.solveForPtot = false;
 misc.formulation = {'GSB'};
 
 % collectIntoTasks
+
+function addCommands_(i_study)
+if i_study == 1
+    names = {'Barrel_M9_parm1_omega75000_PML_GSB_applyLoadplaneWave_pmlFill0_TSVSalpha.txt', ...
+             'Barrel_M7_parm2_omega75000_BEM_CCBIEC_applyLoadplaneWave_pmlFill0_TSVSalpha.txt'};
+    for name = names
+        T = readLaTeXFormat(['~/results/ASIGA/Barrel/' name{1}]);
+        x = T(:,1);
+        y = T(:,2);
+        hold on
+        polarplot(x*pi/180,y,'DisplayName',name{1})
+        legend('off');
+        legend('show','Interpreter','latex');
+    end
+end
+
 
