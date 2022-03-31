@@ -22,6 +22,8 @@ misc.computeCondNumber = 0;
 runTasksInParallel = 0;
 misc.progressBars = false;        % Show progress bars for building system matrices
 
+warning('off','NURBS:weights')
+
 varCol = setSSParameters(1);
 msh.meshFile = 'createNURBSmesh_EL';
 c_f = varCol{1}.c_f;   % Speed of sound in outer fluid

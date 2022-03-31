@@ -80,6 +80,11 @@ else
     if numel(varCol) > 1
         error('not implemented')
     end
+    if numel(Xi) == 12
+        xiAngle = pi/2;
+    else
+        xiAngle = 2*pi/3;
+    end
     t_fluid = task.misc.r_a - R;
     t_pml = task.pml.t;
     c_z = L/2+t_fluid;
@@ -94,11 +99,11 @@ else
             pmlLayer{1}.isPML = [0,0,1];
             pmlLayer{2}.isPML = [0,1,1];
             pmlLayer{3}.isPML = [0,0,1];
-            pmlLayer{4}.isPML = [0,1,0];
+            pmlLayer{4}.isPML = [0,0,1];
             pmlLayer{5}.isPML = [0,1,1];
             if task.msh.pmlFill
                 pmlLayer{2}.isPML = [0,0,1];
-                pmlLayer{5}.isPML = [0,1,0];
+                pmlLayer{5}.isPML = [0,0,1];
             end
         else
             error('Not properly implemented: Needs to make an anulus around special parametrization in the pmlLayer')
@@ -127,7 +132,7 @@ else
             end
         end
             
-        pmlLayer = insertKnotsInNURBS(pmlLayer,{{[] R/(R+t_fluid) []}, {}, {[] [t_fluid/(L+2*t_fluid), (L+t_fluid)/(L+2*t_fluid)] []}, {[] [] R/(R+t_fluid)}, {}});
+        pmlLayer = insertKnotsInNURBS(pmlLayer,{{[] R/(R+t_fluid) []}, {}, {[] [t_fluid/(L+2*t_fluid), (L+t_fluid)/(L+2*t_fluid)] []}, {[] t_fluid/(R+t_fluid) []}, {}});
         fluid = explodeNURBS(fluid);
         varCol{1}.nurbs = fluid;
         varCol = copySet(varCol,1, 'outer', 'Gamma_a');
@@ -135,11 +140,11 @@ else
     end
     fluid = makeUniformNURBSDegree(fluid,degree);
     if parm == 1
-        Imap{1} = [];
-        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap,0,dirs);
+        Imap{1} = [R*xiAngle, (R+t_fluid)*xiAngle, (R+t_fluid+t_pml)*xiAngle];
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/R,Imap,0,dirs,true,true);
     else
-        Imap{1} = [R*pi/2, R*1.414057108745095];
-        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
+        Imap{1} = [R*xiAngle, R*1.414057108745095];
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*xiAngle),Imap);
     end
     task.iem.N = min(numel(newKnotsIns{1}{3})+degree(1),9);
 end
