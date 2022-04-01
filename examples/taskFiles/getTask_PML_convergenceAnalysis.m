@@ -22,7 +22,7 @@ prePlot.plotGeometryInfo    = 1;       % Plot domain boundaries (i.e. Gamma, Gam
 % misc.method = {'BEM'};
 % BC = {'SHBC', 'SSBC','NNBC'};
 % for BC = {'SHBC', 'SSBC','NNBC'}
-axiSymmetricCase = 0;
+axiSymmetricCase = 1;
 if axiSymmetricCase
     ffp.alpha_s = 0;
     ffp.beta_s = -pi/2;
@@ -41,7 +41,7 @@ prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 % prePlot.resolution = [100,100,0];
 warning('off','NURBS:weights')
 
-surfaceError = true;
+surfaceError = 1;
 if surfaceError
     postPlot(1).xname       	= 'surfDofs';
     postPlot(1).yname       	= 'surfaceError';

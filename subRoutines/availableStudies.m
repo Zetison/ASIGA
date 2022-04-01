@@ -4,7 +4,7 @@ function studyName = availableStudies()
 % studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'M1'; %getTask_M1
 % studyName = 'M2'; %getTask_M2
-% studyName = 'M3'; %getTask_M3
+studyName = 'M3'; %getTask_M3
 % studyName = 'M4'; %getTask_M4
 % studyName = 'M5'; %getTask_M5
 % studyName = 'M31'; %getTask_M31
@@ -28,7 +28,7 @@ function studyName = availableStudies()
 % studyName = 'test'; %getTask_test
 % studyName = 'PMLstudy'; %getTask_PMLstudy
 % studyName = 'Prism'; %getTask_Prism
-studyName = 'PML_convergenceAnalysis'; %getTask_PML_convergenceAnalysis
+% studyName = 'PML_convergenceAnalysis'; %getTask_PML_convergenceAnalysis
 % studyName = 'Mi2021ilc'; %getTask_Mi2021ilc
 % studyName = 'unitTest'; %getTask_unitTest
 

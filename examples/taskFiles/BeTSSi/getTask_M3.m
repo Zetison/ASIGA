@@ -9,7 +9,7 @@ getDefaultTaskValues
 misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 % misc.applyLoad = 'pointPulsation';
 
-misc.scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = {'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 misc.model = 'M3';
 misc.BC = {'SHBC'};
@@ -47,6 +47,7 @@ msh.parm = 1;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = prePlot.plot3Dgeometry;
 msh.M = 5:6;
+% msh.M = 4;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 misc.r_a = 1.25*varCol{1}.R2;
@@ -97,9 +98,9 @@ if strcmp(misc.scatteringCase{1},'MS')
 else
     postPlot(1).xlim            = [0,360];
     postPlot(1).ylim            = [-40,50];
+    ffp.beta_s = 0;
+    ffp.alpha_s = 240*pi/180;
 end
-ffp.beta_s = 0;
-ffp.alpha_s = 240*pi/180;
 
 collectIntoTasks
 
@@ -177,7 +178,8 @@ if i_study == 1
         y = T(:,2);
         plot(x,y,'DisplayName','Reference solution f = 1000Hz')
     else
-        T = readLaTeXFormat('miscellaneous/refSolutions/M3_SHBC_BI_alpha240_f1000.txt');
+        T = readLaTeXFormat('miscellaneous/refSolutions/M3_SHBC_MS_f1000.txt');
+%         T = readLaTeXFormat('miscellaneous/refSolutions/M3_SHBC_BI_alpha240_f1000.txt');
         x = T(:,1);
         y = T(:,2);
         plot(x,y,'DisplayName','Reference solution f = 1000Hz')
