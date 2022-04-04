@@ -80,11 +80,11 @@ switch applyLoad
         phi = atan2(X{1}(:,2),X{1}(:,1));
         dr = X{1}./r(:,[1,1,1]);
         dtheta = [cos(theta).*cos(phi), cos(theta).*sin(phi), -sin(theta)]./r(:,[1,1,1]);
-        varCol{1}.p = hankel_s(1,k*r,1).*cos(theta);
+        varCol{1}.p = sphBessel(1,k.*r,3).*cos(theta);
         varCol{1}.p_0 = -cos(theta);
         varCol{1}.dp = cell(1,3);
         for i = 1:3
-            varCol{1}.dp{i} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,i) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,i);
+            varCol{1}.dp{i} = k*dSphBessel(1,k.*r,3).*cos(theta).*dr(:,i) - dSphBessel(1,k.*r,3).*sin(theta).*dtheta(:,i);
         end
     case 'SimpsonTorus'
         varCol{1}.p = prod(sin(k*X{1}/sqrt(3)),2);

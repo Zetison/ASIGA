@@ -4,7 +4,7 @@ function studyName = availableStudies()
 % studyName = 'articleIGA_Simpson'; %getTask_articleIGA_Simpson
 % studyName = 'M1'; %getTask_M1
 % studyName = 'M2'; %getTask_M2
-studyName = 'M3'; %getTask_M3
+% studyName = 'M3'; %getTask_M3
 % studyName = 'M4'; %getTask_M4
 % studyName = 'M5'; %getTask_M5
 % studyName = 'M31'; %getTask_M31
@@ -18,7 +18,7 @@ studyName = 'M3'; %getTask_M3
 
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
-% studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
+studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
 % studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Shirron2006afe'; %getTask_Shirron2006afe
 % studyName = 'Shirron2006afe_Fig3'; %getTask_Shirron2006afe_Fig3
