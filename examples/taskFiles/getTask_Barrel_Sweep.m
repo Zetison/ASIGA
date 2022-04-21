@@ -99,9 +99,19 @@ k = sort(unique(k));
 
 misc.omega = k*varCol{1}.c_f;
 loopParameters = {'msh.M','msh.parm','misc.method','misc.formulation','misc.omega'};
-collectIntoTasks
+% collectIntoTasks
 
 
 misc.method = {'BA'};
 misc.formulation = {'SL2E'};
+% collectIntoTasks
+
+misc.method = {'PML'};
+misc.formulation = {'GSB'};
+misc.r_a = 1.25*R;
+msh.parm = 1;
+pml.t = 0.25*R;
+pml.refinement = @(M) round((2^(M-1)-1)*pml.t/(R*2*pi/3));
+msh.refineThetaOnly = false;
+msh.pmlFill = true;
 collectIntoTasks

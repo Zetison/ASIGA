@@ -15,14 +15,17 @@ for i = 1:numel(task.varCol)
         task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');
     end
 end
-PMLpatchFound = false;
-for i = 1:numel(task.varCol{1}.nurbs)
-    if isfield(task.varCol{1}.nurbs{i},'isPML') && any(task.varCol{1}.nurbs{i}.isPML)
-        PMLpatchFound = true;
+if strcmp(task.misc.method,'PML') 
+    PMLpatchFound = false;
+    for i = 1:numel(task.varCol{1}.nurbs)
+        if isfield(task.varCol{1}.nurbs{i},'isPML') && any(task.varCol{1}.nurbs{i}.isPML)
+            PMLpatchFound = true;
+        end
     end
-end
-if strcmp(task.misc.method,'PML') && ~PMLpatchFound
-    task = createPML(task);
+    if ~PMLpatchFound
+        task = createPML(task);
+    end
+    task = addPMLtopology(task);
 end
 for i = 1:numel(task.varCol)
     task.varCol = findCartesianAlignedBdry(task.varCol,i);
@@ -48,7 +51,7 @@ function varCol = findCartesianAlignedBdry(varCol,domain)
 
 connection = varCol{domain}.geometry.topology.connection;
 names = {'yz','xz','xy'};
-for j = 1:3
+for j = 1:numel(names)
     patches = [];
     faces = [];
     for i = 1:numel(connection)
@@ -104,7 +107,6 @@ end
 task.varCol{1}.nurbs = uniteNURBS({task.varCol{1}.nurbs,nurbsPML});
 task = repeatKnots(task);
 task = degenerateIGAtoFEM(task);
-task = addPMLtopology(task);
 
 
 % task.varCol = copySet(task.varCol,1, 'Gamma_a', 'Gamma_a_PML');

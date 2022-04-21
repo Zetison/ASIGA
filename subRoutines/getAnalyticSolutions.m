@@ -84,7 +84,7 @@ switch applyLoad
         varCol{1}.p_0 = -cos(theta)./k;
         varCol{1}.dp = cell(1,3);
         for i = 1:3
-            varCol{1}.dp{i} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,i) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,i);
+            varCol{1}.dp{i} = k.*dSphBessel(1,k.*r,3).*cos(theta).*dr(:,i) - dSphBessel(1,k.*r,3).*sin(theta).*dtheta(:,i);
         end
     case 'Safjan10'
         r = norm2(X{1});
