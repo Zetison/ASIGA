@@ -6,6 +6,7 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+noCoresToUse       = 8;         % Number of processors for parallel computations (Inf uses all available cores)
 misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 % misc.applyLoad = 'pointPulsation';
 
