@@ -73,9 +73,14 @@ if numel(k) > 1 && size(P_far,1) > 1
     error('not implemented')
 end
 p_h = zeros(max([size(P_far,1),numel(k)]),1);
-
+poolobj = gcp('nocreate');
+if strcmp(task.misc.scatteringCase,'MS')
+    noCoresToUse = 1;
+else
+    noCoresToUse = poolobj.NumWorkers;
+end
 % for e = 1:noElems %
-parfor e = 1:noElems
+parfor (e = 1:noElems, noCoresToUse)
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(2,2);

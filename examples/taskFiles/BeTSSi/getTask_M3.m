@@ -6,10 +6,11 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+noCoresToUse = 8;         % Number of processors for parallel computations (Inf uses all available cores)
 misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 % misc.applyLoad = 'pointPulsation';
 
-misc.scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = {'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 misc.model = 'M3';
 misc.BC = {'SHBC'};
@@ -47,6 +48,7 @@ msh.parm = 1;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = prePlot.plot3Dgeometry;
 msh.M = 5:6;
+msh.M = 2;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 misc.r_a = 1.25*varCol{1}.R2;
