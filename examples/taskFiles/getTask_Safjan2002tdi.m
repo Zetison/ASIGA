@@ -12,59 +12,68 @@ misc.scatteringCase = 'BI';
 misc.model = 'Safjan2002tdi'; % Simpson sphere
 misc.method = {'IENSG'};
 % misc.method = {'IE'};
-IEbasis	= 'Chebyshev';
+iem.IEbasis	= 'Chebyshev';
 % IEbasis	= 'Lagrange';
 % IEbasis	= {'Chebyshev','Bernstein','Lagrange'};
-BC = 'NBC';
+misc.BC = 'NBC';
 misc.coreMethod = 'IGA';
 runTasksInParallel = 0;
-progressBars = false;        % Show progress bars for building system matrices
+misc.progressBars = false;        % Show progress bars for building system matrices
 misc.applyLoad = 'Safjan';
+misc.checkNURBSweightsCompatibility = false;
 
 Upsilon = [22*sqrt(2)/3, 44*sqrt(3)/7]; % 3:1, 7:1
 Upsilon = 22*sqrt(2)/3; % 3:1
 % Upsilon = 44*sqrt(3)/7; % 7:1
-Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 
-c_z = 11;
-c_x = sqrt(c_z^2-Upsilon.^2);
+varCol{1}.c_z = 11;
+varCol{1}.c_x = sqrt(varCol{1}.c_z^2-Upsilon.^2);
 
-layer{1} = struct('media', 'fluid', ...
+varCol{1} = struct('media', 'fluid', ...
                   'c_f', 1500, ...
                   'rho', 1000);
               
 varCol = setSSParameters(1);
-varCol{1}.meshFile = 'createNURBSmesh_EL';
+msh.meshFile = 'createNURBSmesh_EL';
 c_f = varCol{1}.c_f;   % Speed of sound in outer fluid
 k = 1;                 % Wave number for Simpson2014aib
-omega = c_f*k;         % Angular frequency
-f = omega/(2*pi);      % Frequency
+misc.omega = c_f*k;         % Angular frequency
 
-M = 1:7;
-M = 6; %8
-parm = 1;
-alpha = 0;
-beta = (-90:0.5:90)*pi/180;
-prePlot.plot3Dgeometry = 0;
+msh.M = 1:7;
+msh.M = 1; %8
+msh.parm = 1;
+ffp.alpha = 0;
+ffp.beta = (-90:0.5:90)*pi/180;
+prePlot.plot3Dgeometry = 1;
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plotArtificialBndry = false;        % Plot the artificial boundary for the IENSG misc.method
-computeCondNumber = 0;
+prePlot.plotFullDomain   = 1;        % Plot volumetric domains
+prePlot.resolution       = [20,20,0];  % Number of evaluation points in the visualization for each element for each parametric direction
+prePlot.view             = [0,0];
+prePlot.plotSubsets      = {'xz','Gamma'};
+prePlot.plotSubsets      = {'xz'};
+prePlot.plotControlPolygon  = 0;       % Plot the control polygon for the NURBS mesh
+prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
+
+misc.computeCondNumber = 0;
 err.calculateSurfaceError = 1;
-calculateFarFieldPattern = false;     % Calculate far field pattern
+ffp.calculateFarFieldPattern = false;     % Calculate far field pattern
 varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
 
-degree = 5;
+msh.degree = 5;
+msh.degree = 2;
 
 warning('off','NURBS:weights')
-loopParameters = {'N','p_ie','s_ie','IElocSup', 'IEbasis','misc.method', 'formulation', 'c_x'};
+loopParameters = {'iem.N','iem.p_ie','iem.s_ie','iem.IElocSup', 'iem.IEbasis','misc.method', 'misc.formulation'};
 
-postPlot(1).xname       	= 'N';
+postPlot(1).xname       	= 'iem.N';
 postPlot(1).yname        	= 'surfaceError';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
 postPlot(1).axisType    	= 'loglog';
 postPlot(1).lineStyle   	= '*-';
-postPlot(1).xLoopName     	= 'N';
+postPlot(1).xLoopName     	= 'iem.N';
 postPlot(1).yScale          = 1/100;
 % postPlot(1).legendEntries 	= {'misc.method','formulation','M'};
 postPlot(1).fileDataHeaderX	= [];
@@ -76,9 +85,9 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_error();
 % postPlot(2).addCommands   	= [];
 
 runTasksInParallel = 0;
-IElocSup = true;
-s_ie = [1,2];
-s_ie = 1;
+iem.IElocSup = true;
+iem.s_ie = [1,2];
+iem.s_ie = 1;
 N_arr = {[2,10,20,40,90],...
          [4,20,30,40,80,100],...
          [6,30,40,60,90],...
@@ -86,49 +95,51 @@ N_arr = {[2,10,20,40,90],...
          [10,25,35,50,60,75,100]};
 % formulation = {'PGC','BGU'};
 % formulation = {'BGU'};
-formulation = {'PGU'};
+misc.formulation = {'PGU'};
 % formulation = {'WBGC','PGC','WBGU','PGU'};
 maxN = 100;
 % maxN = 40;
 for p_ie = 3 %1:5
-%     N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
-    N = N_arr{p_ie};
-%     N = 4*p_ie;
-%     N = [3*p_ie,4*p_ie];
-%     N = 2*p_ie:p_ie:4*p_ie;
-    % N = 3;
+    iem.p_ie = p_ie;
+%     iem.N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
+    iem.N = N_arr{p_ie};
+%     iem.N = 4*p_ie;
+%     iem.N = [3*p_ie,4*p_ie];
+%     iem.N = 2*p_ie:p_ie:4*p_ie;
+    % iem.N = 3;
     collectIntoTasks
 end
 
-IEbasis	= 'Lagrange';
+iem.IEbasis	= 'Lagrange';
 
 for p_ie = 3 %1:5
-%     N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
-    N = N_arr{p_ie};
-%     N = p_ie*round((2*p_ie:p_ie:100)/p_ie);
-%     N = p_ie*2.^(1:7);
-%     N = 2*p_ie:p_ie:20;
-%     N = 4*p_ie;
+    iem.p_ie = p_ie;
+%     iem.N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
+    iem.N = N_arr{p_ie};
+%     iem.N = p_ie*round((2*p_ie:p_ie:100)/p_ie);
+%     iem.N = p_ie*2.^(1:7);
+%     iem.N = 2*p_ie:p_ie:20;
+%     iem.N = 4*p_ie;
 %     collectIntoTasks
 end
 
-IElocSup = false;
-s_ie = NaN;
-N = 1:19;
-N = 1:9;
+iem.IElocSup = false;
+iem.s_ie = NaN;
+iem.N = 1:19;
+iem.N = 1:9;
 % N = 4;
-p_ie = NaN;
-IEbasis	= 'Chebyshev';
-IEbasis	= 'Lagrange';
+iem.p_ie = NaN;
+iem.IEbasis	= 'Chebyshev';
+iem.IEbasis	= 'Lagrange';
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 misc.method = {'BA'};
-useNeumanProj = 0;
-solveForPtot = 0;
-N = [1,maxN];
-formulation = {'SL2E'};
+misc.useNeumanProj = 0;
+misc.solveForPtot = 0;
+iem.N = [1,maxN];
+misc.formulation = {'SL2E'};
 postPlot(1).lineStyle = '--';
 % collectIntoTasks
 
