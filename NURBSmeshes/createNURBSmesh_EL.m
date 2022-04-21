@@ -29,7 +29,7 @@ else
     c_x = varCol{1}.R;
     c_y = varCol{1}.R;
     c_z = varCol{1}.R;
-    Upsilon = sqrt(c_z^2-c_x^2);
+    Upsilon = 0;
 end
 if numel(varCol) == 1
     t = eps;
@@ -149,6 +149,8 @@ else
     end
     
     task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
+    varCol{1}.refLength = refLength;
+    varCol{1}.dirs = dirs;
 
     if numel(varCol) > 1
         solid = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);

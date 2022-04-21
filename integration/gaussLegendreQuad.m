@@ -4,6 +4,11 @@ function [points, weights] = gaussLegendreQuad(quadorder)
 points = zeros(quadorder,1); 
 weights = zeros(quadorder,1);
 
+if quadorder > 64
+	warning('There exist no listed gausspoints of order 65 or more: using 64 quadrature points instead...')
+	quadorder = 64;
+end
+
 switch quadorder
 	case 1
 		% Set Gauss quadrature points
@@ -4484,8 +4489,5 @@ switch quadorder
 		weights(62) = 0.00650445796897836;
 		weights(63) = 0.00414703326056247;
 		weights(64) = 0.00178328072169643;
-    otherwise
-        [points,weights] = lgwt(quadorder,-1,1);
-        points = flipud(points);
-        weights = flipud(weights);
+		
 end

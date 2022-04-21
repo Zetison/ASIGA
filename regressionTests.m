@@ -1,11 +1,11 @@
 %% Regression tests
 % A successful run of this script should be performed prior to any push to git
 startup
-Eps = 1e-6;
+Eps = 1e-8;
 testFolder = 'examples/taskFiles/tests/';
 studyName = {'Venas2018iao_Figure6','Venas2020asi_Figure21','Venas2018iao_Table2','Venas2020asi_Figure7','Venas2019asi_Figure4','Venas2019asi_FigureB10B11B12',...
              'Venas2019asi_FigureA2A3'};
-% studyName = {'Venas2020asi_Figure21'};
+% studyName = {'Venas2018iao_Table2'};
 stringShift = 60;
 noFailedTests = 0;
 for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
@@ -27,7 +27,7 @@ for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
                         if any(isnan(entry_ref(:)))
                             continue
                         end
-                        reg_error = norm(entry(:)-entry_ref(:))/norm(entry_ref(:));
+                        reg_error = norm(entry(:)-entry_ref(:))/norm(entry_ref);
                         if reg_error > Eps
                             testFailed = true;
                             break

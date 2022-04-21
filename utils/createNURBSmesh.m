@@ -21,13 +21,8 @@ for i = 1:numel(task.varCol{1}.nurbs)
         PMLpatchFound = true;
     end
 end
-if strcmp(task.misc.method,'PML')
-    if PMLpatchFound
-        task = addPMLtopology(task);   
-    else
-        task = createPML(task);
-        task = addPMLtopology(task);   
-    end
+if strcmp(task.misc.method,'PML') && ~PMLpatchFound
+    task = createPML(task);
 end
 for i = 1:numel(task.varCol)
     task.varCol = findCartesianAlignedBdry(task.varCol,i);
@@ -35,6 +30,11 @@ end
 
 if task.msh.nonLinearParam
     task = convertAllToNonLinearParam(task);
+end
+if task.msh.autoRefine
+    for i = 1:numel(task.varCol)
+        task.varCol{i}.nurbs = autoRefineNURBS(task.varCol{i}.nurbs,task.varCol{i}.geometry.topology.connection,task.varCol{1}.refLength/2^(task.msh.M-1),task.varCol{1}.dirs);
+    end
 end
 
 
@@ -48,7 +48,7 @@ function varCol = findCartesianAlignedBdry(varCol,domain)
 
 connection = varCol{domain}.geometry.topology.connection;
 names = {'yz','xz','xy'};
-for j = 1:numel(names)
+for j = 1:3
     patches = [];
     faces = [];
     for i = 1:numel(connection)
@@ -104,6 +104,7 @@ end
 task.varCol{1}.nurbs = uniteNURBS({task.varCol{1}.nurbs,nurbsPML});
 task = repeatKnots(task);
 task = degenerateIGAtoFEM(task);
+task = addPMLtopology(task);
 
 
 % task.varCol = copySet(task.varCol,1, 'Gamma_a', 'Gamma_a_PML');

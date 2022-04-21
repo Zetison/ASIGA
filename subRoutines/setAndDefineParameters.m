@@ -5,7 +5,7 @@ switch task.misc.model
         isSphericalShell = true;
     case {'Safjan2002tdi'}
         analyticSolutionExist = true;
-        isSphericalShell = false;
+        isSphericalShell = (task.iem.Upsilon == 0);
     otherwise
         analyticSolutionExist = false;
         isSphericalShell = false;

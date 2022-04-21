@@ -43,6 +43,7 @@ msh.explodeNURBS        = false;   % Create patches from all C^0 interfaces
 msh.x_0                 = [0,0,0]; % Translate center of model
 msh.Xi                  = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.nonLinearParam      = false;   % Use a non-linear parametrization to have equidistant control points (only implemented in the zeta-dir, and for geometrically linear parametrization)
+msh.autoRefine          = false;   % Use automatic refining algorithm based on h_max = refLength/2^(M-1) where M is the mesh number and refLength is the largest element edge in the coarse mesh
 
 %% Settings for pre plotting (geometry and mesh visualisation)
 prePlot.plotFullDomain      = true;        % Plot volumetric domains
@@ -56,7 +57,7 @@ prePlot.view                = getView;     % Set view angle [azimuth,elevation]
 prePlot.export_fig_name2D   = '';          % Name of exported figure using export_fig for 2D plots
 prePlot.export_fig_name3D   = '';          % Name of exported figure using export_fig for 3D plots
 prePlot.useCamlight         = true;        % Toggle camlight on
-prePlot.camproj             = 'perspective'; % 'perspective' or 'orthographic'
+preplot.camproj             = 'perspective'; % 'perspective' or 'orthographic'
 
 plotParmDir = 1;
 prePlot.plotControlPolygon  = false;       % Plot the control polygon for the NURBS mesh

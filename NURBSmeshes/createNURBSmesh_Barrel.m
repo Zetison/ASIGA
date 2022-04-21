@@ -80,11 +80,6 @@ else
     if numel(varCol) > 1
         error('not implemented')
     end
-    if numel(Xi) == 12
-        xiAngle = pi/2;
-    else
-        xiAngle = 2*pi/3;
-    end
     t_fluid = task.misc.r_a - R;
     t_pml = task.pml.t;
     c_z = L/2+t_fluid;
@@ -95,44 +90,16 @@ else
     fluid = getBarrelData('R', R+t_fluid, 't', t_fluid, 'parm', parm, 'L', L+2*t_fluid, 'd_p', 3, 'Xi', Xi);
     if strcmp(task.misc.method,'PML')
         pmlLayer = getBarrelData('R', R+2*t_fluid, 't', t_pml, 'parm', parm, 'L', L+4*t_fluid, 'd_p', 3, 'Xi', Xi,'pmlFill', task.msh.pmlFill);
-        if parm == 1
-            pmlLayer{1}.isPML = [0,0,1];
-            pmlLayer{2}.isPML = [0,1,1];
-            pmlLayer{3}.isPML = [0,0,1];
-            pmlLayer{4}.isPML = [0,0,1];
-            pmlLayer{5}.isPML = [0,1,1];
-            if task.msh.pmlFill
-                pmlLayer{2}.isPML = [0,0,1];
-                pmlLayer{5}.isPML = [0,0,1];
-            end
-        else
-            error('Not properly implemented: Needs to make an anulus around special parametrization in the pmlLayer')
-            for i = 1:5
-                pmlLayer{i}.isPML = [0,0,1];
-            end
-            for i = 6:9
-                pmlLayer{i}.isPML = [0,1,1];
-            end
-            for i = 10:13
-                pmlLayer{i}.isPML = [0,0,1];
-            end
-            for i = 14:18
-                pmlLayer{i}.isPML = [0,1,0];
-            end
-            for i = 19:22
-                pmlLayer{i}.isPML = [0,1,1];
-            end
-            if task.msh.pmlFill
-                for i = 6:9
-                    pmlLayer{i}.isPML = [0,0,1];
-                end
-                for i = 19:22
-                    pmlLayer{i}.isPML = [0,1,0];
-                end
-            end
+        pmlLayer{1}.isPML = [0,0,1];
+        pmlLayer{2}.isPML = [0,1,1];
+        pmlLayer{3}.isPML = [0,0,1];
+        pmlLayer{4}.isPML = [0,1,0];
+        pmlLayer{5}.isPML = [0,1,1];
+        if task.msh.pmlFill
+            pmlLayer{2}.isPML = [0,0,1];
+            pmlLayer{5}.isPML = [0,1,0];
         end
-            
-        pmlLayer = insertKnotsInNURBS(pmlLayer,{{[] R/(R+t_fluid) []}, {}, {[] [t_fluid/(L+2*t_fluid), (L+t_fluid)/(L+2*t_fluid)] []}, {[] t_fluid/(R+t_fluid) []}, {}});
+        pmlLayer = insertKnotsInNURBS(pmlLayer,{{[] R/(R+t_fluid) []}, {}, {[] [t_fluid/(L+2*t_fluid), (L+t_fluid)/(L+2*t_fluid)] []}, {[] [] R/(R+t_fluid)}, {}});
         fluid = explodeNURBS(fluid);
         varCol{1}.nurbs = fluid;
         varCol = copySet(varCol,1, 'outer', 'Gamma_a');
@@ -140,11 +107,11 @@ else
     end
     fluid = makeUniformNURBSDegree(fluid,degree);
     if parm == 1
-        Imap{1} = [R*xiAngle, (R+t_fluid)*xiAngle, (R+t_fluid+t_pml)*xiAngle];
-        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/R,Imap,0,dirs,true,true);
+        Imap{1} = [];
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*2*pi/3),Imap,0,dirs);
     else
-        Imap{1} = [R*xiAngle, R*1.414057108745095];
-        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*xiAngle),Imap);
+        Imap{1} = [R*pi/2, R*1.414057108745095];
+        [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/(R*pi/2),Imap);
     end
     task.iem.N = min(numel(newKnotsIns{1}{3})+degree(1),9);
 end

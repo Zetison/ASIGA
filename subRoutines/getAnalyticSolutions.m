@@ -81,10 +81,26 @@ switch applyLoad
         dr = X{1}./r(:,[1,1,1]);
         dtheta = [cos(theta).*cos(phi), cos(theta).*sin(phi), -sin(theta)]./r(:,[1,1,1]);
         varCol{1}.p = sphBessel(1,k.*r,3).*cos(theta);
-        varCol{1}.p_0 = -cos(theta);
+        varCol{1}.p_0 = -cos(theta)./k;
         varCol{1}.dp = cell(1,3);
         for i = 1:3
-            varCol{1}.dp{i} = k*dSphBessel(1,k.*r,3).*cos(theta).*dr(:,i) - dSphBessel(1,k.*r,3).*sin(theta).*dtheta(:,i);
+            varCol{1}.dp{i} = k*dhankel_s(1,k.*r,1).*cos(theta).*dr(:,i) - hankel_s(1,k.*r,1).*sin(theta).*dtheta(:,i);
+        end
+    case 'Safjan10'
+        r = norm2(X{1});
+        theta = acos(X{1}(:,3)./r);
+        phi = atan2(X{1}(:,2),X{1}(:,1));
+        dr = X{1}./r(:,[1,1,1]);
+        dtheta = [cos(theta).*cos(phi), cos(theta).*sin(phi), -sin(theta)]./r(:,[1,1,1]);
+        P = legendre(10,cos(theta)); 
+        P = P(1,:).';
+        Pnm1 = legendre(9,cos(theta));
+        dP = 10*(P.*cos(theta) - Pnm1(1,:).')./sin(theta);
+        varCol{1}.p = sphBessel(10,k.*r,3).*P;
+        varCol{1}.p_0 = -1i*P./k;
+        varCol{1}.dp = cell(1,3);
+        for i = 1:3
+            varCol{1}.dp{i} = k.*dSphBessel(10,k.*r,3).*P.*dr(:,i) - dSphBessel(10,k.*r,3).*dP.*dtheta(:,i);
         end
     case 'SimpsonTorus'
         varCol{1}.p = prod(sin(k*X{1}/sqrt(3)),2);
@@ -155,8 +171,8 @@ switch applyLoad
             R = norm2(xms);
             p_i = C_n(i)*Phi_k(R);
             p = p + p_i;
-            for i = 1:3
-                dp{i} = dp{i} + p_i.*(1i*k - 1./R)./R.*xms(:,i);
+            for j = 1:3
+                dp{j} = dp{j} + p_i.*(1i*k - 1./R)./R.*xms(:,j);
             end
         end
         p_0 = zeros(size(X{1},1),1);

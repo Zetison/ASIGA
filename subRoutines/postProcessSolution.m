@@ -17,8 +17,6 @@ h_max = -Inf;
 for i = 1:numel(task.varCol)
     if isfield(task.varCol{1},'Aindices')
         task.varCol{i}.U = U(task.varCol{1}.Aindices{i,2},:);
-    else
-        task.varCol{i}.U = U;
     end
     h_max_i = findMaxElementDiameter(task.varCol{i}.patches);
     if h_max < h_max_i

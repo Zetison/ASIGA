@@ -46,10 +46,9 @@ msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 switch misc.method{1}
     case 'PML'
         misc.formulation = {'GSB'};
-        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-1)/8-1];
-    %     varCol{1}.refinement = @(M) [0, round(pi/0.5*1.5*10/2), 2];
-    %     varCol{1}.refinement = @(M) [0, 0, 4];
-        pml.refinement = @(M) 3*2^(M-1)/16-1;
+        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-1)/8-1, 3*2^(M-1)/16-1];
+    %     varCol{1}.refinement = @(M) [0, round(pi/0.5*1.5*10/2), 2, 6];
+    %     varCol{1}.refinement = @(M) [0, 0, 4, 32];
     case {'IE','IENSG'}
         misc.formulation = {'BGU'};
         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-1)/8-1];
@@ -58,7 +57,7 @@ end
 
 msh.degree = 2;
 msh.M = 6; % 6
-ffp.extraGP = [50,0,0];    % extra quadrature points
+misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
 % extraGP = [9-msh.degree,9-msh.degree,0];    % extra quadrature points
 warning('off','NURBS:weights')
 
@@ -69,11 +68,11 @@ misc.omega = 2*pi*f;
 % t_PML = 0.5*a;
 misc.r_a = 1.25*a;
 
-% pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 1;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
+pml.sigmaType = 2;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
 pml.gamma = 5;          % parameter for sigmaType = 1
 pml.t = 0.25*a;         % thickness of PML
-pml.dirichlet = 0;      % use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
 
 iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
 iem.p_ie     = 4;          % Set polynomial order for radial shape functions
@@ -88,12 +87,8 @@ prePlot.plot2Dgeometry = 0;
 % prePlot.resolution = [20,20,0];
 prePlot.resolution = [20,0,0];
 misc.computeCondNumber = 0;
-misc.checkNURBSweightsCompatibility = false;
-prePlot.plotFullDomain   = 0;        % Plot volumetric domains
-prePlot.view             = [0,90];
-prePlot.plotSubsets      = {'xy'};
 
-postPlot(1).xname           = 'ffp.alpha';
+postPlot(1).xname           = 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= false;

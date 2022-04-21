@@ -42,20 +42,11 @@ else
         nurbsDisk = [nurbsDisk, getDiskData('Xi',Xi,'R',[R,R-t],'parm',1,'t',t)];
     end
     nurbsBot = translateNURBS(mirrorNURBS(nurbsDisk,'z'),[0,0,t]);
-    nurbsBot = permuteNURBS(nurbsBot,[2,1,3]);
     nurbsTop = translateNURBS(nurbsDisk,[0,0,L-t]);
-    if options.pmlFill
-        nurbsTop(2) = permuteNURBS(nurbsTop(2),[2,1,3]);
-        nurbsTop(2) = flipNURBSparametrization(nurbsTop(2),2);
-    else
-        nurbsTop(2) = permuteNURBS(nurbsTop(2),[2,3,1]);
-    end
-    nurbsTop(1) = permuteNURBS(nurbsTop(1),[2,1,3]);
-    nurbsTop(1) = flipNURBSparametrization(nurbsTop(1),2);
     nurbsCyl = getCylinderData('Xi',Xi,'R',[R,R-t],'parm',1,'L',L-2*t);
     nurbsCyl = translateNURBS(nurbsCyl,[0,0,t]);
-    nurbsCyl = permuteNURBS(nurbsCyl,[2,3,1]);
-    nurbs = [nurbsBot,nurbsCyl,nurbsTop];
+    nurbs = [permuteNURBS(nurbsBot,[3,2,1]),nurbsCyl,nurbsTop];
+    nurbs = permuteNURBS(nurbs,[2,3,1]);
 end
 nurbs = translateNURBS(nurbs,[0,0,-L/2]);
 nurbs = rotateNURBS(nurbs,'rotAxis','Yaxis');
