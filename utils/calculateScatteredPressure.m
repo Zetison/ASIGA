@@ -3,27 +3,10 @@ function p_h = calculateScatteredPressure(task, P_far, useExtraQuadPts)
 plotFarField = task.ffp.plotFarField;
 d_p = task.varCol{1}.patches{1}.nurbs.d_p;
 d = task.varCol{1}.patches{1}.nurbs.d;
-U = task.varCol{1}.U;
 noDofs = task.varCol{1}.noDofs;
 noElems = task.varCol{1}.noElems;
 degree = task.varCol{1}.degree(1:2); % assume p_xi is equal in all patches
-if numel(task.varCol) > 1
-    varColBdrySolid = meshBoundary(task.varCol{2},'Gamma');
-    
-    nodesSolid = varColBdrySolid.nodes;
-    elementSolid = varColBdrySolid.element;    
-    
-    noDofs = task.varCol{2}.noDofs;
-    Ux = task.varCol{2}.U(1:d:noDofs,:);
-    Uy = task.varCol{2}.U(2:d:noDofs,:);
-    Uz = task.varCol{2}.U(3:d:noDofs,:);
-else
-    nodesSolid = NaN(noDofs,1);
-    elementSolid = NaN(noElems,prod(degree+1));
-    Ux = NaN;
-    Uy = NaN;
-    Uz = NaN;
-end
+
 weights = task.varCol{1}.weights;
 controlPts = task.varCol{1}.controlPts;
 rho = task.varCol{1}.rho;
@@ -38,9 +21,7 @@ if d_p == 3
     pIndex = varColBdry.pIndex;
     knotVecs = varColBdry.knotVecs;
     elRange = varColBdry.elRange;
-    if numel(task.varCol) == 1
-        elementSolid = NaN(noElems,prod(degree+1));
-    end
+    n_en = varColBdry.n_en;
 else
     degree = task.varCol{1}.degree; % assume p_xi is equal in all patches
     index = task.varCol{1}.index;
@@ -50,6 +31,7 @@ else
     zeta0Nodes = 1:noDofs;
     knotVecs = task.varCol{1}.knotVecs;
     elRange = task.varCol{1}.elRange;
+    n_en = prod(degree+1);
 end
 
 BC = task.misc.BC;
@@ -73,14 +55,36 @@ if numel(k) > 1 && size(P_far,1) > 1
     error('not implemented')
 end
 p_h = zeros(max([size(P_far,1),numel(k)]),1);
-poolobj = gcp('nocreate');
-if strcmp(task.misc.scatteringCase,'MS')
-    noCoresToUse = 1;
-else
-    noCoresToUse = poolobj.NumWorkers;
+
+noRHSs = size(task.varCol{1}.U,2);
+Uvalues = zeros(n_en,noElems,noRHSs);
+for e = 1:noElems
+    sctr = zeta0Nodes(element(e,:));
+    Uvalues(:,e,:) = task.varCol{1}.U(sctr,:);
 end
-% for e = 1:noElems %
-parfor (e = 1:noElems, noCoresToUse)
+if numel(task.varCol) > 1
+    varColBdrySolid = meshBoundary(task.varCol{2},'Gamma');
+    
+    nodesSolid = varColBdrySolid.nodes;
+    elementSolid = varColBdrySolid.element;   
+
+    Uxvalues = zeros(n_en,noElems,noRHSs);
+    Uyvalues = zeros(n_en,noElems,noRHSs);
+    Uzvalues = zeros(n_en,noElems,noRHSs); 
+
+    for e = 1:noElems
+        sctrSolid = nodesSolid(elementSolid(e,:))*d;
+        Uxvalues(:,e,:) = task.varCol{2}.U(sctrSolid-2,:);
+        Uyvalues(:,e,:) = task.varCol{2}.U(sctrSolid-1,:);
+        Uzvalues(:,e,:) = task.varCol{2}.U(sctrSolid,:);
+    end
+else
+    Uxvalues = NaN(1,noElems);
+    Uyvalues = NaN(1,noElems);
+    Uzvalues = NaN(1,noElems);
+end
+% for e = 1:noElems
+parfor e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(2,2);
@@ -101,16 +105,14 @@ parfor (e = 1:noElems, noCoresToUse)
     normals = crossProd./repmat(J_1,1,3);
 
     Y = R{1}*pts;  
-    U_sctr = U(sctr,:);
-    p_h_gp = R{1}*U_sctr;
+    p_h_gp = R{1}*squeeze(Uvalues(:,e,:));
 
     if exteriorSHBC
         dp_h_gp = -dp_inc(Y,normals); 
     else
-        sctrSolid = nodesSolid(elementSolid(e,:));
-        dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*Ux(sctrSolid,:)) ...
-                                 +normals(:,2).*(R{1}*Uy(sctrSolid,:)) ...
-                                 +normals(:,3).*(R{1}*Uz(sctrSolid,:)));
+        dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*squeeze(Uxvalues(:,e,:))) ...
+                                 +normals(:,2).*(R{1}*squeeze(Uyvalues(:,e,:))) ...
+                                 +normals(:,3).*(R{1}*squeeze(Uzvalues(:,e,:))));
         if ~solveForPtot
             dp_h_gp = dp_h_gp - dp_inc(Y,normals);
         end
