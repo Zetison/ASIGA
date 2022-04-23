@@ -20,8 +20,8 @@ if 1
     task = buildMatrices(task,1);
     task.varCol{1}.media = 'fluid';
     [task,FF,~,~,A2] = collectMatrices(task);
-    UU = A2\FF;
-    task = postProcessSolution(task,UU);
+    task.UU = A2\FF;
+    task = postProcessSolution(task);
     noPatches = numel(nurbs);
     nurbs2 = cell(1,noPatches);
     counter = 1;
@@ -245,8 +245,8 @@ else
     task.varCol{1}.FF = vectorAssembly(Fvalues,F_indices,noDofs);
     
     [task,FF,~,~,A2] = collectMatrices(task);
-    UU = A2\FF;
-    task = postProcessSolution(task,UU);
+    task.UU = A2\FF;
+    task = postProcessSolution(task);
     noPatches = numel(nurbs);
     nurbs2 = cell(1,noPatches);
     counter = 1;

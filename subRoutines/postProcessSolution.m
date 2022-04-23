@@ -1,4 +1,4 @@
-function [task,U] = postProcessSolution(task,UU)
+function task = postProcessSolution(task)
 
 if isfield(task.varCol{1},'noCols_tot')
     noCols_tot = task.varCol{1}.noCols_tot;
@@ -10,21 +10,24 @@ if isfield(task.varCol{1},'allDofsToRemove')
 else
     allDofsToRemove = task.varCol{1}.dofsToRemove;
 end
-U = zeros(noCols_tot,size(UU,2));
-U(setdiff(1:noCols_tot, allDofsToRemove'),:) = UU;   
+noCols_tot_red = size(task.UU,1);
+task.UU = [task.UU; zeros(noCols_tot-noCols_tot_red,size(task.UU,2))];
+task.UU(setdiff(1:noCols_tot, allDofsToRemove'),:) = task.UU(1:noCols_tot_red,:);
+task.UU(allDofsToRemove,:) = 0;
 
 h_max = -Inf;
 for i = 1:numel(task.varCol)
     if isfield(task.varCol{1},'Aindices')
-        task.varCol{i}.U = U(task.varCol{1}.Aindices{i,2},:);
+        task.varCol{i}.U = task.UU(task.varCol{1}.Aindices{i,2},:);
     else
-        task.varCol{i}.U = U;
+        task.varCol{i}.U = task.UU;
     end
     h_max_i = findMaxElementDiameter(task.varCol{i}.patches);
     if h_max < h_max_i
         h_max = h_max_i;
     end
 end
+task = rmfield(task,'UU');
 if ~isempty(allDofsToRemove)
     task.varCol = addSolutionToRemovedNodes(task.varCol);
 end

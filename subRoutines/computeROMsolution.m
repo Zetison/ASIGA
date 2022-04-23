@@ -19,7 +19,7 @@ P = numel(omega_P);
 omega_start = omega_P(1);
 omega_end = omega_P(end);
 stringShift = 40;
-tasks(i_task).task.varCol = extractVarColFields(task,task.varCol);
+tasks(i_task).task = extractVarColFields(task);
 noDomains = numel(task.varCol);
 
 % noVec = size(U_P{1},2);
@@ -275,29 +275,29 @@ for i_b = 1:numel(basisROMcell)
 
                     Am = A0_am + omega*A1_am + omega^2*A2_am;
                     Pinv = spdiags(1./diag(Am),0,size(Am,1),size(Am,2));
-                    UU = V*(Pinv*((Am*Pinv)\FFm));
+                    task.UU = V*(Pinv*((Am*Pinv)\FFm));
                 case 'Hermite'
-                    UU = zeros(noDofs,1);
+                    task.UU = zeros(noDofs,1);
                     counter = 1;
                     for i = 1:P
                         for n = 1:noVecs
-                            UU = UU + U_sweep{i}(:,n)*Y(counter,:);
+                            task.UU = task.UU + U_sweep{i}(:,n)*Y(counter,:);
                             counter = counter + 1;
                         end
                     end
                 case 'Pade'
                     if useHP
-                        UU = double(interPade(mp(omega),mp(omega_P),p,q));
+                        task.UU = double(interPade(mp(omega),mp(omega_P),p,q));
                     else
-                        UU = interPade(omega,omega_P,p,q);
+                        task.UU = interPade(omega,omega_P,p,q);
                     end
                 case 'Bernstein'
                     B = bernsteinBasis(double((omega-omega_start)/(omega_end - omega_start)),double(p_ROM),0);
-                    UU = (B*a).';
+                    task.UU = (B*a).';
                 case 'Taylor'
-                    UU = interTaylor(omega,omega_P,U_sweep,noVecs-1);
+                    task.UU = interTaylor(omega,omega_P,U_sweep,noVecs-1);
             end
-            task = postProcessSolution(task,UU);
+            task = postProcessSolution(task);
             if printLog
                 fprintf('using %12f seconds.', toc(t_startROM))
             end
@@ -351,7 +351,7 @@ for i_b = 1:numel(basisROMcell)
             tasks(i_task,taskROM,i_b).task.results.surfaceError = surfaceError;
         end
 
-        tasks(i_task,taskROM,i_b).task.varCol = extractVarColFields(task,task.varCol);
+        tasks(i_task,taskROM,i_b).task = extractVarColFields(task);
         tasks(i_task,taskROM,i_b).task.varCol{1}.omega_ROM = temp_omega_ROM;
         tasks(i_task,taskROM,i_b).task.varCol{1}.f_ROM = temp_omega_ROM/(2*pi);
         tasks(i_task,taskROM,i_b).task.varCol{1}.k_ROM = temp_omega_ROM/task.varCol{1}.c_f;

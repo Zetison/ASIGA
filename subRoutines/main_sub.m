@@ -333,7 +333,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     case 'gmres'
                         noRestarts = []; % change this to save memory
                         % noRestarts = 2;
-                        [UU,~,~,it1,rv1] = gmres(A,FF,noRestarts,1e-20,1000,L_A,U_A);
+                        [task.UU,~,~,it1,rv1] = gmres(A,FF,noRestarts,1e-20,1000,L_A,U_A);
                     case 'LU'
                         if ~strcmp(task.sol.preconditioner,'diag')
                             error('not implemented')
@@ -354,31 +354,31 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                                 j = i-1;
                                 b = FF(:,i);
                                 if j > 0
-                                    b = b - j*dAdomega*UU(:,i-1);
+                                    b = b - j*dAdomega*task.UU(:,i-1);
                                 end
                                 if j > 1
-                                    b = b - j*(j-1)/2*d2Adomega2*UU(:,i-2);
+                                    b = b - j*(j-1)/2*d2Adomega2*task.UU(:,i-2);
                                 end
-                                UU(:,i) = Pinv*(dA\b);
+                                task.UU(:,i) = Pinv*(dA\b);
                             end
                         else
                             if useA
                                 if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
-                                    UU = zeros(size(A,1),numel(omega));
+                                    task.UU = zeros(size(A,1),numel(omega));
                                 end
                                 if strcmp(task.misc.scatteringCase,'Sweep')
-                                    UU(:,i_o) = Pinv*((A*Pinv)\FF);
+                                    task.UU(:,i_o) = Pinv*((A*Pinv)\FF);
                                 else
-                                    UU = Pinv*((A*Pinv)\FF);
+                                    task.UU = Pinv*((A*Pinv)\FF);
                                 end
                             else
                                 if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
-                                    UU = zeros(size(task.varCol{1}.A_K,1),numel(omega));
+                                    task.UU = zeros(size(task.varCol{1}.A_K,1),numel(omega));
                                 end
                                 if strcmp(task.misc.scatteringCase,'Sweep')
-                                    UU(:,i_o) = task.varCol{1}.A_K\task.varCol{1}.FF;
+                                    task.UU(:,i_o) = task.varCol{1}.A_K\task.varCol{1}.FF;
                                 else
-                                    UU = task.varCol{1}.A_K\task.varCol{1}.FF;
+                                    task.UU = task.varCol{1}.A_K\task.varCol{1}.FF;
                                 end
                             end
                         end
@@ -421,8 +421,8 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
         end
         if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
-            U_sweep{i_o} = UU;
-            task = postProcessSolution(task,UU);
+            U_sweep{i_o} = task.UU;
+            task = postProcessSolution(task);
         end
         if printLog && strcmp(task.misc.scatteringCase,'Sweep') && numel(omega) > 1
             fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_o, numel(omega), toc(t_freq))  
@@ -450,6 +450,9 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
         ppm = NaN;
     end
 
+    if ~task.rom.useROM
+        task = postProcessSolution(task);
+    end
     if ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         task.results.energyError = zeros(1,numel(omega));
         task.results.L2Error = zeros(1,numel(omega));
@@ -462,8 +465,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
             end
             task.misc.omega = omega(i_o);
             task = getAnalyticSolutions(task);
-            
-            task = postProcessSolution(task,UU(:,i_o));
+
 %             printLog = numel(omega) == 1 && printLog;
             [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, printLog, stringShift);
             task.results.surfaceError(i_o) = surfaceError;
@@ -476,9 +478,6 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
     if numel(omega) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
         fprintf('using %12f seconds.', toc)   
     end
-    if ~task.rom.useROM
-        task = postProcessSolution(task,UU);
-    end
 else
     task.varCol{1}.U = [];
 end  
@@ -490,10 +489,6 @@ if task.ffp.calculateFarFieldPattern && ~task.rom.useROM
     task = calculateTS(task,printLog,stringShift);
     task = computeDerivedFFPquantities(task,task.ffp.p_h);
 end
-if task.misc.clearGlobalMatrices
-    clear UU U
-end
-
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
 if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
     tic
@@ -627,7 +622,7 @@ if task.rom.useROM
     task.U_sweep = U_sweep;
 end
 if ~task.misc.storeFullVarCol
-    task.varCol = extractVarColFields(task,task.varCol);
+    task = extractVarColFields(task);
 end
 
 
