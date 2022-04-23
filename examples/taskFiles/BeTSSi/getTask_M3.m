@@ -6,11 +6,11 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+saveStudies        = false;       % save ASIGA-struct into a .mat file
 noCoresToUse       = 8;         % Number of processors for parallel computations (Inf uses all available cores)
 misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 % misc.applyLoad = 'pointPulsation';
 
-misc.scatteringCase = {'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 misc.model = 'M3';
 misc.BC = {'SHBC'};
@@ -47,7 +47,7 @@ msh.parm = 1;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = prePlot.plot3Dgeometry;
 msh.M = 5:6;
-msh.M = 4;
+%msh.M = 1:2;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 misc.r_a = 1.25*varCol{1}.R2;
@@ -55,13 +55,17 @@ iem.boundaryMethod = 0;   % Attach infinite elements directly onto the scatterer
 iem.N = round(2.^(msh.M-1)/4+msh.degree-1); 
 pml.t = 0.25*varCol{1}.R2;         % thickness of PML
 pml.refinement = @(M) 2^(M-1)/4-1;
+pml.sigmaType = 1:3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.n = [2,2,1];
+pml.gamma = [5,NaN,NaN];
+pml.dirichlet = [0,0,1];	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
 
 ffp.beta = 0;
 ffp.alpha = (0:0.1:360)*pi/180;
 
 warning('off','NURBS:weights')
-connectedParameters = {{'misc.method','misc.formulation'}};
-loopParameters = {'msh.M','msh.parm','misc.omega','misc.method'};
+connectedParameters = {{'misc.method','misc.formulation'},{'pml.sigmaType','pml.n','pml.dirichlet','pml.gamma'}};
+loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.scatteringCase','misc.BC','pml.sigmaType'};
 misc.solveForPtot = false;
 
 para.plotResultsInParaview = false;
@@ -91,21 +95,25 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 % postPlot(2).xScale          = 1;
 % postPlot(2).addCommands   	= [];
 
-if strcmp(misc.scatteringCase{1},'MS')
-    para.i_MS = find(abs(ffp.alpha - 240*pi/180) < 20*eps);
-    postPlot(1).xlim            = [0,180];
-    postPlot(1).ylim            = [-60,40];
-else
-    postPlot(1).xlim            = [0,360];
-    postPlot(1).ylim            = [-40,50];
-    ffp.beta_s = 0;
-    ffp.alpha_s = 240*pi/180;
+for scatteringCase = {'MS','BI'}
+    misc.scatteringCase = scatteringCase; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+    if strcmp(misc.scatteringCase{1},'MS')
+        para.i_MS = find(abs(ffp.alpha - 240*pi/180) < 20*eps);
+        postPlot(1).xlim            = [0,180];
+        postPlot(1).ylim            = [-60,40];
+    else
+        postPlot(1).xlim            = [0,360];
+        postPlot(1).ylim            = [-40,50];
+        ffp.beta_s = 0;
+        ffp.alpha_s = 240*pi/180;
+    end
+    collectIntoTasks
 end
 
-collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
+misc.scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.method = {'KDT'};
 misc.formulation = {'MS1'};
 % misc.coreMethod = 'linear_FEM';
