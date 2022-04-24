@@ -92,6 +92,13 @@ for i_col = 1:numel(studiesCol)
         if studiesCol{i_col}(i_study).saveStudies
             save([resultsFolder '/studiesCol'], 'studiesCol')
         end
+        study = studiesCol{i_col}(i_study);
+        for i = 1:numel(study.postPlot)
+            study.postPlot(i).plotResults = false;
+            if study.postPlot(i).printResults
+                printResultsToTextFiles(study,study.postPlot(i))
+            end
+        end
     end
     close all
     for i_study = 1:numel(studiesCol{i_col})  

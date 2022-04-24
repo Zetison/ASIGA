@@ -7,7 +7,7 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 saveStudies        = false;       % save ASIGA-struct into a .mat file
-noCoresToUse       = 8;         % Number of processors for parallel computations (Inf uses all available cores)
+% noCoresToUse       = 8;         % Number of processors for parallel computations (Inf uses all available cores)
 misc.applyLoad = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 % misc.applyLoad = 'pointPulsation';
 
@@ -47,7 +47,7 @@ msh.parm = 1;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = prePlot.plot3Dgeometry;
 msh.M = 5:6;
-msh.M = 4;
+% msh.M = 4;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 misc.r_a = 1.25*varCol{1}.R2;
