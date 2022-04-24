@@ -91,7 +91,7 @@ parfor e = 1:noElems
 end
 
 F = zeros(noDofs,noRHSs);
-for i = 1:noRHSs
+parfor i = 1:noRHSs
     F(:,i) = vectorAssembly(Fvalues(:,:,i),indices,noDofs);
 end
 task.varCol{i_domain}.FF = F;
