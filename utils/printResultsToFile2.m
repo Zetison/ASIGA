@@ -56,42 +56,24 @@ switch format
     case 'LaTeX'
         %% Create file in 'LaTeX format'
         fprintf(fid, [repmat('%%',1,30) ' Meta data ' repmat('%%',1,30) '\n']);
-        fprintf(fid, '%% Boundary condition: %s\n', task.misc.BC);
-        f = task.misc.omega/(2*pi);
-        if numel(f) == 1
-            fprintf(fid, '%% f: %0.5gHz\n', f);
+        method_lc = lower(task.misc.method); % method string in lower case format
+        fid = printFieldNames(fid,task,'misc');
+        fid = printFieldNames(fid,task,'ffp');
+        fid = printFieldNames(fid,task,'msh');
+        fid = printFieldNames(fid,task,method_lc); % Only print method fields for relevant struct
+        
+        if isfield(task,'totNoElems') && ~strcmp(xLoopName,task.msh.M) && ~strcmp(xLoopName,task.msh.degree)
+            fprintf(fid, '%% Total number of elements: %d\n', task.totNoElems);
         end
-        fprintf(fid, '%% Incident wave direction: alpha_s = %0.5gDeg, beta_s = %0.5gDeg\n', task.ffp.alpha_s*180/pi, task.ffp.beta_s*180/pi);
-        if isfield(task,'formulation')
-            fprintf(fid, '%% Formulation: %s\n', task.misc.formulation);
-        end
-        fprintf(fid, '%% Core method: %s\n', task.misc.coreMethod);
-        fprintf(fid, '%% Method: %s\n', task.misc.method);
-        if ~strcmp(xLoopName,task.msh.degree)
-            fprintf(fid, '%% Degree: %d\n', task.msh.degree);
-        end
-        if ~strcmp(xLoopName,task.msh.M)
-            fprintf(fid, '%% mesh: %d\n', task.msh.M);
-        end
-
-        if isfield(task,'IEbasis')
-            fprintf(fid, '%% Infinite element basis (in radial shape functions): %s\n', task.iem.IEbasis);
-        end
-        if isfield(task,'N') && ~strcmp(xLoopName,task.iem.N)
-            fprintf(fid, '%% N: %d\n', task.iem.N);
-        end
-        if isfield(task.varCol{1},'totNoElems') && ~strcmp(xLoopName,task.msh.M) && ~strcmp(xLoopName,task.msh.degree)
-            fprintf(fid, '%% Total number of elements: %d\n', task.varCol{1}.totNoElems);
-        end
-        if isfield(task.varCol{1},'dofs') && ~strcmp(xLoopName,task.msh.M) && ~strcmp(xLoopName,task.msh.degree)
+        if isfield(task,'dofs') && ~strcmp(xLoopName,task.msh.M) && ~strcmp(xLoopName,task.msh.degree)
             fprintf(fid, '%% Degrees of freedom: %d\n', task.dofs);
         end
-        if isfield(task.varCol{1},'timeBuildSystem')
-            totTimeString = convertTimeToString(task.varCol{1}.timeBuildSystem);
+        if isfield(task,'timeBuildSystem')
+            totTimeString = convertTimeToString(task.timeBuildSystem);
             fprintf(fid, '%% Time spent building system: %s\n', totTimeString);
         end
-        if isfield(task.varCol{1},'timeSolveSystem')
-            totTimeString = convertTimeToString(task.varCol{1}.timeSolveSystem);
+        if isfield(task,'timeSolveSystem')
+            totTimeString = convertTimeToString(task.timeSolveSystem);
             fprintf(fid, '%% Time spent solving system: %s\n', totTimeString);
         end
         if ~isnan(xLoopName)
@@ -109,9 +91,9 @@ switch format
         if externalProvider
             fprintf(fid, '%s\n', comments); % Line 3: Comments, Computer specs. and calculation times   
         elseif isfield(task,'actualNoDofs')
-            totTimeString = convertTimeToString(task.varCol{1}.timeBuildSystem);
+            totTimeString = convertTimeToString(task.timeBuildSystem);
             fprintf(fid, 'Method: %s%s %s with %d elements (%d degrees of freedom) and NURBS degree %d. Computational time for system assembly (4x6-core Xeon 2.67 GHz): %s\n', ...
-                task.misc.coreMethod, task.misc.method, task.misc.formulation, task.varCol{1}.totNoElems, task.dofs, max(task.varCol{1}.nurbs{1}.degree), totTimeString); % Line 3: Comments, Computer specs. and calculation times
+                task.misc.coreMethod, task.misc.method, task.misc.formulation, task.totNoElems, task.dofs, max(task.msh.degree), totTimeString); % Line 3: Comments, Computer specs. and calculation times
         else
             fprintf(fid, 'No info\n');
         end
@@ -165,4 +147,20 @@ elseif totTime/60 < 60
     totTimeString = [num2str(totTime/60) ' minutes.'];
 else
     totTimeString = [num2str(totTime/3600) ' hours.'];
+end
+
+function fid = printFieldNames(fid,task,method_lc)
+
+fieldNames = fieldnames(task.(method_lc));
+for fieldname = fieldNames.'
+    if ~(numel(task.(method_lc).(fieldname{1})) > 20 && ~isa(task.(method_lc).(fieldname{1}),'char'))
+        switch class(task.(method_lc).(fieldname{1}))
+            case 'char'
+                fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, task.(method_lc).(fieldname{1}));
+            case {'double','int','int32','logical'}
+                fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, num2str(task.(method_lc).(fieldname{1})));
+            case 'function_handle'
+                fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, func2str(task.(method_lc).(fieldname{1})));
+        end
+    end
 end

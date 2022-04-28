@@ -19,7 +19,7 @@ P = numel(omega_P);
 omega_start = omega_P(1);
 omega_end = omega_P(end);
 stringShift = 40;
-tasks(i_task).task = extractVarColFields(task);
+tasks(i_task).task = rmfield(tasks(i_task).task,'varCol');
 noDomains = numel(task.varCol);
 
 % noVec = size(U_P{1},2);
@@ -351,7 +351,7 @@ for i_b = 1:numel(basisROMcell)
             tasks(i_task,taskROM,i_b).task.results.surfaceError = surfaceError;
         end
 
-        tasks(i_task,taskROM,i_b).task = extractVarColFields(task);
+        tasks(i_task,taskROM,i_b).task = rmfield(task,'varCol');
         tasks(i_task,taskROM,i_b).task.varCol{1}.omega_ROM = temp_omega_ROM;
         tasks(i_task,taskROM,i_b).task.varCol{1}.f_ROM = temp_omega_ROM/(2*pi);
         tasks(i_task,taskROM,i_b).task.varCol{1}.k_ROM = temp_omega_ROM/task.varCol{1}.c_f;

@@ -622,7 +622,7 @@ if task.rom.useROM
     task.U_sweep = U_sweep;
 end
 if ~task.misc.storeFullVarCol
-    task = extractVarColFields(task);
+    task = rmfield(task,'varCol');
 end
 
 

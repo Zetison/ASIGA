@@ -47,7 +47,7 @@ msh.parm = 1;
 msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 msh.explodeNURBS = prePlot.plot3Dgeometry;
 msh.M = 5:6;
-% msh.M = 4;
+msh.M = 2;
 f = 1e3;             % Frequency
 misc.omega = 2*pi*f;
 misc.r_a = 1.25*varCol{1}.R2;
@@ -59,6 +59,10 @@ pml.sigmaType = 1:3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType =
 pml.n = [2,2,1];
 pml.gamma = [5,NaN,NaN];
 pml.dirichlet = [0,0,1];	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.n = 2;
+pml.gamma = 5;
+pml.dirichlet = 1;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
 
 ffp.beta = 0;
 ffp.alpha = (0:0.1:360)*pi/180;
@@ -95,7 +99,7 @@ postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 % postPlot(2).xScale          = 1;
 % postPlot(2).addCommands   	= [];
 
-for scatteringCase = {'MS','BI'}
+for scatteringCase = {'BI'} %{'MS','BI'}
     misc.scatteringCase = scatteringCase; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
     if strcmp(misc.scatteringCase{1},'MS')
         para.i_MS = find(abs(ffp.alpha - 240*pi/180) < 20*eps);
