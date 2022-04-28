@@ -297,6 +297,7 @@ for i_b = 1:numel(basisROMcell)
                 case 'Taylor'
                     task.UU = interTaylor(omega,omega_P,U_sweep,noVecs-1);
             end
+            task = computeDerivedQuantities(task);
             task = postProcessSolution(task);
             if printLog
                 fprintf('using %12f seconds.', toc(t_startROM))

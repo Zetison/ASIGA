@@ -40,21 +40,26 @@ for i = 1:task.noDomains
 end
 
 %% Find nodes to remove due to gluing and homogeneous dirichlet conditions
-totNoElems = 0;
-FEdofs = 0;
 for i = 1:task.noDomains
     task.varCol{i} = findDofsToRemove(task.varCol{i});
-    totNoElems = totNoElems + task.varCol{i}.noElems;
-    FEdofs = FEdofs + task.varCol{i}.noDofs - numel(task.varCol{i}.dofsToRemove);
 end
+if printLog
+    fprintf('using %12f seconds.', toc)
+end
+
+%% Compute derived quantities
+tic
+if printLog
+    fprintf(['\n%-' num2str(stringShift) 's'], 'Computing derived quantities ... ')
+end
+task = computeDerivedQuantities(task);
 
 if printLog
     fprintf('using %12f seconds.', toc)
-    fprintf('\nTotal number of elements = %d', totNoElems)
-    fprintf('\nFinite element dofs = %d', FEdofs)
+    fprintf('\nTotal number of elements = %d', task.totNoElems)
+    fprintf('\nFinite element dofs = %d', task.FEdofs)
+    fprintf('\nNumber of elements per wavelength = %.2g', task.nepw)
 end
-task.totNoElems = totNoElems;
-
 
 %% Check NURBS compatibility
 if task.misc.checkNURBSweightsCompatibility
