@@ -96,19 +96,19 @@ switch options.noXLoopPrms
                 ioOptions.xLoopName = NaN;
                 printResultsToFile2(ioOptions);
             end
+            analyticSolutionExist = study.tasks(i).task.analyticSolutionExist;
+            plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || ...
+                                                                                strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
+            if plotAnalyticSolution
+                y_ref = study.tasks(i).task.results.([yname '_ref']);
+                y_ref = y_ref*options.yScale;
+            end
             if plotResults
-                analyticSolutionExist = study.tasks(i).task.analyticSolutionExist;
-                plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || ...
-                                                                                    strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
                 if plotAnalyticSolution
                     prevGrafs = get(gca, 'Children');
                     analyticPlotted = false;
                     if ~isempty(prevGrafs)
                         for j = 1:numel(prevGrafs)
-                            y_ref = study.tasks(i).task.results.([yname '_ref']);
-                            x = eval(['study.tasks(1).task.' xname]);
-                            x = x*options.xScale;
-                            y_ref = y_ref*options.yScale;
                             if numel(y_ref) == numel(prevGrafs(j).YData) && all(y_ref(:) == prevGrafs(j).YData(:))
                                 analyticPlotted = true;
                             end
@@ -116,8 +116,6 @@ switch options.noXLoopPrms
                     end
                     if ~analyticPlotted
                         y_ref = study.tasks(i).task.results.([yname '_ref']);
-                        x = eval(['study.tasks(1).task.' xname]);
-                        x = x*options.xScale;
                         y_ref = y_ref*options.yScale;
                         plotXY(x,y_ref,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
                         hold on
@@ -127,25 +125,22 @@ switch options.noXLoopPrms
                 plotXY(x,y,options.axisType,options.lineStyle,col(i,:),legendName);
                 hold on
             end
-        end
-        analyticSolutionExist = study.tasks(1).task.analyticSolutionExist;
-        plotAnalyticSolution = analyticSolutionExist && (strcmp(yname, 'TS') || strcmp(yname, 'p') || strcmp(yname, 'p_Re') || ...
-                                                                             strcmp(yname, 'p_Im') || strcmp(yname, 'abs_p'));
-        if plotAnalyticSolution && printResults
-            if isrow(y_ref)
-                y_ref = y_ref.';
+            if plotAnalyticSolution && printResults
+                if isrow(y_ref)
+                    y_ref = y_ref.';
+                end
+                if isrow(x)
+                    x = x.';
+                end
+                ioOptions.filename = [subFolderName '/' saveName '_analytic'];
+                ioOptions.x = x;
+                ioOptions.y = y_ref;
+                ioOptions.xlabel = {fileDataHeaderX};
+                ioOptions.ylabel = {yname};
+                ioOptions.task = study.tasks(i).task;
+                ioOptions.xLoopName = NaN;
+                printResultsToFile2(ioOptions);
             end
-            if isrow(x)
-                x = x.';
-            end
-            ioOptions.filename = [subFolderName '/' saveName '_analytic'];
-            ioOptions.x = x;
-            ioOptions.y = y_ref;
-            ioOptions.xlabel = {fileDataHeaderX};
-            ioOptions.ylabel = {yname};
-            ioOptions.task = study.tasks(i).task;
-            ioOptions.xLoopName = NaN;
-            printResultsToFile2(ioOptions);
         end
     case 1
         idx = 1;

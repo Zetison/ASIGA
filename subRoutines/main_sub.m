@@ -84,7 +84,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
         task = getAnalyticSolutions(task);
         switch task.misc.method
             case {'IE','ABC','IENSG','PML'}
-                task.varCol{1}.timeBuildSystem = 0;
+                task.timeBuildSystem = 0;
                 for i_domain = 1:task.noDomains
                     if ~(strcmp(task.misc.method,'IENSG') && task.iem.boundaryMethod && i_domain == 1)
                         tic          
@@ -99,7 +99,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         else  
                             task = buildMatrices(task,i_domain);
                         end
-                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                        task.timeBuildSystem = task.timeBuildSystem + toc;
                         if printLog
                             fprintf('using %12f seconds.', toc)
                         end
@@ -114,7 +114,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         end
                         task = buildIEmatrix(task);
                         
-                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                        task.timeBuildSystem = task.timeBuildSystem + toc;
                         if printLog
                             fprintf('using %12f seconds.', toc)
                         end
@@ -142,7 +142,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         end
                         task.varCol{1} = addABC(task.varCol{1}); 
 
-                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                        task.timeBuildSystem = task.timeBuildSystem + toc;
                         if printLog
                             fprintf('using %12f seconds.', toc)
                         end
@@ -159,7 +159,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         if printLog
                             fprintf('using %12f seconds.', toc)
                         end
-                        task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                        task.timeBuildSystem = task.timeBuildSystem + toc;
                     end
 
                     % Apply Neumann conditions
@@ -173,7 +173,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     if printLog
                         fprintf('using %12f seconds.', toc)
                     end
-                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                    task.timeBuildSystem = task.timeBuildSystem + toc;
                 end
             case 'BEM'
                 tic
@@ -199,7 +199,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         fprintf('using %12f seconds.', toc)
                     end
                 end
-                task.varCol{1}.timeBuildSystem = toc(t_start);
+                task.timeBuildSystem = toc(t_start);
                 if task.noDomains > 1 
                     tic
                     % Solid matrices
@@ -208,7 +208,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     end
                     task = buildMatrices(task,2);
                     
-                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                    task.timeBuildSystem = task.timeBuildSystem + toc;
                     if printLog
                         fprintf('using %12f seconds.', toc)
                     end
@@ -243,10 +243,10 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     if printLog
                         fprintf('using %12f seconds.', toc)
                     end
-                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                    task.timeBuildSystem = task.timeBuildSystem + toc;
                 end  
             case 'BA'
-                task.varCol{1}.timeBuildSystem = 0;
+                task.timeBuildSystem = 0;
                 for i = 1:task.noDomains
                     tic          
                     if printLog
@@ -254,7 +254,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     end
                     task = buildMatrices(task,i);
                     task = buildBAmatrix(task,i);
-                    task.varCol{1}.timeBuildSystem = task.varCol{1}.timeBuildSystem + toc;
+                    task.timeBuildSystem = task.timeBuildSystem + toc;
                     if printLog
                         fprintf('using %12f seconds.', toc)
                     end
@@ -262,16 +262,16 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
 %                 if task.noDomains > 1 
 %                     warning('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
 %                 end
-                task.varCol{1}.timeBuildSystem = toc;
+                task.timeBuildSystem = toc;
             case 'MFS'
                 tic
                 if printLog
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Building MFS matrix ... ')
                 end
                 task = buildMFSmatrix(task);  
-                task.varCol{1}.timeBuildSystem = toc;
+                task.timeBuildSystem = toc;
                 if printLog
-                    fprintf('using %12f seconds.', task.varCol{1}.timeBuildSystem)
+                    fprintf('using %12f seconds.', task.timeBuildSystem)
                 end
         end
         switch task.misc.method
@@ -296,14 +296,14 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     end
                     task.varCol{1}.A_K(:,allDofsToRemove) = [];
                 end
-                task.varCol{1}.timeCollectingMatrices = toc;
+                task.timeCollectingMatrices = toc;
                 if printLog
-                    fprintf('using %12f seconds.', task.varCol{1}.timeCollectingMatrices)
+                    fprintf('using %12f seconds.', task.timeCollectingMatrices)
                 end
                 
                 if printLog
                     fprintf(['\n%-' num2str(stringShift) 's'], 'Total time building system ... ')
-                    fprintf(' was  %12f seconds.', task.varCol{1}.timeBuildSystem+task.varCol{1}.timeCollectingMatrices)
+                    fprintf(' was  %12f seconds.', task.timeBuildSystem+task.timeCollectingMatrices)
                 end
                 
                 %% SOLVE SYSTEM
@@ -399,7 +399,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 if printLog
                     fprintf('using %12f seconds.', toc)
                 end
-                task.varCol{1}.timeSolveSystem = toc;
+                task.timeSolveSystem = toc;
                 if task.misc.computeCondNumber && (size(A,1) == size(A,2))
                     if printLog
                         fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating condition number ... ')
@@ -627,7 +627,7 @@ if task.rom.useROM
     task.U_sweep = U_sweep;
 end
 if ~task.misc.storeFullVarCol
-    task = rmfield(task,'varCol');
+    task.varCol = rmfields(task.varCol,getAddedFields());
 end
 
 

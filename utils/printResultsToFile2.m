@@ -150,17 +150,18 @@ else
 end
 
 function fid = printFieldNames(fid,task,method_lc)
-
-fieldNames = fieldnames(task.(method_lc));
-for fieldname = fieldNames.'
-    if ~(numel(task.(method_lc).(fieldname{1})) > 20 && ~isa(task.(method_lc).(fieldname{1}),'char'))
-        switch class(task.(method_lc).(fieldname{1}))
-            case 'char'
-                fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, task.(method_lc).(fieldname{1}));
-            case {'double','int','int32','logical'}
-                fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, num2str(task.(method_lc).(fieldname{1})));
-            case 'function_handle'
-                fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, func2str(task.(method_lc).(fieldname{1})));
+if isfield(task,method_lc)
+    fieldNames = fieldnames(task.(method_lc));
+    for fieldname = fieldNames.'
+        if ~(numel(task.(method_lc).(fieldname{1})) > 20 && ~isa(task.(method_lc).(fieldname{1}),'char'))
+            switch class(task.(method_lc).(fieldname{1}))
+                case 'char'
+                    fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, task.(method_lc).(fieldname{1}));
+                case {'double','int','int32','logical'}
+                    fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, num2str(task.(method_lc).(fieldname{1})));
+                case 'function_handle'
+                    fprintf(fid, '%% %s.%s: %s\n', method_lc, fieldname{1}, func2str(task.(method_lc).(fieldname{1})));
+            end
         end
     end
 end

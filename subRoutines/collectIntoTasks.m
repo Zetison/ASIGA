@@ -9,18 +9,30 @@ end
 loopParametersArr = cell(length(loopParameters),1);
 
 taskNames = fieldnames(task);
-allTaskNames = cell(0,0);
+allTaskNames = cell(1000,1);
+counter2 = 1;
 for j = 1:numel(taskNames)
     taskName_j = task.(taskNames{j});
     if isstruct(taskName_j)
         subTaskNames = fieldnames(taskName_j);
         for i = 1:numel(subTaskNames)
-            allTaskNames{end+1,1} = [taskNames{j} '.' subTaskNames{i}];
+            allTaskNames{counter2} = [taskNames{j} '.' subTaskNames{i}];
+            counter2 = counter2 + 1;
         end
     else
-        allTaskNames(end+1,1) = taskNames(j);
+        allTaskNames(counter2) = taskNames(j);
+        counter2 = counter2 + 1;
     end
 end
+for patch = 1:numel(task.varCol)
+    subTaskNames = fieldnames(task.varCol{patch});
+    for i = 1:numel(subTaskNames)
+        allTaskNames{counter2} = ['varCol{' num2str(patch) '}.' subTaskNames{i}];
+        counter2 = counter2 + 1;
+    end
+end
+allTaskNames(counter2:end) = [];
+
 childrenParameters = cell(size(connectedParameters));
 for i = 1:numel(connectedParameters)
     childrenParameters{i} = cell(size(connectedParameters{i}));

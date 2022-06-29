@@ -45,7 +45,17 @@ if varCol{1}.boundaryMethod
     else
         theta_m = asec(sqrt(3));
         refLength = c_z*(pi-2*theta_m);
-    end    
+    end
+    if task.msh.refineThetaOnly
+        if parm ~= 1
+            error('Must have parm = 1 for pure theta refinement')
+        end
+        degreeVec = [2,degree];
+        dirs = 2;
+    else
+        degreeVec = degree;
+        dirs = 1:2;
+    end
     if isfield(varCol{1},'refinement')
         if numel(varCol) > 1
             t_fluid = c_z*2*pi/(32-pi);
@@ -149,8 +159,6 @@ else
     end
     
     task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
-    varCol{1}.refLength = refLength;
-    varCol{1}.dirs = dirs;
 
     if numel(varCol) > 1
         solid = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
@@ -180,6 +188,8 @@ else
         end
     end
 end
+varCol{1}.refLength = refLength;
+varCol{1}.dirs = dirs;
 chimin = c_z*(1-10*eps);
 chimax = c_z*(1+10*eps);
 if parm == 2 && degree < 4
