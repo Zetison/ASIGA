@@ -25,9 +25,6 @@ if prePlot.plot3Dgeometry
         end
     end
     for j = 1:numel(task.varCol)
-        if strcmp(task.misc.coreMethod, 'linear_FEM')
-            prePlot.resolution = [0,0,0];
-        end
         if isempty(prePlot.color)
             switch task.varCol{j}.media
                 case 'fluid'
@@ -54,7 +51,7 @@ if prePlot.plot3Dgeometry
                 idx = findSet(topset,prePlot.plotSubsets{i});
                 if isnan(idx)
                     warning(['Subset ' prePlot.plotSubsets{i} ' does not exist in structure'])
-                    break
+                    continue
                 end
                 noPatches = numel(topset{idx}.item);
                 nurbs = cell(1,noPatches);
@@ -105,6 +102,7 @@ if prePlot.plot3Dgeometry
     figName = [task.resultsFolder '/' figName '_3D'];
     if exist('../export_fig', 'dir')
         export_fig(figName, '-png', '-transparent', prePlot.pngResolution)
+%         export_fig(figName, '-pdf', '-transparent')
     end
     savefig([figName, '.fig'])
 end   
@@ -124,12 +122,6 @@ if prePlot.plot2Dgeometry
             otherwise
                 nurbs2D = task.varCol{j}.nurbs;
                 nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
-        end
-        switch task.misc.model
-            case {'PH', 'M3', 'MS', 'IMS', 'SMS','Mi2021ilc'}
-                prePlot.view = [0,90];
-            otherwise
-                prePlot.view = [0,0];
         end
         if numel(task.varCol) > 1
             switch task.varCol{j}.media
@@ -177,7 +169,9 @@ if prePlot.plot2Dgeometry
     end
     savefig([figName, '.fig'])
 end
-
+if isa(prePlot.addCommands,"function_handle")
+    prePlot.addCommands()
+end
 
 
 % plotControlPts(fluid);

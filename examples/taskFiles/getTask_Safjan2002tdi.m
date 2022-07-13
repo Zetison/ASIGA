@@ -38,7 +38,6 @@ c_z = 11;
 c_x = sqrt(c_z^2-Upsilon.^2);
               
 varCol = setSSParameters(1);
-varCol{1}.meshFile = 'createNURBSmesh_EL';
 c_f = varCol{1}.c_f;   % Speed of sound in outer fluid
 k = 1;                 % Wave number for Simpson2014aib
 misc.omega = c_f*k;    % Angular frequency

@@ -11,3 +11,4 @@ task.varCol{1}.geometry.topology = geometry.topology;
 if task.pml.dirichlet
     task.varCol = copySet(task.varCol,1, 'outer', 'homDirichlet');
 end
+task.varCol = copySet(task.varCol,1, 'outer', 'Gamma_b');

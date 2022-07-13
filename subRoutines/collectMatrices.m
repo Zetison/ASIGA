@@ -59,14 +59,14 @@ for i = 1:noDomains
                 c_f = 1;
             end
             eqScale = 1/rho;
-            if strcmp(task.misc.method,'BA')
+            if strcmp(task.misc.method,'BA') || strcmp(task.misc.method,'interp')
                 massMatrixScale = eqScale;
             else
                 massMatrixScale = -eqScale/c_f^2;
             end
         case 'solid'
             eqScale = 1;
-            if strcmp(task.misc.method,'BA')
+            if strcmp(task.misc.method,'BA') || strcmp(task.misc.method,'interp')
                 massMatrixScale = eqScale;
             else
                 massMatrixScale = -eqScale*rho;
@@ -115,7 +115,7 @@ if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
         end  
     end
 end
-if ~(strcmp(task.misc.method,'BEM') && strcmp(task.misc.formulation(1),'C'))
+if ~((strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'interp')) && strcmp(task.misc.formulation(1),'C'))
     A0(allDofsToRemove,:) = [];
     A1(allDofsToRemove,:) = [];
     A2(allDofsToRemove,:) = [];

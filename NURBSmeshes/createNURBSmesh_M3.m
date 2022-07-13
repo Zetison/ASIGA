@@ -219,10 +219,6 @@ else
     %         plotNURBS(ellipsoid,'colorFun',@(x) log10(abs(sum((x-x_0).^2./[c_z,c_xy,c_xy].^2)-1)))
         end
     end
-    if task.msh.explodeNURBS
-        fluid = explodeNURBS(fluid);
-        solid = explodeNURBS(solid);
-    end
 end
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
