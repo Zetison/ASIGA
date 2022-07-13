@@ -14,7 +14,7 @@ misc.scatteringCase      = 'BI';        % Bistatic scattering
 misc.applyLoad           = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 misc.model               = 'S1';        % Spherical shell of radius 1
 misc.method              = 'IE';        % Method for handling the unbounded domain problem
-misc.coreMethod          = 'IGA';       % Solution space: 
+misc.coreMethod          = 'IGA';       % Solution space: IGA, C0_IGA, hp_FEM, h_FEM, linear_FEM
 misc.BC                  = 'SHBC';      % Boundary condition
 misc.formulation         = 'BGU';       % Formulation
 misc.computeCondNumber   = false;       % Compute the condition number of the global matrix
@@ -30,6 +30,7 @@ misc.clearGlobalMatrices = true;        % Clear memory consuming matrices
 misc.P_inc               = 1;           % Amplitude of incident wave
 misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as opposed to the interior problem)
 misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are compatible across patch interfaces
+task.misc.compute_h_max  = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
 
 %% Mesh settings
 msh.M                   = 1;	   % Mesh number

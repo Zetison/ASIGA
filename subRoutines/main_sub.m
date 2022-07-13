@@ -76,7 +76,7 @@ if ~isempty(task.prePlot.QoI)
     fprintf('\nQoI error is %.15g\n',task.results.QoIError)
 end
 
-if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry) && task.prePlot.abortAfterPlotting
+if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry || task.misc.preProcessOnly) && task.prePlot.abortAfterPlotting
     return
 end
 

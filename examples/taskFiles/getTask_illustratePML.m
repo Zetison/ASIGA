@@ -30,6 +30,8 @@ varCol{1} = struct('media', 'fluid', ...
                    'c_f', 1500, ...
                    'rho', 1000);
 msh.meshFile = 'createNURBSmesh_EL';
+misc.preProcessOnly = true;
+misc.compute_h_max  = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
 
 misc.checkNURBSweightsCompatibility = 0;
 prePlot.plotGeometryInfo = 0;       % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
@@ -81,7 +83,7 @@ misc.r_a = c_x*1.1;
 % misc.extraGP = [10,10,10];
 % ffp.extraGP = [50,0,0];
 
-loopParameters = {'msh.M','misc.coreMethod'};
+loopParameters = {'msh.M','msh.degree','misc.coreMethod'};
 
 pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
 pml.n = 1;
@@ -112,8 +114,8 @@ prePlot.addCommands = @() addCommands(pml,misc,varCol);
 
 misc.coreMethod = {'linear_FEM','IGA'};
 
-postPlot(1).xname        	= 'dofs';
-% postPlot(1).xname        	= 'surfDofs';
+% postPlot(1).xname        	= 'dofs';
+postPlot(1).xname        	= 'surfDofs';
 postPlot(1).yname        	= 'QoIError';    % Examples include: 'p_Re', 'p_Im', 'abs_p', 'TS', 'error_pAbs', 'error_p', 'surfaceError', 'energyError', 'L2Error', 'H1Error', 'H1sError'
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
@@ -123,11 +125,21 @@ postPlot(1).lineStyle    	= '*-';
 postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).noXLoopPrms   	= 1;
 
-msh.M = 1:4; % 4
+M_0 = 9;
+msh.M = 1:M_0; % 4
 misc.coreMethod = 'IGA';
 pml.X_bApprox = 'BA';
+msh.degree = 2:4;
 collectIntoTasks
 
+msh.M = 1:(M_0-1); % 4
+misc.coreMethod = 'C0_IGA';
+collectIntoTasks
+
+misc.coreMethod = 'hp_FEM';
+collectIntoTasks
+
+msh.M = 1:M_0; % 4
 misc.coreMethod = 'linear_FEM';
 pml.X_bApprox = 'interp';
 collectIntoTasks

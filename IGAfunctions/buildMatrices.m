@@ -107,8 +107,8 @@ else
 end
 
 %% Build global matrices
-for e = 1:noElems
-% parfor e = 1:noElems
+% for e = 1:noElems
+parfor e = 1:noElems
 	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
@@ -135,7 +135,7 @@ for e = 1:noElems
     J = cell(1,3);
     if buildStiffnessMatrix
         if any(isPML(e,:)) && usePML && strcmp(formulation,'GSB')
-            if 0
+            if 1
                 xi_t = complex(xi);
     
                 for i = 1:d_p
@@ -194,9 +194,10 @@ for e = 1:noElems
                             end
                         end
                     case 2
-                        d3X = (R{2}.*R{3}.*R{4}./R{1}.^2)*pts;
                         i_nonAbsorption = find(~isPML(e,:));
                         j_absorption = setdiff(1:d_p,i_nonAbsorption);
+                        d2Xabsorption = (R{j_absorption(1)+1}.*R{j_absorption(2)+1}./R{1})*pts;
+                        d3X = (R{2}.*R{3}.*R{4}./R{1}.^2)*pts;
                         Isigma = intSigmaPML(xi,pml);
                         sigma = intSigmaPML(xi,pml);
                         for i = 1:d_p
@@ -210,15 +211,14 @@ for e = 1:noElems
                                     d2X = (R{i+1}.*R{j+1}./R{1})*pts;
                                     J{i} = J{i} + 1i*Isigma(:,j).*d2X;
                                 end
-                                J{i} = J{i} - Isigma(:,otherIdx(1)).*Isigma(:,otherIdx(2)).*d3X;
+                                J{i} = J{i} - (1i*xi(:,j_absorption(1)).*Isigma(:,j_absorption(2)) + 1i*xi(:,j_absorption(2)).*Isigma(:,j_absorption(1))   - Isigma(:,j_absorption(1)).*Isigma(:,j_absorption(2))).*d3X;
                             else
                                 J{i} = J{i} + 1i*sigma(:,i).*dX;
                                 j = setdiff(j_absorption,i);
-                                d2X = (R{j_absorption(1)+1}.*R{j_absorption(2)+1}./R{1})*pts;
-                                J{i} = J{i} + (1i*Isigma(:,j) - Isigma(:,j).*sigma(:,i)).*d2X;
+                                J{i} = J{i} - sigma(:,i).*(1i*xi(:,j) - Isigma(:,j)).*d2Xabsorption;
                             end
                         end
-                        keyboard
+%                         keyboard
                     case 3
                         d3X = (R{2}.*R{3}.*R{4}./R{1}.^2)*pts;
                         Isigma = intSigmaPML(xi,pml);
