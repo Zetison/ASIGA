@@ -107,8 +107,8 @@ else
 end
 
 %% Build global matrices
-% for e = 1:noElems
-parfor e = 1:noElems
+for e = 1:noElems
+% parfor e = 1:noElems
 	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
@@ -132,50 +132,130 @@ parfor e = 1:noElems
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     R = NURBSbasis(I, xi, degree, knots, wgts);
+    J = cell(1,3);
     if buildStiffnessMatrix
         if any(isPML(e,:)) && usePML && strcmp(formulation,'GSB')
-            xi_t = complex(xi);
+            if 0
+                xi_t = complex(xi);
+    
+                for i = 1:d_p
+                    if isPML(e,i)
+                        xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
+                    end
+                end
+    
+                R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
+                for i = 1:d_p
+                    J{i} = R_t{i+1}*pts;
+                end
+                if isPML(e,1)
+                    J{1} = J{1}.*(1+1i*sigmaPML(xi(:,1),pml));
+                end
+                if isPML(e,2)
+                    J{2} = J{2}.*(1+1i*sigmaPML(xi(:,2),pml));
+                end
+                if isPML(e,3)
+                    J{3} = J{3}.*(1+1i*sigmaPML(xi(:,3),pml));
+                end
+            else
+                J_old = cell(1,3);
+                xi_t = complex(xi);
+    
+                for i = 1:d_p
+                    if isPML(e,i)
+                        xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
+                    end
+                end
+    
+                R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
+                for i = 1:d_p
+                    J_old{i} = R_t{i+1}*pts;
+                end
+                if isPML(e,1)
+                    J_old{1} = J_old{1}.*(1+1i*sigmaPML(xi(:,1),pml));
+                end
+                if isPML(e,2)
+                    J_old{2} = J_old{2}.*(1+1i*sigmaPML(xi(:,2),pml));
+                end
+                if isPML(e,3)
+                    J_old{3} = J_old{3}.*(1+1i*sigmaPML(xi(:,3),pml));
+                end
+                switch sum(isPML(e,:))
+                    case 1
+                        j = find(isPML(e,:));
+                        Isigma = intSigmaPML(xi(:,j),pml);
+                        for i = 1:d_p
+                            J{i} = R{i+1}*pts;
+                            if isPML(e,i)
+                                J{i} = J{i}.*(1 + 1i*sigmaPML(xi(:,j),pml));
+                            else
+                                d2X = (R{i+1}.*R{j+1}./R{1})*pts;
+                                J{i} = J{i} + 1i*d2X.*Isigma;
+                            end
+                        end
+                    case 2
+                        d3X = (R{2}.*R{3}.*R{4}./R{1}.^2)*pts;
+                        i_nonAbsorption = find(~isPML(e,:));
+                        j_absorption = setdiff(1:d_p,i_nonAbsorption);
+                        Isigma = intSigmaPML(xi,pml);
+                        sigma = intSigmaPML(xi,pml);
+                        for i = 1:d_p
+                            otherIdx = setdiff(1:d_p,i);
+                            dX = R{i+1}*pts;
+                            J{i} = dX;
 
-            for i = 1:d_p
-                if isPML(e,i)
-                    xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
+
+                            if i == i_nonAbsorption
+                                for j = j_absorption
+                                    d2X = (R{i+1}.*R{j+1}./R{1})*pts;
+                                    J{i} = J{i} + 1i*Isigma(:,j).*d2X;
+                                end
+                                J{i} = J{i} - Isigma(:,otherIdx(1)).*Isigma(:,otherIdx(2)).*d3X;
+                            else
+                                J{i} = J{i} + 1i*sigma(:,i).*dX;
+                                j = setdiff(j_absorption,i);
+                                d2X = (R{j_absorption(1)+1}.*R{j_absorption(2)+1}./R{1})*pts;
+                                J{i} = J{i} + (1i*Isigma(:,j) - Isigma(:,j).*sigma(:,i)).*d2X;
+                            end
+                        end
+                        keyboard
+                    case 3
+                        d3X = (R{2}.*R{3}.*R{4}./R{1}.^2)*pts;
+                        Isigma = intSigmaPML(xi,pml);
+                        sigma = intSigmaPML(xi,pml);
+                        for i = 1:d_p
+                            J{i} = R{i+1}*pts;
+                            otherIdx = setdiff(1:d_p,i);
+                            J{i} = J{i} + 1i*sigma(:,i)*R{i+1};
+                            for j = otherIdx
+                                d2X = (R{i+1}.*R{j+1}./R{1})*pts;
+                                J{i} = J{i} + (1i*Isigma(:,j) - sigma(:,i)*Isigma(:,j))*d2X;
+                            end
+                            J{i} = J{i} + (1i*sigma(:,i) - 1).*Isigma(:,otherIdx(1)).*Isigma(:,otherIdx(2)).*d3X;
+                        end
                 end
             end
-
-            R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
-            J1 = R_t{2}*pts;
-            J2 = R_t{3}*pts;
-            J3 = R_t{4}*pts;
-            if isPML(e,1)
-                J1 = J1.*(1+1i*sigmaPML(xi(:,1),pml));
-            end
-            if isPML(e,2)
-                J2 = J2.*(1+1i*sigmaPML(xi(:,2),pml));
-            end
-            if isPML(e,3)
-                J3 = J3.*(1+1i*sigmaPML(xi(:,3),pml));
-            end
         else
-            J1 = R{2}*pts;
-            J2 = R{3}*pts;
-            J3 = R{4}*pts;
+            for i = 1:d_p
+                J{i} = R{i+1}*pts;
+            end
         end
-        J_1 = sum(J1.*cross(J2,J3,2),2);
+        J_1 = sum(J{1}.*cross(J{2},J{3},2),2);
     else
         J_1 = getJacobian(R,pts,d_p);
     end
     fact = J_1 * J_2.* W;
 
     if buildStiffnessMatrix        
-        a11 = J1(:,1);
-        a21 = J1(:,2);
-        a31 = J1(:,3);
-        a12 = J2(:,1);
-        a22 = J2(:,2);
-        a32 = J2(:,3);
-        a13 = J3(:,1);
-        a23 = J3(:,2);
-        a33 = J3(:,3);
+        a11 = J{1}(:,1);
+        a21 = J{1}(:,2);
+        a31 = J{1}(:,3);
+        a12 = J{2}(:,1);
+        a22 = J{2}(:,2);
+        a32 = J{2}(:,3);
+        a13 = J{3}(:,1);
+        a23 = J{3}(:,2);
+        a33 = J{3}(:,3);
         JinvT1 = [(a22.*a33-a23.*a32)./J_1, (a23.*a31-a21.*a33)./J_1, (a21.*a32-a22.*a31)./J_1]; % First row of transpose of Jinv
         JinvT2 = [(a13.*a32-a12.*a33)./J_1, (a11.*a33-a13.*a31)./J_1, (a12.*a31-a11.*a32)./J_1]; % Second row of transpose of Jinv
         JinvT3 = [(a12.*a23-a13.*a22)./J_1, (a13.*a21-a11.*a23)./J_1, (a11.*a22-a12.*a21)./J_1]; % Third row of transpose of Jinv

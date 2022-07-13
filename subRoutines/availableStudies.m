@@ -9,7 +9,7 @@ function studyName = availableStudies()
 % studyName = 'M5'; %getTask_M5
 % studyName = 'M31'; %getTask_M31
 % studyName = 'PH'; %getTask_PH
-% studyName = 'Barrel'; %getTask_Barrel
+studyName = 'Barrel'; %getTask_Barrel
 % studyName = 'Barrel_Sweep'; %getTask_Barrel_Sweep
 % studyName = 'S15'; %getTask_S15
 % studyName = 'CE'; %getTask_CE
@@ -18,7 +18,7 @@ function studyName = availableStudies()
 
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
-studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
+% studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
 % studyName = 'Safjan2002tdi_Fig1'; %getTask_Safjan2002tdi_Fig1
 % studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Shirron2006afe'; %getTask_Shirron2006afe

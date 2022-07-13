@@ -54,7 +54,7 @@ else
 %     varCol{1}.refinement = @(M) [0, 0, 4];
 end
 
-msh.degree = 3;
+msh.degree = 2; %3
 msh.M = 4; % 4
 ffp.extraGP = [100,0,0];    % extra quadrature points
 % extraGP = [7,7,0];    % extra quadrature points

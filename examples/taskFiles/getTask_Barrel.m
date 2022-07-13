@@ -32,10 +32,11 @@ k = [50,100];
 % k = 10;
 misc.omega = k*varCol{1}.c_f;
 msh.refineThetaOnly = 1;
-msh.pmlFill = [0,1]; % Use rounded corners for PML domain
+% msh.pmlFill = [0,1]; % Use rounded corners for PML domain
+msh.pmlFill = 0; % Use rounded corners for PML domain
 msh.M = 6:7;
 msh.M = 5:7;
-% msh.M = 4;
+msh.M = 1;
 msh.degree = 2;
 msh.parm = [1,2];
 msh.parm = 1;
@@ -43,6 +44,7 @@ ffp.alpha_s = pi;
 ffp.beta_s = 0;
 if msh.refineThetaOnly
     ffp.extraGP = [100,0,0];
+    ffp.extraGP = [59,0,0];
 end
 
 ffp.beta = 0;
@@ -92,7 +94,7 @@ postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
-postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
+% postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
 para.plotFullDomain          = false;
 para.plotResultsInParaview	 = 1;
@@ -145,7 +147,6 @@ postPlot(1).subFolderName   = '';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 1;
-postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
 msh.degree = 2;
 misc.applyLoad = 'pointPulsation';
@@ -196,7 +197,8 @@ if i_study == 1
              'Barrel_M7_parm2_omega75000_BEM_CCBIEC_applyLoadplaneWave_pmlFill0_TSVSalpha.txt'};
     names = {'Barrel_M7_parm2_omega75000_BEM_CCBIEC_applyLoadplaneWave_pmlFill0_TSVSalpha.txt'};
     for name = names
-        T = readLaTeXFormat(['~/results/ASIGA/Barrel/' name{1}]);
+        homeDir = expanduser('~');
+        T = readLaTeXFormat([homeDir '/results/ASIGA/Barrel/' name{1}]);
         x = T(:,1);
         y = T(:,2);
         hold on
