@@ -182,14 +182,14 @@ parfor e = 1:noElems
                 end
                 switch sum(isPML(e,:))
                     case 1
-                        j = find(isPML(e,:));
-                        Isigma = intSigmaPML(xi(:,j),pml);
+                        j1 = find(isPML(e,:));
+                        Isigma = intSigmaPML(xi(:,j1),pml);
                         for i = 1:d_p
                             J{i} = R{i+1}*pts;
                             if isPML(e,i)
-                                J{i} = J{i}.*(1 + 1i*sigmaPML(xi(:,j),pml));
+                                J{i} = J{i}.*(1 + 1i*sigmaPML(xi(:,j1),pml));
                             else
-                                d2X = (R{i+1}.*R{j+1}./R{1})*pts;
+                                d2X = (R{i+1}.*R{j1+1}./R{1})*pts;
                                 J{i} = J{i} + 1i*d2X.*Isigma;
                             end
                         end
@@ -207,15 +207,15 @@ parfor e = 1:noElems
 
 
                             if i == i_nonAbsorption
-                                for j = j_absorption
-                                    d2X = (R{i+1}.*R{j+1}./R{1})*pts;
-                                    J{i} = J{i} + 1i*Isigma(:,j).*d2X;
+                                for j2 = j_absorption
+                                    d2X = (R{i+1}.*R{j2+1}./R{1})*pts;
+                                    J{i} = J{i} + 1i*Isigma(:,j2).*d2X;
                                 end
                                 J{i} = J{i} - (1i*xi(:,j_absorption(1)).*Isigma(:,j_absorption(2)) + 1i*xi(:,j_absorption(2)).*Isigma(:,j_absorption(1))   - Isigma(:,j_absorption(1)).*Isigma(:,j_absorption(2))).*d3X;
                             else
                                 J{i} = J{i} + 1i*sigma(:,i).*dX;
-                                j = setdiff(j_absorption,i);
-                                J{i} = J{i} - sigma(:,i).*(1i*xi(:,j) - Isigma(:,j)).*d2Xabsorption;
+                                j1 = setdiff(j_absorption,i);
+                                J{i} = J{i} - sigma(:,i).*(1i*xi(:,j1) - Isigma(:,j1)).*d2Xabsorption;
                             end
                         end
 %                         keyboard
@@ -227,9 +227,9 @@ parfor e = 1:noElems
                             J{i} = R{i+1}*pts;
                             otherIdx = setdiff(1:d_p,i);
                             J{i} = J{i} + 1i*sigma(:,i)*R{i+1};
-                            for j = otherIdx
-                                d2X = (R{i+1}.*R{j+1}./R{1})*pts;
-                                J{i} = J{i} + (1i*Isigma(:,j) - sigma(:,i)*Isigma(:,j))*d2X;
+                            for j2 = otherIdx
+                                d2X = (R{i+1}.*R{j2+1}./R{1})*pts;
+                                J{i} = J{i} + (1i*Isigma(:,j2) - sigma(:,i)*Isigma(:,j2))*d2X;
                             end
                             J{i} = J{i} + (1i*sigma(:,i) - 1).*Isigma(:,otherIdx(1)).*Isigma(:,otherIdx(2)).*d3X;
                         end
