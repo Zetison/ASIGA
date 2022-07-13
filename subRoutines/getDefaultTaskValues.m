@@ -83,6 +83,10 @@ prePlot.ylabel              = 'y';         % Set y-axis label
 prePlot.zlabel              = 'z';         % Set z-axis label
 prePlot.pngResolution       = '-r200';     % Resolution of exported png images
 prePlot.color               = [];          % Nx3 array with colors to use
+prePlot.addCommands      	= [];          % Add commands through a function handle after preplotting
+prePlot.coarseLinearSampling = true;       % Only sample cornerpoints for linear parametrizations
+prePlot.QoI                 = [];
+prePlot.QoI_ref             = [];
 
 %% Solver settings
 sol.solver = 'LU';              % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
@@ -111,6 +115,7 @@ postPlot(1).xname        	= 'alpha';
 postPlot(1).yname        	= 'TS';    % Examples include: 'p_Re', 'p_Im', 'abs_p', 'TS', 'error_pAbs', 'error_p', 'surfaceError', 'energyError', 'L2Error', 'H1Error', 'H1sError'
 postPlot(1).plotResults  	= false;
 postPlot(1).printResults 	= false;
+postPlot(1).addSlopes       = false;
 postPlot(1).axisType      	= 'plot';
 postPlot(1).lineStyle    	= '*-';
 postPlot(1).xScale       	= 1;
@@ -180,6 +185,7 @@ pml.t = NaN;         	% thickness of PML
 pml.n = 1;            	% polynomial order
 pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
 pml.alpha = 30;         % constant used for the stretching function sigma(xi) for sigmaType = 5
+pml.X_bApprox = 'BA';   % X_bApprox = 'BA' finds X_b using least squares while X_bApprox = 'interp' uses interpolation at Greville abscissa
 
 %% Settings for the MFS (method of fundamental solution)
 mfs.delta = 0.1;            % Distance from the boundary to the internal source points

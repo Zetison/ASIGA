@@ -50,10 +50,9 @@ for patch = 1:noPatches
                 idx = mod(i:i+1+d_p-2,d_p)+1;
                 controlPts = permute(slc(coeffs,J,i+1),[1,idx+1]); % permute to obtains normal vectors aligned with the left over parametric direction
                 idx = idx(1:end-1);
-                controlPts = reshape(controlPts,[d+1,number(idx)]);
                 knots = nurbs{patch}.knots(idx);
 
-                subnurbs(counter) = createNURBSobject(controlPts,knots);
+                subnurbs(counter) = createNURBSobject(reshape(controlPts,[d+1,number(idx)]),knots);
                 if isfield(nurbs{patch},'isPML')
                     subnurbs{counter}.isPML = nurbs{patch}.isPML;
                 end

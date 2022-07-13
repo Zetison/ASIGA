@@ -5,9 +5,17 @@ degree = task.msh.degree;
 
 x_0 = [0, 0, 0];
 task.iem.x_0 = x_0; % The center of the model
-alignWithAxis = 'Zaxis';
+if isfield(task.msh,'alignWithAxis')
+    alignWithAxis = task.msh.alignWithAxis;
+else
+    alignWithAxis = 'Zaxis';
+end
+
 switch task.misc.method
     case {'IE','IENSG','ABC'}
+        if ~strcmp(alignWithAxis,'Zaxis')
+            warning('You may need to alter A_2 to account for this.')
+        end
         task.iem.A_2 = eye(3);
         varCol{1}.alignWithAxis = alignWithAxis;
 end
@@ -18,17 +26,23 @@ else
 end
 if isfield(varCol{1},'c_z')
     c_x = varCol{1}.c_x;
-    if ~isfield(varCol,'c_y')
-        c_y = c_x;
-    else
+    if isfield(varCol{1},'c_y')
         c_y = varCol{1}.c_y;
+    else
+        c_y = c_x;
     end
     c_z = varCol{1}.c_z;
-    Upsilon = sqrt(c_z^2-c_x^2);
+    C = [c_x,c_y,c_z];
+    c_min = min(C);
+    [c_max,I_c_max]  = max(C);
+    Upsilon = sqrt(c_max^2-c_min^2);
 else
     c_x = varCol{1}.R;
     c_y = varCol{1}.R;
     c_z = varCol{1}.R;
+    C = [c_x,c_y,c_z];
+    c_min = min(C);
+    I_c_max = 1;
     Upsilon = 0;
 end
 if numel(varCol) == 1
@@ -40,11 +54,13 @@ parm = task.msh.parm;
 if varCol{1}.boundaryMethod
     solid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
     solid = makeUniformNURBSDegree(solid,degree);
+    c_max = max([c_x,c_y,c_z]);
+    L_gamma = 2*c_max;
     if parm == 1
-        refLength = c_z*pi/2;
+        refLength = c_max*pi/2;
     else
         theta_m = asec(sqrt(3));
-        refLength = c_z*(pi-2*theta_m);
+        refLength = c_max*(pi-2*theta_m);
     end
     if task.msh.refineThetaOnly
         if parm ~= 1
@@ -66,7 +82,6 @@ if varCol{1}.boundaryMethod
     else
         solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0);
     end
-    L_gamma = 2*c_z;
     
     options.at = [0 0; 0 0; 0 1];
     fluid = subNURBS(solid,options);
@@ -76,8 +91,8 @@ if varCol{1}.boundaryMethod
             fluid_i = getEllipsoidData('C', varCol{2}.R, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi);
             fluid_i_inner = flipNURBSparametrization(subNURBS(fluid_i,'at',[0,0;0,0;1,0]),1);
             fluid_i_outer = subNURBS(solid,'at',[0,0;0,0;1,0]);
-            fluid_i_inner = refineNURBSevenly(fluid_i_inner,(2^(M-1)-1)/(c_z*pi/2),{},0);
-            fluid_i_outer = refineNURBSevenly(fluid_i_outer,(2^(M-1)-1)/(c_z*pi/2),{},0);
+            fluid_i_inner = refineNURBSevenly(fluid_i_inner,(2^(M-1)-1)/(c_max*pi/2),{},0);
+            fluid_i_outer = refineNURBSevenly(fluid_i_outer,(2^(M-1)-1)/(c_max*pi/2),{},0);
             fluid_i = [fluid_i_inner,fluid_i_outer];
             
             varCol{3}.patchTop = getPatchTopology(fluid_i);
@@ -96,7 +111,7 @@ if varCol{1}.boundaryMethod
         else
             fluid_i = subNURBS(solid,'at',[0,0;0,0;1,0]);
             fluid_i = makeUniformNURBSDegree(fluid_i,degree);
-            fluid_i = refineNURBSevenly(fluid_i,(2^(M-1)-1)/(c_z*pi/2),{},0);
+            fluid_i = refineNURBSevenly(fluid_i,(2^(M-1)-1)/(c_max*pi/2),{},0);
             varCol{3}.patchTop = getPatchTopology(fluid_i);
 
             varCol_fluid_i.dimension = 1;
@@ -118,28 +133,35 @@ else
     c_x_g = c_x; % 30
     c_y_g = c_y; % 30
     c_z_g = c_z; % 30
-    Upsilon = sqrt(c_z^2-c_x^2);
+    C_g = [c_x_g,c_y_g,c_z_g];
+    c_g_max = max(C_g);
+    c_g_min = min(C_g);
     if isnan(task.misc.r_a)
-        t_fluid = c_z_g*2*pi/(32-pi);
+        t_fluid = c_g_max*2*pi/(32-pi);
 %         t_fluid = 10*R_o(1)*2*pi/(32-pi);
-        c_z = c_z_g+t_fluid;
+        c_max = c_g_max+t_fluid;
     else
-        c_z = task.misc.r_a;
-        t_fluid = c_z-c_z_g;
+        c_max = task.misc.r_a;
+        if c_max < c_g_max
+            error('You must set misc.r_a > c_z')
+        end
+        t_fluid = c_max-c_g_max;
     end
-    c_x = sqrt(c_z^2-Upsilon^2);
-    c_y = c_x;
+    c_min = c_g_min+t_fluid;
+    Upsilon = sqrt(c_max^2-c_min^2);
+    C = C+t_fluid;
+    c_max = max(C);
     L_gamma = 2*c_z_g;
 
-    fluid = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi);
-    if task.msh.explodeNURBS
-        fluid = explodeNURBS(fluid);
+    fluid = getEllipsoidData('C', C, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi);
+    if true
+        fluid = explodeNURBS(fluid,2);
     end
     if parm == 1
-        refLength = c_z*pi/2;
+        refLength = c_max*pi/2;
     else
         theta_m = asec(sqrt(3));
-        refLength = c_z*(pi-2*theta_m);
+        refLength = c_max*(pi-2*theta_m);
     end
     if task.msh.refineThetaOnly
         if parm ~= 1
@@ -158,14 +180,11 @@ else
         [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{},0,dirs);
     end
     
-    task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
+    task.misc.r_a = evaluateProlateCoords([0,0,C(end)],Upsilon);
 
     if numel(varCol) > 1
-        solid = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
+        solid = getEllipsoidData('C', C_g, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
         solid = makeUniformNURBSDegree(solid,degreeVec);
-        if task.msh.explodeNURBS
-            solid = explodeNURBS(solid);
-        end
         if isfield(varCol{2},'refinement')
             solid = insertKnotsInNURBS(solid,varCol{2}.refinement(M,t,t_fluid));
         else
@@ -175,11 +194,8 @@ else
     end
 
     if numel(varCol) > 2
-        fluid_i = getEllipsoidData('C', [c_x_g,c_y_g,c_z_g] - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi);
+        fluid_i = getEllipsoidData('C', C_g - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi);
         fluid_i = makeUniformNURBSDegree(fluid_i,degreeVec);
-        if task.msh.explodeNURBS
-            fluid_i = explodeNURBS(fluid_i);
-        end
         if isfield(varCol{3},'refinement')
             fluid_i = insertKnotsInNURBS(fluid_i,varCol{3}.refinement(M));
         else
@@ -190,8 +206,8 @@ else
 end
 varCol{1}.refLength = refLength;
 varCol{1}.dirs = dirs;
-chimin = c_z*(1-10*eps);
-chimax = c_z*(1+10*eps);
+chimin = C(end)*(1-10*eps);
+chimax = C(end)*(1+10*eps);
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
@@ -204,8 +220,8 @@ if numel(varCol) > 2
 end
 
 if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
-    varCol{1}.c_z = c_z;
-    varCol{1}.c_xy = c_x;
+    varCol{1}.c_z = C(end);
+    varCol{1}.c_xy = C(1);
 end
 varCol{1}.chimax = chimax;
 varCol{1}.chimin = chimin;

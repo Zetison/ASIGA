@@ -65,6 +65,16 @@ end
 if task.misc.checkNURBSweightsCompatibility
     checkNURBSweightsCompatibility(task);
 end
+if ~isempty(task.prePlot.QoI)
+%     taskBdry = task;
+%     taskBdry.varCol{i_v} = rmfield(taskBdry.varCol{i_v},'geometry');
+%     varColBdry = meshBoundary(task.varCol{i_v},'Gamma_b');
+%     taskBdry.varCol{i_v}.nurbs = varColBdry.nurbs;
+%     taskBdry = collectVariables(taskBdry);
+%     taskBdry.varCol{i_v} = findDofsToRemove(generateIGAmesh(taskBdry.varCol{i_v}));
+    task.results.QoIError = integrateFunc(task, task.prePlot.QoI, task.prePlot.QoI_ref);
+    fprintf('\nQoI error is %.15g\n',task.results.QoIError)
+end
 
 if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry) && task.prePlot.abortAfterPlotting
     return

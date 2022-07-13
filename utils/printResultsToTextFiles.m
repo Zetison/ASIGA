@@ -4,6 +4,7 @@ options = struct('xname',           'alpha',  ...
                  'yname',           'TS', ...
                  'plotResults', 	1, ... 
                  'printResults',	0, ... 
+                 'addSlopes',	    0, ... 
                  'axisType',        'plot', ... 
                  'lineStyle',        '*-', ... 
                  'xScale',          1, ...
@@ -117,12 +118,12 @@ switch options.noXLoopPrms
                     if ~analyticPlotted
                         y_ref = study.tasks(i).task.results.([yname '_ref']);
                         y_ref = y_ref*options.yScale;
-                        plotXY(x,y_ref,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
+                        plotXY(x,y_ref,options.axisType,options.lineStyle,[0,0,0],'Analytic solution',options.addSlopes);
                         hold on
                     end
                 end
                 
-                plotXY(x,y,options.axisType,options.lineStyle,col(i,:),legendName);
+                plotXY(x,y,options.axisType,options.lineStyle,col(i,:),legendName,options.addSlopes);
                 hold on
             end
             if plotAnalyticSolution && printResults
@@ -229,11 +230,11 @@ switch options.noXLoopPrms
                     end
                     if ~analyticPlotted
                         y_ref_temp = y_ref_temp(:);
-                        plotXY(x_temp,y_ref_temp,options.axisType,options.lineStyle,[0,0,0],'Analytic solution');
+                        plotXY(x_temp,y_ref_temp,options.axisType,options.lineStyle,[0,0,0],'Analytic solution',options.addSlopes);
                         hold on
                     end
                 end
-                plotXY(x_temp,y_temp,options.axisType,options.lineStyle,col(i,:),legendName);
+                plotXY(x_temp,y_temp,options.axisType,options.lineStyle,col(i,:),legendName,options.addSlopes);
                 hold on
             end
         end

@@ -6,7 +6,11 @@ end
 eval(['task = ' task.msh.meshFile '(task);'])
 
 task = repeatKnots(task);
-task = degenerateIGAtoFEM(task);
+if task.msh.explodeNURBS
+    for i = 1:numel(task.varCol)
+        task.varCol{i}.nurbs = explodeNURBS(task.varCol{i}.nurbs);
+    end
+end
 for i = 1:numel(task.varCol)
     if i == 1
         task = defineDomains(task);
@@ -27,9 +31,6 @@ if strcmp(task.misc.method,'PML')
     end
     task = addPMLtopology(task);
 end
-for i = 1:numel(task.varCol)
-    task.varCol = findCartesianAlignedBdry(task.varCol,i);
-end
 
 if task.msh.nonLinearParam
     task = convertAllToNonLinearParam(task);
@@ -38,6 +39,11 @@ if task.msh.autoRefine
     for i = 1:numel(task.varCol)
         task.varCol{i}.nurbs = autoRefineNURBS(task.varCol{i}.nurbs,task.varCol{i}.geometry.topology.connection,task.varCol{1}.refLength/2^(task.msh.M-1),task.varCol{1}.dirs);
     end
+end
+task = degenerateIGAtoFEM(task);
+
+for i = 1:numel(task.varCol)
+    task.varCol = findCartesianAlignedBdry(task.varCol,i);
 end
 
 
@@ -50,20 +56,27 @@ end
 function varCol = findCartesianAlignedBdry(varCol,domain)
 
 connection = varCol{domain}.geometry.topology.connection;
-names = {'yz','xz','xy'};
+names = {'yz','xz','xy','xy1'};
 for j = 1:numel(names)
     patches = [];
     faces = [];
     for i = 1:numel(connection)
-        at = zeros(2,3,'logical');
         patch = connection{i}.Attributes.master;
         midx = connection{i}.Attributes.midx;
+        at = zeros(2,3,'logical');
         at(midx) = true;
         nurbs = subNURBS(varCol{domain}.nurbs(patch),'at',at.');
-        Eps = 1e7*eps;
-        if all(abs(nurbs{1}.coeffs(j,:)) < Eps)
-            faces = [faces, midx];
-            patches = [patches, patch];
+        Eps = 1e9*eps;
+        if j == 4
+            if all(abs(nurbs{1}.coeffs(3,:)) < Eps) && all(nurbs{1}.coeffs(1:3,:) > -Eps,'all')
+                faces = [faces, midx];
+                patches = [patches, patch];
+            end
+        else
+            if all(abs(nurbs{1}.coeffs(j,:)) < Eps)
+                faces = [faces, midx];
+                patches = [patches, patch];
+            end
         end
     end
     if ~isempty(faces)
@@ -93,7 +106,7 @@ for i = 1:numel(item)
     at(midx) = true;
     nurbsPML(i) = subNURBS(task.varCol{1}.nurbs(patch),'at',at.');
 end
-nurbsPML = normalBasedSurface2volume(nurbsPML,task.pml.t);
+nurbsPML = normalBasedSurface2volume(nurbsPML,task.pml.t,task.pml.X_bApprox);
 nurbsPML = makeUniformNURBSDegree(nurbsPML,task.varCol{1}.nurbs{1}.degree);
 if nargin(task.pml.refinement) > 1
     noNewKnots = task.pml.refinement(task.msh.M,task.pml.t);
@@ -106,7 +119,11 @@ for i = 1:numel(nurbsPML)
 end
 task.varCol{1}.nurbs = uniteNURBS({task.varCol{1}.nurbs,nurbsPML});
 task = repeatKnots(task);
-task = degenerateIGAtoFEM(task);
+if task.msh.explodeNURBS
+    for i = 1:numel(task.varCol)
+        task.varCol{i}.nurbs = explodeNURBS(task.varCol{i}.nurbs);
+    end
+end
 
 
 % task.varCol = copySet(task.varCol,1, 'Gamma_a', 'Gamma_a_PML');

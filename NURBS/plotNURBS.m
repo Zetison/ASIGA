@@ -20,9 +20,12 @@ options = struct('resolution',[10,10,10], ...
                  'colorControlPolygon', 'red', ...
                  'markerEdgeColor', 'black', ...
                  'markerColor', 'black', ...
+                 'quiverLineWidth', 1, ...
                  'LineWidth',0.5, ...
+                 'qstep',1, ...
                  'view', getView(), ...
                  'displayName', '', ...
+                 'colorParmDirs', {{getColor(12),getColor(13),getColor(7)}}, ...
                  'samplingDistance', NaN, ...
                  'elementBasedSamples',false);
 if nargin > 1
@@ -42,16 +45,18 @@ plotControlPolygon = options.plotControlPolygon;
 plotNormalVectors = options.plotNormalVectors;
 plotParmDir = options.plotParmDir;
 quiverScale = options.quiverScale;
+quiverLineWidth = options.quiverLineWidth;
 markerEdgeColor = options.markerEdgeColor;
 plotAt = options.plotAt;
 colorFun = options.colorFun;
 lineWidth = options.LineWidth;
 lineColor = options.lineColor;
+qstep = options.qstep;
 colorControlPolygon = options.colorControlPolygon;
 markerColor = options.markerColor;
 color = options.color;
 alphaValue = options.alphaValue;
-colorParmDirs = {getColor(12),getColor(13),getColor(7)};
+colorParmDirs = options.colorParmDirs;
 if alphaValue ~= 1
     faceLighting = 'none';
 else
@@ -165,11 +170,11 @@ for patch = 1:noPatches
                                 eta = p_values{indices(2)}(j);
                                 zeta = p_values{indices(3)}(k);
                                 XI = [xi,eta,zeta];
-                                if plotJacobian || plotNormalVectors || plotParmDir
+                                if plotJacobian || plotNormalVectors || plotParmDir || (plotSolution && nargin(colorFun) == 3)
                                     [v,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XI(indicesMat2(ii,:)),1);
-                                    dX_temp2(1,k,:,1) = quiverScale*dvdxi/norm(dvdxi);
-                                    dX_temp2(1,k,:,2) = quiverScale*dvdeta/norm(dvdeta);
-                                    dX_temp2(1,k,:,3) = quiverScale*dvdzeta/norm(dvdzeta);
+                                    dX_temp2(1,k,:,1) = dvdxi/norm(dvdxi);
+                                    dX_temp2(1,k,:,2) = dvdeta/norm(dvdeta);
+                                    dX_temp2(1,k,:,3) = dvdzeta/norm(dvdzeta);
                                 else
                                     v = evaluateNURBS(nurbs, XI(indicesMat2(ii,:)),1);
                                 end
@@ -195,7 +200,21 @@ for patch = 1:noPatches
                             C(1:nuk1,counter+1:counter+nuk2) = log10(J_1);
                         end
                         if plotSolution
-                            C(1:nuk1,counter+1:counter+nuk2) = reshape(colorFun(reshape(X_temp,nuk1*nuk2,3)),nuk1,nuk2);
+                            X_temp_r = reshape(X_temp,nuk1*nuk2,3);
+                            switch nargin(colorFun)
+                                case 1
+                                    cFun = colorFun(X_temp_r);
+                                case 3
+                                    n = reshape(cross(dX_temp(:,:,:,1),dX_temp(:,:,:,2),3),nuk1*nuk2,3);
+                                    n = n./norm2(n);
+                                    n(isnan(n)) = 10;
+                                    dXdzeta = reshape(dX_temp(:,:,:,3),nuk1*nuk2,3);
+                                    cFun = colorFun(X_temp_r,n,dXdzeta./norm2(dXdzeta));
+                            end
+                            if any(isnan(cFun(:)))
+                                keyboard
+                            end
+                            C(1:nuk1,counter+1:counter+nuk2) = reshape(cFun,nuk1,nuk2);
                         end
                         
                         stepLen = res(indices(2:3))+1;
@@ -235,7 +254,7 @@ for patch = 1:noPatches
                     else
                         colorParm = colorParmDirs{i};
                     end
-                    quiver3(X(:,:,1),X(:,:,2),X(:,:,3),Up{1,i},Up{2,i},Up{3,i},'color',colorParm,'LineWidth',options.LineWidth*2,'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                    quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*Up{1,i}(1:qstep:end,1:qstep:end),quiverScale*Up{2,i}(1:qstep:end,1:qstep:end),quiverScale*Up{3,i}(1:qstep:end,1:qstep:end),'color',colorParm,'LineWidth',quiverLineWidth,'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
             end
             if plotElementEdges
@@ -257,15 +276,20 @@ for patch = 1:noPatches
                 for j = 1:length(p_values{2})
                     eta = p_values{2}(j);
                     [v,dvdxi,dvdeta] = evaluateNURBS(nurbs, [xi eta], 1);
-                    dX_temp(j,:,1) = quiverScale*dvdxi/norm(dvdxi);
-                    dX_temp(j,:,2) = quiverScale*dvdeta/norm(dvdeta);
+                    dX_temp(j,:,1) = dvdxi/norm(dvdxi);
+                    dX_temp(j,:,2) = dvdeta/norm(dvdeta);
                     normal = cross(dvdxi,dvdeta);
                     if plotSolution
-                        ny = normal/norm(normal);
-                        C_temp(j) = colorFun(v);
+                        switch nargin(colorFun)
+                            case 1
+                                C_temp(j) = colorFun(v);
+                            case 2
+                                n = normal/norm(normal);
+                                C_temp(j) = colorFun(v,n);
+                        end
                     end
                     if plotNormalVectors
-                        ny = quiverScale*normal/norm(normal);
+                        ny = normal/norm(normal);
                         normals_temp(j,:) = ny;
                     end
                     X_temp(j,:) = v;
@@ -286,7 +310,7 @@ for patch = 1:noPatches
                             'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
             if plotNormalVectors
-                quiver3(X(:,:,1),X(:,:,2),X(:,:,3),normals(:,:,1),normals(:,:,2),normals(:,:,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
+                quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*normals(1:qstep:end,1:qstep:end,1),quiverScale*normals(1:qstep:end,1:qstep:end,2),quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
             end
             if plotElementEdges
                 stepLen = res+1;
@@ -307,7 +331,7 @@ for patch = 1:noPatches
             end
             if plotParmDir
                 for i = 1:d_p
-                    quiver3(X(:,:,1),X(:,:,2),X(:,:,3),dX(:,:,1,i),dX(:,:,2,i),dX(:,:,3,i),'LineWidth',options.LineWidth*2,'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                    quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),dX(1:qstep:end,1:qstep:end,1,i),dX(1:qstep:end,1:qstep:end,2,i),dX(1:qstep:end,1:qstep:end,3,i),'LineWidth',quiverLineWidth,'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
             end
         elseif d_p == 2 && d == 2
@@ -456,6 +480,7 @@ else
     axis off
     ax = gca;               % get the current axis
     ax.Clipping = 'off';    % turn clipping off
+%     ax.SortMethod = 'ChildOrder';
     camproj('perspective')
     view(options.view)
 end

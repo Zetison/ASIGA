@@ -9,7 +9,7 @@ getDefaultTaskValues
 
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'Mi2021ilc';
-noCoresToUse = 4;
+% noCoresToUse = 4;
 msh.explodeNURBS = 1;   % Create patches from all C^0 interfaces
 
 msh.meshFile = 'createNURBSmesh_EL';
