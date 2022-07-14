@@ -54,13 +54,6 @@ if printLog
 end
 task = computeDerivedQuantities(task);
 
-if printLog
-    fprintf('using %12f seconds.', toc)
-    fprintf('\nTotal number of elements = %d', task.totNoElems)
-    fprintf('\nFinite element dofs = %d', task.FEdofs)
-    fprintf('\nNumber of elements per wavelength = %.2g', task.nepw)
-end
-
 %% Check NURBS compatibility
 if task.misc.checkNURBSweightsCompatibility
     checkNURBSweightsCompatibility(task);
@@ -74,6 +67,13 @@ if ~isempty(task.prePlot.QoI)
 %     taskBdry.varCol{i_v} = findDofsToRemove(generateIGAmesh(taskBdry.varCol{i_v}));
     task.results.QoIError = integrateFunc(task, task.prePlot.QoI, task.prePlot.QoI_ref);
     fprintf('\nQoI error is %.15g\n',task.results.QoIError)
+end
+
+if printLog
+    fprintf('using %12f seconds.', toc)
+    fprintf('\nTotal number of elements = %d', task.totNoElems)
+    fprintf('\nFinite element dofs = %d', task.FEdofs)
+    fprintf('\nNumber of elements per wavelength = %.2g', task.nepw)
 end
 
 if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry || task.misc.preProcessOnly) && task.prePlot.abortAfterPlotting

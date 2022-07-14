@@ -205,13 +205,12 @@ parfor e = 1:noElems
                             dX = R{i+1}*pts;
                             J{i} = dX;
 
-
                             if i == i_nonAbsorption
                                 for j2 = j_absorption
                                     d2X = (R{i+1}.*R{j2+1}./R{1})*pts;
                                     J{i} = J{i} + 1i*Isigma(:,j2).*d2X;
                                 end
-                                J{i} = J{i} - (1i*xi(:,j_absorption(1)).*Isigma(:,j_absorption(2)) + 1i*xi(:,j_absorption(2)).*Isigma(:,j_absorption(1))   - Isigma(:,j_absorption(1)).*Isigma(:,j_absorption(2))).*d3X;
+                                J{i} = J{i} - (1i*xi(:,j_absorption(1)).*Isigma(:,j_absorption(2)) + 1i*xi(:,j_absorption(2)).*Isigma(:,j_absorption(1)) - Isigma(:,j_absorption(1)).*Isigma(:,j_absorption(2))).*d3X;
                             else
                                 J{i} = J{i} + 1i*sigma(:,i).*dX;
                                 j1 = setdiff(j_absorption,i);

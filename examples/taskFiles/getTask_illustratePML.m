@@ -125,23 +125,26 @@ postPlot(1).lineStyle    	= '*-';
 postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).noXLoopPrms   	= 1;
 
-M_0 = 9;
+M_0 = 8;
 msh.M = 1:M_0; % 4
 misc.coreMethod = 'IGA';
 pml.X_bApprox = 'BA';
 msh.degree = 2:4;
 collectIntoTasks
 
-msh.M = 1:(M_0-1); % 4
+msh.M = 1:M_0; % 4
 misc.coreMethod = 'C0_IGA';
 collectIntoTasks
 
 misc.coreMethod = 'hp_FEM';
 collectIntoTasks
 
+misc.coreMethod = 'h_FEM';
+pml.X_bApprox = 'interp';
+collectIntoTasks
+
 msh.M = 1:M_0; % 4
 misc.coreMethod = 'linear_FEM';
-pml.X_bApprox = 'interp';
 collectIntoTasks
 
 
