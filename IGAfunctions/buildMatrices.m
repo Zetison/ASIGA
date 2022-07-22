@@ -135,7 +135,7 @@ parfor e = 1:noElems
     J = cell(1,3);
     if buildStiffnessMatrix
         if any(isPML(e,:)) && usePML && strcmp(formulation,'GSB')
-            if 1
+            if 0
                 xi_t = complex(xi);
     
                 for i = 1:d_p
@@ -147,39 +147,27 @@ parfor e = 1:noElems
                 R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
                 for i = 1:d_p
                     J{i} = R_t{i+1}*pts;
-                end
-                if isPML(e,1)
-                    J{1} = J{1}.*(1+1i*sigmaPML(xi(:,1),pml));
-                end
-                if isPML(e,2)
-                    J{2} = J{2}.*(1+1i*sigmaPML(xi(:,2),pml));
-                end
-                if isPML(e,3)
-                    J{3} = J{3}.*(1+1i*sigmaPML(xi(:,3),pml));
-                end
-            else
-                J_old = cell(1,3);
-                xi_t = complex(xi);
-    
-                for i = 1:d_p
                     if isPML(e,i)
-                        xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
+                        J{i} = J{i}.*(1+1i*sigmaPML(xi(:,i),pml));
                     end
                 end
-    
-                R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
-                for i = 1:d_p
-                    J_old{i} = R_t{i+1}*pts;
-                end
-                if isPML(e,1)
-                    J_old{1} = J_old{1}.*(1+1i*sigmaPML(xi(:,1),pml));
-                end
-                if isPML(e,2)
-                    J_old{2} = J_old{2}.*(1+1i*sigmaPML(xi(:,2),pml));
-                end
-                if isPML(e,3)
-                    J_old{3} = J_old{3}.*(1+1i*sigmaPML(xi(:,3),pml));
-                end
+            else
+%                 J_old = cell(1,3);
+%                 xi_t = complex(xi);
+%     
+%                 for i = 1:d_p
+%                     if isPML(e,i)
+%                         xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
+%                     end
+%                 end
+%     
+%                 R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
+%                 for i = 1:d_p
+%                     J_old{i} = R_t{i+1}*pts;
+%                     if isPML(e,i)
+%                         J_old{i} = J_old{i}.*(1+1i*sigmaPML(xi(:,i),pml));
+%                     end
+%                 end
                 switch sum(isPML(e,:))
                     case 1
                         j1 = find(isPML(e,:));
@@ -199,9 +187,8 @@ parfor e = 1:noElems
                         d2Xabsorption = (R{j_absorption(1)+1}.*R{j_absorption(2)+1}./R{1})*pts;
                         d3X = (R{2}.*R{3}.*R{4}./R{1}.^2)*pts;
                         Isigma = intSigmaPML(xi,pml);
-                        sigma = intSigmaPML(xi,pml);
+                        sigma = sigmaPML(xi,pml);
                         for i = 1:d_p
-                            otherIdx = setdiff(1:d_p,i);
                             dX = R{i+1}*pts;
                             J{i} = dX;
 
@@ -217,20 +204,21 @@ parfor e = 1:noElems
                                 J{i} = J{i} - sigma(:,i).*(1i*xi(:,j1) - Isigma(:,j1)).*d2Xabsorption;
                             end
                         end
-%                         keyboard
                     case 3
                         d3X = (R{2}.*R{3}.*R{4}./R{1}.^2)*pts;
                         Isigma = intSigmaPML(xi,pml);
-                        sigma = intSigmaPML(xi,pml);
+                        sigma = sigmaPML(xi,pml);
+                        xi1iI = xi + 1i*Isigma;
                         for i = 1:d_p
-                            J{i} = R{i+1}*pts;
+                            dX = R{i+1}*pts;
+                            J{i} = dX;
                             otherIdx = setdiff(1:d_p,i);
-                            J{i} = J{i} + 1i*sigma(:,i)*R{i+1};
+                            temp = complex(zeros(size(J{i})));
                             for j2 = otherIdx
-                                d2X = (R{i+1}.*R{j2+1}./R{1})*pts;
-                                J{i} = J{i} + (1i*Isigma(:,j2) - sigma(:,i)*Isigma(:,j2))*d2X;
+                                temp = temp - xi1iI(:,j2).*(R{i+1}.*R{j2+1}./R{1})*pts;
                             end
-                            J{i} = J{i} + (1i*sigma(:,i) - 1).*Isigma(:,otherIdx(1)).*Isigma(:,otherIdx(2)).*d3X;
+                            temp = temp + prod(xi1iI(:,otherIdx),2).*d3X;
+                            J{i} = J{i} + 1i*sigma(:,i).*(dX + temp);
                         end
                 end
             end

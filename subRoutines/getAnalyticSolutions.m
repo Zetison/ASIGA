@@ -310,6 +310,14 @@ end
 if nargin < 3
     analyticFunctions = varCol; 
 else
+    switch func
+        case 'dp_incdx'
+            varCol{m_func}.(func) = varCol{1}.dp_inc{1};
+        case 'dp_incdy'
+            varCol{m_func}.(func) = varCol{1}.dp_inc{2};
+        case 'dp_incdz'
+            varCol{m_func}.(func) = varCol{1}.dp_inc{3};
+    end
     analyticFunctions = varCol{m_func}.(func);
 end
 

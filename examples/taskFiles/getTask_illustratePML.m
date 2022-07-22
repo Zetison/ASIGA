@@ -8,7 +8,7 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 saveStudies = false;
-misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'illustratePML';
 
 c_x = 3;
@@ -72,6 +72,8 @@ misc.method = {'PML'};
 misc.formulation = {'GSB'};
 
 ffp.calculateFarFieldPattern = false;     % Calculate far field pattern
+ffp.beta_s = 0;   
+ffp.alpha_s = 0;   
 
 misc.omega = 1;
 misc.BC = 'SHBC';
@@ -125,7 +127,7 @@ postPlot(1).lineStyle    	= '*-';
 postPlot(1).xLoopName     	= 'msh.M';
 postPlot(1).noXLoopPrms   	= 1;
 
-M_0 = 8;
+M_0 = 7;
 msh.M = 1:M_0; % 4
 misc.coreMethod = 'IGA';
 pml.X_bApprox = 'BA';

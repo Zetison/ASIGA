@@ -30,7 +30,8 @@ misc.clearGlobalMatrices = true;        % Clear memory consuming matrices
 misc.P_inc               = 1;           % Amplitude of incident wave
 misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as opposed to the interior problem)
 misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are compatible across patch interfaces
-task.misc.compute_h_max  = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
+misc.compute_h_max       = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
+misc.preProcessOnly      = false;
 
 %% Mesh settings
 msh.M                   = 1;	   % Mesh number
@@ -39,6 +40,7 @@ msh.initMeshFactEta 	= 1;	   % initial number of knots in eta direction
 msh.initMeshFactZeta    = 1;	   % initial number of knots in zeta direction
 msh.parm                = 1;       % Toggle different parameterizations of a geometric model
 msh.refineThetaOnly     = 0;       % For the ellipsoidal/spherical geometries, refine in the theta direction only
+msh.pmlFill             = 0;       % Use rounded corners for PML domain
 msh.degree              = 2;       % NURBS polynomial degree
 msh.explodeNURBS        = false;   % Create patches from all C^0 interfaces
 msh.x_0                 = [0,0,0]; % Translate center of model
