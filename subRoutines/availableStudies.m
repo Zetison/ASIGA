@@ -9,7 +9,7 @@ function studyName = availableStudies()
 % studyName = 'M5'; %getTask_M5
 % studyName = 'M31'; %getTask_M31
 % studyName = 'PH'; %getTask_PH
-studyName = 'Barrel'; %getTask_Barrel
+% studyName = 'Barrel'; %getTask_Barrel
 % studyName = 'Barrel_Sweep'; %getTask_Barrel_Sweep
 % studyName = 'S15'; %getTask_S15
 % studyName = 'CE'; %getTask_CE
@@ -25,14 +25,14 @@ studyName = 'Barrel'; %getTask_Barrel
 % studyName = 'Shirron2006afe_Fig3'; %getTask_Shirron2006afe_Fig3
 % studyName = 'FreeCAD'; %getTask_FreeCAD
 % studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
-% studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
+studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 % studyName = 'test'; %getTask_test
 % studyName = 'PMLstudy'; %getTask_PMLstudy
 % studyName = 'Prism'; %getTask_Prism
 % studyName = 'PML_convergenceAnalysis'; %getTask_PML_convergenceAnalysis
 % studyName = 'Mi2021ilc'; %getTask_Mi2021ilc
 % studyName = 'unitTest'; %getTask_unitTest
-studyName = 'illustratePML'; %getTask_illustratePML
+% studyName = 'illustratePML'; %getTask_illustratePML
 
 
 %% Venas2020ibe

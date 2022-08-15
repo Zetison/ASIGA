@@ -25,7 +25,7 @@ for i = 1:numel(applyLoads)
     warning('off','NURBS:weights')
 
     prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
-    prePlot.plot3Dgeometry = 0;
+    prePlot.plot3Dgeometry = 1;
     prePlot.plot2Dgeometry = 0;
     prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
     % prePlot.colorFun = @(v) abs(norm2(v)-1);
