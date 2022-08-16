@@ -4,8 +4,8 @@ function studiesCol = main(studyName,runRegressionTests,M_0)
 % Author: Jon Vegard Venås
 % E-mail: JonVegard.Venas@sintef.no
 % Institute: SINTEF Digital
-% Release: 2
-% Release date: 29/07/2020
+% Release: 3
+% Release date: 23/07/2022
 
 startup
 if nargin < 1
@@ -66,7 +66,8 @@ for i_col = 1:numel(studiesCol)
         else
             for i_task = 1:noTasks
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,printLog,resultsFolder);
-                if (tasks(i_task).task.prePlot.plot3Dgeometry || tasks(i_task).task.prePlot.plot2Dgeometry) && tasks(i_task).task.prePlot.abortAfterPlotting
+                if (tasks(i_task).task.prePlot.plot3Dgeometry || tasks(i_task).task.prePlot.plot2Dgeometry || tasks(i_task).task.misc.preProcessOnly) && tasks(i_task).task.prePlot.abortAfterPlotting
+                    studiesCol{i_col}(i_study).tasks = tasks;
                     return
                 end
                 if tasks(i_task).task.rom.useROM

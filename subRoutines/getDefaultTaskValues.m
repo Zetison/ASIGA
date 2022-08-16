@@ -181,14 +181,15 @@ iem.Upsilon  = 0;            % Parameter for prolate spheroidal coordinate syste
 iem.boundaryMethod = true;   % Attach infinite elements directly onto the scatterer for the IENSG formulation
 
 %% Settings for the PML (perfectly matched layers)
-pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = gamma*xi^n, sigmaType = 3: sigma(xi) = gamma/(1-xi)^n, sigmaType = 4: sigma(xi) = gamma*(1/(1-xi)^n - 1), sigmaType = 5: sigma from Mi2021ilc: sigma(xi) = gamma*xi^n
-pml.gamma = NaN;        % If ~isnan(pml.gamma) the matrices will be frequency independent (needed if useROM)
-pml.t = NaN;         	% thickness of PML
-pml.n = 1;            	% polynomial order
-pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-pml.alpha = 30;         % constant used for the stretching function sigma(xi) for sigmaType = 5
-pml.X_bApprox = 'BA';   % X_bApprox = 'BA' finds X_b using least squares while X_bApprox = 'interp' uses interpolation at Greville abscissa
+pml.eps = 1e9*eps;              % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
+pml.sigmaType = 3;   	        % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = gamma*xi^n, sigmaType = 3: sigma(xi) = gamma/(1-xi)^n, sigmaType = 4: sigma(xi) = gamma*(1/(1-xi)^n - 1), sigmaType = 5: sigma from Mi2021ilc: sigma(xi) = gamma*xi^n
+pml.gamma = NaN;                % If ~isnan(pml.gamma) the matrices will be frequency independent (needed if useROM)
+pml.t = NaN;         	        % thickness of PML
+pml.n = 1;            	        % polynomial order
+pml.dirichlet = true;	        % use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+pml.alpha = 30;                 % constant used for the stretching function sigma(xi) for sigmaType = 5
+pml.X_bApprox = 'BA';           % X_bApprox = 'BA' finds X_b using least squares while X_bApprox = 'interp' uses interpolation at Greville abscissa
+pml.linearAbsorption = true;    % Setting this to false enables non-linear parametrization in the absorption parametric direction
 
 %% Settings for the MFS (method of fundamental solution)
 mfs.delta = 0.1;            % Distance from the boundary to the internal source points

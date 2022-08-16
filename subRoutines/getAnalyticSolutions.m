@@ -346,7 +346,7 @@ end
 
 
 
-function dp_inc_ROM = dp_inc_ROM(X,n,varCol,dp_incdn_)
+function dp_inc_ROM = dp_incdn_ROM(X,n,varCol,dp_incdn_)
 
 m = 0:(varCol{1}.noRHSs-1);
 switch varCol{1}.applyLoad

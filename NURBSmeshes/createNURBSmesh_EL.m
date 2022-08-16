@@ -154,7 +154,7 @@ else
     L_gamma = 2*c_z_g;
 
     fluid = getEllipsoidData('C', C, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi);
-    if true
+    if false
         fluid = explodeNURBS(fluid,2);
     end
     if parm == 1
