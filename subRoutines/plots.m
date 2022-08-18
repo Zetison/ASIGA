@@ -45,26 +45,38 @@ startMatlabPool
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test normalBasedSurface2volume
+% close all
+% C = 1;
+% C = [1,2,3];
+% nurbs = getEllipsoidData('C',C,'parm',2);
+% M = 1;
+% nurbs = insertKnotsInNURBS(nurbs,(2^(M-1)-1)*[1,1]);
+% t_PML = 2;
+% 
+% I = 1:6;
+% % I = 1;
+% prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
+% prePlot.resolution = [50,50,0];
+% prePlot.plotControlPolygon = true;
+% % plotNURBS(nurbs(I), prePlot);
+% C = C+t_PML;
+% [nurbsVol,nurbs2] = normalBasedSurface2volume(nurbs,t_PML);
+% prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
+% plotNURBS(nurbs2(I), prePlot);
+% camlight
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test autorefine
 close all
-C = 1;
-C = [1,2,3];
-nurbs = getEllipsoidData('C',C,'parm',2);
-M = 1;
-nurbs = insertKnotsInNURBS(nurbs,(2^(M-1)-1)*[1,1]);
-t_PML = 2;
+R = 1;
+nurbs = getDiskData('R',R,'parm',2);
+geometry = getTopology(nurbs);
+refLength = R*pi/2;
+M = 2;
+nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1),1);
 
-I = 1:6;
-% I = 1;
-prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
-prePlot.resolution = [50,50,0];
-prePlot.plotControlPolygon = true;
-% plotNURBS(nurbs(I), prePlot);
-C = C+t_PML;
-[nurbsVol,nurbs2] = normalBasedSurface2volume(nurbs,t_PML);
-prePlot.colorFun = @(v) log10(abs(norm2(v./C)-1));
-plotNURBS(nurbs2(I), prePlot);
-camlight
-
+plotNURBS(nurbs);
+view(0,90)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find NURBS representation of part of sphere
 % p = 4;

@@ -15,11 +15,11 @@ for i = 1:d_p
     I(i) = findKnotSpan(number(i), degree(i), parm_pt(1,i), knots{i});
     ix{i+1} = I(i) - degree(i) + (1:degree(i)+1) - 1;
 end
-nen = prod(degree+1);
+n_en = prod(degree+1);
 ix{1} = 1:d;
 P = slc(coeffs,ix,1:d_p+1);
-P = reshape(P,d,nen);
+P = reshape(P,d,n_en);
 ix{1} = d+1;
 weights = slc(coeffs,ix,1:d_p+1);
-weights = reshape(weights,1,nen);
+weights = reshape(weights,1,n_en);
 varargout = evalNURBSloc(I,parm_pt,degree,knots,weights.',P.',n);

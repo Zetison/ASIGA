@@ -32,7 +32,10 @@ if withOrient
                 coeffs2 = flip(coeffs2,flipIdx+1);
                 knots{flipIdx} = 1-flip(knots{flipIdx});
             end
-            temp = permute(coeffs2,[1,indices(i,:)+1]);
+            temp = coeffs2;
+            if d_p > 0
+                temp = permute(coeffs2,[1,indices(i,:)+1]);
+            end
             knots = knots(indices(i,:));
             equalKnotVecs = true;
             for jj = 1:d_p

@@ -26,7 +26,12 @@ parm = options.parm;
 if R ~= 0 && parm ~=1
     error('This combination does not exist')
 end
-
+t = options.t;
+% if t == 0
+%     d = 2;
+% else
+%     d = 3;
+% end
 w = 1/sqrt(2);
 switch parm
     case 1
@@ -40,14 +45,12 @@ switch parm
         w3 = w2*w2;
         Xi = [0,0,0,1,1,1];
         Eta = [0,0,1,1];
-        coeffs = zeros(4,3,2);
+        coeffs = zeros(3,3,2);
         coeffs(:,:,1) = [	 r	 x	 0;
                              0	 x	 r;
-                             0	 0	 0;
                              1   w2	 1];
         coeffs(:,:,2) = [	 R1	 R1	 0;
                              0	 R1	 R1;
-                             0	 0	 0;
                              1   w	 1];
         nurbs = cell(1,5);
         nurbs(1) = createNURBSobject(coeffs,{Xi, Eta});
@@ -56,18 +59,15 @@ switch parm
         nurbs(3) = rotateNURBS(nurbs(2),'theta',pi/2);
         nurbs(4) = rotateNURBS(nurbs(3),'theta',pi/2);
 
-        coeffs = zeros(4,3,3);
+        coeffs = zeros(3,3,3);
         coeffs(:,:,1) = [	-r	-x	 0;
                              0  -x	-r;
-                             0	 0	 0;
                              1   w2	 1];
         coeffs(:,:,2) = [	-x	 0	 x;
                              x	 0	-x;
-                             0	 0	 0;
                              w2	 w3	 w2];
         coeffs(:,:,3) = [	 0	 x	 r;
                              r	 x	 0;
-                             0	 0	 0;
                              1   w2	 1];
         Xi = [0,0,0,1,1,1];
         Eta = [0,0,0,1,1,1];
@@ -76,25 +76,21 @@ switch parm
         Xi = [0 0 0 1 1 1];
         Eta = [0 0 0 1 1 1];
 
-        coeffs = zeros(4,3,3);
+        coeffs = zeros(3,3,3);
         w2 = sqrt(2)-1;
         coeffs(:,:,1) = [	 R1	 R1	 0;
                              0  -R1	-R1;
-                             0	 0	 0;
                              1   w	 1];
         coeffs(:,:,2) = [	 R1	 0	-R1;
                              R1	 0	-R1;
-                             0	 0	 0;
                              w   w2	 w];
         coeffs(:,:,3) = [	 0	-R1	-R1;
                              R1	 R1	 0;
-                             0	 0	 0;
                              1   w	 1];
 
         nurbs = createNURBSobject(coeffs,{Xi, Eta});
         nurbs = permuteNURBS(nurbs,[2,1]); % ensure upwards pointing normal vector
 end
-t = options.t;
 if t ~= 0
     nurbs = extrudeNURBS(nurbs,'extrudeDir',[0,0,t],'flip',t < 0);
 end

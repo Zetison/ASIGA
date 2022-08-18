@@ -13,7 +13,6 @@ if nargin > 1
     end
     options = updateOptions(options,newOptions);
 end
-nurbs = ensure3DNURBS(nurbs);
 if isa(options.rotAxis,'char')
     switch options.rotAxis
         case 'Xaxis'
@@ -24,6 +23,8 @@ if isa(options.rotAxis,'char')
             options.rotAxis = [0, 0, 1];
     end
 end
+nurbs = ensure3DNURBS(nurbs);
+
 x_1 = options.x_1;
 Xi = options.Xi;
 n = options.rotAxis;
@@ -52,6 +53,10 @@ for i = 1:numel(nurbs)
         coeffs = subasgnArr(coeffs,reshape(x.',[d,number]),subs);
         subs{1}{1} = d+1;
         coeffs = subasgnArr(coeffs,reshape(wArc(j)*w,[1,number]),subs);
+    end
+    if all(abs(coeffs(3,:)) < 1e4*eps)
+        coeffs = slc(coeffs, [1:2,4], 1);
+        nurbs{i}.d = 2;
     end
     nurbs{i}.coeffs = coeffs;
     nurbs{i}.d_p = nurbs{i}.d_p + 1;
