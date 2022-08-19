@@ -10,6 +10,9 @@ noPatches = numel(nurbs);
 keys = cell(noPatches,1);
 subnurbs = cell(noPatches,1);
 for i = 1:noPatches
+    if nurbs{i}.d_p == 0
+        continue
+    end
     subnurbs{i} = subNURBS(nurbs(i));
     keys{i} = zeros(1,numel(subnurbs{i}),'int32');
     for ii = 1:numel(subnurbs{i})
@@ -17,29 +20,31 @@ for i = 1:noPatches
         d_p = subnurbs{i}{ii}.d_p;
         d = subnurbs{i}{ii}.d;
         indices = 1:d_p;
-        compScaling = [1,2,3]; % Add more uniquness to the key (due to symmetries in many geometries)
+        compScaling = 1:d; % Add more uniquness to the key (due to symmetries in many geometries)
         compSum = sum(abs(subnurbs{i}{ii}.coeffs(1:d,:)),2);
         bdryMeasure = dot(compSum/norm(compSum),compScaling/norm(compScaling));
         keys{i}(ii) = int32(bdryMeasure*1e6);
-        % Skip adding bdries that have zero measure
-        for iii = 1:d_p
-            zeroMeasure = true;
-            temp = reshape(permute(coeffs,[1,iii+1,setdiff(indices,iii)+1]),d+1,subnurbs{i}{ii}.number(iii),[]);
-
-            for l = 1:size(temp,3)
-                temp2 = temp(1:d,:,l).';
-                uniqueCoeffs = uniquetol(temp2,Eps,'ByRows',true, 'DataScale',max(norm2(temp2)), 'OutputAllIndices', true);
-                if size(uniqueCoeffs,1) ~= 1
-                    zeroMeasure = false;
+        if d_p > 1
+            % Skip adding bdries that have zero measure
+            for iii = 1:d_p
+                zeroMeasure = true;
+                temp = reshape(permute(coeffs,[1,iii+1,setdiff(indices,iii)+1]),d+1,subnurbs{i}{ii}.number(iii),[]);
+    
+                for l = 1:size(temp,3)
+                    temp2 = temp(1:d,:,l).';
+                    uniqueCoeffs = uniquetol(temp2,Eps,'ByRows',true, 'DataScale',max(norm2(temp2)), 'OutputAllIndices', true);
+                    if size(uniqueCoeffs,1) ~= 1
+                        zeroMeasure = false;
+                        break
+                    end
+                end
+                if zeroMeasure
                     break
                 end
             end
             if zeroMeasure
-                break
+                keys{i}(ii) = -1;
             end
-        end
-        if zeroMeasure
-            keys{i}(ii) = -1;
         end
     end
 end
@@ -120,24 +125,27 @@ if ~isempty(freeBdries)
     % Find the outer surface
     connMap = connMap(~cellfun('isempty',connMap));
     d = nurbsFaces{1}.d;
-    avgLen = zeros(1,numel(connMap));
+    V_max = -Inf;
     for i = 1:numel(connMap)
         nurbsPart = nurbsFaces(connMap{i});
-        noCpts = 0;
-        center = zeros(d,1);
+%         noCpts = 0;
+        noCpts = zeros(numel(nurbsPart),1);
         for j = 1:numel(nurbsPart)
-            center = center + sum(nurbsPart{j}.coeffs(1:d,:),2);
-            noCpts = noCpts + prod(nurbsPart{j}.number);
+            noCpts(j) = prod(nurbsPart{j}.number);
         end
-        center = center/noCpts;
-        noCpts = 0;
+
+        X = zeros(sum(noCpts),d);
+        counter = 1;
         for j = 1:numel(nurbsPart)
-            avgLen(i) = avgLen(i) + sum(norm2((nurbsPart{j}.coeffs(1:d,:)-center).'));
-            noCpts = noCpts + prod(nurbsPart{j}.number);
+            X(counter:counter+noCpts(j)-1,:) = nurbsPart{j}.coeffs(1:d,:).';
+            counter = counter + noCpts(j);
         end
-        avgLen(i) = avgLen(i)/noCpts;
+        [~, V] = convhull(X);
+        if V > V_max
+            I_outer = i;
+            V_max = V;
+        end
     end
-    [~,I_outer] = max(avgLen);
     
     % Generate topologysets
     counterFreeSurfOuter = 1;

@@ -18,7 +18,7 @@ function studyName = availableStudies()
 
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
-% studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
+studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
 % studyName = 'Safjan2002tdi_Fig1'; %getTask_Safjan2002tdi_Fig1
 % studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Shirron2006afe'; %getTask_Shirron2006afe
@@ -28,7 +28,7 @@ function studyName = availableStudies()
 studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 % studyName = 'test'; %getTask_test
 % studyName = 'PMLstudy'; %getTask_PMLstudy
-studyName = 'Prism'; %getTask_Prism
+% studyName = 'Prism'; %getTask_Prism
 % studyName = 'PML_convergenceAnalysis'; %getTask_PML_convergenceAnalysis
 % studyName = 'Mi2021ilc'; %getTask_Mi2021ilc
 % studyName = 'unitTest'; %getTask_unitTest

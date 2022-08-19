@@ -135,39 +135,7 @@ parfor e = 1:noElems
     J = cell(1,3);
     if buildStiffnessMatrix
         if any(isPML(e,:)) && usePML && strcmp(formulation,'GSB')
-            if 0
-                xi_t = complex(xi);
-    
-                for i = 1:d_p
-                    if isPML(e,i)
-                        xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
-                    end
-                end
-    
-                R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
-                for i = 1:d_p
-                    J{i} = R_t{i+1}*pts;
-                    if isPML(e,i)
-                        J{i} = J{i}.*(1+1i*sigmaPML(xi(:,i),pml));
-                    end
-                end
-            else
-%                 J_old = cell(1,3);
-%                 xi_t = complex(xi);
-%     
-%                 for i = 1:d_p
-%                     if isPML(e,i)
-%                         xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
-%                     end
-%                 end
-%     
-%                 R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
-%                 for i = 1:d_p
-%                     J_old{i} = R_t{i+1}*pts;
-%                     if isPML(e,i)
-%                         J_old{i} = J_old{i}.*(1+1i*sigmaPML(xi(:,i),pml));
-%                     end
-%                 end
+            if pml.linearAbsorption
                 switch sum(isPML(e,:))
                     case 1
                         j1 = find(isPML(e,:));
@@ -220,6 +188,22 @@ parfor e = 1:noElems
                             temp = temp + prod(xi1iI(:,otherIdx),2).*d3X;
                             J{i} = J{i} + 1i*sigma(:,i).*(dX + temp);
                         end
+                end
+            else
+                xi_t = complex(xi);
+    
+                for i = 1:d_p
+                    if isPML(e,i)
+                        xi_t(:,i) = xi(:,i) + 1i*intSigmaPML(xi(:,i),pml);
+                    end
+                end
+    
+                R_t = NURBSbasis(I, xi_t, degree, knots, wgts);
+                for i = 1:d_p
+                    J{i} = R_t{i+1}*pts;
+                    if isPML(e,i)
+                        J{i} = J{i}.*(1+1i*sigmaPML(xi(:,i),pml));
+                    end
                 end
             end
         else

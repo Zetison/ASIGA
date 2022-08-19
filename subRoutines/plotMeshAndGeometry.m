@@ -1,5 +1,6 @@
 function task = plotMeshAndGeometry(task)
 prePlot = task.prePlot;
+noDomains = numel(task.varCol);
 if prePlot.plot3Dgeometry
     task.prePlot.fig3Dplot = figure('Color','white','name',['3D plot of geometry with mesh ' num2str(task.msh.M)]);
     if strcmp(task.misc.method, 'IENSG') && prePlot.plotArtificialBndry
@@ -24,21 +25,32 @@ if prePlot.plot3Dgeometry
             end
         end
     end
-    for j = 1:numel(task.varCol)
+    if iscell(prePlot.color)
+        colorsCell = prePlot.color;
+    else
+        colorsCell = cell(noDomains,1);
         if isempty(prePlot.color)
-            switch task.varCol{j}.media
-                case 'fluid'
-                    if task.varCol{j}.boundaryMethod
-                        prePlot.color = getColor(1);
-                    else
-                        prePlot.color = getColor(10);
-                    end
-                case 'solid'
-                    prePlot.color = getColor(1);
+            for j = 1:noDomains
+                switch task.varCol{j}.media
+                    case 'fluid'
+                        if task.varCol{j}.boundaryMethod
+                            colorsCell{j} = getColor(1);
+                        else
+                            colorsCell{j} = getColor(10);
+                        end
+                    case 'solid'
+                        colorsCell{j} = getColor(1);
+                end
             end
+        else
+            [colorsCell{:}] = deal(prePlot.color);
         end
+    end
+            
+    for j = 1:noDomains
         nurbs = task.varCol{j}.nurbs;
         prePlot.displayName = ['Domain ' num2str(j)];
+        prePlot.color = colorsCell{j};
         if prePlot.plotFullDomain
             plotNURBS(nurbs, prePlot);
         end
@@ -67,7 +79,7 @@ if prePlot.plot3Dgeometry
                 end
                 prePlot.displayName = ['Domain ' num2str(j) ', ' topset{idx}.Attributes.name];
                 if strcmp(topset{idx}.Attributes.name,'Gamma')
-                    prePlot.color = getColor(1);
+                    prePlot.color(j,:) = getColor(1);
                 else
                     prePlot.color = colors(i,:);
                 end
@@ -108,7 +120,7 @@ if prePlot.plot3Dgeometry
 end   
 if prePlot.plot2Dgeometry
     figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(task.msh.M)])
-    for j = 1:numel(task.varCol)
+    for j = 1:noDomains
         switch task.varCol{j}.media
             case 'fluid'
                 prePlot.color = getColor(10);
@@ -123,7 +135,7 @@ if prePlot.plot2Dgeometry
                 nurbs2D = task.varCol{j}.nurbs;
                 nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
         end
-        if numel(task.varCol) > 1
+        if noDomains > 1
             switch task.varCol{j}.media
                 case 'fluid'
 %                     prePlot.color = [1,1,1];

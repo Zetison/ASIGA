@@ -19,9 +19,9 @@ if task.misc.compute_h_max
     end
     task.h_max = h_max;
     if isfield(task.varCol{1},'c_f')
-        task.nepw = task.varCol{1}.lambda./task.h_max;
+        task.varCol{1}.nepw = task.varCol{1}.lambda./task.h_max;
         if task.varCol{1}.boundaryMethod
-            task.tau = computeTau(task);
+            task.varCol{1}.tau = computeTau(task);
         end
     end
 end
@@ -29,12 +29,11 @@ end
 task.surfDofs = getNoSurfDofs(task);
 for field = {'a','R','L'}
     if isfield(task.varCol{1},field{1})
-        task.(['k' field{1}]) = task.varCol{1}.(field{1})*task.varCol{1}.k;
+        task.varCol{1}.(['k' field{1}]) = task.varCol{1}.(field{1})*task.varCol{1}.k;
     end
 end
 if isfield(task.misc,'omega')
     task.f = task.misc.omega/(2*pi);
-    task.k = task.misc.omega/task.varCol{1}.c_f;
 end
 if isfield(task,'dofs')
     task.dofsAlg = (task.dofs)^(1/3);
