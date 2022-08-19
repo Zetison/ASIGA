@@ -80,7 +80,7 @@ if varCol{1}.boundaryMethod
             solid = insertKnotsInNURBS(solid,varCol{1}.refinement(M));
         end
     else
-        solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0);
+        solid = refineNURBSevenly(solid,(2^(M-1)-1)/refLength,{},0,dirs);
     end
     
     options.at = [0 0; 0 0; 0 1];

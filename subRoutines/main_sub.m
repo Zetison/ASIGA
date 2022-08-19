@@ -156,7 +156,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                         tic
                         if printLog
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Building coupling matrix ... ')
-                        end  
+                        end
                         for i_domain = 2:task.noDomains
                             task = applyCouplingConditionPatches(task,i_domain);
                         end

@@ -84,7 +84,7 @@ switch applyLoad
         varCol{1}.p_0 = -cos(theta)./k;
         varCol{1}.dp = cell(1,3);
         for i = 1:3
-            varCol{1}.dp{i} = k.*dSphBessel(1,k.*r,3).*cos(theta).*dr(:,i) - dSphBessel(1,k.*r,3).*sin(theta).*dtheta(:,i);
+            varCol{1}.dp{i} = k.*dSphBessel(1,k.*r,3).*cos(theta).*dr(:,i) - sphBessel(1,k.*r,3).*sin(theta).*dtheta(:,i);
         end
     case 'Safjan10'
         r = norm2(X{1});
@@ -100,7 +100,7 @@ switch applyLoad
         varCol{1}.p_0 = -1i*P./k;
         varCol{1}.dp = cell(1,3);
         for i = 1:3
-            varCol{1}.dp{i} = k.*dSphBessel(10,k.*r,3).*P.*dr(:,i) - dSphBessel(10,k.*r,3).*dP.*dtheta(:,i);
+            varCol{1}.dp{i} = k.*dSphBessel(10,k.*r,3).*P.*dr(:,i) - sphBessel(10,k.*r,3).*dP.*dtheta(:,i);
         end
     case 'SimpsonTorus'
         varCol{1}.p = prod(sin(k*X{1}/sqrt(3)),2);

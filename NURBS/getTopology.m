@@ -24,7 +24,7 @@ for i = 1:noPatches
         compSum = sum(abs(subnurbs{i}{ii}.coeffs(1:d,:)),2);
         bdryMeasure = dot(compSum/norm(compSum),compScaling/norm(compScaling));
         keys{i}(ii) = int32(bdryMeasure*1e6);
-        if d_p > 1
+        if d_p >= 1
             % Skip adding bdries that have zero measure
             for iii = 1:d_p
                 zeroMeasure = true;

@@ -210,7 +210,7 @@ A5values = sparse(spIdx(:,1),spIdx(:,2),A5values,noSurfDofs,noSurfDofs,numel(Iun
 % Note that the last two integrals (B1(end) and B1(end-1),
 % B2(end) and B2(end-1)) will be redundant for the cases 'BGC' and 'BGU'
 
-if IElocSup    
+if IElocSup
     s = task.iem.s_ie;
     x = @(zeta) 1 + zeta.^s*(1/Ntot - 1);
     zeta_a = ((Ntot-p_ie)/(Ntot-1))^(1/s);

@@ -6,15 +6,13 @@ function studies = getTask_Safjan2002tdi()
 counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
+saveStudies = false;
 
 %% IE simulation
 misc.scatteringCase = 'BI';
 misc.model = 'Safjan2002tdi'; % Simpson sphere
-misc.method = {'IENSG'};
-% misc.method = {'IE'};
-% iem.IEbasis	= 'Chebyshev';
-iem.IEbasis	= 'Lagrange';
-% iem.IEbasis	= {'Chebyshev','Bernstein','Lagrange'};
+% misc.method = {'IENSG'};
+misc.method = {'IE'};
 misc.coreMethod = 'IGA';
 runTasksInParallel = 0;
 progressBars = false;        % Show progress bars for building system matrices
@@ -33,6 +31,7 @@ Upsilon = [22*sqrt(2)/3, 44*sqrt(3)/7]; % 3:1, 7:1
 Upsilon = 22*sqrt(2)/3; % 3:1
 % Upsilon = 44*sqrt(3)/7; % 7:1
 msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 
 c_z = 11;
 c_x = sqrt(c_z^2-Upsilon.^2);
@@ -48,13 +47,14 @@ varCol{1} = struct('media', 'fluid', ...
                    'c_z',   c_z, ...
                    'c_f', 1500, ...
                    'rho', 1000);
+c_z = varCol{1}.c_z;
 msh.meshFile = 'createNURBSmesh_EL';
 c_f = varCol{1}.c_f;   % Speed of sound in outer fluid
 k = 1;                 % Wave number for Simpson2014aib
 misc.omega = c_f*k;         % Angular frequency
 
 msh.M = 1:7;
-msh.M = 5; %8
+msh.M = 6; %8
 msh.parm = 1;
 msh.explodeNURBS = 0;
 msh.autoRefine = 0;   % Use automatic refining algorithm based on h_max = refLength/2^(M-1) where M is the mesh number and refLength is the largest element edge in the coarse mesh
@@ -63,22 +63,33 @@ ffp.beta = (-90:0.5:90)*pi/180;
 ffp.alpha_s = 0;
 ffp.beta_s = -pi/2;
 prePlot.plot3Dgeometry = 0;
-prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
+prePlot.abortAfterPlotting  = 0;       % Abort simulation after pre plotting
 prePlot.plotArtificialBndry = false;        % Plot the artificial boundary for the IENSG misc.method
-misc.computeCondNumber = 1;
+prePlot.plotFullDomain   = 0;        % Plot volumetric domains
+prePlot.view             = [0,0];
+prePlot.plotSubsets      = {'xz'};
+misc.computeCondNumber = 0;
+misc.r_a = 1.25*c_z;
 err.calculateSurfaceError = 1;
 ffp.calculateFarFieldPattern = 0;     % Calculate far field pattern
-varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
-msh.refineThetaOnly = true;
-ffp.extraGP = [50,0,0];
-misc.extraGP = [10,0,0];
+msh.refineThetaOnly = 1;
+% if msh.refineThetaOnly
+%     varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
+% else
+%     varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, max(2^(M-1)/8-1,0)];
+% end
+if msh.refineThetaOnly
+    ffp.extraGP = [50,0,0];
+    misc.extraGP = [20,0,0];
+end
 
-msh.degree = 4;
+msh.degree = 3;
 
 warning('off','NURBS:weights')
-loopParameters = {'iem.N','iem.p_ie','iem.s_ie','iem.IElocSup', 'iem.IEbasis','misc.method', 'misc.formulation', 'varCol{1}.c_x'};
+loopParameters = {'iem.N','iem.p_ie','iem.s_ie','iem.IElocSup', 'iem.IEbasis','msh.M','misc.method', 'misc.formulation', 'varCol{1}.c_x'};
 
-postPlot(1).xname       	= 'iem.N';
+% postPlot(1).xname       	= 'iem.N';
+postPlot(1).xname           = 'dofs';
 postPlot(1).yname        	= 'surfaceError';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
@@ -112,16 +123,20 @@ runTasksInParallel = 0;
 iem.IElocSup = 1;
 iem.s_ie = [1,2];
 iem.s_ie = 1;
+% iem.IEbasis	= 'Chebyshev';
+iem.IEbasis	= 'Lagrange';
+% iem.IEbasis	= {'Chebyshev','Bernstein','Lagrange'};
 N_arr = {[2,10,20,40,90],...
          [4,20,30,40,80,100],...
          [6,30,40,60,90],...
          [8,20,40,60,80],...
          [10,25,35,50,60,75,100]};
-% misc.formulation = {'PGC','BGU'};
+misc.formulation = {'PGC','BGU'};
 % misc.formulation = {'BGU'};
-misc.formulation = {'PGU'};
+misc.formulation = {'PGC'};
 % misc.formulation = {'WBGC','PGC','WBGU','PGU'};
 maxN = 100;
+% N_arr{3} = 2.^(4:5);
 % maxN = 40;
 for p_ie = 3 %1:5
     iem.p_ie = p_ie;
@@ -131,14 +146,6 @@ for p_ie = 3 %1:5
 %     iem.N = [3*p_ie,4*p_ie];
 %     iem.N = 2*p_ie:p_ie:4*p_ie;
     % iem.N = 3;
-%     collectIntoTasks
-end
-
-iem.IEbasis	= 'Lagrange';
-
-for p_ie = 3 %1:5
-%     iem.N = p_ie*2.^(1:floor(log(maxN/p_ie)/log(2)));
-    iem.N = N_arr{p_ie};
 %     iem.N = p_ie*round((2*p_ie:p_ie:100)/p_ie);
 %     iem.N = p_ie*2.^(1:7);
 %     iem.N = 2*p_ie:p_ie:20;
@@ -148,26 +155,46 @@ end
 
 iem.IElocSup = false;
 iem.s_ie = NaN;
-% iem.N = 1:19;
+iem.N = 1:19;
 iem.N = 1:12;
-% iem.N = 4;
+% iem.N = 5;
 iem.p_ie = NaN;
 % iem.IEbasis	= 'Chebyshev';
 misc.formulation = {'PGC'};
 % misc.formulation = {'BGU'};
-iem.IEbasis	= 'Lagrange';
-% iem.IEbasis	= 'Chebyshev';
-iem.boundaryMethod = true;
+% iem.IEbasis	= 'Lagrange';
+iem.IEbasis	= 'Chebyshev';
+iem.boundaryMethod = false;
 collectIntoTasks
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PML simulation
+misc.method = {'PML'};
+% postPlot(1).xLoopName = 'iem.N';
+N_arr{3} = iem.N;
+% iem.N = [1,maxN];
+misc.formulation = {'GSB'};
+pml.t = 0.2*c_z;
+for degree = 3 %1:5
+    msh.degree = degree;
+    N = N_arr{degree};
+    N(N<degree+1) = [];
+    for n = N
+        pml.refinement = @(M) n-(degree+1);
+        iem.N = n;
+        collectIntoTasks
+    end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
 misc.method = {'BA'};
+% postPlot(1).xLoopName = 'iem.N';
 misc.useNeumanProj = 0;
 misc.solveForPtot = 0;
 iem.N = [1,maxN];
 misc.formulation = {'SL2E'};
-postPlot(1).lineStyle = '--';
+postPlot(1).lineStyle = '*-';
 collectIntoTasks
 
 function addCommands_error()
