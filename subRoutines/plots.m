@@ -70,6 +70,11 @@ startMatlabPool
 close all
 R = 1;
 nurbs = getDiskData('R',R,'parm',2);
+nurbs = insertKnotsInNURBS(nurbs,[100,200]);
+xi = sort(rand(100,1));
+eta = sort(rand(100,1));
+evaluateNURBSvec(nurbs{1}, [xi,eta],1)
+I = edgeLengths(nurbs,1);
 geometry = getTopology(nurbs);
 refLength = R*pi/2;
 M = 2;
