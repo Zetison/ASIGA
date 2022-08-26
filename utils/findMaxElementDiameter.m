@@ -6,79 +6,46 @@ end
 H_max = zeros(numel(patches),1);
 H_min = zeros(numel(patches),1);
 diagsMax = cell(numel(patches),1);
-parfor patch = 1:numel(patches)
-    h_max = 0;
-    h_min = inf;
+for patch = 1:numel(patches)
     nurbs = patches{patch}.nurbs;
-    switch nurbs.d_p
-        case 3
-            Xi = nurbs.knots{1};
-            Eta = nurbs.knots{2};
-            Zeta = nurbs.knots{3};
-
-            extraXiPts = 0;
-            extraEtaPts = 0;
-            extraZetaPts = 0;
-
-            noElems = (numel(unique(Xi))-1)*(numel(unique(Eta))-1)*(numel(unique(Zeta))-1);
-
-            [nodes, ~, visElements] = buildVisualization3dMesh_new(Xi, Eta, Zeta, extraXiPts, extraEtaPts, extraZetaPts, noElems, nurbs);
-
-
-            for e = 1:noElems
-                ind = visElements(e,:);
-
-                diameter = norm(nodes(ind(1),1:3) - nodes(ind(7),1:3));
-                if h_max < diameter
-                    h_max = diameter;
-                end
-                if h_min > diameter
-                    h_min = diameter;
-                end
-
-                diameter = norm(nodes(ind(2),1:3) - nodes(ind(8),1:3));
-                if h_max < diameter
-                    h_max = diameter;
-                end
-                if h_min > diameter
-                    h_min = diameter;
-                end
-
-                diameter = norm(nodes(ind(3),1:3) - nodes(ind(5),1:3));
-                if h_max < diameter
-                    h_max = diameter;
-                end
-                if h_min > diameter
-                    h_min = diameter;
-                end
-
-                diameter = norm(nodes(ind(4),1:3) - nodes(ind(6),1:3));
-                if h_max < diameter
-                    h_max = diameter;
-                end
-                if h_min > diameter
-                    h_min = diameter;
-                end
-            end
-            diaMax = NaN;
-        case 2
-            Xi = nurbs.knots{1};
-            Eta = nurbs.knots{2};
-
-            extraXiPts = 0;
-            extraEtaPts = 0;
-
-            [nodes, ~, visElements] = buildVisualization3dSurfaceMesh(Xi, Eta, extraXiPts, extraEtaPts, nurbs);
-
-            dia = [norm2(nodes(visElements(:,1),:) - nodes(visElements(:,3),:)), ...
-                   norm2(nodes(visElements(:,2),:) - nodes(visElements(:,4),:))];
-            diaMax = max(dia,[],2);
-            diaMin = max(dia,[],2);
-            h_max = max(diaMax);
-            h_min = min(diaMin);
+    d_p = nurbs.d_p;
+    d = nurbs.d;
+    uniqueKnots = cell(1,d_p);
+    noKnots = zeros(1,d_p);
+    for i = 1:d_p
+        uniqueKnots{i} = unique(nurbs.knots{i});
+        noKnots(i) = numel(uniqueKnots{i});
     end
-    H_max(patch) = h_max;
-    H_min(patch) = h_min;
+
+    switch d_p
+        case 1
+            v = evaluateNURBSvec(nurbs,uniqueKnots{1}.');
+            d_1 = vecnorm(v(2:end,:) - v(1:end-1,:), 2, d_p+1);
+            diaMax = d_1;
+            diaMin = d_1;
+        case 2
+            [XI,ETA] = ndgrid(uniqueKnots{1},uniqueKnots{2});
+
+            v = evaluateNURBSvec(nurbs,[XI(:),ETA(:)]);
+            v = reshape(v,[noKnots,d]);
+            d_1 = vecnorm(v(2:end,2:end,:) - v(1:end-1,1:end-1,:), 2, d_p+1);
+            d_2 = vecnorm(v(1:end-1,2:end,:) - v(2:end,1:end-1,:), 2, d_p+1);
+            diaMax = max([d_1(:), d_2(:)],[],2);
+            diaMin = min([d_1(:), d_2(:)],[],2);
+        case 3
+            [XI,ETA,ZETA] = ndgrid(uniqueKnots{1},uniqueKnots{2},uniqueKnots{3});
+
+            v = evaluateNURBSvec(nurbs,[XI(:),ETA(:),ZETA(:)]);
+            v = reshape(v,[noKnots,d]);
+            d_1 = vecnorm(v(2:end,2:end,2:end,:) - v(1:end-1,1:end-1,1:end-1,:), 2, d_p+1);
+            d_2 = vecnorm(v(1:end-1,2:end,2:end,:) - v(2:end,1:end-1,1:end-1,:), 2, d_p+1);
+            d_3 = vecnorm(v(2:end,1:end-1,2:end,:) - v(1:end-1,2:end,1:end-1,:), 2, d_p+1);
+            d_4 = vecnorm(v(2:end,2:end,1:end-1,:) - v(1:end-1,1:end-1,2:end,:), 2, d_p+1);
+            diaMax = max([d_1(:), d_2(:), d_3(:), d_4(:)],[],2);
+            diaMin = min([d_1(:), d_2(:), d_3(:), d_4(:)],[],2);
+    end
+    H_max(patch) = max(diaMax);
+    H_min(patch) = min(diaMin);
     diagsMax{patch} = diaMax;
 end
 diagsMax = cell2mat(diagsMax);

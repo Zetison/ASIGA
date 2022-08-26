@@ -1,9 +1,9 @@
-function [h,maxC,minC] = plotNURBS(varargin)
+function [h,maxC,minC] = plotNURBSvec(varargin)
 
 %% Interpret input arguments
 nurbsPatches = varargin{1};
 % set default values
-options = struct('resolution',[10,10,10], ...
+options = struct('resolution',[32,32,32], ...
                  'plotObject',true, ...
                  'plotElementEdges',true,...
                  'plotControlPolygon', 0, ...
@@ -95,9 +95,6 @@ for patch = 1:noPatches
     if plotSolution && plotJacobian && d_p == 3
         warning('Plotting solution from function handle instead of Jacobian')
     end
-    coeffs = nurbs.coeffs;
-    coeffs = subasgnArr(coeffs,[],size(coeffs,1));
-    dimensions = size(coeffs);
     p_values = cell(1,d_p);
     uniqueKnots = cell(1,d_p);
     noElemsDir = zeros(1,d_p);
@@ -138,6 +135,7 @@ for patch = 1:noPatches
             maxnuk = max([nuk1,nuk2,nuk3]);
             vElementEdges = NaN(6*(maxnuk+1)*max(noUniqueKnots)*2,3);
             X = NaN(maxnuk,6*(maxnuk+1),3);
+            normals = NaN(maxnuk,6*(maxnuk+1),3);
             Up = cell(3,3);
             for i_c = 1:d_p
                 for j_c = 1:d_p
@@ -153,31 +151,34 @@ for patch = 1:noPatches
                     if plotAt(ii,jj)
                         nuk1 = length(p_values{indices(2)});
                         nuk2 = length(p_values{indices(3)});
-                        X_temp = zeros(nuk1, nuk2, 3);
-                        dX_temp = zeros(nuk1, nuk2, 3, 3);
-                        parfor j = 1:nuk1
-    %                     for j = 1:nuk1
-                            X_temp2 = zeros(1,nuk2, 3);
-                            dX_temp2 = zeros(1,nuk2, 3, d_p);
-                            for k = 1:nuk2
-                                xi = jj-1;
-                                eta = p_values{indices(2)}(j);
-                                zeta = p_values{indices(3)}(k);
-                                XI = [xi,eta,zeta];
-                                if plotJacobian || plotNormalVectors || plotParmDir || (plotSolution && nargin(colorFun) == 3)
-                                    [v,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XI(indicesMat2(ii,:)),1);
-                                    dX_temp2(1,k,:,1) = dvdxi/norm(dvdxi);
-                                    dX_temp2(1,k,:,2) = dvdeta/norm(dvdeta);
-                                    dX_temp2(1,k,:,3) = dvdzeta/norm(dvdzeta);
-                                else
-                                    v = evaluateNURBS(nurbs, XI(indicesMat2(ii,:)),1);
-                                end
-                                X_temp2(1,k,:) = v;
-                            end
-                            X_temp(j,:,:) = X_temp2;
-                            dX_temp(j,:,:,:) = dX_temp2;
+                        XI = (jj-1)*ones(nuk1,nuk2);
+                        [ETA,ZETA] = ndgrid(p_values{indices(2)},p_values{indices(3)});
+                        XIETAZETA = [XI(:), ETA(:), ZETA(:)];
+                        [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1);
+                        dX_temp = zeros(nuk1*nuk2, d, d_p);
+                        dX_temp(:,:,1) = dvdxi./norm2(dvdxi);
+                        dX_temp(:,:,2) = dvdeta./norm2(dvdeta);
+                        dX_temp(:,:,3) = dvdzeta./norm2(dvdzeta);
+                        if plotNormalVectors || (plotSolution && nargin(colorFun) == 2)
+                            normal = cross(dX_temp(:,:,indices(2)),dX_temp(:,:,indices(3)),2);
+                            normals_temp = (-1)^jj*normal./norm2(normal);
                         end
-                        X(1:nuk1,counter+1:counter+nuk2,:) = X_temp;
+                        dX_temp = reshape(dX_temp,nuk1,nuk2, d, d_p);
+                        if plotSolution
+                            switch nargin(colorFun)
+                                case 1
+                                    C_temp = colorFun(X_temp);
+                                case 2
+                                    C_temp = colorFun(X_temp,normals_temp);
+                                case 3
+                                    n = reshape(cross(dX_temp(:,:,:,1),dX_temp(:,:,:,2),3),nuk1*nuk2,3);
+                                    n = n./norm2(n);
+                                    n(isnan(n)) = 10;
+                                    dXdzeta = reshape(dX_temp(:,:,:,3),nuk1*nuk2,3);
+                                    C_temp = colorFun(X_temp,n,dXdzeta./norm2(dXdzeta));
+                            end
+                            C(1:nuk1,counter+1:counter+nuk2) = reshape(C_temp,nuk1,nuk2);
+                        end
                         if plotParmDir
                             for i_c = 1:d_p
                                 for j_c = 1:d_p
@@ -193,27 +194,17 @@ for patch = 1:noPatches
                             end
                             C(1:nuk1,counter+1:counter+nuk2) = log10(J_1);
                         end
-                        if plotSolution
-                            X_temp_r = reshape(X_temp,nuk1*nuk2,3);
-                            switch nargin(colorFun)
-                                case 1
-                                    cFun = colorFun(X_temp_r);
-                                case 3
-                                    n = reshape(cross(dX_temp(:,:,:,1),dX_temp(:,:,:,2),3),nuk1*nuk2,3);
-                                    n = n./norm2(n);
-                                    n(isnan(n)) = 10;
-                                    dXdzeta = reshape(dX_temp(:,:,:,3),nuk1*nuk2,3);
-                                    cFun = colorFun(X_temp_r,n,dXdzeta./norm2(dXdzeta));
-                            end
-                            if any(isnan(cFun(:)))
-                                keyboard
-                            end
-                            C(1:nuk1,counter+1:counter+nuk2) = reshape(cFun,nuk1,nuk2);
+                        X_temp = reshape(X_temp,nuk1,nuk2,d);
+
+                        X(1:nuk1,counter+1:counter+nuk2,:) = X_temp;
+                        if plotNormalVectors
+                            normals(1:nuk1,counter+1:counter+nuk2,:) = reshape(normals_temp,nuk1,nuk2,d);
                         end
                         
                         stepLen = res(indices(2:3))+1;
                         noLines = noUniqueKnots(indices(2:3));
                         
+                        % Create element edges
                         temp = NaN(nuk1+1, noLines(2), 3);
                         temp(1:end-1,:,:) = X_temp(:,1:stepLen(2):end,:);
                         noAddedPoints = noLines(2)*(nuk1+1);
@@ -251,48 +242,38 @@ for patch = 1:noPatches
                     quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*Up{1,i}(1:qstep:end,1:qstep:end),quiverScale*Up{2,i}(1:qstep:end,1:qstep:end),quiverScale*Up{3,i}(1:qstep:end,1:qstep:end),'color',colorParm,'LineWidth',quiverLineWidth,'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
             end
+            if plotNormalVectors
+                quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*normals(1:qstep:end,1:qstep:end,1),quiverScale*normals(1:qstep:end,1:qstep:end,2),quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
+            end
             if plotElementEdges
                 plotGridLines(vElementEdges,displayName)
             end
         elseif d_p == 2 && d == 3
             nuk1 = length(p_values{1});
             nuk2 = length(p_values{2});
-            X = zeros(nuk1, nuk2, 3);
-            dX = zeros(nuk1, nuk2, 3, d_p);
-            normals = zeros(length(p_values{1}), length(p_values{2}),3);
+            normals = zeros(length(p_values{1}), length(p_values{2}), d);
             C = zeros(length(p_values{1}), length(p_values{2}));
-            parfor i = 1:length(p_values{1})
-                X_temp = zeros(length(p_values{2}),3);
-                dX_temp = zeros(length(p_values{2}), 3, d_p);
-                normals_temp = zeros(length(p_values{2}),3);
-                C_temp = zeros(1,length(p_values{2}));
-                xi = p_values{1}(i);
-                for j = 1:length(p_values{2})
-                    eta = p_values{2}(j);
-                    [v,dvdxi,dvdeta] = evaluateNURBS(nurbs, [xi eta], 1);
-                    dX_temp(j,:,1) = dvdxi/norm(dvdxi);
-                    dX_temp(j,:,2) = dvdeta/norm(dvdeta);
-                    normal = cross(dvdxi,dvdeta);
-                    if plotSolution
-                        switch nargin(colorFun)
-                            case 1
-                                C_temp(j) = colorFun(v);
-                            case 2
-                                n = normal/norm(normal);
-                                C_temp(j) = colorFun(v,n);
-                        end
-                    end
-                    if plotNormalVectors
-                        ny = normal/norm(normal);
-                        normals_temp(j,:) = ny;
-                    end
-                    X_temp(j,:) = v;
-                end
-                X(i,:,:) = X_temp;
-                dX(i,:,:,:) = dX_temp;
-                normals(i,:,:) = normals_temp;
-                C(i,:) = C_temp;
+            [XI,ETA] = ndgrid(p_values{1},p_values{2});
+            [X,dvdxi,dvdeta] = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1);
+            dX = zeros(nuk1*nuk2, d, d_p);
+            dX(:,:,1) = dvdxi./norm2(dvdxi);
+            dX(:,:,2) = dvdeta./norm2(dvdeta);
+            dX = reshape(dX,nuk1,nuk2, 3, d_p);
+            if plotNormalVectors || (plotSolution && nargin(colorFun) == 2)
+                normal = cross(dvdxi,dvdeta,2);
+                normals = normal./norm2(normal);
             end
+            if plotSolution
+                switch nargin(colorFun)
+                    case 1
+                        C = colorFun(X);
+                    case 2
+                        C = colorFun(X,normals);
+                end
+                C = reshape(C,nuk1,nuk2);
+            end
+            X = reshape(X,nuk1,nuk2,d);
+
             if plotSolution
                 surf(X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
                             'FaceLighting', faceLighting, 'DisplayName',displayName)
@@ -304,6 +285,7 @@ for patch = 1:noPatches
                             'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
             if plotNormalVectors
+                normals = reshape(normals,nuk1,nuk2,d);
                 quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*normals(1:qstep:end,1:qstep:end,1),quiverScale*normals(1:qstep:end,1:qstep:end,2),quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
             end
             if plotElementEdges
@@ -329,9 +311,10 @@ for patch = 1:noPatches
                 end
             end
         elseif d_p == 2 && d == 2
+            % Find the curve counter-clockwise around the patch
             XI = zeros(2*length(p_values{1})+2*length(p_values{2})-4, d);
             counter = 1;
-
+            
             % along eta = 0
             xi = p_values{1};
             npts = size(xi,1);
@@ -344,49 +327,38 @@ for patch = 1:noPatches
             XI(counter:counter+npts-1,:) = [ones(npts,1), eta];
             counter = counter + npts;
 
-            % reverse order of arrays
-            p_values{1} = p_values{1}(end:-1:1);
-            p_values{2} = p_values{2}(end:-1:1);
-
             % along eta = 1
-            xi = p_values{1}(2:end);
+            xi = p_values{1}(end-1:-1:1);
             npts = size(xi,1);
-            XI(counter:counter+npts-1,:) = [xi, zeros(npts,1)];
+            XI(counter:counter+npts-1,:) = [xi, ones(npts,1)];
             counter = counter + npts;
             
             % along xi = 0
-            eta = p_values{2}(2:end-1);
+            eta = p_values{2}(end-1:-1:2); % Skip the end-point as the fill-function will automatically connect the curve
             npts = size(eta,1);
             XI(counter:counter+npts-1,:) = [zeros(npts,1), eta];
+
+            % evaluate NURBS
             v = evaluateNURBSvec(nurbs, XI);
 
             % reverse back order of arrays
-            p_values{1} = p_values{1}(end:-1:1);
-            p_values{2} = p_values{2}(end:-1:1);
             fill(v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
 
             if plotElementEdges
-                v = [];
-                for i = 1:d_p
-                    indices = indicesMat(i,:);
-                    nuk = length(uniqueKnots{indices(2)}); % number of unique knots
-                    nok = length(p_values{indices(1)}); % number of knots
-                    temp = zeros(d,nuk*(nok+1));
-                    counter = 0;
-                    for j = 1:nuk
-                        eta = uniqueKnots{indices(2)}(j);
-        
-                        xi = p_values{indices(1)};
-                        npts = length(xi);
-                        XI = [xi eta*ones(npts,1)];
-                        temp2 = evaluateNURBSvec(nurbs, XI(:,indicesMat2(i,:)));
-                        
-                        temp(:,counter+1:counter+nok+1) = [temp2, NaN(d,1)];
-                        counter = counter + nok+1;
-                    end
-                    v = [v, temp];
-                    plotGridLines(v,displayName)
-                end
+                nok1 = length(p_values{1}); % number of knots in the xi direction
+                nok2 = length(p_values{2}); % number of knots in the eta direction
+                nuk1 = length(uniqueKnots{1}); % number of unique knots in the xi direction
+                nuk2 = length(uniqueKnots{1}); % number of unique knots in the eta direction
+                XI = [[kron(ones(nuk2,1),p_values{1}), kron(uniqueKnots{2}.',ones(nok1,1))];
+                      [kron(uniqueKnots{1}.',ones(nok2,1)), kron(ones(nuk1,1),p_values{2})]];
+                npts = nuk2*(nok1+1)+nuk1*(nok2+1) - 1;
+                v = NaN(npts, d);
+                indices = false(npts,1);
+                indices_NaN = [(nok1+1):(nok1+1):(nuk2*(nok1+1)), ...
+                              ((nok2+1):(nok2+1):(nuk1*(nok2+1))-1)+(nuk2*(nok1+1))];
+                indices(indices_NaN) = true;
+                v(~indices,:) = evaluateNURBSvec(nurbs, XI);
+                plotGridLines(v,displayName)
             end
         elseif d_p == 1
             C = evaluateNURBSvec(nurbs, p_values{1});
@@ -401,18 +373,24 @@ for patch = 1:noPatches
         end
     end
     if plotControlPolygon
+        coeffs = subasgnArr(nurbs.coeffs,[],size(nurbs.coeffs,1)); % Remove the weights
+        dimensions = size(coeffs);
         if d_p == 1
-            v = coeffs(1:d,:);
+            v = coeffs;
         else
-            v = [];
+            number = nurbs.number;
+            v = zeros(d,3*prod(number)+prod(number([1,2]))+prod(number([1,3]))+prod(number([2,3])));
+            counter = 1;
             for i = 1:d_p
                 indices = 1:d_p+1;
                 indices([i+1,2]) = [2,i+1];
                 temp = permute(coeffs,indices);
                 prd = prod(dimensions(indices(3:end))); % product of remaining dimensions
-                temp = cat(2,reshape(temp,dimensions(1),dimensions(i+1),prd),NaN(d,1,prd));  % adding NaN to make the data discontinous
-                temp = reshape(temp,dimensions(1),(dimensions(i+1)+1)*prd);
-                v = [v, temp, NaN(dimensions(1),1)];
+                temp = cat(2,reshape(temp,d,number(i),prd),NaN(d,1,prd));  % adding NaN to make the data discontinous
+                temp = reshape(temp,d,(number(i)+1)*prd);
+                npts = size(temp,2) + 1;
+                v(:,counter:counter+npts-1) = [temp, NaN(d,1)];
+                counter = counter + npts;
             end
         end
         switch d

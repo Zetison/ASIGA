@@ -3,8 +3,19 @@ clear all
 
 addpath(genpath('../export_fig'))
 no2Dpoints = 1000;
-startMatlabPool
+% startMatlabPool
 
+load(['NURBSgeometries/BCAdata/BeTSSi_BCA_p' num2str(2)])
+figure
+tic
+nurbs = getBeTSSiM4Data;
+nurbs = makeUniformNURBSDegree(nurbs,2);
+nurbs = insertKnotsInNURBS(nurbs,1);
+% plotNURBSvec(nurbs,'plotParmDir',true,'plotSolution',true, 'colorFun', @(v) norm2(v), 'coarseLinearSampling', false)
+plotNURBSvec(nurbs,'plotControlPolygon',true, 'coarseLinearSampling', false)
+toc
+% view(-40,60)
+return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot all shapes
@@ -67,21 +78,37 @@ startMatlabPool
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test autorefine
-close all
-R = 1;
-nurbs = getDiskData('R',R,'parm',2);
-nurbs = insertKnotsInNURBS(nurbs,[100,200]);
-xi = sort(rand(100,1));
-eta = sort(rand(100,1));
-evaluateNURBSvec(nurbs{1}, [xi,eta],1)
-I = edgeLengths(nurbs,1);
-geometry = getTopology(nurbs);
-refLength = R*pi/2;
-M = 2;
-nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1),1);
-
-plotNURBS(nurbs);
-view(0,90)
+% close all
+% R = 1;
+% nurbs = getDiskData('R',R,'parm',2);
+% % nurbs = insertKnotsInNURBS(nurbs,[10,20]);
+% xi = sort(rand(1000,1));
+% eta = sort(rand(1000,1));
+% % tic
+% % v_old = zeros(100,2);
+% % dvdxi_old = zeros(100,2);
+% % dvdeta_old = zeros(100,2);
+% % for i = 1:numel(xi)
+% %     [temp,dtempdxi,dtempdeta] = evaluateNURBS(nurbs{1}, [xi(i),eta(i)],1);
+% %     v_old(i,:) = temp;
+% %     dvdxi_old(i,:) = dtempdxi;
+% %     dvdeta_old(i,:) = dtempdeta;
+% % end
+% % toc
+% % tic
+% % [v, dvdxi,dvdeta] = evaluateNURBSvec(nurbs{1}, [xi,eta],1);
+% % toc
+% % I = edgeLengths(nurbs,1);
+% % geometry = getTopology(nurbs);
+% refLength = R*pi/2;
+% M = 2;
+% % nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1),1);
+% 
+% close all
+% tic
+% plotNURBSvec(nurbs);
+% toc
+% view(0,90)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find NURBS representation of part of sphere
 % p = 4;

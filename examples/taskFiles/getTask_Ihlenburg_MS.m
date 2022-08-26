@@ -118,12 +118,13 @@ for i = 1:numel(applyLoads)
         n = 20;
         n = 3;
         eqDistr = 1:n;
-    %     k = linspace(2.5, 20, 5)/varCol{1}.R1;
-        k = linspace(0.5, 4.29, n);
+        k = linspace(2.5, 20, n)/varCol{1}.R1;
+%         k = k/100;
+%         k = linspace(0.5, 4.29, n);
 %         k = linspace(0.5, 4.29, 3);
 %         k = linspace(0.5, 4.29, 10)/10;
 
-        k_ROM = k(1):0.005:k(end);
+%         k_ROM = k(1):0.005:k(end);
 %         k_ROM = k(1):0.05:k(end);
         k_ROM = k(1):0.5:k(end);
         k_ROM = sort(unique([k_ROM,k]));
@@ -133,7 +134,7 @@ for i = 1:numel(applyLoads)
         rom.omega_ROM = k_ROM*c_f;
         f = k*c_f/(2*pi);
         misc.omega = 2*pi*f;
-        msh.explodeNURBS = 1;   % Create patches from all C^0 interfaces
+        msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
         
         %% Settings for the PML (perfectly matched layers)
         refLength = varCol{1}.R1*pi/2;
@@ -166,14 +167,9 @@ for i = 1:numel(applyLoads)
         end
         msh.degree = 3:4;
         msh.degree = 2;
-        msh.M = 1; % 7
+        msh.M = 7; % 7
         
-        misc.extraGP = [9-max(msh.degree),0,0];    % extra quadrature points
-        
-        iem.N = 20; % 9
-        iem.p_ie = 4;
-        iem.s_ie = 2;
-        iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
+        ffp.extraGP = [50,0,0];    % extra quadrature points
         
         rom.useROM = true;
         rom.noVecsArr = 32;
@@ -231,12 +227,6 @@ for i = 1:numel(applyLoads)
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
         collectIntoTasks
-        
-        iem.N = 50;
-        iem.p_ie = 4;
-        iem.s_ie = 2;
-        iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
-    %     collectIntoTasks
     end
 end
 

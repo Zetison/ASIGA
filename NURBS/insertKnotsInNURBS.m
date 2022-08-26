@@ -20,6 +20,9 @@ for patch = 1:noPatches
     knots = cell(1,d_p);
     for i = 1:d_p
         if uniformRef
+            if numel(newKnots) < d_p
+                newKnots(numel(newKnots):d_p) = newKnots(end);
+            end
             newKnotsPatch = insertUniform2(nurbs.knots{i}, newKnots(i));
         else
             if isempty(newKnots{patch})

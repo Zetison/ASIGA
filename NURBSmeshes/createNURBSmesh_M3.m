@@ -113,16 +113,14 @@ else
         task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
     end
 
+    if numel(Xi) == 12
+        xiAngle = pi/2;
+    else
+        xiAngle = 2*pi/3;
+    end
     
 
     solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi);
-    if numel(Xi) == 12
-        xiAngle = pi/2;
-        solid = [glueNURBS(solid(1:4),1),glueNURBS(solid(5:8),1),glueNURBS(solid(9:12),1)];
-    else
-        xiAngle = 2*pi/3;
-        solid = [glueNURBS(solid(1:3),1),glueNURBS(solid(4:6),1),glueNURBS(solid(7:9),1)];
-    end
     if task.msh.refineThetaOnly
         if parm ~= 1
             error('Must have parm = 1 for pure theta refinement')
@@ -136,17 +134,12 @@ else
     
     refLength = R_max*pi/2;
     if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'IENSG')
+        solid_outer = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', 0, 'L', L, 'parm', parm, 'Xi', Xi);
         [Gamma_a,RR,c_xy,c_z] = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi);
         Upsilon = sqrt(c_z^2-c_xy^2);
         chimin = 25.7;
         chimax = 27.2;
-        if numel(Xi) == 12
-            Gamma_a = [glueNURBS(Gamma_a(1:4),1),glueNURBS(Gamma_a(5:8),1),glueNURBS(Gamma_a(9:12),1)];
-        else
-            Gamma_a = [glueNURBS(Gamma_a(1:3),1),glueNURBS(Gamma_a(4:6),1),glueNURBS(Gamma_a(7:9),1)];
-        end
-%         fluid = getBeTSSiM3Data('R1', R1+t_fluid, 'R2', R2+t_fluid, 't', t_fluid, 'L', L, 'parm', parm, 'Xi', Xi);
-        fluid = loftNURBS({subNURBS(solid,'at',[0,0;0,0;0,1]),Gamma_a});
+        fluid = loftNURBS({solid_outer,Gamma_a});
         fluid = makeUniformNURBSDegree(fluid,degreeVec);
         [fluid,newKnotsIns] = refineNURBSevenly(fluid,(2^(M-1)-1)/refLength,{RR*xiAngle},0,refDirs); %c_z-L/2-R_max, 
         solid = makeUniformNURBSDegree(solid,degreeVec);
@@ -154,8 +147,10 @@ else
         for i = 1:numel(newKnotsIns)
             newKnotsIns{i}{3} = {};
         end
+        newKnotsIns = [newKnotsIns(1:3),newKnotsIns,newKnotsIns(end-2:end)];
         solid = insertKnotsInNURBS(solid,newKnotsIns);
     else
+        error('This routine has not been updater for exploded solid object')
         chimin = NaN;
         chimax = NaN;
         ellipsoid = getEllipsoidData('C',[c_z,c_xy,c_xy],'alignWithAxis',alignWithAxis,'x_0',x_0, 'alpha', 0, ...

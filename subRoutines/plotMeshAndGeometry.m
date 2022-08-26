@@ -13,7 +13,7 @@ if prePlot.plot3Dgeometry
             prePlot.alphaValue = 0.8;
         end
         if prePlot.plotFullDomain
-            plotNURBS(ellipsoid,'resolution',[100 100],'alphaValue',0.6,'color','blue');
+            plotNURBSvec(ellipsoid,'resolution',[100 100],'alphaValue',0.6,'color','blue');
         end
         noTopsets = numel(prePlot.plotSubsets);
         for i = 1:noTopsets
@@ -52,7 +52,7 @@ if prePlot.plot3Dgeometry
         prePlot.displayName = ['Domain ' num2str(j)];
         prePlot.color = colorsCell{j};
         if prePlot.plotFullDomain
-            plotNURBS(nurbs, prePlot);
+            plotNURBSvec(nurbs, prePlot);
         end
         if isfield(task.varCol{j},'geometry') && ~isempty(prePlot.plotSubsets)
             topset = task.varCol{j}.geometry.topologysets.set;
@@ -62,7 +62,7 @@ if prePlot.plot3Dgeometry
             for i = 1:noTopsets
                 idx = findSet(topset,prePlot.plotSubsets{i});
                 if isnan(idx)
-                    warning(['Subset ' prePlot.plotSubsets{i} ' does not exist in structure'])
+                    warning(['Subset ' prePlot.plotSubsets{i} ' does not exist for domain ' num2str(j)])
                     continue
                 end
                 noPatches = numel(topset{idx}.item);
@@ -83,7 +83,7 @@ if prePlot.plot3Dgeometry
                 else
                     prePlot.color = colors(i,:);
                 end
-                plotNURBS(nurbs, prePlot);
+                plotNURBSvec(nurbs, prePlot);
             end
         end
     end
@@ -148,7 +148,7 @@ if prePlot.plot2Dgeometry
             prePlot.color = getColor(10);
         end
         prePlot.displayName = ['Domain ' num2str(j)];
-        plotNURBS(nurbs, prePlot);
+        plotNURBSvec(nurbs, prePlot);
     end
     hold off
     axis equal

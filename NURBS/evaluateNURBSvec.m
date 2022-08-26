@@ -1,4 +1,4 @@
-function vargout = evaluateNURBSvec(nurbs, parm_pt,n)
+function varargout = evaluateNURBSvec(nurbs, xi,n,U)
 
 if nargin < 3
     n = 0;
@@ -8,45 +8,37 @@ d_p = nurbs.d_p;
 knots = nurbs.knots;
 degree = nurbs.degree;
 number = nurbs.number;
-coeffs = nurbs.coeffs;
-ix = cell(1,d_p+1);
-tic
-I = zeros(size(parm_pt,1),d_p);
-I2 = zeros(size(parm_pt,1),d_p);
+I = zeros(size(xi,1),d_p);
 for i = 1:d_p
-    for j = 1:size(parm_pt,1)
-        I(j,i) = findKnotSpan(number(i), degree(i), parm_pt(j,i), knots{i});
-    end
-    I2(:,i) = findKnotSpanVec(number(i), degree(i), parm_pt(:,i), knots{i});
-    ix{i+1} = I(:,i) - degree(i) + (1:degree(i)+1) - 1;
+    I(:,i) = findKnotSpanVec(number(i), degree(i), xi(:,i), knots{i});
 end
-n_en = prod(degree+1);
-ix{1} = 1:d;
-P = slc(coeffs,ix,1:d_p+1);
-P = reshape(P,d,n_en);
-ix{1} = d+1;
-weights = slc(coeffs,ix,1:d_p+1);
-weights = reshape(weights,1,n_en);
+weights = reshape(nurbs.coeffs(d+1,:),1,[]);
 
-i = 1;
-tic
-B = zeros(size(parm_pt,1),3,2);
-for j = 1:size(parm_pt,1)
-    B(j,:,:) = BsplineBasis(I(j,i), parm_pt(j,i), degree(i), knots{i}, n);
+d_p = numel(degree);
+order = degree+1;
+n_en = prod(order);
+npts = size(xi,1);
+
+w_i = ones([npts,order]);
+shift = 1;
+for i = 1:d_p
+    temp_i = ones(1,d_p);
+    temp_i(i) = degree(i)+1;
+    w_i = w_i + (reshape(I(:,i)-degree(i)+(0:degree(i)),[npts,temp_i])-1)*shift;
+    shift = shift*number(i);
 end
-toc
-tic
-B2 = BsplineBasisVec(I2(:,i), parm_pt(:,i), degree(i), knots{i}, n);
-toc
+w = weights(w_i);
 
-
-
-R = NURBSbasis(I,xi,degree,knots,weights,n);
+RdR = NURBSbasisVec(I,xi,degree,knots,w,n);
+if nargin < 4
+    coeffs = nurbs.coeffs(1:d,:).';
+    U = reshape(coeffs(w_i,:),npts,n_en,d);
+end
 d_p = numel(knots);
-vargout = cell(1,d_p+1);
-vargout{1} = R{1}*U;
+varargout = cell(1,d_p+1);
+varargout{1} = reshape(sum(RdR{1}.*U,2),[],d);
 for i = 1:d_p
     for j = 1:n
-        vargout{i+1}(:,:,j) = R{i+1}(:,:,j)*U;
+        varargout{i+1}(:,:,j) = sum(RdR{i+1}(:,:,j).*U,2);
     end
 end

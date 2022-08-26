@@ -560,8 +560,6 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
             para.name = vtfFileName;
         end
 
-
-        M = task.msh.M;
         para.extraXiPts = eval(para.extraXiPts);
         para.extraEtaPts = eval(para.extraEtaPts);
         para.extraZetaPts = eval(para.extraZetaPts);
