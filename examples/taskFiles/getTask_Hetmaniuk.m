@@ -5,6 +5,7 @@ function studies = getTask_Hetmaniuk()
 counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
+saveStudies        = false;       % save ASIGA-struct into a .mat file
 
 
 %% IE simulation
@@ -21,8 +22,8 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-% BCs = {'SSBC'};
-BCs = {'SHBC','SSBC'};
+BCs = {'SSBC'};
+% BCs = {'SHBC','SSBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -47,11 +48,13 @@ err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
 
+prePlot.plot3Dgeometry = 0;
 prePlot.view                = [54,38];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plot3Dgeometry = 0;
-prePlot.plot2Dgeometry = 0;
+prePlot.plotFullDomain      = 0;
+prePlot.plotSubsets         = {'xz'}; 
+prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
 prePlot.resolution = [400,200,0];
@@ -115,18 +118,20 @@ for i = 1:numel(BCs)
         misc.formulation = {'GSB'};
         if msh.parm == 1
             if exploitAxisSymmetry
-                varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(2^(M-4)-1,3)];
+                varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
             else
-                varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1, max(2^(M-4)-1,3)];
+                varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1];
             end
         else
-            varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1, max(2^(M-4)-1,3)];
+            varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1];
         end
     else
         misc.formulation = {'BGC'};
-        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1, max(2^(M-4)-1,3)];
+        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
     end
+    pml.refinement = @(M) max(2^(M-4)-1,3);
     misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
+    ffp.extraGP = [50,0,0];    % extra quadrature points
     if noDomains > 1
         if msh.parm == 1
             if exploitAxisSymmetry
@@ -185,6 +190,7 @@ for i = 1:numel(BCs)
     rom.basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROMcell = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    misc.symmetric = 0;
     iem.N = 16; % 9
     iem.p_ie = 5;
     iem.s_ie = 2;
@@ -200,10 +206,10 @@ for i = 1:numel(BCs)
             pml.gamma = 2.5;          % parameter for sigmaType = 1
             misc.r_a = 1.2;
             rom.noVecsArr = [8,16,24,32];
-%             rom.noVecsArr = 32;
+            rom.noVecsArr = 32;
         case {'SSBC','NNBC'}
             rom.noVecsArr = [4,8,12,20];
-%             rom.noVecsArr = 20;
+            rom.noVecsArr = 20;
             pml.t = 0.4;         % thickness of PML
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.4;
@@ -237,7 +243,7 @@ for i = 1:numel(BCs)
     para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
     para.extraZetaPts            = '1';   % Extra visualization points in the zeta-direction per element
 %     collectIntoTasks
-
+    
     misc.omega = rom.omega_ROM;
     para.plotResultsInParaview = 0;
     misc.method = {'BA'};

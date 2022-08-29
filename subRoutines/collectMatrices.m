@@ -73,28 +73,46 @@ for i = 1:noDomains
             end
     end
     if isfield(task.varCol{i},'A_K')
-        A0(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
+        if strcmp(task.varCol{i}.media,'solid') && task.misc.symmetric
+            A2(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
+        else
+            A0(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
+        end
         task.varCol{i} = rmfield(task.varCol{i},'A_K');
     end
     
     if isfield(task.varCol{i},'A_M')
-        A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+        if task.misc.symmetric
+            switch task.varCol{i}.media
+                case 'fluid'
+                    A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+                case 'solid'
+                    A4(Aindices{i,1},Aindices{i,2}) = A4(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+            end
+        else
+            A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+        end
         task.varCol{i} = rmfield(task.varCol{i},'A_M');
     end
     if isfield(task.varCol{i},'A_C') && i > 1
         Cindices1 = Aindices{i,1}(end)+(1:size(task.varCol{i}.A_C,1));
         Cindices2 = Aindices{i,2}(1)-1+(1:size(task.varCol{i}.A_C,2));
-        switch task.varCol{i-1}.media
-            case 'fluid'
-                A2(Cindices1,Cindices2) = A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
-            case 'solid'
-                A0(Cindices1,Cindices2) = A0(Cindices1,Cindices2) + task.varCol{i}.A_C;
-        end
-        switch task.varCol{i}.media
-            case 'fluid'
-                A2(Cindices2,Cindices1) = A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
-            case 'solid'
-                A0(Cindices2,Cindices1) = A0(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
+        if task.misc.symmetric
+            A2(Cindices1,Cindices2) = A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
+            A2(Cindices2,Cindices1) = A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
+        else
+            switch task.varCol{i-1}.media
+                case 'fluid'
+                    A2(Cindices1,Cindices2) = A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
+                case 'solid'
+                    A0(Cindices1,Cindices2) = A0(Cindices1,Cindices2) + task.varCol{i}.A_C;
+            end
+            switch task.varCol{i}.media
+                case 'fluid'
+                    A2(Cindices2,Cindices1) = A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
+                case 'solid'
+                    A0(Cindices2,Cindices1) = A0(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
+            end
         end
         task.varCol{i} = rmfield(task.varCol{i},'A_C');
     end

@@ -8,11 +8,11 @@ function tasks = computeROMsolution(tasks,i_task,basisROMcell,omega_ROM,noVecsAr
 
 U_sweep = tasks(i_task).task.U_sweep;
 noDofs = size(U_sweep{1},1);
-A0 = tasks(i_task).task.varCol{1}.A0;
-A1 = tasks(i_task).task.varCol{1}.A1;
-A2 = tasks(i_task).task.varCol{1}.A2;
-tasks(i_task).task.varCol = rmfields(tasks(i_task).task.varCol,{'A0','A1','A2','U'});
-tasks(i_task).task = rmfield(tasks(i_task).task,'U_sweep');
+A0 = tasks(i_task).task.A0;
+A1 = tasks(i_task).task.A1;
+A2 = tasks(i_task).task.A2;
+A4 = tasks(i_task).task.A4;
+tasks(i_task).task = rmfield(tasks(i_task).task,{'A0','A1','A2','A4','U_sweep'});
 task = tasks(i_task).task;
 omega_P = task.misc.omega;
 P = numel(omega_P);
@@ -54,6 +54,7 @@ for i_b = 1:numel(basisROMcell)
                 A0_am = V'*A0*V;
                 A1_am = V'*A1*V;
                 A2_am = V'*A2*V;
+                A4_am = V'*A4*V;
             case 'Hermite'
 %                 mp.Digits(400);
 %                 Y = getInterpolatingHermite(mp(k_P.'),mp(omega_ROM),noVecs);
@@ -273,7 +274,7 @@ for i_b = 1:numel(basisROMcell)
                     [task,FF] = collectMatrices(task);
                     FFm = V'*FF;  
 
-                    Am = A0_am + omega*A1_am + omega^2*A2_am;
+                    Am = A0_am + omega*A1_am + omega^2*A2_am + omega^4*A4_am;
                     Pinv = spdiags(1./diag(Am),0,size(Am,1),size(Am,2));
                     task.UU = V*(Pinv*((Am*Pinv)\FFm));
                 case 'Hermite'

@@ -167,7 +167,7 @@ for i = 1:numel(applyLoads)
         end
         msh.degree = 3:4;
         msh.degree = 2;
-        msh.M = 7; % 7
+        msh.M = 3; % 7
         
         ffp.extraGP = [50,0,0];    % extra quadrature points
         

@@ -31,7 +31,8 @@ misc.P_inc               = 1;           % Amplitude of incident wave
 misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as opposed to the interior problem)
 misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are compatible across patch interfaces
 misc.compute_h_max       = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
-misc.preProcessOnly      = false;
+misc.preProcessOnly      = false;       % Only run the preProcessing process
+misc.symmetric           = true;        % Use symmetric matrices for coupled problems (at the expence of having to store three more global matrices for ROM)
 
 %% Mesh settings
 msh.M                   = 1;	   % Mesh number
@@ -202,7 +203,6 @@ rom.useROM       = false;    % Toggle the usage of ROM
 rom.noVecsArr 	 = 8;        % Number of derivatives at each point (including the 0th derivative
 rom.k_ROM    	 = 3;        % Points at which to compute derivatives
 rom.basisROMcell = {'DGP'};  % Basis for ROM ('Pade','Taylor','DGP','Hermite' or 'Bernstein')
-
 
 
 

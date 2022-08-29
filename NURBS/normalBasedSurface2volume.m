@@ -17,6 +17,7 @@ nurbs2 = cell(1,noPatches);
 task.misc.method = 'BA';
 task.misc.progressBars = false;
 task.misc.extraGP = [0,0,0];
+task.misc.symmetric = true;
 task.varCol{1}.nurbs = nurbs;
 task.varCol{1}.fieldDimension = 3;
 switch X_bApprox

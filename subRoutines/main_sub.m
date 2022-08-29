@@ -173,6 +173,9 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     end
                     for i_domain = 1:min(task.noDomains,2)
                         task = applyNeumannCondition(task,i_domain);
+                        if task.misc.symmetric && strcmp(task.varCol{i_domain}.media,'solid')
+                            task.varCol{i_domain}.FF = omega_i^2*task.varCol{i_domain}.FF;
+                        end
                     end
                     if printLog
                         fprintf('using %12f seconds.', toc)
@@ -348,25 +351,26 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                             error('not implemented')
                         end
                         if task.rom.useROM
-                            dAdomega = A1 + 2*omega_i*A2 + 4*omega_i^3*A4;
-                            d2Adomega2 = 2*A2 + 12*omega_i^2*A4;
+                            dAdomega = cell(1,4);
+                            dAdomega{1} = A1 + 2*omega_i*A2 + 4*omega_i^3*A4;
+                            dAdomega{2} = 2*A2 + 12*omega_i^2*A4;
+                            dAdomega{3} = 24*omega_i*A4;
+                            dAdomega{4} = 24*A4;
                             if task.rom.useDGP && i_o == numel(omega)
-                                task.varCol{1}.A0 = A0;
-                                task.varCol{1}.A1 = A1;
-                                task.varCol{1}.A2 = A2;
+                                task.A0 = A0;
+                                task.A1 = A1;
+                                task.A2 = A2;
+                                task.A4 = A4;
                             end
-                            UU = zeros(size(FF));
+                            task.UU = zeros(size(FF));
                             dA = decomposition(A*Pinv,'lu');
                             fprintf('using %12f seconds.', toc)
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
                             for i = 1:task.noRHSs
                                 j = i-1;
                                 b = FF(:,i);
-                                if j > 0
-                                    b = b - j*dAdomega*task.UU(:,i-1);
-                                end
-                                if j > 1
-                                    b = b - j*(j-1)/2*d2Adomega2*task.UU(:,i-2);
+                                for k = 1:min(j,numel(dAdomega))
+                                    b = b - nchoosek(j,k)*dAdomega{k}*task.UU(:,i-k);
                                 end
                                 task.UU(:,i) = Pinv*(dA\b);
                             end
@@ -425,7 +429,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 end
                 if task.misc.clearGlobalMatrices
                     task.varCol = rmfields(task.varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
-                    clear A FF A0 A1 A2 A4 Pinv dA dAdomega d2Adomega2 b
+                    clear A FF A0 A1 A2 A4 Pinv dA dAdomega b
                 end
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
         end

@@ -49,9 +49,7 @@ for i = 1:noDomains
             
             task.varCol{i}.p_ = @(X) analytic({X},layer,NaN,'p',i);
         case 'solid'
-            task.varCol{i}.u_x_ = @(X) analytic({X},layer,NaN,'u_x',i);
-            task.varCol{i}.u_y_ = @(X) analytic({X},layer,NaN,'u_y',i);
-            task.varCol{i}.u_z_ = @(X) analytic({X},layer,NaN,'u_z',i);
+            task.varCol{i}.u_ = @(X) analytic({X},layer,NaN,'u',i);
     end
 end
 task.p_0_ = @(X) analytic({X},layer,NaN,'p_0',1);

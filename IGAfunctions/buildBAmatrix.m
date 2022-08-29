@@ -22,16 +22,6 @@ noDofs = task.varCol{i_varCol}.noDofs;
 extraGP = task.misc.extraGP;
 d_p = task.varCol{i_varCol}.patches{1}.nurbs.d_p;
 
-if task.misc.solveForPtot && task.misc.exteriorProblem
-    analytic = @(x) task.varCol{i_varCol}.p_(x) + task.p_inc_(x);
-else
-    switch task.varCol{i_varCol}.media
-        case 'fluid'
-            analytic = task.varCol{i_varCol}.p_;
-        case 'solid'
-            analytic = @(X) reshape([task.varCol{i_varCol}.u_x_(X).'; task.varCol{i_varCol}.u_y_(X).'; task.varCol{i_varCol}.u_z_(X).'],3*size(X{i_varCol},1),1);
-    end
-end
 
 if strcmp(task.misc.coreMethod, 'XI')
     useEnrichedBfuns = true;
@@ -102,10 +92,16 @@ for i = 1:i_varCol
         X{i} = zeros(0,3);
     end
 end
-if nargin(analytic) == 2
-    analytic_values = analytic(X,n_values);
+if task.misc.solveForPtot && task.misc.exteriorProblem
+    analytic_values = task.varCol{i_varCol}.p_(X) + task.p_inc_(X);
 else
-    analytic_values = analytic(X);
+    switch task.varCol{i_varCol}.media
+        case 'fluid'
+            analytic_values = task.varCol{i_varCol}.p_(X);
+        case 'solid'
+            u = task.varCol{i_varCol}.u_(X);
+            analytic_values = reshape([u{1}.'; u{2}.'; u{3}.'],3*size(X{i_varCol},1),1);
+    end
 end
 
 d_f = task.varCol{i_varCol}.dimension;
