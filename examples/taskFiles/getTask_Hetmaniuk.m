@@ -22,8 +22,8 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-BCs = {'SSBC'};
-% BCs = {'SHBC','SSBC'};
+% BCs = {'SSBC'};
+BCs = {'SHBC','SSBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -215,8 +215,7 @@ for i = 1:numel(BCs)
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.4;
     end
-    pml.gamma = -log(pml.eps)*(pml.n+1)/(k(1)*pml.t);
-    
+
     rom.useROM = true;
 
     misc.storeFullVarCol = false;
