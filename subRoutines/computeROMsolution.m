@@ -346,16 +346,20 @@ for i_b = 1:numel(basisROMcell)
                 otherwise
                     temp_omega_ROM = omega_ROM;
             end
-            tasks(i_task,taskROM,i_b).task.results.energyError = energyError;
-            tasks(i_task,taskROM,i_b).task.results.L2Error = L2Error;
-            tasks(i_task,taskROM,i_b).task.results.H1Error = H1Error;
-            tasks(i_task,taskROM,i_b).task.results.H1sError = H1sError;
-            tasks(i_task,taskROM,i_b).task.results.surfaceError = surfaceError;
+            if task.err.calculateVolumeError
+                tasks(i_task,taskROM,i_b).task.results.energyError = energyError;
+                tasks(i_task,taskROM,i_b).task.results.L2Error = L2Error;
+                tasks(i_task,taskROM,i_b).task.results.H1Error = H1Error;
+                tasks(i_task,taskROM,i_b).task.results.H1sError = H1sError;
+            end
+            if task.err.calculateSurfaceError
+                tasks(i_task,taskROM,i_b).task.results.surfaceError = surfaceError;
+            end
         end
 
-        tasks(i_task,taskROM,i_b).task = rmfield(task,'varCol');
-        tasks(i_task,taskROM,i_b).task.varCol{1}.omega_ROM = temp_omega_ROM;
-        tasks(i_task,taskROM,i_b).task.varCol{1}.f_ROM = temp_omega_ROM/(2*pi);
+        tasks(i_task,taskROM,i_b).task.varCol = rmfields(task.varCol,getAddedFields());
+        tasks(i_task,taskROM,i_b).task.omega_ROM = temp_omega_ROM;
+        tasks(i_task,taskROM,i_b).task.f_ROM = temp_omega_ROM/(2*pi);
         tasks(i_task,taskROM,i_b).task.varCol{1}.k_ROM = temp_omega_ROM/task.varCol{1}.c_f;
         tasks(i_task,taskROM,i_b).task.rom.noVecs = noVecs;
         tasks(i_task,taskROM,i_b).task.rom.basisROM = basisROM;

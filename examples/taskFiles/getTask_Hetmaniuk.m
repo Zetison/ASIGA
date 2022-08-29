@@ -67,7 +67,7 @@ for i = 1:numel(BCs)
 %     misc.method = {'IE'};
     misc.method = {'PML'};
 
-    postPlot(1).xname           = 'k_ROM';
+    postPlot(1).xname           = 'varCol{1}.k_ROM';
     postPlot(1).yname        	= 'surfaceError';
     postPlot(1).plotResults  	= true;
     postPlot(1).printResults 	= true;
@@ -170,6 +170,7 @@ for i = 1:numel(BCs)
             omega = 2*pi*f;
             f_ROM = f(1):12:f(end);
 %             f_ROM = f(1):120:f(end);
+%             f_ROM = f(1):1200:f(end);
 %             f_ROM = linspace(1430, 4290, 9);
             rom.omega_ROM = 2*pi*f_ROM;
             k = omega/varCol{1}.c_f;
