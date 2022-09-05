@@ -6,6 +6,8 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+saveStudies = false;
+
 misc.scatteringCase = 'Sweep';
 
 misc.model = 'S1';  % Spherical shell

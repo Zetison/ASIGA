@@ -1,3 +1,7 @@
+
+
+saveStudies = false;
+
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'IL';
 

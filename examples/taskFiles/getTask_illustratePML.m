@@ -8,6 +8,8 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 saveStudies = false;
+
+saveStudies = false;
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'illustratePML';
 

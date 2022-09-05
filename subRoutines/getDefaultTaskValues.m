@@ -4,7 +4,7 @@
 loopParameters     = {'msh.M'};   % parameter study array to be investigated
 runTasksInParallel = false;       % Run tasks in parallel
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
-saveStudies        = true;       % save ASIGA-struct into a .mat file
+saveStudies        = false;       % save ASIGA-struct into a .mat file
 noCoresToUse       = Inf;         % Number of processors for parallel computations (Inf uses all available cores)
 connectedParameters = {{}};       % Define set of loop parameters to be connected (i.e. connectedParameters = {{'msh.M','iem.N'}} assumes the arrays msh.M and iem.N to be of same size and loops through the elements in pairs)
 

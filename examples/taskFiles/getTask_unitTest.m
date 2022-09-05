@@ -5,6 +5,8 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+saveStudies = false;
+
 misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 misc.model = 'S1';
 varCol = setS1Parameters();

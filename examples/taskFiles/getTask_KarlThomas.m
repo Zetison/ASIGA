@@ -1,5 +1,7 @@
 
 
+saveStudies = false;
+
 misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
 misc.model = 'TAP'; % The TAP misc.model (Mock shell) described in Richard Hodges book "Underwater acoustics: analysis, design and performance of sonar"

@@ -6,6 +6,8 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+saveStudies = false;
+
 
 %% IE simulation
 misc.model = 'IMS';  % Spherical shell
@@ -124,9 +126,9 @@ for i = 1:numel(applyLoads)
 %         k = linspace(0.5, 4.29, 3);
 %         k = linspace(0.5, 4.29, 10)/10;
 
-%         k_ROM = k(1):0.005:k(end);
+        k_ROM = k(1):0.005:k(end);
 %         k_ROM = k(1):0.05:k(end);
-        k_ROM = k(1):0.5:k(end);
+%         k_ROM = k(1):0.5:k(end);
         k_ROM = sort(unique([k_ROM,k]));
 %         k_ROM = k;
 %         k = k(1)+(k(end)-k(1))*(1-cos((2*eqDistr-1)/2/n*pi))/2; % Chebyshev nodes

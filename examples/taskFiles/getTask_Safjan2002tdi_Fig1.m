@@ -4,6 +4,8 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
+saveStudies = false;
+
 %% IE simulation
 misc.scatteringCase = 'BI';
 misc.model = 'Safjan2002tdi'; % Simpson sphere
