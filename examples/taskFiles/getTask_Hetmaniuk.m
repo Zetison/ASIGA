@@ -22,8 +22,8 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-% BCs = {'SSBC'};
-BCs = {'SHBC','SSBC'};
+BCs = {'SSBC'};
+% BCs = {'SHBC','SSBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -42,6 +42,7 @@ warning('off','NURBS:weights')
 misc.r_s = 3;
 
 msh.parm = 1;
+msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
 exploitAxisSymmetry = 1; % only for msh.parm = 1
 err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
@@ -113,7 +114,7 @@ for i = 1:numel(BCs)
         msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
     end
     msh.degree = 3;
-    msh.M = 7; % 7
+    msh.M = 5; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
         if msh.parm == 1
@@ -127,20 +128,21 @@ for i = 1:numel(BCs)
         end
     else
         misc.formulation = {'BGC'};
-        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
+%         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
     end
     pml.refinement = @(M) max(2^(M-4)-1,3);
-    misc.extraGP = [9-msh.degree,0,0];    % extra quadrature points
+    misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
     ffp.extraGP = [50,0,0];    % extra quadrature points
     if noDomains > 1
         if msh.parm == 1
             if exploitAxisSymmetry
-                varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+%                 varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+                varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid*2^(M-3)),0)];
             else
-                varCol{2}.refinement = @(M,t,t_fluid) [2^(M-1)-1, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+                varCol{2}.refinement = @(M,t,t_fluid) [2^(M-1)-1, 2^(M-1)-1, max(round(t/t_fluid*2^(M-4)),0)];
             end
         else
-            varCol{2}.refinement = @(M,t,t_fluid) [3*2^(M-3)-1, 3*2^(M-3)-1, max(round(t/t_fluid)*2^(M-1),0)];
+            varCol{2}.refinement = @(M,t,t_fluid) [3*2^(M-3)-1, 3*2^(M-3)-1, max(round(t/t_fluid*2^(M-4)),0)];
         end
     end
     switch misc.BC
@@ -150,6 +152,7 @@ for i = 1:numel(BCs)
             k_ROM = k(1):0.05:k(end);
 %             k_ROM = k(1):0.2:k(end);
 %             k_ROM = linspace(9, 36, 5);
+%             k_ROM = k(1);
             c_f = varCol{1}.c_f;
             rom.omega_ROM = k_ROM*c_f;
             f = k*c_f/(2*pi);
@@ -172,6 +175,7 @@ for i = 1:numel(BCs)
 %             f_ROM = f(1):120:f(end);
 %             f_ROM = f(1):1200:f(end);
 %             f_ROM = linspace(1430, 4290, 9);
+            f_ROM = f(1);
             rom.omega_ROM = 2*pi*f_ROM;
             k = omega/varCol{1}.c_f;
             if hetmaniukCase
@@ -191,7 +195,9 @@ for i = 1:numel(BCs)
     rom.basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROMcell = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    misc.symmetric = 0;
+
+    misc.symmetric = 1;
+
     iem.N = 16; % 9
     iem.p_ie = 5;
     iem.s_ie = 2;
@@ -199,8 +205,8 @@ for i = 1:numel(BCs)
     
 
     pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-    pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
-    pml.dirichlet = false;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+    pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+    pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
     switch misc.BC
         case {'SHBC','NBC'}
             pml.t = 0.2;         % thickness of PML
@@ -215,6 +221,9 @@ for i = 1:numel(BCs)
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.4;
     end
+    if ~(pml.sigmaType == 1)
+        pml.gamma = 1/(k(1)*pml.t);
+    end
 
     rom.useROM = true;
 
@@ -228,14 +237,20 @@ for i = 1:numel(BCs)
     rom.useROM = false;
     for j = 1:6
         postPlot(j).noXLoopPrms   	= 1;
-        postPlot(j).xname = postPlot(j).xname(1);
+        switch misc.BC
+            case {'SHBC','NBC'}
+                postPlot(j).xname = 'varCol{1}.k';
+            case {'SSBC','NNBC'}
+                postPlot(j).xname = 'f';
+        end
         postPlot(j).xLoopName     	= 'misc.omega';
     end
     misc.omega = rom.omega_ROM;
+%     misc.omega = rom.omega_ROM(1);
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-    collectIntoTasks
+%     collectIntoTasks
     
     misc.omega = rom.omega_ROM(end);
     para.plotResultsInParaview = true;
@@ -245,9 +260,10 @@ for i = 1:numel(BCs)
 %     collectIntoTasks
     
     misc.omega = rom.omega_ROM;
+%     misc.omega = rom.omega_ROM(1);
     para.plotResultsInParaview = 0;
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-    collectIntoTasks
+%     collectIntoTasks
 end

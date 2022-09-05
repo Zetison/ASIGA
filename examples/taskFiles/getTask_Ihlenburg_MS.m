@@ -25,8 +25,8 @@ misc.checkNURBSweightsCompatibility = false;
 misc.preProcessOnly = 0;
 warning('off','NURBS:weights')
 
+prePlot.plot3Dgeometry = 1;
 prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
-prePlot.plot3Dgeometry = 0;
 prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 %     prePlot.resolution = [20,20,0];
@@ -166,10 +166,11 @@ for i = 1:numel(applyLoads)
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.degree = 2;
-        msh.M = 3; % 7
+        msh.degree = 4;
+        msh.M = 7; % 7
+        misc.symmetric = false;
         
-        ffp.extraGP = [50,0,0];    % extra quadrature points
+        misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
         
         rom.useROM = true;
         rom.noVecsArr = 32;

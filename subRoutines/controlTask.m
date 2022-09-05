@@ -58,7 +58,7 @@ if strcmp(method,'BA') && strcmp(scatteringCase,'MS') && (numel(task.ffp.alpha_s
     error('This is case is not implemented. The best approximation method must be combined with "scatteringCase = BI"')
 end
 if strcmp(method,'PML') && isnan(task.pml.gamma) && task.rom.useROM
-    error('gamma is not set: gamma cannot be frequency dependent when using ROM')
+    error('gamma is not set: gamma cannot be frequency dependent when using ROM. I.e. use pml.gamma = 1/(k(1)*pml.t) for pml.sigmaType=3');
 end
 task.misc.storeFullVarCol = task.misc.storeFullVarCol || task.rom.useROM;
 

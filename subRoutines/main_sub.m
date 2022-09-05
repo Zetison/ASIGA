@@ -613,9 +613,11 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
                     else
                         switch bdryName
                             case {'xy','yz','xz'}
-                                warning(['The set ' bdryName ' was not found, and is thus not plotted in paraview. For xy, yz and xz; setting msh.explodeNURBS = true might help.'])
+                                warning(['The set ' bdryName ' was not found for domain ' num2str(i_v) ', and is thus not plotted in paraview. For xy, yz and xz; setting msh.explodeNURBS = true might help.'])
                             otherwise
-                                warning(['The set ' bdryName ' was not found, and is thus not plotted in paraview.'])
+                                if ~(strcmp(bdryName,'Gamma_a') && i_v > 1)
+                                    warning(['The set ' bdryName ' was not found for domain ' num2str(i_v) ', and is thus not plotted in paraview.'])
+                                end
                         end
                     end
                 end

@@ -53,7 +53,7 @@ for i = 1:noDomains
     end
 end
 task.p_0_ = @(X) analytic({X},layer,NaN,'p_0',1);
-task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,task.p_inc_);
+task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,task.p_inc_,task.misc.omega,task.misc.symmetric);
 task.dp_incdn_ROM_ = @(X,n) dp_incdn_ROM(X,n,layer,task.dp_incdn_);
 
 
@@ -364,24 +364,43 @@ k = varCol{1}.omega/c_f;
 temp(:,2:end) = (1i./d_vecX)*m(2:end)/k;
 dp_inc_ROM = dp_incdn_(X,n).*(1i*d_vecX/c_f).^m.*(1-temp);
 
-function p_inc_ROM = p_inc_ROM(X,varCol,p_inc_)
+function p_inc_ROM = p_inc_ROM(X,varCol,p_inc_,omega,symmetric)
 
-m = 0:(varCol{1}.noRHSs-1);
-switch varCol{1}.applyLoad
-    case 'planeWave'
-        d_vecX = X*varCol{1}.d_vec;
-    case 'pointPulsation'
-        d_vecX = norm2(X);
-    case 'pointCharge'
-        x_s = varCol{1}.r_s*varCol{1}.d_vec.';
-        d_vecX = norm2(X-x_s);
-    otherwise
-        error('Not implemented')
+if symmetric
+    m = 0:(varCol{1}.noRHSs-1);
+    switch varCol{1}.applyLoad
+        case 'planeWave'
+            d_vecX = X*varCol{1}.d_vec;
+        case 'pointPulsation'
+            d_vecX = norm2(X);
+        case 'pointCharge'
+            x_s = varCol{1}.r_s*varCol{1}.d_vec.';
+            d_vecX = norm2(X-x_s);
+        otherwise
+            error('Not implemented')
+    end
+    c_f = varCol{1}.c_f;
+    mm1 = m - 1;
+    mm1(1) = 0;
+    mm2 = m - 2;
+    mm2(1:2) = 0;
+    p_inc_ROM = p_inc_(X).*(omega.^2.*(1i*d_vecX/c_f).^m + 2*m.*omega.*(1i*d_vecX/c_f).^mm1 + m.*(m-1).*(1i*d_vecX/c_f).^mm2);
+else
+    m = 0:(varCol{1}.noRHSs-1);
+    switch varCol{1}.applyLoad
+        case 'planeWave'
+            d_vecX = X*varCol{1}.d_vec;
+        case 'pointPulsation'
+            d_vecX = norm2(X);
+        case 'pointCharge'
+            x_s = varCol{1}.r_s*varCol{1}.d_vec.';
+            d_vecX = norm2(X-x_s);
+        otherwise
+            error('Not implemented')
+    end
+    c_f = varCol{1}.c_f;
+    p_inc_ROM = p_inc_(X).*(1i*d_vecX/c_f).^m;
 end
-c_f = varCol{1}.c_f;
-p_inc_ROM = p_inc_(X).*(1i*d_vecX/c_f).^m;
-
-
-
-
+    
+    
 

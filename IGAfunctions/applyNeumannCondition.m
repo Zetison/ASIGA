@@ -92,6 +92,7 @@ end
 
 F = zeros(noDofs,noRHSs);
 parfor i = 1:noRHSs
+% for i = 1:noRHSs
     F(:,i) = vectorAssembly(Fvalues(:,:,i),indices,noDofs);
 end
 task.varCol{i_domain}.FF = F;

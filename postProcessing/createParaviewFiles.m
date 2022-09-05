@@ -50,13 +50,13 @@ for i_v = 1:noDomains
     para{i_v}.plotErrorGrad = para{i_v}.plotError && d_p == 3; 
     para{i_v}.plotErrorEnergy = para{i_v}.plotError && d_p == 3; 
     
-    para{i_v}.plotVonMisesStress = options.para_options.plotVonMisesStress && isSolid;
-    para{i_v}.plotStressXX = options.para_options.plotStressXX && isSolid;
-    para{i_v}.plotStressYY = options.para_options.plotStressYY && isSolid;
-    para{i_v}.plotStressZZ = options.para_options.plotStressZZ && isSolid;
-    para{i_v}.plotStressYZ = options.para_options.plotStressYZ && isSolid;
-    para{i_v}.plotStressXZ = options.para_options.plotStressXZ && isSolid;
-    para{i_v}.plotStressXY = options.para_options.plotStressXY && isSolid;
+    para{i_v}.plotVonMisesStress = options.para_options.plotVonMisesStress && isSolid && d_p == 3;
+    para{i_v}.plotStressXX = options.para_options.plotStressXX && isSolid && d_p == 3;
+    para{i_v}.plotStressYY = options.para_options.plotStressYY && isSolid && d_p == 3;
+    para{i_v}.plotStressZZ = options.para_options.plotStressZZ && isSolid && d_p == 3;
+    para{i_v}.plotStressYZ = options.para_options.plotStressYZ && isSolid && d_p == 3;
+    para{i_v}.plotStressXZ = options.para_options.plotStressXZ && isSolid && d_p == 3;
+    para{i_v}.plotStressXY = options.para_options.plotStressXY && isSolid && d_p == 3;
 
     U = task.varCol{i_v}.U(:,task.para.i_MS);
     rho = options.rho;
@@ -166,16 +166,17 @@ for i_v = 1:noDomains
 
                 I = findKnotSpans(degree, [xi(1),eta(1)], knots);
                 R = NURBSbasis(I,[xi, eta], degree, knots, wgts);
-    %             dXdxi = R{2}*pts;
-    %             dXdeta = R{3}*pts;
 
                 nodes_e = R{1}*pts;
-                scalarField_e = R{1}*Usctr;
 
                 container{e}.nodes = nodes_e;
                 container{e}.noNodes = noNodes;
                 container{e}.noVisElems = noVisElems;
-                container{e}.scalarField{i_v} = scalarField_e;
+                if d == 3
+                    container{e}.displacement{i_v} = R{1}*Usctr;
+                else
+                    container{e}.scalarField{i_v} = R{1}*Usctr;
+                end
                 container{e}.visElements = visElements_e;
             end
             noNodes = 0;
@@ -414,24 +415,28 @@ for i_v = 1:numel(task.varCol)
                 u2 = sum(abs(u).^2,2);
                 u_e2 = sum(abs(u_e).^2,2);
 
-                sigma = [layer{i_v}.sigma{1},layer{2}.sigma{2},layer{i_v}.sigma{3},layer{i_v}.sigma{4},layer{i_v}.sigma{5},layer{i_v}.sigma{6}];
-                C = task.varCol{i_v}.C;
+                if d_p == 3
+                    sigma = [layer{i_v}.sigma{1},layer{2}.sigma{2},layer{i_v}.sigma{3},layer{i_v}.sigma{4},layer{i_v}.sigma{5},layer{i_v}.sigma{6}];
+                    C = task.varCol{i_v}.C;
+    
+                    strain_vec = (C\sigma.').';
+    
+                    strain_e = strain_vec-strain_h{i_v};
+    
+                    eCe = real(sum((strain_e*C).*conj(strain_e),2)); % the usage of real() is to remove machine epsilon imaginary part
+                    uCu = real(sum((strain_vec*C).*conj(strain_vec),2)); % the usage of real() is to remove machine epsilon imaginary part
 
-                strain_vec = (C\sigma.').';
+                    rho_s = task.varCol{i_v}.rho; 
+                    data.ErrorGrad = sqrt(eCe/max(uCu));
+                    data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
+                end
 
-                strain_e = strain_vec-strain_h{i_v};
-
-                eCe = real(sum((strain_e*C).*conj(strain_e),2)); % the usage of real() is to remove machine epsilon imaginary part
-                uCu = real(sum((strain_vec*C).*conj(strain_vec),2)); % the usage of real() is to remove machine epsilon imaginary part
-
-                rho_s = task.varCol{i_v}.rho; 
                 data.Error = sqrt(u_e2/max(u2));
-                data.ErrorGrad = sqrt(eCe/max(uCu));
-                data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
-
                 data.analytic = real(makeDynamic(u, para{i_v}, omega)); 
             end
-            data.stress = real(makeDynamic(strain_h{i_v}*C, para{i_v}, omega));
+            if d_p == 3
+                data.stress = real(makeDynamic(strain_h{i_v}*C, para{i_v}, omega));
+            end
             if withDensity
                 data.density = real(makeDynamic(density{i_v}, para{i_v}, omega));
             end

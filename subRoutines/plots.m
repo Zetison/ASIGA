@@ -5,17 +5,7 @@ addpath(genpath('../export_fig'))
 no2Dpoints = 1000;
 % startMatlabPool
 
-load(['NURBSgeometries/BCAdata/BeTSSi_BCA_p' num2str(2)])
-figure
-tic
-nurbs = getBeTSSiM4Data;
-nurbs = makeUniformNURBSDegree(nurbs,2);
-nurbs = insertKnotsInNURBS(nurbs,1);
-% plotNURBSvec(nurbs,'plotParmDir',true,'plotSolution',true, 'colorFun', @(v) norm2(v), 'coarseLinearSampling', false)
-plotNURBSvec(nurbs,'plotControlPolygon',true, 'coarseLinearSampling', false)
-toc
-% view(-40,60)
-return
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot all shapes
