@@ -78,7 +78,7 @@ end
 t_start = tic;
 omega = task.misc.omega;
 if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
-    U_sweep = cell(1,numel(omega));
+    task.U_sweep = cell(1,numel(omega));
 end
 if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
     for i_o = 1:numel(omega)
@@ -173,7 +173,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                     end
                     for i_domain = 1:min(task.noDomains,2)
                         task = applyNeumannCondition(task,i_domain);
-                        if task.misc.symmetric && strcmp(task.varCol{i_domain}.media,'solid')
+                        if task.misc.symmetric && ~task.rom.useROM && strcmp(task.varCol{i_domain}.media,'solid')
                             task.varCol{i_domain}.FF = omega_i^2*task.varCol{i_domain}.FF;
                         end
                     end
@@ -331,7 +331,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                             L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
                             U_A = D_SSOR-omega_SSOR*F_SSOR;
                         case 'diag'
-                            Pinv = spdiags(1./diag(A),0,size(A,2),size(A,2));
+                            Pinv = spdiags(1./sqrt(diag(A)),0,size(A,2),size(A,2));
                     end
                 end
                 if printLog
@@ -363,7 +363,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                                 task.A4 = A4;
                             end
                             task.UU = zeros(size(FF));
-                            dA = decomposition(A*Pinv,'lu');
+                            dA = decomposition(Pinv*A*Pinv,'lu');
                             fprintf('using %12f seconds.', toc)
                             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing ROM solution ... ')
                             for i = 1:task.noRHSs
@@ -372,7 +372,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                                 for k = 1:min(j,numel(dAdomega))
                                     b = b - nchoosek(j,k)*dAdomega{k}*task.UU(:,i-k);
                                 end
-                                task.UU(:,i) = Pinv*(dA\b);
+                                task.UU(:,i) = Pinv*(dA\(Pinv*b));
                             end
                         else
                             if useA
@@ -380,9 +380,9 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                                     task.UU = zeros(size(A,1),numel(omega));
                                 end
                                 if strcmp(task.misc.scatteringCase,'Sweep')
-                                    task.UU(:,i_o) = Pinv*((A*Pinv)\FF);
+                                    task.UU(:,i_o) = Pinv*((Pinv*A*Pinv)\(Pinv*FF));
                                 else
-                                    task.UU = Pinv*((A*Pinv)\FF);
+                                    task.UU = Pinv*((Pinv*A*Pinv)\(Pinv*FF));
                                 end
                             else
                                 if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
@@ -434,7 +434,7 @@ if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
                 % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
         end
         if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
-            U_sweep{i_o} = task.UU;
+            task.U_sweep{i_o} = task.UU;
             task = postProcessSolution(task);
         end
         if printLog && strcmp(task.misc.scatteringCase,'Sweep') && numel(omega) > 1
@@ -631,9 +631,6 @@ if printLog
     fprintf('\nTotal time spent on task: %12f', task.varCol{1}.tot_time)  
 end
 
-if task.rom.useROM
-    task.U_sweep = U_sweep;
-end
 if ~task.misc.storeFullVarCol
     task.varCol = rmfields(task.varCol,getAddedFields());
 end

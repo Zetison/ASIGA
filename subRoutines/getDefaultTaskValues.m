@@ -32,7 +32,7 @@ misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as oppo
 misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are compatible across patch interfaces
 misc.compute_h_max       = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
 misc.preProcessOnly      = false;       % Only run the preProcessing process
-misc.symmetric           = true;        % Use symmetric matrices for coupled problems (at the expence of having to store three more global matrices for ROM)
+misc.symmetric           = true;        % Use symmetric matrices for coupled problems (at the expence of having to store three more global matrices for ROM). The global matrix has better conditioning with misc.symmetric = true but the opposit is true for the reduced matrices.
 
 %% Mesh settings
 msh.M                   = 1;	   % Mesh number

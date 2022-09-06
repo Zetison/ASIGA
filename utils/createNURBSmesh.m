@@ -27,6 +27,9 @@ if strcmp(task.misc.method,'PML')
         end
     end
     if ~PMLpatchFound
+        if ~(isfield(task.pml,'refinement') || isfield(task.varCol{1},'refLength'))
+            error('The refinement field must be specified using PML')
+        end
         task = createPML(task);
     end
     task = addPMLtopology(task);
@@ -108,10 +111,14 @@ for i = 1:numel(item)
 end
 nurbsPML = normalBasedSurface2volume(nurbsPML,task.pml.t,task.pml.X_bApprox);
 nurbsPML = makeUniformNURBSDegree(nurbsPML,task.varCol{1}.nurbs{1}.degree);
-if nargin(task.pml.refinement) > 1
-    noNewKnots = task.pml.refinement(task.msh.M,task.pml.t);
+if isfield(task.pml,'refinement')
+    if nargin(task.pml.refinement) > 1
+        noNewKnots = task.pml.refinement(task.msh.M,task.pml.t);
+    else
+        noNewKnots = task.pml.refinement(task.msh.M);
+    end
 else
-    noNewKnots = task.pml.refinement(task.msh.M);
+    noNewKnots = round(max((2^(task.msh.M-1)-1)*task.pml.t/task.varCol{1}.refLength, 3));
 end
 nurbsPML = insertKnotsInNURBS(nurbsPML,[0,0,noNewKnots]);
 for i = 1:numel(nurbsPML)

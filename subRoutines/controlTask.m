@@ -14,9 +14,6 @@ end
 if strcmp(method,'PML') && isnan(task.misc.r_a) 
     error('The distance to the PML layer must be set')
 end
-if strcmp(method,'PML') && ~isfield(task.pml,'refinement') 
-    error('The refinement field must be specified using PML')
-end
 if strcmp(task.misc.method,'BEM') && ~task.misc.solveForPtot && ~strcmp(task.misc.BC,'NBC')...
         && ~strcmp(applyLoad,'radialPulsation')
     warning('It is reccomended to use solveForPtot = true for BEM')

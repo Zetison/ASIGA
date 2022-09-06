@@ -27,7 +27,7 @@ misc.checkNURBSweightsCompatibility = false;
 misc.preProcessOnly = 0;
 warning('off','NURBS:weights')
 
-prePlot.plot3Dgeometry = 1;
+prePlot.plot3Dgeometry = 0;
 prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
 prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
@@ -118,7 +118,7 @@ for i = 1:numel(applyLoads)
 
         varCol = varCol(1:noDomains);
         n = 20;
-        n = 3;
+%         n = 3;
         eqDistr = 1:n;
         k = linspace(2.5, 20, n)/varCol{1}.R1;
 %         k = k/100;

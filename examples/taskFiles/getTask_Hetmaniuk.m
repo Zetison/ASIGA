@@ -22,8 +22,8 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-BCs = {'SSBC'};
-% BCs = {'SHBC','SSBC'};
+% BCs = {'SSBC'};
+BCs = {'SHBC','SSBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -43,7 +43,7 @@ misc.r_s = 3;
 
 msh.parm = 1;
 msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
-exploitAxisSymmetry = 1; % only for msh.parm = 1
+msh.refineThetaOnly = 1; % only for msh.parm = 1
 err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
@@ -108,41 +108,50 @@ for i = 1:numel(BCs)
     end
     varCol = setHetmaniukParameters(noDomains);
     msh.meshFile = 'createNURBSmesh_EL';
-    if exploitAxisSymmetry
+    if msh.refineThetaOnly
         msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
     else
         msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
     end
     msh.degree = 3;
-    msh.M = 5; % 7
+    manuelRefinement = false;
+    msh.M = 7; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
-        if msh.parm == 1
-            if exploitAxisSymmetry
-                varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
+        if manuelRefinement
+            if msh.parm == 1
+                if msh.refineThetaOnly
+                    varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
+                else
+                    varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1];
+                end
             else
-                varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1];
+                varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1];
             end
-        else
-            varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1];
         end
     else
         misc.formulation = {'BGC'};
-%         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
+        if manuelRefinement
+            varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
+        end
     end
-    pml.refinement = @(M) max(2^(M-4)-1,3);
+    if manuelRefinement
+        pml.refinement = @(M) max(2^(M-4)-1,3);
+    end
     misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
     ffp.extraGP = [50,0,0];    % extra quadrature points
     if noDomains > 1
-        if msh.parm == 1
-            if exploitAxisSymmetry
-%                 varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
-                varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid*2^(M-3)),0)];
+        if manuelRefinement
+            if msh.parm == 1
+                if msh.refineThetaOnly
+                    varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
+    %                 varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid*2^(M-3)),0)];
+                else
+                    varCol{2}.refinement = @(M,t,t_fluid) [2^(M-1)-1, 2^(M-1)-1, max(round(t/t_fluid*2^(M-4)),0)];
+                end
             else
-                varCol{2}.refinement = @(M,t,t_fluid) [2^(M-1)-1, 2^(M-1)-1, max(round(t/t_fluid*2^(M-4)),0)];
+                varCol{2}.refinement = @(M,t,t_fluid) [3*2^(M-3)-1, 3*2^(M-3)-1, max(round(t/t_fluid*2^(M-4)),0)];
             end
-        else
-            varCol{2}.refinement = @(M,t,t_fluid) [3*2^(M-3)-1, 3*2^(M-3)-1, max(round(t/t_fluid*2^(M-4)),0)];
         end
     end
     switch misc.BC
@@ -170,12 +179,13 @@ for i = 1:numel(BCs)
             end
         case {'SSBC','NNBC'}
             f = linspace(1430, 4290, 5);
+%             f = 1430;
             omega = 2*pi*f;
             f_ROM = f(1):12:f(end);
 %             f_ROM = f(1):120:f(end);
 %             f_ROM = f(1):1200:f(end);
 %             f_ROM = linspace(1430, 4290, 9);
-            f_ROM = f(1);
+%             f_ROM = f(1);
             rom.omega_ROM = 2*pi*f_ROM;
             k = omega/varCol{1}.c_f;
             if hetmaniukCase
@@ -196,14 +206,13 @@ for i = 1:numel(BCs)
     rom.basisROMcell = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
 
-    misc.symmetric = 1;
+    misc.symmetric = 0;
 
     iem.N = 16; % 9
     iem.p_ie = 5;
     iem.s_ie = 2;
     iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
     
-
     pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
     pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
     pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
@@ -250,13 +259,19 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-%     collectIntoTasks
+    collectIntoTasks
     
     misc.omega = rom.omega_ROM(end);
     para.plotResultsInParaview = true;
-    para.extraXiPts              = '1';  % Extra visualization points in the xi-direction per element
-    para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
-    para.extraZetaPts            = '1';   % Extra visualization points in the zeta-direction per element
+    para.plotSubsets = {};
+    para.plotFullDomain = 1;
+    if msh.refineThetaOnly
+        para.extraXiPts              = '50';  % Extra visualization points in the xi-direction per element
+    else
+        para.extraXiPts              = '0';  % Extra visualization points in the xi-direction per element
+    end
+    para.extraEtaPts             = '0';  % Extra visualization points in the eta-direction per element
+    para.extraZetaPts            = '0';   % Extra visualization points in the zeta-direction per element
 %     collectIntoTasks
     
     misc.omega = rom.omega_ROM;
@@ -265,5 +280,5 @@ for i = 1:numel(BCs)
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-%     collectIntoTasks
+    collectIntoTasks
 end

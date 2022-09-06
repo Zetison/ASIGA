@@ -383,7 +383,10 @@ if symmetric
     mm1 = m - 1;
     mm1(1) = 0;
     mm2 = m - 2;
-    mm2(1:2) = 0;
+    mm2(1) = 0;
+    if numel(mm2) > 1
+        mm2(2) = 0;
+    end
     p_inc_ROM = p_inc_(X).*(omega.^2.*(1i*d_vecX/c_f).^m + 2*m.*omega.*(1i*d_vecX/c_f).^mm1 + m.*(m-1).*(1i*d_vecX/c_f).^mm2);
 else
     m = 0:(varCol{1}.noRHSs-1);

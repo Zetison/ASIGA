@@ -269,14 +269,17 @@ for i_b = 1:numel(basisROMcell)
                     for i_domain = 1:min(noDomains,2)
                         task.rom.useROM = false;
                         task = applyNeumannCondition(task,i_domain);
+                        if task.misc.symmetric && strcmp(task.varCol{i_domain}.media,'solid')
+                            task.varCol{i_domain}.FF = omega^2*task.varCol{i_domain}.FF;
+                        end
                         task.rom.useROM = true;
                     end
                     [task,FF] = collectMatrices(task);
                     FFm = V'*FF;  
 
                     Am = A0_am + omega*A1_am + omega^2*A2_am + omega^4*A4_am;
-                    Pinv = spdiags(1./diag(Am),0,size(Am,1),size(Am,2));
-                    task.UU = V*(Pinv*((Am*Pinv)\FFm));
+                    Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
+                    task.UU = V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
                 case 'Hermite'
                     task.UU = zeros(noDofs,1);
                     counter = 1;
