@@ -1,4 +1,8 @@
 function nurbs = explodeNURBS(nurbs,dir,reverseDir)
+d_p = nurbs{1}.d_p;
+if nargin < 2
+    dir = 1:d_p;
+end
 if ischar(dir)
     switch dir
         case 'xi'
@@ -10,10 +14,6 @@ if ischar(dir)
     end
 end
 
-d_p = nurbs{1}.d_p;
-if nargin < 2
-    dir = 1:d_p;
-end
 if nargin < 3
     reverseDir = false;
 end
