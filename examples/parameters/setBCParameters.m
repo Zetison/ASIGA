@@ -55,4 +55,7 @@ h_d = b-s;
 delta_d = 0.25;
 x_d = -4;
 
+r1 = 7.0;
+d_torp = 5.7;
+
 putVariablesIntoContainer

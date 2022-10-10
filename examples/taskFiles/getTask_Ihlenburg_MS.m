@@ -72,8 +72,8 @@ for i = 1:numel(applyLoads)
         postPlot(2).axisType      	= 'semilogy';
         postPlot(2).addCommands   	= [];
     else
-        BCs = {'SSBC'};
-%         BCs = {'SHBC'};
+%         BCs = {'SSBC'};
+        BCs = {'SHBC'};
         err.calculateSurfaceError = 0;
         err.calculateVolumeError  = 0;
         postPlot = postPlot(1);
@@ -120,7 +120,8 @@ for i = 1:numel(applyLoads)
         n = 20;
 %         n = 3;
         eqDistr = 1:n;
-        k = linspace(2.5, 20, n)/varCol{1}.R1;
+%         k = linspace(2.5, 20, n)/varCol{1}.R1;
+        k = linspace(2.5, 5, n)/varCol{1}.R1;
 %         k = k/100;
 %         k = linspace(0.5, 4.29, n);
 %         k = linspace(0.5, 4.29, 3);
@@ -169,7 +170,7 @@ for i = 1:numel(applyLoads)
         end
         msh.degree = 3:4;
         msh.degree = 4;
-        msh.M = 7; % 7
+        msh.M = 5; % 7
         misc.symmetric = false;
         
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points

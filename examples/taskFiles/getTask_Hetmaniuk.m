@@ -186,6 +186,7 @@ for i = 1:numel(BCs)
 %             f_ROM = f(1):1200:f(end);
 %             f_ROM = linspace(1430, 4290, 9);
 %             f_ROM = f(1);
+            f_ROM = sort(unique([f,f_ROM]));
             rom.omega_ROM = 2*pi*f_ROM;
             k = omega/varCol{1}.c_f;
             if hetmaniukCase

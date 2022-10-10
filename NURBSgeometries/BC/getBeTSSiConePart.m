@@ -30,7 +30,7 @@ switch part
                 controlPts(1:3,:) = R_x*controlPts(1:3,:);
                 nurbs = createNURBSobject(controlPts, Xi);
 
-                r2 = @(s) evaluateNURBS(nurbs,abs((s1-s)/s1));
+                r2 = @(s) evaluateNURBS(nurbs{1},abs((s1-s)/s1)).';
             else
                 Theta = @(s) theta*s/s1;
                 r2 = @(s) [x_f*ones(1,numel(s));
@@ -100,7 +100,7 @@ switch part
 
                 XX = [x(i);y(i);z(i)];
                 thetaE1 = atan2(XX(3),XX(2));
-                XX = evaluateNURBS(nurbs,1-etaTemp(i));
+                XX = evaluateNURBS(nurbs{1},1-etaTemp(i));
                 thetaE2 = atan2(XX(3),XX(2));
                 thetaA = (1-stemp(i))/(1-s2)*thetaE1 + (stemp(i)-s2)/(1-s2)*thetaE2;
 %                 isoCurve = evaluateNURBS(nurbs,etaTemp(i));

@@ -573,7 +573,7 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
         if para.plotFullDomain
             tic
             if printLog
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Creating paraview files for domains ... ')
+                fprintf(['\n%-' num2str(stringShift) 's'], 'Creating volumetric paraview files for all domains ... ')
             end
             createParaviewFiles(task, 'para_options', para);
         end
@@ -584,7 +584,7 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
                 for i = 1:numel(para.plotSubsets)
                     bdryName = para.plotSubsets{i};
                     if printLog
-                        fprintf(['\n%-' num2str(stringShift) 's'], ['Creating paraview files for ' bdryName ' ... '])
+                        fprintf(['\n%-' num2str(stringShift) 's'], ['Creating paraview files for ' bdryName ' in domain ' num2str(i_v) ' ... '])
                     end
                     [~,setFound] = findSet(task.varCol{i_v}.geometry.topologysets.set,bdryName);
                     if setFound

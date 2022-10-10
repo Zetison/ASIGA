@@ -1,4 +1,14 @@
 function nurbs = explodeNURBS(nurbs,dir,reverseDir)
+if ischar(dir)
+    switch dir
+        case 'xi'
+            dir = 1;
+        case 'eta'
+            dir = 2;
+        case 'zeta'
+            dir = 3;
+    end
+end
 
 d_p = nurbs{1}.d_p;
 if nargin < 2
