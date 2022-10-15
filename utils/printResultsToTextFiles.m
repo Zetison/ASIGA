@@ -9,6 +9,8 @@ options = struct('xname',           'alpha',  ...
                  'lineStyle',        '*-', ... 
                  'xScale',          1, ...
                  'yScale',          1, ... 
+                 'xLabel',          [], ...
+                 'yLabel',          [], ...
                  'format',          'LaTeX', ...
                  'xlim',            NaN, ...
                  'ylim',            NaN, ...
@@ -264,54 +266,58 @@ if plotResults
     title(['Results for model ' study.tasks(1).task.misc.model],'interpreter','none')
     intrprtrX = 'latex';
     intrprtrY = 'latex';
-    switch xname
-        case 'ffp.alpha'
-            xLabel = '$$\alpha$$';
-        case {'misc.omega','misc.omega_ROM'}
-            xLabel = '$$\omega$$';
-        case {'misc.f','misc.f_ROM'}
-            xLabel = '$$f$$';
-        case {'varCol{1}.k','varCol{1}.k_ROM'}
-            if options.xScale == 1
-                xLabel = '$$k$$';
-            else
+    if isempty(options.xLabel)
+        switch xname
+            case 'ffp.alpha'
+                xLabel = '$$\alpha$$';
+            case {'misc.omega','misc.omega_ROM'}
+                xLabel = '$$\omega$$';
+            case {'misc.f','misc.f_ROM'}
+                xLabel = '$$f$$';
+            case {'varCol{1}.k','varCol{1}.k_ROM'}
+                if options.xScale == 1
+                    xLabel = '$$k$$';
+                else
+                    xLabel = '$$ka$$';
+                end
+            case 'ffp.beta'
+                xLabel = '$$\beta$$';
+            case 'iem.s_ie'
+                xLabel = '$$s$$';
+            case 'dofs'
+                xLabel = 'Degrees of freedom';
+            case 'surfDofs'
+                xLabel = 'Dofs at $$\Gamma$$';
+            case 'dofsAlg'
+                xLabel = 'Degrees of freedom in algebraic scale $$N^{1/3}$$';
+                xt = get(gca, 'XTick');
+                set(gca, 'XTick', xt, 'XTickLabel', xt.^3)
+            case 'nepw'
+                xLabel = 'Number of elements per wave length';
+            case 'tot_time'
+                xLabel = 'Total time';
+            case 'timeSolveSystem'
+                xLabel = 'Time solving the system';
+            case 'timeBuildSystem'
+                xLabel = 'Time building the system';
+            case 'iem.N'
+                xLabel = '$$N$$';
+            case 'pml.gamma'
+                xLabel = '$$\gamma$$';
+            case 'bem.agpBEM'
+                xLabel = '$$s$$';
+            case 'varCol{1}.kL'
+                xLabel = '$$kL$$';
+            case 'varCol{1}.ka'
                 xLabel = '$$ka$$';
-            end
-        case 'ffp.beta'
-            xLabel = '$$\beta$$';
-        case 'iem.s_ie'
-            xLabel = '$$s$$';
-        case 'dofs'
-            xLabel = 'Degrees of freedom';
-        case 'surfDofs'
-            xLabel = 'Dofs at $$\Gamma$$';
-        case 'dofsAlg'
-            xLabel = 'Degrees of freedom in algebraic scale $$N^{1/3}$$';
-            xt = get(gca, 'XTick');
-            set(gca, 'XTick', xt, 'XTickLabel', xt.^3)
-        case 'nepw'
-            xLabel = 'Number of elements per wave length';
-        case 'tot_time'
-            xLabel = 'Total time';
-        case 'timeSolveSystem'
-            xLabel = 'Time solving the system';
-        case 'timeBuildSystem'
-            xLabel = 'Time building the system';
-        case 'iem.N'
-            xLabel = '$$N$$';
-        case 'pml.gamma'
-            xLabel = '$$\gamma$$';
-        case 'bem.agpBEM'
-            xLabel = '$$s$$';
-        case 'varCol{1}.kL'
-            xLabel = '$$kL$$';
-        case 'varCol{1}.ka'
-            xLabel = '$$ka$$';
-        case 'varCol{1}.kR'
-            xLabel = '$$kR$$';
-        otherwise
-            xLabel = xname;
-            intrprtrX = 'none';
+            case 'varCol{1}.kR'
+                xLabel = '$$kR$$';
+            otherwise
+                xLabel = xname;
+                intrprtrX = 'none';
+        end
+    else
+        xLabel = options.xLabel;
     end
     if (strcmp(xname,'ffp.alpha') || strcmp(xname,'ffp.beta')) && (options.xScale == 180/pi)
         if strcmp(options.axisType,'polar')
@@ -320,37 +326,41 @@ if plotResults
             xtickformat('degrees')
         end
     end
-    switch yname
-        case 'p'
-            yLabel = '$$p$$';
-        case 'p_Re'
-            yLabel = 'Real part of pressure';
-        case 'p_Im'
-            yLabel = 'Imaginary part of pressure';
-        case 'TS'
-            yLabel = '$$\mathrm{TS}$$';
-        case 'abs_p'
-            yLabel = '$$|p|$$';
-        case 'error_p'
-            yLabel = '$$\frac{|p-p_h|}{|p|}$$';
-        case 'error_pAbs'
-            yLabel = '$$\frac{||p|-|p_h||}{|p|}$$';
-        case 'surfaceError'
-            yLabel = '$$\frac{\|p-p_h\|_{L_2(\Gamma)}}{\|p\|_{L_2(\Gamma)}}$$';
-        case 'energyError'
-            yLabel = '$$\frac{\|p-p_h\|_E}{\|p\|_E}$$';
-        case 'H1sError'
-            yLabel = '$$\frac{|p-p_h|_{H^1}}{|p|_{H^1}}$$';
-        case 'L2Error'
-            yLabel = '$$\frac{\|p-p_h\|_{L^2}}{\|p\|_{L^2}}$$';
-        case 'cond_number'
-            yLabel = 'Condition number';
-        otherwise
-            yLabel = yname;
-            intrprtrY = 'none';
-    end
-    if (strcmp(yname,'error_pAbs') || strcmp(yname,'error_p') || strcmp(yname,'surfaceError') || strcmp(yname,'energyError')) && (options.yScale == 1)
-        yLabel = [yLabel, ' [\%]'];
+    if isempty(options.yLabel)
+        switch yname
+            case 'p'
+                yLabel = '$$p$$';
+            case 'p_Re'
+                yLabel = 'Real part of pressure';
+            case 'p_Im'
+                yLabel = 'Imaginary part of pressure';
+            case 'TS'
+                yLabel = '$$\mathrm{TS}$$';
+            case 'abs_p'
+                yLabel = '$$|p|$$';
+            case 'error_p'
+                yLabel = '$$\frac{|p-p_h|}{|p|}$$';
+            case 'error_pAbs'
+                yLabel = '$$\frac{||p|-|p_h||}{|p|}$$';
+            case 'surfaceError'
+                yLabel = '$$\frac{\|p-p_h\|_{L_2(\Gamma)}}{\|p\|_{L_2(\Gamma)}}$$';
+            case 'energyError'
+                yLabel = '$$\frac{\|p-p_h\|_E}{\|p\|_E}$$';
+            case 'H1sError'
+                yLabel = '$$\frac{|p-p_h|_{H^1}}{|p|_{H^1}}$$';
+            case 'L2Error'
+                yLabel = '$$\frac{\|p-p_h\|_{L^2}}{\|p\|_{L^2}}$$';
+            case 'cond_number'
+                yLabel = 'Condition number';
+            otherwise
+                yLabel = yname;
+                intrprtrY = 'none';
+        end
+        if (strcmp(yname,'error_pAbs') || strcmp(yname,'error_p') || strcmp(yname,'surfaceError') || strcmp(yname,'energyError')) && (options.yScale == 1)
+            yLabel = [yLabel, ' [\%]'];
+        end
+    else
+        yLabel = options.yLabel;
     end
             
           

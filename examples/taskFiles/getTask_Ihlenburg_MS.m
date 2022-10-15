@@ -28,7 +28,7 @@ misc.preProcessOnly = 0;
 warning('off','NURBS:weights')
 
 prePlot.plot3Dgeometry = 0;
-prePlot.abortAfterPlotting  = 1;       % Abort simulation after pre plotting
+prePlot.abortAfterPlotting = 1;       % Abort simulation after pre plotting
 prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 %     prePlot.resolution = [20,20,0];
@@ -45,7 +45,6 @@ postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
 postPlot(1).axisType      	= 'plot';
 postPlot(1).lineStyle    	= '-';
-postPlot(1).xScale       	= 1;
 postPlot(1).legendEntries 	= {};
 postPlot(1).subFolderName 	= '';
 postPlot(1).fileDataHeaderX	= [];
@@ -72,8 +71,8 @@ for i = 1:numel(applyLoads)
         postPlot(2).axisType      	= 'semilogy';
         postPlot(2).addCommands   	= [];
     else
-%         BCs = {'SSBC'};
-        BCs = {'SHBC'};
+        BCs = {'SSBC'};
+%         BCs = {'SHBC'};
         err.calculateSurfaceError = 0;
         err.calculateVolumeError  = 0;
         postPlot = postPlot(1);
@@ -148,7 +147,6 @@ for i = 1:numel(applyLoads)
         pml.refinement = @(M) max(round((2^(M-1)-1)*pml.t/refLength),2);   
         pml.gamma = 1/(k(1)*pml.t);     
         
-        postPlot(1).xScale = varCol{1}.R1;
         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-4)-1,2)];
         if noDomains > 1
             varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
@@ -169,17 +167,23 @@ for i = 1:numel(applyLoads)
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.degree = 4;
-        msh.M = 5; % 7
-        misc.symmetric = false;
+        msh.degree = 4; % 4
+        msh.M = 6; % 7
+        misc.symmetric = 0;
         
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
         
         rom.useROM = true;
-        rom.noVecsArr = 32;
+        rom.noVecsArr = [4,8,16];
 %         rom.noVecsArr = 1;
 
         misc.r_a = 1.25*varCol{1}.R1;
+        postPlot(1).xScale = varCol{1}.R1;
+        postPlot(1).xLabel = '$$ka$$';
+        if strcmp(misc.applyLoad,'pointPulsation')
+            postPlot(2).xScale = varCol{1}.R1;
+            postPlot(2).xLabel = '$$ka$$';
+        end
         
         misc.storeFullVarCol = false;
         if strcmp(misc.scatteringCase, 'Sweep')
@@ -206,9 +210,9 @@ for i = 1:numel(applyLoads)
                 postPlot(2).xLoopName = 'misc.omega';
             end
         end
-        postPlot(1).xname(end-3:end) = [];
+        postPlot(1).xname = 'varCol{1}.k';
         if strcmp(misc.applyLoad,'pointPulsation')
-            postPlot(2).xname(end-3:end) = [];
+            postPlot(2).xname = 'varCol{1}.k';
         end
         misc.omega = rom.omega_ROM;
         rom.useROM = false;
@@ -230,7 +234,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-        collectIntoTasks
+%         collectIntoTasks
     end
 end
 

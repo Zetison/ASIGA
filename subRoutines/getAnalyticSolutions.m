@@ -28,8 +28,10 @@ layer = extract_e3Dss_data(task);
 if task.analyticSolutionExist
     task.analyticFunctions = @(X) analytic(X,layer);
 end
-task.p_inc_ = @(X) analytic({X},layer,NaN,'p_inc',1);
-task.dp_incdn_ = @(X,n) analytic({X},layer,n,'dp_incdn',1);
+p_inc_ = @(X) analytic({X},layer,NaN,'p_inc',1);
+dp_incdn_ = @(X,n) analytic({X},layer,n,'dp_incdn',1);
+task.p_inc_ = p_inc_;
+task.dp_incdn_ = dp_incdn_;
 if splitExteriorFields
     task.dp_incdx_ = @(X) analytic({X},layer,NaN,'dp_incdx',1);
     task.dp_incdy_ = @(X) analytic({X},layer,NaN,'dp_incdy',1);
@@ -53,8 +55,10 @@ for i = 1:noDomains
     end
 end
 task.p_0_ = @(X) analytic({X},layer,NaN,'p_0',1);
-task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,task.p_inc_,task.misc.omega,task.misc.symmetric);
-task.dp_incdn_ROM_ = @(X,n) dp_incdn_ROM(X,n,layer,task.dp_incdn_);
+omega = task.misc.omega;
+symmetric = task.misc.symmetric;
+task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,p_inc_,omega,symmetric);
+task.dp_incdn_ROM_ = @(X,n) dp_incdn_ROM(X,n,layer,dp_incdn_);
 
 
 

@@ -63,7 +63,7 @@ studies(counter).runTasksInParallel = runTasksInParallel;
 studies(counter).noCoresToUse = noCoresToUse;
 studies(counter).saveStudies = saveStudies;
 
-task.rom.useGDP = false;
+task.rom.useDGP = false;
 for i = 1:numel(rom.basisROMcell)
     if strcmp(rom.basisROMcell{i},'DGP')
         task.rom.useDGP = true;

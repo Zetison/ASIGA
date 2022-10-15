@@ -28,6 +28,9 @@ for i_b = 1:numel(basisROMcell)
     for taskROM = 1:numel(noVecsArr)
         noVecs = noVecsArr(taskROM);
         if printLog
+            fprintf('\nBasis:%s, noVecs = %d', basisROM, noVecs)
+        end
+        if printLog
             fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
         end
         t_startROM = tic;

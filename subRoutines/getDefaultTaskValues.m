@@ -33,6 +33,7 @@ misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are com
 misc.compute_h_max       = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
 misc.preProcessOnly      = false;       % Only run the preProcessing process
 misc.symmetric           = true;        % Use symmetric matrices for coupled problems (at the expence of having to store three more global matrices for ROM). The global matrix has better conditioning with misc.symmetric = true but the opposit is true for the reduced matrices.
+misc.omega               = [];          % Loop over these angular frequencies
 
 %% Mesh settings
 msh.M                   = 1;	   % Mesh number
@@ -201,7 +202,7 @@ rt.N = 4; % Number of rays is approximately round(10^(rt.N/2))
 %% Settings for ROM (reduced order modelling)
 rom.useROM       = false;    % Toggle the usage of ROM
 rom.noVecsArr 	 = 8;        % Number of derivatives at each point (including the 0th derivative
-rom.k_ROM    	 = 3;        % Points at which to compute derivatives
+misc.omega_ROM   = [];       % Loop over these angular frequencies (misc.omega is used as snapshot parameters for ROM)
 rom.basisROMcell = {'DGP'};  % Basis for ROM ('Pade','Taylor','DGP','Hermite' or 'Bernstein')
 
 
