@@ -288,7 +288,7 @@ for i_b = 1:numel(basisROMcell)
                     counter = 1;
                     for i = 1:P
                         for n = 1:noVecs
-                            task.UU = task.UU + U_sweep{i}(:,n)*Y(counter,:);
+                            task.UU = task.UU + U_sweep{i}(:,n)*Y(counter,i_f);
                             counter = counter + 1;
                         end
                     end

@@ -9,7 +9,9 @@ for i = 1:numel(a)
     else
         indices = and(inter(i-1) < x, x <= inter(i));
     end
-    for n = 0:D
-        y(:,indices) = y(:,indices) + dF{i}(:,n+1)/factorial(n)*(x(indices)-a(i)).^n;
+    if any(indices)
+        for n = 0:D
+            y(:,indices) = y(:,indices) + dF{i}(:,n+1)/factorial(n)*(x(indices)-a(i)).^n;
+        end
     end
 end

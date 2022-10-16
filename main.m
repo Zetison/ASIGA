@@ -118,8 +118,10 @@ for i_col = 1:numel(studiesCol)
                     end
                     xname = study.postPlot(i).xname;
                     yname = study.postPlot(i).yname;
-                    xname(xname == '.') = [];
-                    yname(yname == '.') = [];
+                    xname = strrep(xname, 'varCol', 'd');
+                    
+                    xname = regexprep(xname,'[^a-zA-Z1-9\s]','');
+                    yname = regexprep(yname,'[^a-zA-Z1-9\s]','');
                     model = study.tasks(1).task.misc.model;
                     savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
                 end

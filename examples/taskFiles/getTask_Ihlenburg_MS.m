@@ -119,8 +119,8 @@ for i = 1:numel(applyLoads)
         n = 20;
 %         n = 3;
         eqDistr = 1:n;
-%         k = linspace(2.5, 20, n)/varCol{1}.R1;
-        k = linspace(2.5, 5, n)/varCol{1}.R1;
+        k = linspace(2.5, 20, n)/varCol{1}.R1;
+%         k = linspace(2.5, 5, n)/varCol{1}.R1;
 %         k = k/100;
 %         k = linspace(0.5, 4.29, n);
 %         k = linspace(0.5, 4.29, 3);
@@ -159,23 +159,24 @@ for i = 1:numel(applyLoads)
     %     c_z = 44.45920956623927;
         msh.c_xy = 11.439247597213537;
 
-        basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
-        basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+%         rom.basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
+        rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
         if strcmp(misc.method,'PML')
             misc.formulation = {'GSB'};
         else
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.degree = 4; % 4
-        msh.M = 6; % 7
+%         msh.degree = 2; % 4
+        msh.M = 6:7; % 7
+%         msh.M = 1; % 7
         misc.symmetric = 0;
         
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
         
         rom.useROM = true;
         rom.noVecsArr = [4,8,16];
-%         rom.noVecsArr = 1;
+%         rom.noVecsArr = 8;
 
         misc.r_a = 1.25*varCol{1}.R1;
         postPlot(1).xScale = varCol{1}.R1;
@@ -234,7 +235,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-%         collectIntoTasks
+        collectIntoTasks
     end
 end
 
