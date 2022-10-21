@@ -111,76 +111,13 @@ if prePlot.plot3Dgeometry
     if isempty(figName)
         figName = task.saveName;
     end
-    figName = [task.resultsFolder '/' figName '_3D'];
+    figName = [task.resultsFolder '/' figName];
     if exist('../export_fig', 'dir')
-        export_fig(figName, '-png', '-transparent', prePlot.pngResolution)
-%         export_fig(figName, '-pdf', '-transparent')
+%         ax.SortMethod='ChildOrder';
+        export_fig(figName, prePlot.format, '-transparent', prePlot.pngResolution)
     end
     savefig([figName, '.fig'])
 end   
-if prePlot.plot2Dgeometry
-    figure('Color','white','name',['Cross section of Fluid 3D NURBS geometry. Mesh ' num2str(task.msh.M)])
-    for j = 1:noDomains
-        switch task.varCol{j}.media
-            case 'fluid'
-                prePlot.color = getColor(10);
-            case 'solid'
-                prePlot.color = getColor(1);
-        end
-        switch task.misc.model
-            case {'MS'}
-                nurbs2D = task.varCol{j}.nurbs(1:4:end);
-                nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
-            otherwise
-                nurbs2D = task.varCol{j}.nurbs;
-                nurbs = subNURBS(nurbs2D,'at',[1 0; 0 0; 0 0]);
-        end
-        if noDomains > 1
-            switch task.varCol{j}.media
-                case 'fluid'
-%                     prePlot.color = [1,1,1];
-                    prePlot.color = getColor(10);
-                case 'solid'
-                    prePlot.color = getColor(1);
-            end
-        else
-%             prePlot.color = [1,1,1];
-            prePlot.color = getColor(10);
-        end
-        prePlot.displayName = ['Domain ' num2str(j)];
-        plotNURBSvec(nurbs, prePlot);
-    end
-    hold off
-    axis equal
-    axis(prePlot.axis)
-    if ~strcmp(prePlot.axis,'off')
-        xlabel(prePlot.xlabel)
-        ylabel(prePlot.ylabel)
-        zlabel(prePlot.zlabel)
-    end
-%     set(gca, 'Color', 'none');
-    set(gca, 'Color', 'white');
-    set(gcf,'color','w');
-    drawnow
-            
-    if ~isempty(prePlot.title)
-        title(prePlot.title)
-    end
-    
-    ax = gca;               % get the current axis
-    ax.Clipping = 'off';    % turn clipping off
-    figName = prePlot.export_fig_name2D;
-    if isempty(figName)
-        figName = task.saveName;
-    end
-    figName = [task.resultsFolder '/' figName '_2D'];
-    if exist('../export_fig', 'dir')
-        ax.SortMethod='ChildOrder';
-%         export_fig(figName, '-png', '-transparent', prePlot.pngResolution)
-        export_fig(figName, '-pdf', '-transparent')
-    end
-    savefig([figName, '.fig'])
-end
 if isa(prePlot.addCommands,"function_handle")
     prePlot.addCommands()
 end

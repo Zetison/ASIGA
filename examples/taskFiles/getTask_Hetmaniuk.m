@@ -22,8 +22,8 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-% BCs = {'SSBC'};
-BCs = {'SHBC','SSBC'};
+BCs = {'SSBC'};
+% BCs = {'SHBC','SSBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -49,16 +49,18 @@ err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
 
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.view                = [54,38];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plotFullDomain      = 0;
-prePlot.plotSubsets         = {'xz'}; 
+prePlot.plotFullDomain      = 1;
+% prePlot.plotSubsets         = {'xz'}; 
+prePlot.plotSubsets         = {}; 
 prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
 prePlot.resolution = [400,200,0];
+prePlot.format = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
 
 misc.computeCondNumber = 0;
 
@@ -115,7 +117,7 @@ for i = 1:numel(BCs)
     end
     msh.degree = 3;
     manuelRefinement = false;
-    msh.M = 7; % 7
+    msh.M = 1; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
         if manuelRefinement
@@ -223,10 +225,10 @@ for i = 1:numel(BCs)
             pml.gamma = 2.5;          % parameter for sigmaType = 1
             misc.r_a = 1.2;
             rom.noVecsArr = [8,16,24,32];
-            rom.noVecsArr = 32;
+%             rom.noVecsArr = 32;
         case {'SSBC','NNBC'}
             rom.noVecsArr = [4,8,12,20];
-            rom.noVecsArr = 20;
+%             rom.noVecsArr = 20;
             pml.t = 0.4;         % thickness of PML
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.4;

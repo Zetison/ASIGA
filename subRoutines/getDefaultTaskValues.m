@@ -87,6 +87,7 @@ prePlot.xlabel              = 'x';         % Set x-axis label
 prePlot.ylabel              = 'y';         % Set y-axis label
 prePlot.zlabel              = 'z';         % Set z-axis label
 prePlot.pngResolution       = '-r200';     % Resolution of exported png images
+prePlot.format              = '-png';      % Use '-png' or '-pdf' (for vector graphics)
 prePlot.color               = [];          % Nx3 array with colors to use
 prePlot.addCommands      	= [];          % Add commands through a function handle after preplotting
 prePlot.coarseLinearSampling = true;       % Only sample cornerpoints for linear parametrizations
