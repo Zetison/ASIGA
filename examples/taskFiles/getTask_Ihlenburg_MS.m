@@ -7,6 +7,7 @@ studies = cell(0,1);
 getDefaultTaskValues
 
 saveStudies = false;
+noCoresToUse = 32;         % Number of processors for parallel computations (Inf uses all available cores)
 
 
 %% IE simulation
@@ -99,7 +100,7 @@ for i = 1:numel(applyLoads)
                            'L', 67.9958, ...
                            'c_f', 1482, ...
                            'rho', 1000);
-        eta = 0.01; % hysteretic loss factor for hysteresis damping
+        eta = 0.001; % hysteretic loss factor for hysteresis damping
         E = 2.0e11;
         E = E*(1-1i*eta);
         varCol{2} = struct('media', 'solid', ...
@@ -178,8 +179,8 @@ for i = 1:numel(applyLoads)
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
         
         rom.useROM = true;
-        rom.noVecsArr = [4,8,16];
-        rom.noVecsArr = 16;
+        rom.noVecsArr = [4,8,16,32];
+%         rom.noVecsArr = 16;
 
         misc.r_a = 1.25*varCol{1}.R1;
         postPlot(1).xScale = varCol{1}.R1;
@@ -238,7 +239,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-%         collectIntoTasks
+        collectIntoTasks
     end
 end
 
