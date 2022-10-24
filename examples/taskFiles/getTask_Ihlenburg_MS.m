@@ -102,7 +102,7 @@ for i = 1:numel(applyLoads)
                            'rho', 1000);
         eta = 0.001; % hysteretic loss factor for hysteresis damping
         E = 2.0e11;
-        E = E*(1-1i*eta);
+%         E = E*(1-1i*eta);
         varCol{2} = struct('media', 'solid', ...
                            'E', E, ...
                            'nu', 0.29, ...
@@ -123,12 +123,8 @@ for i = 1:numel(applyLoads)
         n = 20;
 %         n = 3;
         eqDistr = 1:n;
-        k = linspace(2.5, 20, n)/varCol{1}.R1;
-%         k = linspace(2.5, 5, n)/varCol{1}.R1;
-%         k = k/100;
-%         k = linspace(0.5, 4.29, n);
-%         k = linspace(0.5, 4.29, 3);
-%         k = linspace(0.5, 4.29, 10)/10;
+%         k = linspace(2.5, 20, n)/varCol{1}.R1;
+        k = linspace(0.5, 4.29, n);
 
         k_ROM = k(1):0.005:k(end);
 %         k_ROM = k(1):0.05:k(end);
