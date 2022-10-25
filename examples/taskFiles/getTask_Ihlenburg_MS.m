@@ -8,6 +8,7 @@ getDefaultTaskValues
 
 saveStudies = false;
 noCoresToUse = 32;         % Number of processors for parallel computations (Inf uses all available cores)
+noCoresToUse = 4;         % Number of processors for parallel computations (Inf uses all available cores)
 
 
 %% IE simulation
@@ -192,7 +193,7 @@ for i = 1:numel(applyLoads)
         else
             loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','misc.omega'};
         end
-        collectIntoTasks
+%         collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.scatteringCase = 'BI';
@@ -217,7 +218,7 @@ for i = 1:numel(applyLoads)
         end
         misc.omega = rom.omega_ROM;
         rom.useROM = false;
-        if 0 %strcmp(misc.scatteringCase, 'BI')
+        if 1 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
             para.extraXiPts              = '60';  % Extra visualization points in the xi-direction per element
             para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
