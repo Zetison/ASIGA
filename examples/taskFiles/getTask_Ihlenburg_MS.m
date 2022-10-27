@@ -29,7 +29,7 @@ misc.checkNURBSweightsCompatibility = false;
 misc.preProcessOnly = 0;
 warning('off','NURBS:weights')
 
-prePlot.plot3Dgeometry = 0;
+prePlot.plot3Dgeometry = 1;
 prePlot.abortAfterPlotting = 1;       % Abort simulation after pre plotting
 prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
@@ -41,6 +41,8 @@ prePlot.plotSubsets         = {'xy'};
 % prePlot.plotSubsets         = {'innerCoupling','outerCoupling','inner','outer'}; 
 prePlot.view                = [0,90];     % Set view angle [azimuth,elevation]
 prePlot.useCamlight         = false;
+% prePlot.format              = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
+prePlot.pngResolution       = '-r600';      % Use '-png' or '-pdf' (for vector graphics)
 
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;

@@ -113,7 +113,9 @@ if prePlot.plot3Dgeometry
     end
     figName = [task.resultsFolder '/' figName];
     if exist('../export_fig', 'dir')
-%         ax.SortMethod='ChildOrder';
+        if strcmp(prePlot.format,'-pdf')
+            ax.SortMethod='ChildOrder';
+        end
         export_fig(figName, prePlot.format, '-transparent', prePlot.pngResolution)
     end
     savefig([figName, '.fig'])

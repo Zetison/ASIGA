@@ -24,6 +24,9 @@ end
 if strcmp(scatteringCase,'MS') && ~strcmp(applyLoad,'planeWave')
     error('MS only applies for planeWave')
 end
+if strcmp(task.prePlot.format,'-pdf') && task.prePlot.plotFullDomain
+    error('The -pdf prePlot.format option should only be used for 2D pictures')
+end
 
 if strcmp(method, 'BEM') && ~(strcmp(formulation, 'CCBIE') || strcmp(formulation, 'GCBIE') || ...
                               strcmp(formulation, 'CHBIE') || strcmp(formulation, 'GHBIE') ||  ...

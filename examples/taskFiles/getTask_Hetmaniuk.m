@@ -22,8 +22,9 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-BCs = {'SSBC'};
-% BCs = {'SHBC','SSBC'};
+% BCs = {'SSBC'};
+% BCs = {'NNBC'};
+BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -49,17 +50,18 @@ err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
 
-prePlot.plot3Dgeometry = 1;
+prePlot.plot3Dgeometry = 0;
 prePlot.view                = [54,38];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plotFullDomain      = 1;
-% prePlot.plotSubsets         = {'xz'}; 
-prePlot.plotSubsets         = {}; 
+prePlot.plotFullDomain      = 0;
+prePlot.plotSubsets         = {'xz'}; 
+% prePlot.plotSubsets         = {}; 
 prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
 prePlot.resolution = [400,200,0];
+prePlot.resolution = [100,0,0];
 prePlot.format = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
 
 misc.computeCondNumber = 0;
@@ -107,6 +109,8 @@ for i = 1:numel(BCs)
             noDomains = 1;
         case 'SSBC'
             noDomains = 2;
+        case 'NNBC'
+            noDomains = 3;
     end
     varCol = setHetmaniukParameters(noDomains);
     msh.meshFile = 'createNURBSmesh_EL';
@@ -117,24 +121,21 @@ for i = 1:numel(BCs)
     end
     msh.degree = 3;
     manuelRefinement = false;
-    msh.M = 1; % 7
+    msh.M = 7; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
-        if manuelRefinement
-            if msh.parm == 1
-                if msh.refineThetaOnly
-                    varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
-                else
-                    varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1];
-                end
-            else
-                varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1];
-            end
-        end
     else
         misc.formulation = {'BGC'};
-        if manuelRefinement
-            varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
+    end
+    if manuelRefinement
+        if msh.parm == 1
+            if msh.refineThetaOnly
+                varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
+            else
+                varCol{1}.refinement = @(M) [2^(M-1)-1, 2^(M-1)-1, 2^(M-4)-1];
+            end
+        else
+            varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1];
         end
     end
     if manuelRefinement
@@ -262,8 +263,9 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-    collectIntoTasks
+%     collectIntoTasks
     
+    %% Run paraview visualization case
     misc.omega = rom.omega_ROM(end);
     para.plotResultsInParaview = true;
     para.plotSubsets = {};
@@ -277,6 +279,7 @@ for i = 1:numel(BCs)
     para.extraZetaPts            = '0';   % Extra visualization points in the zeta-direction per element
 %     collectIntoTasks
     
+    %% Run BA sweep
     misc.omega = rom.omega_ROM;
 %     misc.omega = rom.omega_ROM(1);
     para.plotResultsInParaview = 0;
