@@ -222,17 +222,17 @@ for i = 1:numel(BCs)
     pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
     switch misc.BC
         case {'SHBC','NBC'}
-            pml.t = 0.2;         % thickness of PML
+            pml.t = 0.2*varCol{1}.R;         % thickness of PML
             pml.gamma = 2.5;          % parameter for sigmaType = 1
-            misc.r_a = 1.2;
+            misc.r_a = 1.2*varCol{1}.R;
             rom.noVecsArr = [8,16,24,32];
 %             rom.noVecsArr = 32;
         case {'SSBC','NNBC'}
-            rom.noVecsArr = [4,8,12,20];
+            rom.noVecsArr = [4,8,12,20,32];
 %             rom.noVecsArr = 20;
-            pml.t = 0.4;         % thickness of PML
+            pml.t = 0.2*varCol{1}.R;         % thickness of PML
             pml.gamma = 2.0;          % parameter for sigmaType = 1
-            misc.r_a = 1.4;
+            misc.r_a = 1.2*varCol{1}.R;
     end
     if ~(pml.sigmaType == 1)
         pml.gamma = 1/(k(1)*pml.t);
@@ -263,7 +263,7 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-%     collectIntoTasks
+    collectIntoTasks
     
     %% Run paraview visualization case
     misc.omega = rom.omega_ROM(end);
