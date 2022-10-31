@@ -51,18 +51,22 @@ misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
 
 prePlot.plot3Dgeometry = 0;
-prePlot.view                = [54,38];     % Set view angle [azimuth,elevation]
+prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plotFullDomain      = 0;
+prePlot.plotFullDomain      = 1;
 prePlot.plotSubsets         = {'xz'}; 
-% prePlot.plotSubsets         = {}; 
-prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
+prePlot.plotSubsets         = {}; 
+% prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
 prePlot.resolution = [400,200,0];
-prePlot.resolution = [100,0,0];
-prePlot.format = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
+% prePlot.resolution = [100,0,0];
+if prePlot.plotFullDomain
+    prePlot.format = '-png';      % Use '-png' or '-pdf' (for vector graphics)
+else
+    prePlot.format = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
+end
 
 misc.computeCondNumber = 0;
 
