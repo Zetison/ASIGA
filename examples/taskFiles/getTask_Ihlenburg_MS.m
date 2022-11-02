@@ -8,7 +8,7 @@ getDefaultTaskValues
 
 saveStudies = false;
 noCoresToUse = 32;         % Number of processors for parallel computations (Inf uses all available cores)
-noCoresToUse = 4;         % Number of processors for parallel computations (Inf uses all available cores)
+% noCoresToUse = 4;         % Number of processors for parallel computations (Inf uses all available cores)
 
 
 %% IE simulation
@@ -29,7 +29,7 @@ misc.checkNURBSweightsCompatibility = false;
 misc.preProcessOnly = 0;
 warning('off','NURBS:weights')
 
-prePlot.plot3Dgeometry = 1;
+prePlot.plot3Dgeometry = 0;
 prePlot.abortAfterPlotting = 1;       % Abort simulation after pre plotting
 prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
@@ -172,7 +172,7 @@ for i = 1:numel(applyLoads)
         msh.degree = 3:4;
         msh.degree = 4; % 4
         msh.M = 6:7; % 7
-        msh.M = 6; % 7
+        msh.M = 7; % 7
         misc.symmetric = 0;
         
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
