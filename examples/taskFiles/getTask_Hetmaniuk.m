@@ -125,7 +125,7 @@ for i = 1:numel(BCs)
     end
     msh.degree = 3;
     manuelRefinement = false;
-    msh.M = 7; % 7
+    msh.M = 2; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
