@@ -33,7 +33,6 @@ for i_col = 1:numel(studiesCol)
         loopParametersArr = studiesCol{i_col}(i_study).loopParametersArr;
         noTasks = length(studiesCol{i_col}(i_study).tasks);
 
-        tasks = studiesCol{i_col}(i_study).tasks;
         resultsFolder = [folderName '/' studiesCol{i_col}(i_study).subFolderName];
         if ~exist(resultsFolder, 'dir')
             mkdir(resultsFolder)
@@ -44,15 +43,17 @@ for i_col = 1:numel(studiesCol)
         runTasksInParallel = studiesCol{i_col}(i_study).runTasksInParallel;
         startMatlabPool
         printLog = ~runTasksInParallel && ~runRegressionTests;
+        
         if runTasksInParallel
-            progressBars = tasks(1).task.misc.progressBars;
-            nProgressStepSize = ceil(length(tasks)/1000);
+            progressBars = studiesCol{i_col}(i_study).tasks(1).task.misc.progressBars;
+            nProgressStepSize = ceil(noTasks/1000);
             if progressBars
-                ppm = ParforProgMon('Simulating tasks: ', length(tasks));
+                ppm = ParforProgMon('Simulating tasks: ', noTasks);
             else
                 ppm = NaN;
             end
-            parfor i_task = 1:length(tasks)
+            tasks = studiesCol{i_col}(i_study).tasks(i_task);
+            parfor i_task = 1:noTasks
                 if progressBars && mod(i_task,nProgressStepSize) == 0
                     ppm.increment();
                 end
@@ -62,34 +63,21 @@ for i_col = 1:numel(studiesCol)
                 end
             end
             studiesCol{i_col}(i_study).tasks = tasks;
-            studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
         else
             for i_task = 1:noTasks
-                tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,printLog,resultsFolder);
-                if (tasks(i_task).task.prePlot.plot3Dgeometry || tasks(i_task).task.prePlot.plot2Dgeometry || tasks(i_task).task.misc.preProcessOnly) && tasks(i_task).task.prePlot.abortAfterPlotting
-                    studiesCol{i_col}(i_study).tasks = tasks;
+                plot3Dgeometry      = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.plot3Dgeometry;
+                abortAfterPlotting  = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.abortAfterPlotting;
+                preProcessOnly      = studiesCol{i_col}(i_study).tasks(i_task).task.misc.preProcessOnly;
+                studiesCol{i_col}(i_study).tasks(i_task).task = main_sub(studiesCol{i_col}(i_study).tasks(i_task).task,loopParameters,printLog,resultsFolder);
+                if (plot3Dgeometry || preProcessOnly) && abortAfterPlotting
                     return
-                end
-                if tasks(i_task).task.rom.useROM
-                    basisROMcell = studiesCol{i_col}(i_study).basisROMcell;
-                    omega_ROM = studiesCol{i_col}(i_study).omega_ROM;
-                    noVecsArr = studiesCol{i_col}(i_study).noVecsArr;
-                    tasks = computeROMsolution(tasks,i_task,basisROMcell,omega_ROM,noVecsArr,printLog);
                 end
                 if printLog
                     fprintf('\nCase %s: Completed task %d/%d in study %d/%d\n\n', studyName{i_col}, i_task, noTasks, i_study, noStudies) 
                 end
             end
-            studiesCol{i_col}(i_study).tasks = tasks;
-            if tasks(i_task).task.rom.useROM
-                studiesCol{i_col}(i_study).loopParameters{end+1} = 'rom.noVecs';
-                studiesCol{i_col}(i_study).loopParametersArr{end+1} = noVecsArr;
-                studiesCol{i_col}(i_study).loopParameters{end+1} = 'rom.basisROM';
-                studiesCol{i_col}(i_study).loopParametersArr{end+1} = basisROMcell;
-                studiesCol{i_col}(i_study).tasks = tasks(:);
-            end
-            studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
         end 
+        studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
         if studiesCol{i_col}(i_study).saveStudies
             save([resultsFolder '/studiesCol'], 'studiesCol')
         end

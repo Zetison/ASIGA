@@ -63,17 +63,6 @@ studies(counter).runTasksInParallel = runTasksInParallel;
 studies(counter).noCoresToUse = noCoresToUse;
 studies(counter).saveStudies = saveStudies;
 
-task.rom.useDGP = false;
-for i = 1:numel(rom.basisROMcell)
-    if strcmp(rom.basisROMcell{i},'DGP')
-        task.rom.useDGP = true;
-    end
-end
-if task.rom.useROM
-    studies(counter).basisROMcell = task.rom.basisROMcell;
-    studies(counter).omega_ROM = task.rom.omega_ROM;
-    studies(counter).noVecsArr = task.rom.noVecsArr;
-end
 
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr, connectedParameters, childrenParameters);
 if isempty(studies(counter).tasks)

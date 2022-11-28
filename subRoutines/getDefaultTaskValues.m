@@ -54,12 +54,10 @@ msh.autoRefine          = false;   % Use automatic refining algorithm based on h
 prePlot.plotFullDomain      = true;        % Plot volumetric domains
 prePlot.plotSubsets         = {};          % Plot (surface) subsets (i.e. the artificial boundary Gamma_a) in paraview 
                                            % (examples include: 'Gamma','Gamma_a','yz','xz','xy','innerCoupling','outerCoupling','outer','inner','homDirichlet')
-prePlot.plot2Dgeometry      = false;       % Plot cross section of mesh and geometry
 prePlot.plot3Dgeometry      = false;       % Plot visualization of mesh and geometry in 3D
 prePlot.storeFig            = false;       % Store pre plotted figure
 prePlot.abortAfterPlotting  = false;       % Abort simulation after pre plotting
 prePlot.view                = getView;     % Set view angle [azimuth,elevation]
-prePlot.export_fig_name2D   = '';          % Name of exported figure using export_fig for 2D plots
 prePlot.export_fig_name3D   = '';          % Name of exported figure using export_fig for 3D plots
 prePlot.useCamlight         = true;        % Toggle camlight on
 prePlot.camproj             = 'perspective'; % 'perspective' or 'orthographic'
@@ -201,11 +199,15 @@ mfs.delta = 0.1;            % Distance from the boundary to the internal source 
 rt.N = 4; % Number of rays is approximately round(10^(rt.N/2))
 
 %% Settings for ROM (reduced order modelling)
-rom.useROM       = false;    % Toggle the usage of ROM
-rom.noVecsArr 	 = 8;        % Number of derivatives at each point (including the 0th derivative
-misc.omega_ROM   = [];       % Loop over these angular frequencies (misc.omega is used as snapshot parameters for ROM)
-rom.basisROMcell = {'DGP'};  % Basis for ROM ('Pade','Taylor','DGP','Hermite' or 'Bernstein')
-
-
+rom.useROM       = false;   % Toggle the usage of ROM
+rom.noVecs 	     = 8;       % Number of derivatives at each point (including the 0th derivative
+rom.omega        = [];      % Loop over these angular frequencies (misc.omega is used as snapshot parameters for ROM)
+rom.basisROM     = {'DGP'}; % Basis for ROM ('Pade','Taylor','DGP','Hermite' or 'Bernstein')
+rom.adaptiveROM  = true;
+rom.J_min        = 16;      % Minimum number of derivatives
+rom.J_max        = 64;      % Maximum number of derivatives
+rom.deltaJ       = 4;       % Increment of number of vectors (derivatives) added 
+rom.n_c          = 9;       % Number of points to evaluate residual for each unique interval in omega_T
+rom.tolerance    = 1e-3;    % Tolerance for the residual error for when to stop adaptive ROM
 
 

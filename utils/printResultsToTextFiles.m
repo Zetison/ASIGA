@@ -270,11 +270,11 @@ if plotResults
         switch xname
             case 'ffp.alpha'
                 xLabel = '$$\alpha$$';
-            case {'misc.omega','misc.omega_ROM'}
+            case {'misc.omega'}
                 xLabel = '$$\omega$$';
-            case {'misc.f','misc.f_ROM'}
+            case {'misc.f'}
                 xLabel = '$$f$$';
-            case {'varCol{1}.k','varCol{1}.k_ROM'}
+            case {'varCol{1}.k'}
                 if options.xScale == 1
                     xLabel = '$$k$$';
                 else

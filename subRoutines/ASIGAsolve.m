@@ -76,7 +76,7 @@ switch task.misc.method
                     dAdomega{2} = 2*A2 + 12*omega_i^2*A4;
                     dAdomega{3} = 24*omega_i*A4;
                     dAdomega{4} = 24*A4;
-                    if task.rom.useDGP && i_o == numel(omega)
+                    if strcmp(task.rom.basisROM,'DGP') && i_o == numel(omega)
                         task.A0 = A0;
                         task.A1 = A1;
                         task.A2 = A2;
@@ -154,7 +154,6 @@ switch task.misc.method
         % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
 end
         
-if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
+if task.rom.useROM
     task.U_sweep{i_o} = task.UU;
-    task = postProcessSolution(task);
 end

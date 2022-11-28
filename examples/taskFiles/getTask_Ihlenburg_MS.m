@@ -86,9 +86,9 @@ for i = 1:numel(applyLoads)
         misc.BC = BC;
         misc.scatteringCase = 'Sweep';
         postPlot(1).noXLoopPrms = 0;
-        postPlot(1).xname = 'varCol{1}.k_ROM';
+        postPlot(1).xname = 'varCol{1}.k';
         if strcmp(misc.applyLoad,'pointPulsation')
-            postPlot(2).xname = 'varCol{1}.k_ROM';
+            postPlot(2).xname = 'varCol{1}.k';
         end
         switch BC{1}
             case {'SHBC','NBC'}
@@ -127,18 +127,18 @@ for i = 1:numel(applyLoads)
 %         n = 3;
         eqDistr = 1:n;
 %         k = linspace(2.5, 20, n)/varCol{1}.R1;
-        k = linspace(0.5, 4.29, n);
+        k_P = linspace(0.5, 4.29, n);
 
-        k_ROM = k(1):0.005:k(end);
-%         k_ROM = k(1):0.05:k(end);
-%         k_ROM = k(1):0.5:k(end);
-        k_ROM = sort(unique([k_ROM,k]));
-%         k_ROM = k;
+        k = k_P(1):0.005:k_P(end);
+%         k = k(1):0.05:k(end);
+%         k = k(1):0.5:k(end);
+        k = sort(unique([k,k_P]));
+%         k = k;
 %         k = k(1)+(k(end)-k(1))*(1-cos((2*eqDistr-1)/2/n*pi))/2; % Chebyshev nodes
         c_f = varCol{1}.c_f;
-        rom.omega_ROM = k_ROM*c_f;
-        f = k*c_f/(2*pi);
-        misc.omega = 2*pi*f;
+        misc.omega = k*c_f;
+        f_P = k_P*c_f/(2*pi);
+        rom.omega = 2*pi*f_P;
         msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
         
         %% Settings for the PML (perfectly matched layers)
@@ -148,7 +148,7 @@ for i = 1:numel(applyLoads)
         pml.n = 1;            	% polynomial order
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
         pml.refinement = @(M) max(round((2^(M-1)-1)*pml.t/refLength),2);   
-        pml.gamma = 1/(k(1)*pml.t);     
+        pml.gamma = 1/(k_P(1)*pml.t);     
         
         varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-4)-1,2)];
         if noDomains > 1
@@ -162,8 +162,9 @@ for i = 1:numel(applyLoads)
     %     c_z = 44.45920956623927;
         msh.c_xy = 11.439247597213537;
 
-%         rom.basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
-        rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+%         rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
+        rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+        rom.adaptiveROM  = true;
         if strcmp(misc.method,'PML')
             misc.formulation = {'GSB'};
         else
@@ -178,8 +179,8 @@ for i = 1:numel(applyLoads)
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
         
         rom.useROM = true;
-        rom.noVecsArr = [4,8,16,32];
-%         rom.noVecsArr = 16;
+        rom.noVecs = [4,8,16,32];
+%         rom.noVecs = 16;
 
         misc.r_a = 1.25*varCol{1}.R1;
         postPlot(1).xScale = varCol{1}.R1;
@@ -191,9 +192,9 @@ for i = 1:numel(applyLoads)
         
         misc.storeFullVarCol = false;
         if strcmp(misc.scatteringCase, 'Sweep')
-            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.noVecs','rom.basisROM'};
         else
-            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','misc.omega'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.noVecs','rom.basisROM','misc.omega'};
         end
 %         collectIntoTasks
 
@@ -218,7 +219,6 @@ for i = 1:numel(applyLoads)
         if strcmp(misc.applyLoad,'pointPulsation')
             postPlot(2).xname = 'varCol{1}.k';
         end
-        misc.omega = rom.omega_ROM;
         rom.useROM = false;
         if 1 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
@@ -226,10 +226,9 @@ for i = 1:numel(applyLoads)
             para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
             para.extraZetaPts            = '1';   % Extra visualization points in the zeta-direction per element
             para.plotTimeOscillation     = 1;
-            misc.omega = rom.omega_ROM(end);
+            misc.omega = misc.omega(end);
         else
-            misc.omega = rom.omega_ROM;
-%             misc.omega = rom.omega_ROM(end);
+%             misc.omega = misc.omega(end);
         end
         if strcmp(misc.method,'PML')
             misc.formulation = {'GSB'};

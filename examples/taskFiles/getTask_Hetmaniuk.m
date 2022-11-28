@@ -76,7 +76,7 @@ for i = 1:numel(BCs)
 %     misc.method = {'IE'};
     misc.method = {'PML'};
 
-    postPlot(1).xname           = 'varCol{1}.k_ROM';
+    postPlot(1).xname           = 'varCol{1}.k';
     postPlot(1).yname        	= 'surfaceError';
     postPlot(1).plotResults  	= true;
     postPlot(1).printResults 	= true;
@@ -106,7 +106,7 @@ for i = 1:numel(BCs)
     postPlot(5) = postPlot(2);
     postPlot(6) = postPlot(3);
     for j = 4:6
-        postPlot(j).xname = 'f_ROM';
+        postPlot(j).xname = 'f';
     end
     switch misc.BC
         case {'SHBC','NBC'}
@@ -163,16 +163,17 @@ for i = 1:numel(BCs)
     end
     switch misc.BC
         case {'SHBC','NBC'}
-            k = linspace(9, 36, 3);
-%             k = linspace(9, 36, 3)/5;
-            k_ROM = k(1):0.05:k(end);
-%             k_ROM = k(1):0.2:k(end);
-%             k_ROM = linspace(9, 36, 5);
-%             k_ROM = k(1);
+            k_P = linspace(9, 36, 3);
+%             k_P = linspace(9, 36, 3)/5;
+            k = k_P(1):0.05:k_P(end);
+%             k = k_P(1):0.2:k_P(end);
+%             k = linspace(9, 36, 5);
+%             k = k_P(1);
             c_f = varCol{1}.c_f;
-            rom.omega_ROM = k_ROM*c_f;
             f = k*c_f/(2*pi);
-            omega = 2*pi*f;
+            f_P = k_P*c_f/(2*pi);
+            misc.omega = 2*pi*f;
+            omega_P = 2*pi*f_P;
             if hetmaniukCase
                 misc.P_inc = -1;
                 ffp.beta = pi/2;   
@@ -185,17 +186,17 @@ for i = 1:numel(BCs)
                 postPlot(3+j).printResults = false;
             end
         case {'SSBC','NNBC'}
-            f = linspace(1430, 4290, 5);
-%             f = 1430;
-            omega = 2*pi*f;
-            f_ROM = f(1):12:f(end);
-%             f_ROM = f(1):120:f(end);
-%             f_ROM = f(1):1200:f(end);
-%             f_ROM = linspace(1430, 4290, 9);
-%             f_ROM = f(1);
-            f_ROM = sort(unique([f,f_ROM]));
-            rom.omega_ROM = 2*pi*f_ROM;
-            k = omega/varCol{1}.c_f;
+            f_P = linspace(1430, 4290, 5);
+%             f_P = 1430;
+            omega_P = 2*pi*f_P;
+            f = f_P(1):12:f_P(end);
+%             f = f_P(1):120:f_P(end);
+%             f = f_P(1):1200:f_P(end);
+%             f = linspace(1430, 4290, 9);
+%             f = f_P(1);
+            f = sort(unique([f_P,f]));
+            misc.omega = 2*pi*f;
+            k = omega_P/varCol{1}.c_f;
             if hetmaniukCase
                 misc.P_inc = 1;
                 ffp.beta = -pi/2;   
@@ -208,12 +209,13 @@ for i = 1:numel(BCs)
                 postPlot(3+j).printResults = true;
             end
     end
-    misc.omega = omega;
+    rom.omega = omega_P;
 
-    rom.basisROMcell = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.basisROMcell = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.basisROMcell = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-
+    rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    rom.adaptiveROM  = true;
+    
     misc.symmetric = 0;
 
     iem.N = 16; % 9
@@ -229,11 +231,11 @@ for i = 1:numel(BCs)
             pml.t = 0.2*varCol{1}.R;         % thickness of PML
             pml.gamma = 2.5;          % parameter for sigmaType = 1
             misc.r_a = 1.2*varCol{1}.R;
-            rom.noVecsArr = [8,16,24,32];
-%             rom.noVecsArr = 32;
+            rom.noVecs = [8,16,24,32];
+%             rom.noVecs = 32;
         case {'SSBC','NNBC'}
-            rom.noVecsArr = [4,8,12,20,32];
-%             rom.noVecsArr = 20;
+            rom.noVecs = [4,8,12,20,32];
+%             rom.noVecs = 20;
             pml.t = 0.2*varCol{1}.R;         % thickness of PML
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.2*varCol{1}.R;
@@ -246,7 +248,7 @@ for i = 1:numel(BCs)
 
     misc.storeFullVarCol = false;
     misc.scatteringCase = 'Sweep';
-    loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC'};
+    loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','rom.noVecs','rom.basisROM'};
     
     collectIntoTasks
 
@@ -262,15 +264,14 @@ for i = 1:numel(BCs)
         end
         postPlot(j).xLoopName     	= 'misc.omega';
     end
-    misc.omega = rom.omega_ROM;
-%     misc.omega = rom.omega_ROM(1);
+%     misc.omega = misc.omega(1);
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-    collectIntoTasks
+%     collectIntoTasks
     
     %% Run paraview visualization case
-    misc.omega = rom.omega_ROM(end);
+    misc.omega = misc.omega(end);
     para.plotResultsInParaview = true;
     para.plotSubsets = {};
     para.plotFullDomain = 1;
@@ -284,11 +285,11 @@ for i = 1:numel(BCs)
 %     collectIntoTasks
     
     %% Run BA sweep
-    misc.omega = rom.omega_ROM;
-%     misc.omega = rom.omega_ROM(1);
+    misc.omega = misc.omega;
+%     misc.omega = misc.omega(1);
     para.plotResultsInParaview = 0;
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-    collectIntoTasks
+%     collectIntoTasks
 end

@@ -44,7 +44,7 @@ for i = 1:noDomains
             task.varCol{i}.boundaryMethod = false; % Assume only 3D elasticity is implemented
     end
     if task.rom.useROM
-        task.noRHSs = max(task.rom.noVecsArr);
+        task.noRHSs = task.rom.noVecs;
     else
         task.noRHSs = numel(task.ffp.alpha_s);
     end

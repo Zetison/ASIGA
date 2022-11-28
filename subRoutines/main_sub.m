@@ -24,7 +24,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot geometry
 % keyboard
-if task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry
+if task.prePlot.plot3Dgeometry
     tic
     fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Plotting geometry ... ')
     task = plotMeshAndGeometry(task);
@@ -71,82 +71,64 @@ if printLog
     fprintf('\nNumber of elements per wavelength = %.2g', min(task.varCol{1}.nepw(:)))
 end
 
-if (task.prePlot.plot3Dgeometry || task.prePlot.plot2Dgeometry || task.misc.preProcessOnly) && task.prePlot.abortAfterPlotting
+if (task.prePlot.plot3Dgeometry || task.misc.preProcessOnly) && task.prePlot.abortAfterPlotting
     return
 end
 
 %% Build stiffness matrix
 t_start = tic;
-omega = task.misc.omega;
-if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
-    task.U_sweep = cell(1,numel(omega));
-end
-if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
-    for i_o = 1:numel(omega)
-        omega_i = omega(i_o);
-        t_freq = tic;
-        task.misc.omega = omega_i;
-        task = ASIGAassembly(task,t_start);
-        task = ASIGAsolve(task,omega,i_o);
-        if printLog && strcmp(task.misc.scatteringCase,'Sweep') && numel(omega) > 1
-            fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_o, numel(omega), toc(t_freq))  
+if task.rom.useROM && task.rom.adaptive
+    % Algorithm P1 in Hetmaniuk2013aas available at https://www.doi.org/10.1002/nme.4436
+    task.U_sweep = {};
+    omega_T = [];
+    omega_T_new = [task.rom.omega(1),task.rom.omega(end)];
+    while ~isempty(omega_T_new)
+        for omega_p = omega_T_new
+            % Algorithm P2 in Hetmaniuk2013aas
+            Hetmaniuk2012raa_P2(omega_p,task.rom.J_min,task.rom.J_max,task.rom.deltaJ)
         end
+        error('Not yet implemente')
+
+
+        omega_T = union(omega_T,omega_T_new);
     end
-    if numel(omega) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
-        tic
-        if printLog
-            fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Calculating surface error ... ')
-        end
-        progressBars = numel(omega) > 1 && task.misc.progressBars;
-        nProgressStepSize = ceil(numel(omega)/10);
-        if progressBars
-            try
-                ppm = ParforProgMon('Calculating surface error: ', numel(omega));
-            catch
-                progressBars = false;
-                ppm = NaN;
+
+else
+    if task.rom.useROM
+        omega_arr = task.rom.omega;
+        omega = task.misc.omega;
+    else
+        omega_arr = task.misc.omega;
+    end
+    if task.rom.useROM && strcmp(task.misc.scatteringCase,'Sweep')
+        task.U_sweep = cell(1,numel(omega_arr));
+    end
+    if ~(strcmp(task.misc.method,'RT') || strcmp(task.misc.method,'KDT'))
+        for i_o = 1:numel(omega_arr)
+            omega_i = omega_arr(i_o);
+            t_freq = tic;
+            task.misc.omega = omega_i;
+            task = ASIGAassembly(task,t_start);
+            task = ASIGAsolve(task,omega_arr,i_o);
+            if printLog && strcmp(task.misc.scatteringCase,'Sweep') && numel(omega_arr) > 1
+                fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_o, numel(omega_arr), toc(t_freq))  
             end
-        else
-            ppm = NaN;
+        end
+        
+        if ~task.rom.useROM
+            task = postProcessSolution(task);
+            if task.err.calculateSurfaceError || task.err.calculateVolumeError
+                task = calculateErrors(task, printLog, task.misc.stringShift);
+            end
         end
     else
-        progressBars = false;
-        ppm = NaN;
+        task.varCol{1}.U = [];
+    end  
+    if task.rom.useROM
+        task.misc.omega = omega;
+        task = computeROMsolution(task,printLog);
     end
-
-    if ~task.rom.useROM
-        task = postProcessSolution(task);
-    end
-    if ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
-        task.results.energyError = zeros(1,numel(omega));
-        task.results.L2Error = zeros(1,numel(omega));
-        task.results.H1Error = zeros(1,numel(omega));
-        task.results.H1sError = zeros(1,numel(omega));
-        task.results.surfaceError = zeros(1,numel(omega));
-        for i_o = 1:numel(omega)
-            if progressBars
-                ppm.increment();
-            end
-            task.misc.omega = omega(i_o);
-            task = getAnalyticSolutions(task);
-
-%             printLog = numel(omega) == 1 && printLog;
-            [L2Error, H1Error, H1sError, energyError, surfaceError] = calculateErrors(task, printLog, task.misc.stringShift);
-            task.results.surfaceError(i_o) = surfaceError;
-            task.results.energyError(i_o) = energyError;
-            task.results.L2Error(i_o) = L2Error;
-            task.results.H1Error(i_o) = H1Error;
-            task.results.H1sError(i_o) = H1sError;
-        end
-    end
-    if numel(omega) > 1 && ~task.rom.useROM && (task.err.calculateSurfaceError || task.err.calculateVolumeError)
-        fprintf('using %12f seconds.', toc)   
-    end
-else
-    task.varCol{1}.U = [];
-end  
-task.misc.omega = omega;
-
+end
 %% Compute scattered pressure   
 if task.ffp.calculateFarFieldPattern && ~task.rom.useROM
     task = getAnalyticSolutions(task);
