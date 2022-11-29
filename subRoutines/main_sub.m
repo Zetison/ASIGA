@@ -1,6 +1,5 @@
 function task = main_sub(task,loopParameters,printLog,resultsFolder)
 
-task.misc.stringShift = 40;
 task = controlTask(task);
 task.saveName = defineFolderAndFilenames(task,loopParameters);
 task.resultsFolder = resultsFolder;
@@ -78,21 +77,33 @@ end
 %% Build stiffness matrix
 t_start = tic;
 if task.rom.useROM && task.rom.adaptive
+    n_c = task.rom.n_c;
     % Algorithm P1 in Hetmaniuk2013aas available at https://www.doi.org/10.1002/nme.4436
-    task.U_sweep = {};
+    task.V = [];
     omega_T = [];
     omega_T_new = [task.rom.omega(1),task.rom.omega(end)];
     while ~isempty(omega_T_new)
-        for omega_p = omega_T_new
+        for p = 1:numel(omega_T_new)
             % Algorithm P2 in Hetmaniuk2013aas
-            Hetmaniuk2012raa_P2(omega_p,task.rom.J_min,task.rom.J_max,task.rom.deltaJ)
+            task = Hetmaniuk2012raa_P2(task, omega_T_new, p);
+        end
+        omega_T = union(omega_T,omega_T_new);
+        omega_T_new = [];
+        for p = 1:numel(omega_T)-1
+            omega_p = omega_T(p);
+            omega_pp1 = omega_T(p+1);
+            j = 1:n_c;
+            omega_cj = omega_p + j/(n_c+1)*(omega_pp1 - omega_p);
+
+            task = computeROMresidual(task, omega_cj);
+
+            [~,j_max] = max(task.rom.history(end).residual);
+            if residual(j_max) > task.rom.tolerance
+                omega_T_new = union(omega_T_new,omega_cj(j_max));
+            end
         end
         error('Not yet implemente')
-
-
-        omega_T = union(omega_T,omega_T_new);
     end
-
 else
     if task.rom.useROM
         omega_arr = task.rom.omega;

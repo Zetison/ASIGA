@@ -34,6 +34,7 @@ misc.compute_h_max       = true;        % Compute h_max and derived quantities l
 misc.preProcessOnly      = false;       % Only run the preProcessing process
 misc.symmetric           = true;        % Use symmetric matrices for coupled problems (at the expence of having to store three more global matrices for ROM). The global matrix has better conditioning with misc.symmetric = true but the opposit is true for the reduced matrices.
 misc.omega               = [];          % Loop over these angular frequencies
+misc.stringShift         = 40;          % Number of spaces in tabbing for output in command window
 
 %% Mesh settings
 msh.M                   = 1;	   % Mesh number

@@ -9,11 +9,11 @@ switch task.misc.method
         end
         useA = ~(task.noDomains == 1 && strcmp(task.misc.method,'BEM'));
         if useA
-            [task,FF,A0,A1,A2,A4] = collectMatrices(task);
+            task = collectMatrices(task);
             if strcmp(task.misc.method,'BA')
-                A = A2;
+                A = task.A2;
             else
-                A = A0 + omega_i*A1 + omega_i^2*A2 + omega_i^4*A4;
+                A = task.A0 + omega_i*task.A1 + omega_i^2*task.A2 + omega_i^4*task.A4;
             end
         else
             allDofsToRemove = task.varCol{1}.dofsToRemove;
@@ -82,13 +82,13 @@ switch task.misc.method
                         task.A2 = A2;
                         task.A4 = A4;
                     end
-                    task.UU = zeros(size(FF));
+                    task.UU = zeros(size(task.FF));
                     dA = decomposition(Pinv*A*Pinv,'lu');
                     fprintf('using %12f seconds.', toc)
                     fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing ROM solution ... ')
                     for i = 1:task.noRHSs
                         j = i-1;
-                        b = FF(:,i);
+                        b = task.FF(:,i);
                         for k = 1:min(j,numel(dAdomega))
                             b = b - nchoosek(j,k)*dAdomega{k}*task.UU(:,i-k);
                         end
@@ -100,9 +100,9 @@ switch task.misc.method
                             task.UU = zeros(size(A,1),numel(omega));
                         end
                         if strcmp(task.misc.scatteringCase,'Sweep')
-                            task.UU(:,i_o) = Pinv*((Pinv*A*Pinv)\(Pinv*FF));
+                            task.UU(:,i_o) = Pinv*((Pinv*A*Pinv)\(Pinv*task.FF));
                         else
-                            task.UU = Pinv*((Pinv*A*Pinv)\(Pinv*FF));
+                            task.UU = Pinv*((Pinv*A*Pinv)\(Pinv*task.FF));
                         end
                     else
                         if i_o == 1 && strcmp(task.misc.formulation,'Sweep')
@@ -149,7 +149,7 @@ switch task.misc.method
         end
         if task.misc.clearGlobalMatrices
             task.varCol = rmfields(task.varCol,{'A_K','A_M','A_C','FF','Ainf','Ainf1','Ainf2'});
-            clear A FF A0 A1 A2 A4 Pinv dA dAdomega b
+            clear A Pinv dA dAdomega b
         end
         % fprintf('\nMemory ratio = %f', ((fluid.degree(1)+1)^6*task.varCol{1}.noElems)/nnz(A_fluid_o))
 end

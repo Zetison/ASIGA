@@ -12,7 +12,7 @@ for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
     for i = 1:numel(studyName)
         fprintf(['\n%-' num2str(stringShift) 's'], ['Running test ''' studyName{i} ''' (M_0 = ' num2str(M_0) ') ...'])
         testFailed = false;
-%         try
+        try
             studiesCol = main(studyName{i},true,M_0);
             studiesCol_ref = load([testFolder studyName{i} '_M_0_' num2str(M_0) '.mat'],'studiesCol');
             studiesCol_ref = studiesCol_ref.studiesCol;
@@ -50,11 +50,11 @@ for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
             else
                 fprintf('successfully!')
             end
-%         catch ME
-%             rethrow(ME)
-%             fprintf('Test failed due to runtime error!')
-%             noFailedTests = noFailedTests + 1;
-%         end
+        catch ME
+            rethrow(ME)
+            fprintf('Test failed due to runtime error!')
+            noFailedTests = noFailedTests + 1;
+        end
     end
 end
 fprintf(['\n\nNumber of failed tests: ' num2str(noFailedTests) '\n'])

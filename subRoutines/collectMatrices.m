@@ -1,4 +1,4 @@
-function [task,FF,A0,A1,A2,A4] = collectMatrices(task)
+function task = collectMatrices(task)
 noDomains = numel(task.varCol);
 Aindices = cell(noDomains,2);
 noCols_tot = 0;
@@ -40,11 +40,11 @@ else
     allDofsToRemove = task.varCol{1}.allDofsToRemove;
 end
 % Collect all matrices
-A0 = sparse(noRows_tot,noCols_tot);
-A1 = sparse(noRows_tot,noCols_tot);
-A2 = sparse(noRows_tot,noCols_tot);
-A4 = sparse(noRows_tot,noCols_tot);
-FF = complex(zeros(noRows_tot,size(task.varCol{1}.FF,2)));
+task.A0 = sparse(noRows_tot,noCols_tot);
+task.A1 = sparse(noRows_tot,noCols_tot);
+task.A2 = sparse(noRows_tot,noCols_tot);
+task.A4 = sparse(noRows_tot,noCols_tot);
+task.FF = complex(zeros(noRows_tot,size(task.varCol{1}.FF,2)));
 for i = 1:noDomains
     if isfield(task.varCol{i},'rho')
         rho = task.varCol{i}.rho;
@@ -74,9 +74,9 @@ for i = 1:noDomains
     end
     if isfield(task.varCol{i},'A_K')
         if strcmp(task.varCol{i}.media,'solid') && task.misc.symmetric
-            A2(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
+            task.A2(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
         else
-            A0(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
+            task.A0(Aindices{i,1},Aindices{i,2}) = eqScale*task.varCol{i}.A_K; 
         end
         task.varCol{i} = rmfield(task.varCol{i},'A_K');
     end
@@ -85,12 +85,12 @@ for i = 1:noDomains
         if task.misc.symmetric
             switch task.varCol{i}.media
                 case 'fluid'
-                    A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+                    task.A2(Aindices{i,1},Aindices{i,2}) = task.A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
                 case 'solid'
-                    A4(Aindices{i,1},Aindices{i,2}) = A4(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+                    task.A4(Aindices{i,1},Aindices{i,2}) = task.A4(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
             end
         else
-            A2(Aindices{i,1},Aindices{i,2}) = A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
+            task.A2(Aindices{i,1},Aindices{i,2}) = task.A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
         end
         task.varCol{i} = rmfield(task.varCol{i},'A_M');
     end
@@ -98,49 +98,49 @@ for i = 1:noDomains
         Cindices1 = Aindices{i,1}(end)+(1:size(task.varCol{i}.A_C,1));
         Cindices2 = Aindices{i,2}(1)-1+(1:size(task.varCol{i}.A_C,2));
         if task.misc.symmetric
-            A2(Cindices1,Cindices2) = A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
-            A2(Cindices2,Cindices1) = A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
+            task.A2(Cindices1,Cindices2) = task.A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
+            task.A2(Cindices2,Cindices1) = task.A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
         else
             switch task.varCol{i-1}.media
                 case 'fluid'
-                    A2(Cindices1,Cindices2) = A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
+                    task.A2(Cindices1,Cindices2) = task.A2(Cindices1,Cindices2) + task.varCol{i}.A_C;
                 case 'solid'
-                    A0(Cindices1,Cindices2) = A0(Cindices1,Cindices2) + task.varCol{i}.A_C;
+                    task.A0(Cindices1,Cindices2) = task.A0(Cindices1,Cindices2) + task.varCol{i}.A_C;
             end
             switch task.varCol{i}.media
                 case 'fluid'
-                    A2(Cindices2,Cindices1) = A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
+                    task.A2(Cindices2,Cindices1) = task.A2(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
                 case 'solid'
-                    A0(Cindices2,Cindices1) = A0(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
+                    task.A0(Cindices2,Cindices1) = task.A0(Cindices2,Cindices1) + task.varCol{i}.A_C.'; 
             end
         end
         task.varCol{i} = rmfield(task.varCol{i},'A_C');
     end
     if isfield(task.varCol{i},'FF')
-        FF(Aindices{i,1},:) = eqScale*task.varCol{i}.FF;
+        task.FF(Aindices{i,1},:) = eqScale*task.varCol{i}.FF;
         task.varCol{i} = rmfield(task.varCol{i},'FF');
     end
 end
 if strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
     if isfield(task.varCol{1},'Ainf')
-    	A0(AindicesInf,AindicesInf) = A0(AindicesInf,AindicesInf) + task.varCol{1}.Ainf/task.varCol{1}.rho; 
+    	task.A0(AindicesInf,AindicesInf) = task.A0(AindicesInf,AindicesInf) + task.varCol{1}.Ainf/task.varCol{1}.rho; 
         task.varCol{1} = rmfield(task.varCol{1},'Ainf');
         if task.rom.useROM
-            A1(AindicesInf,AindicesInf) = A1(AindicesInf,AindicesInf) + task.varCol{1}.Ainf1/task.varCol{1}.rho/task.varCol{1}.c_f; 
+            task.A1(AindicesInf,AindicesInf) = task.A1(AindicesInf,AindicesInf) + task.varCol{1}.Ainf1/task.varCol{1}.rho/task.varCol{1}.c_f; 
             task.varCol{1} = rmfield(task.varCol{1},'Ainf1');
-            A2(AindicesInf,AindicesInf) = A2(AindicesInf,AindicesInf) + task.varCol{1}.Ainf2/task.varCol{1}.rho/task.varCol{1}.c_f^2; 
+            task.A2(AindicesInf,AindicesInf) = task.A2(AindicesInf,AindicesInf) + task.varCol{1}.Ainf2/task.varCol{1}.rho/task.varCol{1}.c_f^2; 
             task.varCol{1} = rmfield(task.varCol{1},'Ainf2');
         end  
     end
 end
 if ~((strcmp(task.misc.method,'BEM') || strcmp(task.misc.method,'interp')) && strcmp(task.misc.formulation(1),'C'))
-    A0(allDofsToRemove,:) = [];
-    A1(allDofsToRemove,:) = [];
-    A2(allDofsToRemove,:) = [];
-    A4(allDofsToRemove,:) = [];
-    FF(allDofsToRemove,:) = [];
+    task.A0(allDofsToRemove,:) = [];
+    task.A1(allDofsToRemove,:) = [];
+    task.A2(allDofsToRemove,:) = [];
+    task.A4(allDofsToRemove,:) = [];
+    task.FF(allDofsToRemove,:) = [];
 end
-A0(:,allDofsToRemove) = [];
-A1(:,allDofsToRemove) = [];
-A2(:,allDofsToRemove) = [];
-A4(:,allDofsToRemove) = [];
+task.A0(:,allDofsToRemove) = [];
+task.A1(:,allDofsToRemove) = [];
+task.A2(:,allDofsToRemove) = [];
+task.A4(:,allDofsToRemove) = [];

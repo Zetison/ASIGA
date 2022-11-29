@@ -14,40 +14,17 @@ noVecs = task.rom.noVecs;
 P = numel(omega_P);
 omega_start = omega_P(1);
 omega_end = omega_P(end);
-stringShift = 40;
-noDomains = numel(task.varCol);
 
 if printLog
     fprintf('\nBasis:%s, noVecs = %d', basisROM, noVecs)
 end
 if printLog
-    fprintf(['\n%-' num2str(stringShift) 's'], 'Computing basis for ROM ... ')
+    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing basis for ROM ... ')
 end
 t_startROM = tic;
 switch basisROM
     case 'DGP'
-        V = zeros(noDofs,P*noVecs);
-        counter = 1;
-        for i = 1:noVecs
-            for j = 1:P
-                V(:,counter) = task.U_sweep{j}(:,i);
-                counter = counter + 1;
-            end
-        end
-        U = zeros(size(V));
-        U(:,1) = V(:,1)/sqrt(V(:,1)'*V(:,1));
-        for i = 2:size(V,2)
-            U(:,i) = V(:,i);
-            for j = 1:i-1
-                U(:,i) = U(:,i) - ( U(:,j)'*U(:,i) )/( U(:,j)'*U(:,j) )*U(:,j);
-            end
-            U(:,i) = U(:,i)/sqrt(U(:,i)'*U(:,i));
-        end
-        V = U;
-        A0_am = V'*task.A0*V;
-        A1_am = V'*task.A1*V;
-        A2_am = V'*task.A2*V;
-        A4_am = V'*task.A4*V;
+        task = buildDGP(task);
         task = rmfield(task,{'A0','A1','A2','A4'});
     case 'Hermite'
 %         mp.Digits(400);
@@ -78,7 +55,7 @@ switch basisROM
         p_ROM = P*noVecs-1; % optimal conditioning and precision
         GLL = GLLpoints(Vsize-(p_ROM+1)+2);     
         Xi = [zeros(1,p_ROM+1),parent2ParametricSpace([0,1],GLL(2:end-1)),ones(1,p_ROM+1)];
-        V = zeros(Vsize);
+        task.V = zeros(Vsize);
         b = zeros(Vsize,noDofs);
 
         dp = zeros(noVecs,Vsize,P);
@@ -94,13 +71,13 @@ switch basisROM
         counter = 1;
         for i = 1:noVecs
             for j = 1:P
-                V(counter,:) = dp(i,:,j);
+                task.V(counter,:) = dp(i,:,j);
                 b(counter,:) = task.U_sweep{j}(:,i).';
                 counter = counter + 1;
             end
         end
-        cond(V)
-        a = V\b;
+        cond(task.V)
+        a = task.V\b;
     case 'Bernstein'
         Vsize = P*noVecs;
         p_ROM = P*noVecs-1;
@@ -115,12 +92,12 @@ switch basisROM
         tic
         B = bernsteinBasis((omega_P-omega_start)/(omega_end - omega_start),p_ROM,noVecs-1,1/(omega_end - omega_start));
         toc
-        V = zeros(Vsize,class(B));
+        task.V = zeros(Vsize,class(B));
         b = zeros(Vsize,noDofs);
         counter = 1;
         for i = 1:noVecs
             for j = 1:P
-                V(counter,:) = B(j,:,i);
+                task.V(counter,:) = B(j,:,i);
                 b(counter,:) = task.U_sweep{j}(:,i).';
                 counter = counter + 1;
             end
@@ -131,7 +108,7 @@ switch basisROM
 %         a = double(invV*mp(b));
         tic
 %                 a = double(V\mp(b));
-        a = double(V\b);
+        a = double(task.V\b);
         toc
 %         a = double(invV)*b;
 
@@ -150,39 +127,39 @@ switch basisROM
             dp(:,1,i) = lagrangePolynomials(omega_P.',i,n,k_arrLagr);
             dp(:,2:noVecs,i) = lagrangePolynomialsNthDeriv(omega_P.',i,n,k_arrLagr,noVecs-1);
         end
-        V = zeros(Vsize);
+        task.V = zeros(Vsize);
         b = zeros(Vsize,noDofs);
         counter = 1;
         for i = 1:noVecs
             for j = 1:P
                 temp = dp(j,i,:);
-                V(counter,:) = temp(:);
+                task.V(counter,:) = temp(:);
                 b(counter,:) = task.U_sweep{j}(:,i).';
                 counter = counter + 1;
             end
         end
-        cond(V)
-        a = V\b;
+        cond(task.V)
+        a = task.V\b;
     case 'Fourier'
         Vsize = P*noVecs;
         n_arr = 1:Vsize-1;
         counter = 1;
-        V = zeros(Vsize);
+        task.V = zeros(Vsize);
         b = zeros(Vsize,noDofs);
-        V(1:P,1) = 1;
+        task.V(1:P,1) = 1;
         for i = 1:noVecs
             for j = 1:P
                 if mod(i,2)
-                    V(counter,2:end) = (-1)^((i-1)/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*cos(n_arr*pi*omega_P(j)/(omega_end-omega_start));
+                    task.V(counter,2:end) = (-1)^((i-1)/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*cos(n_arr*pi*omega_P(j)/(omega_end-omega_start));
                 else
-                    V(counter,2:end) = (-1)^(i/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*sin(n_arr*pi*omega_P(j)/(omega_end-omega_start));
+                    task.V(counter,2:end) = (-1)^(i/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*sin(n_arr*pi*omega_P(j)/(omega_end-omega_start));
                 end
                 b(counter,:) = task.U_sweep{j}(:,i).';
                 counter = counter + 1;
             end
         end
-        cond(V)
-        a = V\b;
+        cond(task.V)
+        a = task.V\b;
 end  
 if printLog
     fprintf('using %12f seconds.', toc(t_startROM))
@@ -252,27 +229,19 @@ for i_f = 1:numel(omega)
     omega_i = omega(i_f);
     task.misc.omega = omega_i;
     if printLog
-        fprintf(['\n%-' num2str(stringShift) 's'], ['Computing ROM solution (' num2str(i_f) '/' num2str(numel(omega)) ')... '])
+        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], ['Computing ROM solution (' num2str(i_f) '/' num2str(numel(omega)) ')... '])
     end
     t_startROM = tic;
     task = getAnalyticSolutions(task);
     switch basisROM
         case 'DGP'
-            task.noRHSs = 1;
-            for i_domain = 1:min(noDomains,2)
-                task.rom.useROM = false;
-                task = applyNeumannCondition(task,i_domain);
-                if task.misc.symmetric && strcmp(task.varCol{i_domain}.media,'solid')
-                    task.varCol{i_domain}.FF = omega_i^2*task.varCol{i_domain}.FF;
-                end
-                task.rom.useROM = true;
-            end
+            task = buildRHS(task,overrideUseROM);
             [task,FF] = collectMatrices(task);
-            FFm = V'*FF;  
+            FFm = task.V'*FF;  
 
-            Am = A0_am + omega_i*A1_am + omega_i^2*A2_am + omega_i^4*A4_am;
+            Am = task.A0_am + omega_i*task.A1_am + omega_i^2*task.A2_am + omega_i^4*task.A4_am;
             Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
-            task.UU = V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
+            task.UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
         case 'Hermite'
             task.UU = zeros(noDofs,1);
             counter = 1;
@@ -301,7 +270,7 @@ for i_f = 1:numel(omega)
     end
 
     if task.err.calculateSurfaceError || task.err.calculateVolumeError
-        task = calculateErrors(task, 1, stringShift);
+        task = calculateErrors(task, 1, task.misc.stringShift);
         if task.err.calculateSurfaceError
             surfaceError(i_f) = task.results.surfaceError;
         end
@@ -314,7 +283,7 @@ for i_f = 1:numel(omega)
     end
 
     if task.ffp.calculateFarFieldPattern
-        task = calculateTS(task,printLog,stringShift);
+        task = calculateTS(task,printLog,task.misc.stringShift);
         p_h(i_f) = task.ffp.p_h;
     end
 end
