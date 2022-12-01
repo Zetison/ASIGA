@@ -2,23 +2,11 @@ function task = buildDGP(task,startCol)
 if nargin < 2
     startCol = 1;
 end
-if false
-    % Perform modified Gram-Schmidt orthonormalization
-    k = size(task.V,2);
-    for i = startCol:k
-        task.V(:,i) = task.V(:,i) / norm(task.V(:,i));
-        for j = i+1:k
-            task.V(:,j) = task.V(:,j) - proj(task.V(:,i),task.V(:,j));
-        end
+for i = startCol:size(task.V,2)
+    for j = 1:i-1
+        task.V(:,i) = task.V(:,i) - dot(task.V(:,j),task.V(:,i))*task.V(:,j);
     end
-else
-    for i = startCol:size(task.V,2)
-        V_i = task.V(:,i);
-        for j = 1:i-1
-            task.V(:,i) = task.V(:,i) - dot(task.V(:,j),V_i)/dot(task.V(:,j),task.V(:,j))*task.V(:,j);
-        end
-        task.V(:,i) = task.V(:,i)/norm(task.V(:,i));
-    end
+    task.V(:,i) = task.V(:,i)/norm(task.V(:,i));
 end
 
 % Build reduced order matrices

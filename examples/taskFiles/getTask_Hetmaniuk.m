@@ -233,7 +233,7 @@ for i = 1:numel(BCs)
             pml.gamma = 2.5;          % parameter for sigmaType = 1
             misc.r_a = 1.2*varCol{1}.R;
             rom.noVecs = [8,16,24,32];
-%             rom.noVecs = 32;
+            rom.noVecs = 32;
         case {'SSBC','NNBC'}
             rom.noVecs = [4,8,12,20,32];
 %             rom.noVecs = 20;
@@ -242,7 +242,7 @@ for i = 1:numel(BCs)
             misc.r_a = 1.2*varCol{1}.R;
     end
     if ~(pml.sigmaType == 1)
-        pml.gamma = 1/(k(1)*pml.t);
+        pml.gamma = 1/(k_P(1)*pml.t);
     end
 
     rom.useROM = true;
