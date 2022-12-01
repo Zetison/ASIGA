@@ -76,38 +76,97 @@ end
 
 %% Build stiffness matrix
 t_start = tic;
-if task.rom.useROM && task.rom.adaptive
+if task.rom.useROM
+    omega = task.misc.omega;
+end
+
+if task.rom.useROM && task.rom.adaptiveROM
     n_c = task.rom.n_c;
+    task = ASIGAassembly(task,t_start);
+    task = collectMatrices(task,true,false,false);
+
+    if task.misc.printLog
+        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing ROM basis adaptively ... ')
+    end
+    oldprintLog = task.misc.printLog;
+    task.misc.printLog = false;
+
     % Algorithm P1 in Hetmaniuk2013aas available at https://www.doi.org/10.1002/nme.4436
     task.V = [];
     omega_T = [];
     omega_T_new = [task.rom.omega(1),task.rom.omega(end)];
+    task.rom.history = struct();
+    counter = 1;
     while ~isempty(omega_T_new)
-        for p = 1:numel(omega_T_new)
+        for omega_p = omega_T_new
             % Algorithm P2 in Hetmaniuk2013aas
-            task = Hetmaniuk2012raa_P2(task, omega_T_new, p);
+            task = Hetmaniuk2012raa_P2(task, union(omega_T_new,omega_T), omega_p);
         end
         omega_T = union(omega_T,omega_T_new);
         omega_T_new = [];
+        %%%%%%%%%%%%%
+        task.rom.historyGlob(counter).residual = [];
+        task.rom.historyGlob(counter).omega = [];
+        %%%%%%%%%%%%%
         for p = 1:numel(omega_T)-1
             omega_p = omega_T(p);
             omega_pp1 = omega_T(p+1);
             j = 1:n_c;
             omega_cj = omega_p + j/(n_c+1)*(omega_pp1 - omega_p);
-
             task = computeROMresidual(task, omega_cj);
-
-            [~,j_max] = max(task.rom.history(end).residual);
+            residual = task.rom.history(end).residual;
+            %%%%%%%%%%%%%
+            task.rom.historyGlob(counter).residual = [task.rom.historyGlob(counter).residual, residual];
+            task.rom.historyGlob(counter).omega = [task.rom.historyGlob(counter).omega, omega_cj];
+            %%%%%%%%%%%%%
+            [~,j_max] = max(residual);
             if residual(j_max) > task.rom.tolerance
                 omega_T_new = union(omega_T_new,omega_cj(j_max));
             end
+            
         end
-        error('Not yet implemente')
+        %%%%%%%%%%%%%
+        task = computeROMresidual(task, omega);
+        historyGlob = task.rom.history(end);
+        close all
+        semilogy(historyGlob.omega, historyGlob.residual,'DisplayName',num2str(counter))
+        hold on
+        set(gca,'yscale','log')
+        keyboard
+        %%%%%%%%%%%%%
+        counter = counter + 1;
+    end
+    %%%%%%%%%%%%%
+    if 1
+        close all
+        historyGlob = task.rom.historyGlob;
+        for i = 1:numel(historyGlob)
+            semilogy(historyGlob(i).omega, historyGlob(i).residual,'DisplayName',num2str(i))
+            hold on
+        end
+        legend show
+        set(gca,'yscale','log')
+    else
+        close all
+        history = task.rom.history;
+        for i = 1:numel(history)
+            semilogy(history(i).omega, history(i).residual,'DisplayName',num2str(i))
+            hold on
+        end
+        legend show
+        set(gca,'yscale','log')
+    end
+    keyboard
+    %%%%%%%%%%%%%
+    task.misc.printLog = oldprintLog;
+    if task.misc.printLog
+        fprintf('using %12f seconds.', toc)
     end
 else
     if task.rom.useROM
         omega_arr = task.rom.omega;
         omega = task.misc.omega;
+        task.V = [];
     else
         omega_arr = task.misc.omega;
     end
@@ -120,7 +179,13 @@ else
             t_freq = tic;
             task.misc.omega = omega_i;
             task = ASIGAassembly(task,t_start);
+            task = collectMatrices(task);
             task = ASIGAsolve(task,omega_arr,i_o);
+        
+            if task.misc.printLog
+                fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Total time building system ... ')
+                fprintf(' was  %12f seconds.', task.timeBuildSystem+task.timeCollectingMatrices)
+            end
             if printLog && strcmp(task.misc.scatteringCase,'Sweep') && numel(omega_arr) > 1
                 fprintf('\nTotal time spent on frequency %d of %d: %12f\n', i_o, numel(omega_arr), toc(t_freq))  
             end
@@ -135,10 +200,10 @@ else
     else
         task.varCol{1}.U = [];
     end  
-    if task.rom.useROM
-        task.misc.omega = omega;
-        task = computeROMsolution(task,printLog);
-    end
+end
+if task.rom.useROM
+    task.misc.omega = omega;
+    task = computeROMsolution(task,printLog);
 end
 %% Compute scattered pressure   
 if task.ffp.calculateFarFieldPattern && ~task.rom.useROM

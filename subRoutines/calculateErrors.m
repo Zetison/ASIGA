@@ -77,7 +77,7 @@ for i_o = 1:numel(omega)
             L2Error(i_o) = L2Error;
             H1Error(i_o) = H1Error;
             H1sError(i_o) = H1sError;
-        end  
+        end
     end
 end
 task.misc.omega = omega;

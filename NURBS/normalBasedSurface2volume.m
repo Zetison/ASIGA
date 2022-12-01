@@ -104,8 +104,10 @@ switch X_bApprox
         task.misc.formulation = 'C';
 end
 task.varCol{1}.media = 'fluid';
-[task,FF,~,~,A2] = collectMatrices(task);
-task.UU = A2\FF;
+task.misc.printLog = false;
+task.noDomains = 1;
+task = collectMatrices(task,true,true,false);
+task.UU = task.A2\task.FF;
 task = postProcessSolution(task);
 counter = 1;
 for i = 1:noPatches

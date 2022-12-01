@@ -1,7 +1,5 @@
 function task = ASIGAassembly(task,t_start)
 
-
-omega_i = task.misc.omega;
 task = getAnalyticSolutions(task);
 switch task.misc.method
     case {'IE','ABC','IENSG','PML'}
@@ -84,19 +82,10 @@ switch task.misc.method
             end
 
             % Apply Neumann conditions
-            tic
-            if task.misc.printLog
-                fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Building RHS vector ... ')
+            if ~(task.rom.useROM && task.rom.adaptiveROM)
+                task = buildRHS(task);
             end
-            for i_domain = 1:min(task.noDomains,2)
-                task = applyNeumannCondition(task,i_domain);
-                if task.misc.symmetric && ~task.rom.useROM && strcmp(task.varCol{i_domain}.media,'solid')
-                    task.varCol{i_domain}.FF = omega_i^2*task.varCol{i_domain}.FF;
-                end
-            end
-            if task.misc.printLog
-                fprintf('using %12f seconds.', toc)
-            end
+
             task.timeBuildSystem = task.timeBuildSystem + toc;
         end
     case 'BEM'
@@ -183,9 +172,9 @@ switch task.misc.method
                 fprintf('using %12f seconds.', toc)
             end
         end
-%                 if task.noDomains > 1 
-%                     warning('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
-%                 end
+%         if task.noDomains > 1 
+%             warning('BA is not implemented in such a way that the displacement and pressure conditions at the interfaces is satisfied')
+%         end
         task.timeBuildSystem = toc;
     case 'MFS'
         tic

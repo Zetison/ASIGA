@@ -21,10 +21,10 @@ misc.coreMethod = {'IGA'};
 % misc.applyLoad = 'pointCharge';
 misc.applyLoad = 'planeWave';
 
-% BCs = {'SHBC'};
+BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
-BCs = {'SHBC','SSBC','NNBC'};
+% BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -125,7 +125,7 @@ for i = 1:numel(BCs)
     end
     msh.degree = 3;
     manuelRefinement = false;
-    msh.M = 2; % 7
+    msh.M = 7; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
@@ -169,6 +169,7 @@ for i = 1:numel(BCs)
 %             k = k_P(1):0.2:k_P(end);
 %             k = linspace(9, 36, 5);
 %             k = k_P(1);
+            k = 16;
             c_f = varCol{1}.c_f;
             f = k*c_f/(2*pi);
             f_P = k_P*c_f/(2*pi);
@@ -214,8 +215,8 @@ for i = 1:numel(BCs)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.adaptiveROM  = true;
-    
+    rom.adaptiveROM = 0;
+
     misc.symmetric = 0;
 
     iem.N = 16; % 9

@@ -1,168 +1,170 @@
 function task = computeROMsolution(task,printLog)
-% basisROM = 'Taylor';
-% basisROM = 'Pade';
-% basisROM = 'Lagrange';
-% basisROM = 'Splines';
-% basisROM = 'Fourier';
-% basisROM = 'Bernstein';
 
-noDofs = size(task.U_sweep{1},1);
+noDofs = size(task.V,1);
 omega_P = task.rom.omega;
 omega = task.misc.omega;
 basisROM = task.rom.basisROM;
-noVecs = task.rom.noVecs;
-P = numel(omega_P);
-omega_start = omega_P(1);
-omega_end = omega_P(end);
+task.misc.printLog = false;
 
-if printLog
-    fprintf('\nBasis:%s, noVecs = %d', basisROM, noVecs)
-end
-if printLog
-    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing basis for ROM ... ')
-end
-t_startROM = tic;
-switch basisROM
-    case 'DGP'
-        task = buildDGP(task);
-        task = rmfield(task,{'A0','A1','A2','A4'});
-    case 'Hermite'
-%         mp.Digits(400);
-%         Y = getInterpolatingHermite(mp(k_P.'),mp(omega_ROM),noVecs);
-%         Y = double(Y);
-        Y = getInterpolatingHermite(omega_P.',omega,noVecs);
-    case 'Pade'
-        p = cell(P,1);
-        q = cell(P,1);
-        useHP = 0;
-        if useHP
-            mp.Digits(400);
-        end
-        for i = 1:P
-            n = ceil(noVecs/2)-1;
-            m = floor(noVecs/2);
+if ~task.rom.adaptiveROM
+    noVecs = task.rom.noVecs;
+    P = numel(omega_P);
+    omega_start = omega_P(1);
+    omega_end = omega_P(end);
+    if printLog
+        fprintf('\nBasis:%s, noVecs = %d', basisROM, noVecs)
+    end
+    if printLog
+        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing basis for ROM ... ')
+    end
+    t_startROM = tic;
+    switch basisROM
+        case 'DGP'
+            task = buildDGP(task);
+            task = rmfields(task,{'A','FF','Pinv','A0','A1','A2','A4'});
+        case 'Hermite'
+    %         mp.Digits(400);
+    %         Y = getInterpolatingHermite(mp(k_P.'),mp(omega_ROM),noVecs);
+    %         Y = double(Y);
+            Y = getInterpolatingHermite(omega_P.',omega,noVecs);
+        case 'Pade'
+            p = cell(P,1);
+            q = cell(P,1);
+            useHP = 0;
             if useHP
-                f = @(x,n) mp(task.U_sweep{i}(:,n+1));
-                [p{i},q{i}] = pade(f,mp(omega_P(i)),n,m); 
-            else
-                f = @(x,n) task.U_sweep{i}(:,n+1);
-                [p{i},q{i}] = pade(f,omega_P(i),n,m); 
+                mp.Digits(400);
             end
-        end
-    case 'Splines'
-        Vsize = P*noVecs;
-%         p_ROM = noVecs;
-        p_ROM = P*noVecs-1; % optimal conditioning and precision
-        GLL = GLLpoints(Vsize-(p_ROM+1)+2);     
-        Xi = [zeros(1,p_ROM+1),parent2ParametricSpace([0,1],GLL(2:end-1)),ones(1,p_ROM+1)];
-        task.V = zeros(Vsize);
-        b = zeros(Vsize,noDofs);
-
-        dp = zeros(noVecs,Vsize,P);
-        for i = 1:P
-            xi = (omega_P(i)-omega_start)/(omega_end - omega_start);
-            i1 = findKnotSpan(Vsize, p_ROM, xi, Xi);
-            ders = Bspline_basisDers3(i1, xi, p_ROM, Xi, noVecs-1);
-            for j = 2:noVecs
-                ders(j,:) = ders(j,:)/(omega_end - omega_start).^(j-1);
-            end
-            dp(:,i1-p_ROM:i1,i) = ders;
-        end
-        counter = 1;
-        for i = 1:noVecs
-            for j = 1:P
-                task.V(counter,:) = dp(i,:,j);
-                b(counter,:) = task.U_sweep{j}(:,i).';
-                counter = counter + 1;
-            end
-        end
-        cond(task.V)
-        a = task.V\b;
-    case 'Bernstein'
-        Vsize = P*noVecs;
-        p_ROM = P*noVecs-1;
-        useHP = 0;
-        if useHP
-            mp.Digits(400);
-            p_ROM = mp(p_ROM);
-        end
-        omega_P = convert(omega_P,class(p_ROM));
-        omega_end = omega_P(end);
-        omega_start = omega_P(1);
-        tic
-        B = bernsteinBasis((omega_P-omega_start)/(omega_end - omega_start),p_ROM,noVecs-1,1/(omega_end - omega_start));
-        toc
-        task.V = zeros(Vsize,class(B));
-        b = zeros(Vsize,noDofs);
-        counter = 1;
-        for i = 1:noVecs
-            for j = 1:P
-                task.V(counter,:) = B(j,:,i);
-                b(counter,:) = task.U_sweep{j}(:,i).';
-                counter = counter + 1;
-            end
-        end
-%             invV = inv(V);
-%         cond(V)
-%         a = double(invV*mp(b(:,1)));
-%         a = double(invV*mp(b));
-        tic
-%                 a = double(V\mp(b));
-        a = double(task.V\b);
-        toc
-%         a = double(invV)*b;
-
-    case 'Lagrange'
-        Vsize = P*noVecs;
-        P = noTasks;
-        n = Vsize;
-        temp = cos(pi/(2*n));
-        ak = ((omega_start+omega_end)*temp-(omega_end-omega_start))/(2*temp);
-        bk = ((omega_start+omega_end)*temp+(omega_end-omega_start))/(2*temp);
-        j = 1:n;
-        k_arrLagr = 1/2*(ak+bk)+1/2*(bk-ak)*cos((2*n-2*j+1)*pi/(2*n));
-
-        dp = zeros(P,noVecs,n);
-        for i = 1:n
-            dp(:,1,i) = lagrangePolynomials(omega_P.',i,n,k_arrLagr);
-            dp(:,2:noVecs,i) = lagrangePolynomialsNthDeriv(omega_P.',i,n,k_arrLagr,noVecs-1);
-        end
-        task.V = zeros(Vsize);
-        b = zeros(Vsize,noDofs);
-        counter = 1;
-        for i = 1:noVecs
-            for j = 1:P
-                temp = dp(j,i,:);
-                task.V(counter,:) = temp(:);
-                b(counter,:) = task.U_sweep{j}(:,i).';
-                counter = counter + 1;
-            end
-        end
-        cond(task.V)
-        a = task.V\b;
-    case 'Fourier'
-        Vsize = P*noVecs;
-        n_arr = 1:Vsize-1;
-        counter = 1;
-        task.V = zeros(Vsize);
-        b = zeros(Vsize,noDofs);
-        task.V(1:P,1) = 1;
-        for i = 1:noVecs
-            for j = 1:P
-                if mod(i,2)
-                    task.V(counter,2:end) = (-1)^((i-1)/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*cos(n_arr*pi*omega_P(j)/(omega_end-omega_start));
+            for i = 1:P
+                n = ceil(noVecs/2)-1;
+                m = floor(noVecs/2);
+                shift = (i-1)*noVecs;
+                if useHP
+                    f = @(x,n) mp(task.V(:,shift+n+1));
+                    [p{i},q{i}] = pade(f,mp(omega_P(i)),n,m); 
                 else
-                    task.V(counter,2:end) = (-1)^(i/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*sin(n_arr*pi*omega_P(j)/(omega_end-omega_start));
+                    f = @(x,n) task.V(:,shift+n+1);
+                    [p{i},q{i}] = pade(f,omega_P(i),n,m); 
                 end
-                b(counter,:) = task.U_sweep{j}(:,i).';
-                counter = counter + 1;
             end
-        end
-        cond(task.V)
-        a = task.V\b;
-end  
-if printLog
-    fprintf('using %12f seconds.', toc(t_startROM))
+        case 'Splines'
+            Vsize = P*noVecs;
+    %         p_ROM = noVecs;
+            p_ROM = P*noVecs-1; % optimal conditioning and precision
+            GLL = GLLpoints(Vsize-(p_ROM+1)+2);     
+            Xi = [zeros(1,p_ROM+1),parent2ParametricSpace([0,1],GLL(2:end-1)),ones(1,p_ROM+1)];
+            task.V = zeros(Vsize);
+            b = zeros(Vsize,noDofs);
+    
+            dp = zeros(noVecs,Vsize,P);
+            for i = 1:P
+                xi = (omega_P(i)-omega_start)/(omega_end - omega_start);
+                i1 = findKnotSpan(Vsize, p_ROM, xi, Xi);
+                ders = Bspline_basisDers3(i1, xi, p_ROM, Xi, noVecs-1);
+                for j = 2:noVecs
+                    ders(j,:) = ders(j,:)/(omega_end - omega_start).^(j-1);
+                end
+                dp(:,i1-p_ROM:i1,i) = ders;
+            end
+            counter = 1;
+            for i = 1:noVecs
+                for j = 1:P
+                    shift = (j-1)*noVecs;
+                    task.V(counter,:) = dp(i,:,j);
+                    b(counter,:) = task.V(:,shift+i).';
+                    counter = counter + 1;
+                end
+            end
+            cond(task.V)
+            a = task.V\b;
+        case 'Bernstein'
+            Vsize = P*noVecs;
+            p_ROM = P*noVecs-1;
+            useHP = 0;
+            if useHP
+                mp.Digits(400);
+                p_ROM = mp(p_ROM);
+            end
+            omega_P = convert(omega_P,class(p_ROM));
+            omega_end = omega_P(end);
+            omega_start = omega_P(1);
+            tic
+            B = bernsteinBasis((omega_P-omega_start)/(omega_end - omega_start),p_ROM,noVecs-1,1/(omega_end - omega_start));
+            toc
+            task.V = zeros(Vsize,class(B));
+            b = zeros(Vsize,noDofs);
+            counter = 1;
+            for i = 1:noVecs
+                for j = 1:P
+                    shift = (j-1)*noVecs;
+                    task.V(counter,:) = B(j,:,i);
+                    b(counter,:) = task.V(:,shift+i).';
+                    counter = counter + 1;
+                end
+            end
+    %             invV = inv(V);
+    %         cond(V)
+    %         a = double(invV*mp(b(:,1)));
+    %         a = double(invV*mp(b));
+            tic
+    %                 a = double(V\mp(b));
+            a = double(task.V\b);
+            toc
+    %         a = double(invV)*b;
+    
+        case 'Lagrange'
+            Vsize = P*noVecs;
+            P = noTasks;
+            n = Vsize;
+            temp = cos(pi/(2*n));
+            ak = ((omega_start+omega_end)*temp-(omega_end-omega_start))/(2*temp);
+            bk = ((omega_start+omega_end)*temp+(omega_end-omega_start))/(2*temp);
+            j = 1:n;
+            k_arrLagr = 1/2*(ak+bk)+1/2*(bk-ak)*cos((2*n-2*j+1)*pi/(2*n));
+    
+            dp = zeros(P,noVecs,n);
+            for i = 1:n
+                dp(:,1,i) = lagrangePolynomials(omega_P.',i,n,k_arrLagr);
+                dp(:,2:noVecs,i) = lagrangePolynomialsNthDeriv(omega_P.',i,n,k_arrLagr,noVecs-1);
+            end
+            task.V = zeros(Vsize);
+            b = zeros(Vsize,noDofs);
+            counter = 1;
+            for i = 1:noVecs
+                for j = 1:P
+                    shift = (j-1)*noVecs;
+                    temp = dp(j,i,:);
+                    task.V(counter,:) = temp(:);
+                    b(counter,:) = task.V(:,shift+i).';
+                    counter = counter + 1;
+                end
+            end
+            cond(task.V)
+            a = task.V\b;
+        case 'Fourier'
+            Vsize = P*noVecs;
+            n_arr = 1:Vsize-1;
+            counter = 1;
+            task.V = zeros(Vsize);
+            b = zeros(Vsize,noDofs);
+            task.V(1:P,1) = 1;
+            for i = 1:noVecs
+                for j = 1:P
+                    shift = (j-1)*noVecs;
+                    if mod(i,2)
+                        task.V(counter,2:end) = (-1)^((i-1)/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*cos(n_arr*pi*omega_P(j)/(omega_end-omega_start));
+                    else
+                        task.V(counter,2:end) = (-1)^(i/2)*(n_arr*pi/(omega_end-omega_start)).^(i-1).*sin(n_arr*pi*omega_P(j)/(omega_end-omega_start));
+                    end
+                    b(counter,:) = task.V(:,shift+i).';
+                    counter = counter + 1;
+                end
+            end
+            cond(task.V)
+            a = task.V\b;
+    end  
+    if printLog
+        fprintf('using %12f seconds.', toc(t_startROM))
+    end
 end
 %     k_arr3 = linspace(k_start,k_end,100);
 %     k_arr3 = sort(unique([k_P, k_arr3]));
@@ -235,9 +237,9 @@ for i_f = 1:numel(omega)
     task = getAnalyticSolutions(task);
     switch basisROM
         case 'DGP'
-            task = buildRHS(task,overrideUseROM);
-            [task,FF] = collectMatrices(task);
-            FFm = task.V'*FF;  
+            task = buildRHS(task,true);
+            task = collectMatrices(task);
+            FFm = task.V'*task.FF;  
 
             Am = task.A0_am + omega_i*task.A1_am + omega_i^2*task.A2_am + omega_i^4*task.A4_am;
             Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
@@ -246,8 +248,9 @@ for i_f = 1:numel(omega)
             task.UU = zeros(noDofs,1);
             counter = 1;
             for i = 1:P
+                shift = (i-1)*noVecs;
                 for n = 1:noVecs
-                    task.UU = task.UU + task.U_sweep{i}(:,n)*Y(counter,i_f);
+                    task.UU = task.UU + task.V(:,shift+n)*Y(counter,i_f);
                     counter = counter + 1;
                 end
             end
@@ -261,7 +264,7 @@ for i_f = 1:numel(omega)
             B = bernsteinBasis(double((omega_i-omega_start)/(omega_end - omega_start)),double(p_ROM),0);
             task.UU = (B*a).';
         case 'Taylor'
-            task.UU = interTaylor(omega_i,omega_P,task.U_sweep,noVecs-1);
+            task.UU = interTaylor(omega_i,omega_P,task.V,noVecs-1);
     end
     task = computeDerivedQuantities(task);
     task = postProcessSolution(task);
@@ -331,11 +334,13 @@ if task.err.calculateSurfaceError || task.err.calculateVolumeError
     end
 end
 
-task = rmfield(task,{'U_sweep'});
+task = rmfield(task,{'V'});
 task.varCol = rmfields(task.varCol,getAddedFields());
 task.omega = temp_omega;
 task.f = temp_omega/(2*pi);
 task.varCol{1}.k = temp_omega/task.varCol{1}.c_f;
+
+task.misc.printLog = true;
 
 function [y,x] = insertNaN(x,y,a)
 inter = (a(2:end)+a(1:end-1))/2;

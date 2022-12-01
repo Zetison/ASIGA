@@ -1,4 +1,7 @@
-function task = getAnalyticSolutions(task)
+function task = getAnalyticSolutions(task,shiftROM)
+if nargin < 2
+    shiftROM = 0;
+end
 noDomains = numel(task.varCol);
 applyLoad = task.misc.applyLoad;
 splitExteriorFields = strcmp(applyLoad,'planeWave') || strcmp(applyLoad,'pointCharge') || strcmp(applyLoad,'radialPulsation');
@@ -57,8 +60,9 @@ end
 task.p_0_ = @(X) analytic({X},layer,NaN,'p_0',1);
 omega = task.misc.omega;
 symmetric = task.misc.symmetric;
-task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,p_inc_,omega,symmetric);
-task.dp_incdn_ROM_ = @(X,n) dp_incdn_ROM(X,n,layer,dp_incdn_);
+layer{1}.noRHSs = task.noRHSs;
+task.p_inc_ROM_ = @(X) p_inc_ROM(X,layer,p_inc_,omega,symmetric,shiftROM);
+task.dp_incdn_ROM_ = @(X,n) dp_incdn_ROM(X,n,layer,dp_incdn_,shiftROM);
 
 
 
@@ -346,11 +350,10 @@ for l = 1:L
     end
 end
 
-
-
-function dp_inc_ROM = dp_incdn_ROM(X,n,varCol,dp_incdn_)
+function dp_inc_ROM = dp_incdn_ROM(X,n,varCol,dp_incdn_,shiftROM)
 
 m = 0:(varCol{1}.noRHSs-1);
+m = m + shiftROM;
 switch varCol{1}.applyLoad
     case 'planeWave'
         d_vecX = X*varCol{1}.d_vec;
@@ -368,10 +371,11 @@ k = varCol{1}.omega/c_f;
 temp(:,2:end) = (1i./d_vecX)*m(2:end)/k;
 dp_inc_ROM = dp_incdn_(X,n).*(1i*d_vecX/c_f).^m.*(1-temp);
 
-function p_inc_ROM = p_inc_ROM(X,varCol,p_inc_,omega,symmetric)
+function p_inc_ROM = p_inc_ROM(X,varCol,p_inc_,omega,symmetric,shiftROM)
 
 if symmetric
     m = 0:(varCol{1}.noRHSs-1);
+    m = m + shiftROM;
     switch varCol{1}.applyLoad
         case 'planeWave'
             d_vecX = X*varCol{1}.d_vec;
