@@ -14,6 +14,3 @@ task.A0_am = task.V'*task.A0*task.V;
 task.A1_am = task.V'*task.A1*task.V;
 task.A2_am = task.V'*task.A2*task.V;
 task.A4_am = task.V'*task.A4*task.V;
-
-function w = proj(u,v)
-w = (dot(v,u) / dot(u,u)) * u;
