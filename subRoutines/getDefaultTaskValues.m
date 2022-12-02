@@ -210,5 +210,5 @@ rom.J_max        = 64;      % Maximum number of derivatives
 rom.deltaJ       = 4;       % Increment of number of vectors (derivatives) added 
 rom.n_c          = 9;       % Number of points to evaluate residual for each unique interval in omega_T
 rom.tolerance    = 1e-3;    % Tolerance for the residual error for when to stop adaptive ROM
-
+rom.computeROMresidualFine = false;
 

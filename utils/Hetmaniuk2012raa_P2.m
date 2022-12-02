@@ -1,4 +1,4 @@
-function task = Hetmaniuk2012raa_P2(task, omega, omega_p)
+function [task, J] = Hetmaniuk2012raa_P2(task, omega, omega_p)
 
 J_min = task.rom.J_min;
 J_max = task.rom.J_max;
@@ -16,6 +16,7 @@ else
                     omega(p)   + k/(n_c+1)*(omega(p+1)-omega(p))];
 end
 
+noColsInV = size(task.V,2);
 J = min(max(J_min,deltaJ), J_max);
 residual_old = -1;
 task.noRHSs = J;
@@ -29,10 +30,9 @@ while true
     task = collectMatrices(task,false,true);
     task = createPreconditioner(task);
     task = computeROMderivatives(task,shiftROM);
-    task = buildDGP(task);
+    task = buildDGP(task,noColsInV+shiftROM+1);
 
-    task = computeROMresidual(task, omega_k_star);
-    residual = task.rom.history(end).residual;
+    residual = computeROMresidual(task, omega_k_star);
     if residual_old == -1
         c = -1;
     else

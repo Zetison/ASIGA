@@ -169,7 +169,7 @@ for i = 1:numel(BCs)
 %             k = k_P(1):0.2:k_P(end);
 %             k = linspace(9, 36, 5);
 %             k = k_P(1);
-            k = 16;
+%             k = 16;
             c_f = varCol{1}.c_f;
             f = k*c_f/(2*pi);
             f_P = k_P*c_f/(2*pi);
@@ -215,7 +215,10 @@ for i = 1:numel(BCs)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.adaptiveROM = 0;
+    rom.adaptiveROM = 1;
+    rom.computeROMresidualFine = true;
+%     rom.J_min = 1;
+%     rom.deltaJ = 1;
 
     misc.symmetric = 0;
 

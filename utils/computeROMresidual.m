@@ -1,10 +1,11 @@
-function task = computeROMresidual(task, omega_cj)
+function residual = computeROMresidual(task, omega_cj)
 n_freq = numel(omega_cj);
-task.rom.history(end+1).residual = zeros(1,n_freq);
-task.rom.history(end).omega = omega_cj;
+residual = zeros(1,n_freq);
 for i = 1:n_freq
     omega = omega_cj(i);
+    task.misc.omega = omega;
 
+    task = getAnalyticSolutions(task);
     task = buildRHS(task,true);
     task = collectMatrices(task,false,true);
     FFm = task.V'*task.FF;
@@ -14,5 +15,5 @@ for i = 1:n_freq
     UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
 
     LHS = (task.A0 + omega*task.A1 + omega^2*task.A2 + omega^4*task.A4)*UU;
-    task.rom.history(end).residual(i) = norm(LHS - task.FF)/norm(task.FF);
+    residual(i) = norm(LHS - task.FF)/norm(task.FF);
 end

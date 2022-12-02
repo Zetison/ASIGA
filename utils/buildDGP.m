@@ -2,6 +2,8 @@ function task = buildDGP(task,startCol)
 if nargin < 2
     startCol = 1;
 end
+
+% Perform Gram-Schmidt orthogonalization
 for i = startCol:size(task.V,2)
     for j = 1:i-1
         task.V(:,i) = task.V(:,i) - dot(task.V(:,j),task.V(:,i))*task.V(:,j);
