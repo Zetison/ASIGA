@@ -336,6 +336,9 @@ end
 
 task = rmfield(task,{'V'});
 task.varCol = rmfields(task.varCol,getAddedFields());
+if task.misc.clearGlobalMatrices
+    task = rmfields(task,{'A','FF','Pinv','A0','A1','A2','A4','A0_am','A1_am','A2_am','A4_am'});
+end
 task.omega = temp_omega;
 task.f = temp_omega/(2*pi);
 task.varCol{1}.k = temp_omega/task.varCol{1}.c_f;

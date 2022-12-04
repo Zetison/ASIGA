@@ -43,15 +43,42 @@ while ~isempty(omega_T_new)
     end
     task.rom.history(counter).omega_P = omega_T;
     task.rom.history(counter).J_P = J_P;
+    task.rom.history(counter).omega_T_new = omega_T_new;
     counter = counter + 1;
 end
+if task.misc.printLog
+    fprintf('using %12f seconds.', toc)
+end
 if task.rom.computeROMresidualFine
+    if task.misc.printLog
+        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM residual ... ')
+    end
     residual = computeROMresidual(task, omega);
     task.rom.history(end).residualFine = residual;
-%     semilogy(omega, residual,'DisplayName',num2str(counter))
+    task.rom.history(end).omegaFine = omega;
+%     semilogy(omega, residual,'DisplayName','Residual')
 %     hold on
 %     set(gca,'yscale','log')
+%     keyboard
+    if task.misc.printLog
+        fprintf('using %12f seconds.', toc)
+    end
 end
+if task.rom.computeROMerror
+    if task.misc.printLog
+        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM error ... ')
+    end
+    relError = computeROMerror(task, omega);
+    task.rom.history(end).relError = relError;
+%     semilogy(omega, relError,'DisplayName','Error')
+%     hold on
+%     set(gca,'yscale','log')
+%     keyboard
+    if task.misc.printLog
+        fprintf('using %12f seconds.', toc)
+    end
+end
+
 % close all
 % history = task.rom.history;
 % for i = 1:numel(history)
@@ -62,6 +89,3 @@ end
 % set(gca,'yscale','log')
 % keyboard
 task.misc.printLog = oldprintLog;
-if task.misc.printLog
-    fprintf('using %12f seconds.', toc)
-end

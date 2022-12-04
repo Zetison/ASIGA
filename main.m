@@ -57,6 +57,8 @@ for i_col = 1:numel(studiesCol)
                 if progressBars && mod(i_task,nProgressStepSize) == 0
                     ppm.increment();
                 end
+                
+                %% Run main subroutine
                 tasks(i_task).task = main_sub(tasks(i_task).task,loopParameters,printLog,resultsFolder);
                 if ~runRegressionTests
                     fprintf('\nCase %s: Completed task %d/%d in study %d/%d in %f seconds.\n\n', studyName{i_col}, i_task, noTasks, i_study, noStudies, tasks(i_task).task.varCol{1}.tot_time) 
@@ -68,6 +70,8 @@ for i_col = 1:numel(studiesCol)
                 plot3Dgeometry      = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.plot3Dgeometry;
                 abortAfterPlotting  = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.abortAfterPlotting;
                 preProcessOnly      = studiesCol{i_col}(i_study).tasks(i_task).task.misc.preProcessOnly;
+
+                %% Run main subroutine
                 studiesCol{i_col}(i_study).tasks(i_task).task = main_sub(studiesCol{i_col}(i_study).tasks(i_task).task,loopParameters,printLog,resultsFolder);
                 if (plot3Dgeometry || preProcessOnly) && abortAfterPlotting
                     return

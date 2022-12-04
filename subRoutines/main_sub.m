@@ -87,7 +87,6 @@ if task.rom.useROM && task.rom.adaptiveROM
 else
     if task.rom.useROM
         omega_arr = task.rom.omega;
-        omega = task.misc.omega;
         task.V = [];
     else
         omega_arr = task.misc.omega;

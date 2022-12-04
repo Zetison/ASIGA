@@ -53,8 +53,8 @@ indices = zeros(d_f*n_en,noElems);
 extraGP = task.misc.extraGP;
 [Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
-% parfor e = 1:noElems
-for e = 1:noElems
+parfor e = 1:noElems
+% for e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(2,2);

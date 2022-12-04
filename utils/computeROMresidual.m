@@ -1,19 +1,32 @@
 function residual = computeROMresidual(task, omega_cj)
-n_freq = numel(omega_cj);
-residual = zeros(1,n_freq);
-for i = 1:n_freq
-    omega = omega_cj(i);
+
+
+n_freq = length(omega_cj);
+batchSize = 20;
+reminder = mod(n_freq,batchSize);
+n_batches = (n_freq-reminder)/batchSize;
+omega_cell = mat2cell(reshape(omega_cj(1:end-reminder),batchSize,[]), batchSize,ones(1,n_batches)).';
+omega_cell{end+1,1} = omega_cj(end-reminder+1:end).';
+n_batches = n_batches + 1;
+residual = cell(size(omega_cell));
+for i = 1:n_batches
+    omega = omega_cell{i}.';
     task.misc.omega = omega;
 
     task = getAnalyticSolutions(task);
-    task = buildRHS(task,true);
-    task = collectMatrices(task,false,true);
+    task = buildRHS(task,true,numel(omega));
+    task = collectMatrices(task,false,true,false);
     FFm = task.V'*task.FF;
-
-    Am = task.A0_am + omega*task.A1_am + omega^2*task.A2_am + omega^4*task.A4_am;
-    Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
-    UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
-
-    LHS = (task.A0 + omega*task.A1 + omega^2*task.A2 + omega^4*task.A4)*UU;
-    residual(i) = norm(LHS - task.FF)/norm(task.FF);
+    LHS = zeros(size(task.FF));
+    for j = 1:numel(omega)
+        task.misc.omega = omega(j);
+        task = collectMatrices(task,false,false,true);
+        Am = task.A0_am + omega(j)*task.A1_am + omega(j)^2*task.A2_am + omega(j)^4*task.A4_am;
+        Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
+        UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm(:,j))));
+    
+        LHS(:,j) = (task.A0 + omega(j)*task.A1 + omega(j)^2*task.A2 + omega(j)^4*task.A4)*UU;
+    end
+    residual{i} = (vecnorm(LHS - task.FF,2,1)./vecnorm(task.FF,2,1)).';
 end
+residual = cell2mat(residual).';

@@ -179,8 +179,8 @@ for i = 1:numel(applyLoads)
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
         
         rom.useROM = true;
-        rom.noVecs = [4,8,16,32];
-%         rom.noVecs = 16;
+%         rom.noVecs = [4,8,16,32];
+        rom.noVecs = 16;
 
         misc.r_a = 1.25*varCol{1}.R1;
         postPlot(1).xScale = varCol{1}.R1;
