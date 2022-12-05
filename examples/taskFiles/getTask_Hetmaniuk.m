@@ -174,7 +174,8 @@ for i = 1:numel(BCs)
             c_f = varCol{1}.c_f;
             f = k*c_f/(2*pi);
             f_P = k_P*c_f/(2*pi);
-            misc.omega = 2*pi*f;
+            omega = 2*pi*f;
+            misc.omega = omega;
             omega_P = 2*pi*f_P;
             if hetmaniukCase
                 misc.P_inc = -1;
@@ -197,7 +198,8 @@ for i = 1:numel(BCs)
 %             f = linspace(1430, 4290, 9);
 %             f = f_P(end);
             f = sort(unique([f_P,f]));
-            misc.omega = 2*pi*f;
+            omega = 2*pi*f;
+            misc.omega = omega;
             k_P = omega_P/varCol{1}.c_f;
             if hetmaniukCase
                 misc.P_inc = 1;
@@ -216,7 +218,7 @@ for i = 1:numel(BCs)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.adaptiveROM = 0;
+    rom.adaptiveROM = 1;
     rom.computeROMresidualFine = true;
     rom.computeROMerror = true;
 
@@ -289,7 +291,7 @@ for i = 1:numel(BCs)
 %     collectIntoTasks
     
     %% Run BA sweep
-    misc.omega = misc.omega;
+    misc.omega = omega;
 %     misc.omega = misc.omega(1);
     para.plotResultsInParaview = 0;
     misc.method = {'BA'};
