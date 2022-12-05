@@ -126,7 +126,7 @@ for i = 1:numel(BCs)
     end
     msh.degree = 3;
     manuelRefinement = false;
-    msh.M = 7; % 7
+    msh.M = 4; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
@@ -220,7 +220,7 @@ for i = 1:numel(BCs)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
     rom.computeROMresidualFine = true;
-    rom.computeROMerror = true;
+    rom.computeROMerror = 0;
 
     misc.symmetric = 0;
 
@@ -274,7 +274,7 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-    collectIntoTasks
+%     collectIntoTasks
     
     %% Run paraview visualization case
     misc.omega = misc.omega(end);
@@ -297,7 +297,7 @@ for i = 1:numel(BCs)
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-    collectIntoTasks
+%     collectIntoTasks
 end
 
 function addCommands_(study)

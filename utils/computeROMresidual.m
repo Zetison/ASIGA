@@ -25,7 +25,7 @@ for i = 1:n_batches
         Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
         UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm(:,j))));
     
-        LHS(:,j) = (task.A0 + omega(j)*task.A1 + omega(j)^2*task.A2 + omega(j)^4*task.A4)*UU;
+        LHS(:,j) = task.A*UU;
     end
     residual{i} = (vecnorm(LHS - task.FF,2,1)./vecnorm(task.FF,2,1)).';
 end
