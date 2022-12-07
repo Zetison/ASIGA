@@ -141,7 +141,12 @@ switch task.misc.method
                     end
                 end
                 if collectRHS && isfield(task.varCol{i},'FF')
-                    task.FF(Aindices{i,1},:) = eqScale*task.varCol{i}.FF;
+                    if task.misc.symmetric && strcmp(task.varCol{i}.media,'solid')
+                        omega = task.misc.omega;
+                        task.FF(Aindices{i,1},:) = omega.^2.*eqScale.*task.varCol{i}.FF;
+                    else
+                        task.FF(Aindices{i,1},:) = eqScale*task.varCol{i}.FF;
+                    end
                     task.varCol{i} = rmfield(task.varCol{i},'FF');
                 end
             end

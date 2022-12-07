@@ -15,6 +15,9 @@ else
     omega_k_star = [omega(p-1) + k/(n_c+1)*(omega(p)-omega(p-1)), ...
                     omega(p)   + k/(n_c+1)*(omega(p+1)-omega(p))];
 end
+task.misc.omega = omega(p);
+task = collectMatrices(task,false,false,true);
+task = createPreconditioner(task);
 
 noColsInV = size(task.V,2);
 J = min(max(J_min,deltaJ), J_max);
@@ -27,8 +30,7 @@ while true
     task.misc.omega = omega(p);
     task = getAnalyticSolutions(task,shiftROM);
     task = buildRHS(task);
-    task = collectMatrices(task,false,true);
-    task = createPreconditioner(task);
+    task = collectMatrices(task,false,true,false);
     task = computeROMderivatives(task,shiftROM);
     task = buildDGP(task,noColsInV+shiftROM+1);
 

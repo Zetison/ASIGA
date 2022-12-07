@@ -11,19 +11,19 @@ task.misc.printLog = false;
 
 % Algorithm P1 in Hetmaniuk2013aas available at https://www.doi.org/10.1002/nme.4436
 task.V = [];
-omega_T = [];
+omega_T = zeros(1,0); % Initiate with an empty row vector
 omega_T_new = [task.rom.omega(1),task.rom.omega(end)];
 task.rom.history = struct();
 J_P = [];
 counter = 1;
 while ~isempty(omega_T_new)
     J_new = zeros(1,numel(omega_T_new));
-    for p = 1:numel(omega_T_new)
+    for p = numel(omega_T_new):-1:1
         % Algorithm P2 in Hetmaniuk2013aas
         [task, J_new(p)] = Hetmaniuk2012raa_P2(task, union(omega_T_new,omega_T), omega_T_new(p));
     end
     [omega_T,sortIdx] = sort([omega_T,omega_T_new]);
-    omega_T_new = [];
+    omega_T_new = zeros(1,0); % Initiate with an empty row vector
     J_P = [J_P,J_new];
     J_P = J_P(sortIdx);
     task.rom.history(counter).residual = [];

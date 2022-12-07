@@ -373,43 +373,29 @@ dp_inc_ROM = dp_incdn_(X,n).*(1i*d_vecX/c_f).^m.*(1-temp);
 
 function p_inc_ROM = p_inc_ROM(X,varCol,p_inc_,omega,symmetric,shiftROM)
 
+m = 0:(varCol{1}.noRHSs-1);
+m = m + shiftROM;
+switch varCol{1}.applyLoad
+    case 'planeWave'
+        d_vecX = X*varCol{1}.d_vec;
+    case 'pointPulsation'
+        d_vecX = norm2(X);
+    case 'pointCharge'
+        x_s = varCol{1}.r_s*varCol{1}.d_vec.';
+        d_vecX = norm2(X-x_s);
+    otherwise
+        error('Not implemented')
+end
+c_f = varCol{1}.c_f;
 if symmetric
-    m = 0:(varCol{1}.noRHSs-1);
-    m = m + shiftROM;
-    switch varCol{1}.applyLoad
-        case 'planeWave'
-            d_vecX = X*varCol{1}.d_vec;
-        case 'pointPulsation'
-            d_vecX = norm2(X);
-        case 'pointCharge'
-            x_s = varCol{1}.r_s*varCol{1}.d_vec.';
-            d_vecX = norm2(X-x_s);
-        otherwise
-            error('Not implemented')
-    end
-    c_f = varCol{1}.c_f;
     mm1 = m - 1;
-    mm1(1) = 0;
+    mm1(mm1 < 0) = 0;
     mm2 = m - 2;
-    mm2(1) = 0;
-    if numel(mm2) > 1
-        mm2(2) = 0;
-    end
-    p_inc_ROM = p_inc_(X).*(omega.^2.*(1i*d_vecX/c_f).^m + 2*m.*omega.*(1i*d_vecX/c_f).^mm1 + m.*(m-1).*(1i*d_vecX/c_f).^mm2);
+    mm2(mm2 < 0) = 0;
+    p_inc_ROM = p_inc_(X).*(            (1i*d_vecX/c_f).^m ...
+                            +      2*m.*(1i*d_vecX/c_f).^mm1./omega ...
+                            + m.*(m-1).*(1i*d_vecX/c_f).^mm2./omega.^2);
 else
-    m = 0:(varCol{1}.noRHSs-1);
-    switch varCol{1}.applyLoad
-        case 'planeWave'
-            d_vecX = X*varCol{1}.d_vec;
-        case 'pointPulsation'
-            d_vecX = norm2(X);
-        case 'pointCharge'
-            x_s = varCol{1}.r_s*varCol{1}.d_vec.';
-            d_vecX = norm2(X-x_s);
-        otherwise
-            error('Not implemented')
-    end
-    c_f = varCol{1}.c_f;
     p_inc_ROM = p_inc_(X).*(1i*d_vecX/c_f).^m;
 end
     

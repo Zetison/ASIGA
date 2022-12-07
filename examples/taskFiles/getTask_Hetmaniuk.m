@@ -126,7 +126,7 @@ for i = 1:numel(BCs)
     end
     msh.degree = 3;
     manuelRefinement = false;
-    msh.M = 4; % 7
+    msh.M = 6; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
@@ -190,13 +190,13 @@ for i = 1:numel(BCs)
             end
         case {'SSBC','NNBC'}
             f_P = linspace(1430, 4290, 5);
-%             f_P = 1430;
+            f_P = [1430,2860,4290];
             omega_P = 2*pi*f_P;
             f = f_P(1):12:f_P(end);
 %             f = f_P(1):120:f_P(end);
 %             f = f_P(1):1200:f_P(end);
 %             f = linspace(1430, 4290, 9);
-%             f = f_P(end);
+            f = f_P(end);
             f = sort(unique([f_P,f]));
             omega = 2*pi*f;
             misc.omega = omega;
@@ -218,7 +218,7 @@ for i = 1:numel(BCs)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.adaptiveROM = 1;
+    rom.adaptiveROM = 0;
     rom.computeROMresidualFine = true;
     rom.computeROMerror = 0;
 
@@ -241,7 +241,7 @@ for i = 1:numel(BCs)
             rom.noVecs = 32;
         case {'SSBC','NNBC'}
 %             rom.noVecs = [4,8,12,20,32];
-            rom.noVecs = 20;
+            rom.noVecs = 28;
             pml.t = 0.2*varCol{1}.R;         % thickness of PML
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.2*varCol{1}.R;
