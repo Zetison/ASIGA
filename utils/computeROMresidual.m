@@ -22,8 +22,12 @@ for i = 1:n_batches
         task.misc.omega = omega(j);
         task = collectMatrices(task,false,false,true);
         Am = task.A0_am + omega(j)*task.A1_am + omega(j)^2*task.A2_am + omega(j)^4*task.A4_am;
-        Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
-        UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm(:,j))));
+        if strcmp(task.sol.preconditioner,'none')
+            UU = task.V*(Am\FFm(:,j));
+        else
+            Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
+            UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm(:,j))));
+        end
     
         LHS(:,j) = task.A*UU;
     end

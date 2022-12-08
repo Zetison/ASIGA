@@ -126,7 +126,6 @@ for i = 1:numel(BCs)
     end
     msh.degree = 3;
     manuelRefinement = false;
-    msh.M = 6; % 7
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
@@ -162,15 +161,29 @@ for i = 1:numel(BCs)
             end
         end
     end
+
+    msh.M = 6; % 7
+    rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
+    rom.adaptiveROM = 0;
+    rom.computeROMresidualFine = true;
+    rom.computeROMerror = 0;
+    rom.J_max = 16;
+    sol.preconditioner = 'none';
+    misc.symmetric = 0;
     switch misc.BC
         case {'SHBC','NBC'}
+            k_pml = 9;
             k_P = linspace(9, 36, 3);
+%             k_P = [9, 36];
+            k_P = [36, 9];
 %             k_P = linspace(9, 36, 3)/5;
             k = k_P(1):0.05:k_P(end);
 %             k = k_P(1):1:k_P(end);
 %             k = linspace(9, 36, 5);
-%             k = k_P(1);
-%             k = 16;
+%             k = k_P(end);
+            k = 36;
             c_f = varCol{1}.c_f;
             f = k*c_f/(2*pi);
             f_P = k_P*c_f/(2*pi);
@@ -189,8 +202,12 @@ for i = 1:numel(BCs)
                 postPlot(3+j).printResults = false;
             end
         case {'SSBC','NNBC'}
+            k_pml = 1430*2*pi/varCol{1}.c_f;
             f_P = linspace(1430, 4290, 5);
-            f_P = [1430,2860,4290];
+%             f_P = [1430,4290];
+            f_P = [4290,1430];
+%             f_P = [4290,3146,1430];
+%             f_P = [1430,3146,4290];
             omega_P = 2*pi*f_P;
             f = f_P(1):12:f_P(end);
 %             f = f_P(1):120:f_P(end);
@@ -215,15 +232,6 @@ for i = 1:numel(BCs)
     end
     rom.omega = omega_P;
 
-    rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.adaptiveROM = 0;
-    rom.computeROMresidualFine = true;
-    rom.computeROMerror = 0;
-
-    misc.symmetric = 0;
-
     iem.N = 16; % 9
     iem.p_ie = 5;
     iem.s_ie = 2;
@@ -241,13 +249,13 @@ for i = 1:numel(BCs)
             rom.noVecs = 32;
         case {'SSBC','NNBC'}
 %             rom.noVecs = [4,8,12,20,32];
-            rom.noVecs = 28;
+            rom.noVecs = 16;
             pml.t = 0.2*varCol{1}.R;         % thickness of PML
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.2*varCol{1}.R;
     end
     if ~(pml.sigmaType == 1)
-        pml.gamma = 1/(k_P(1)*pml.t);
+        pml.gamma = 1/(k_pml*pml.t);
     end
 
     rom.useROM = true;

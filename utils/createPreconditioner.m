@@ -16,7 +16,9 @@ switch task.sol.preconditioner
         task.L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
         task.U_A = D_SSOR-omega_SSOR*F_SSOR;
     case 'diag'
-        task.Pinv = spdiags(1./sqrt(diag(task.A)),0,size(task.A,2),size(task.A,2));
+        task.Pinv = spdiags(1./sqrt(diag(task.A)),0,size(task.A,1),size(task.A,2));
+    case 'none'
+        task.Pinv = speye(size(task.A,1),size(task.A,2));
 end
 if task.misc.printLog
     fprintf('using %12f seconds.', toc)

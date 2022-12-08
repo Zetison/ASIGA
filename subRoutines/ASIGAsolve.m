@@ -18,7 +18,7 @@ switch task.misc.method
                 % noRestarts = 2;
                 task.UU = gmres(task.A,task.FF,noRestarts,1e-20,1000,task.L_A,task.U_A);
             case 'LU'
-                if ~strcmp(task.sol.preconditioner,'diag')
+                if ~(strcmp(task.sol.preconditioner,'diag') || strcmp(task.sol.preconditioner,'none'))
                     error('not implemented')
                 end
                 if task.rom.useROM

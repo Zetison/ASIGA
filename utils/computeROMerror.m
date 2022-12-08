@@ -7,12 +7,15 @@ for i = 1:n_freq
 
     task = getAnalyticSolutions(task);
     task = buildRHS(task,true);
-    task = collectMatrices(task,false,true);
+    task = collectMatrices(task,false,true,true);
     FFm = task.V'*task.FF;
-
     Am = task.A0_am + omega*task.A1_am + omega^2*task.A2_am + omega^4*task.A4_am;
-    Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
-    UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
+    if strcmp(task.sol.preconditioner,'none')
+        UU = task.V*(Am\FFm);
+    else
+        Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
+        UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
+    end
 
     task = collectMatrices(task,false,false);
     task = createPreconditioner(task);

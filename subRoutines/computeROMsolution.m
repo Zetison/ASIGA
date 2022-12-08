@@ -238,12 +238,16 @@ for i_f = 1:numel(omega)
     switch basisROM
         case 'DGP'
             task = buildRHS(task,true);
-            task = collectMatrices(task);
+            task = collectMatrices(task,false,true,false);
             FFm = task.V'*task.FF;  
 
             Am = task.A0_am + omega_i*task.A1_am + omega_i^2*task.A2_am + omega_i^4*task.A4_am;
-            Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
-            task.UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
+            if strcmp(task.sol.preconditioner,'none')
+                task.UU = task.V*(Am\FFm);
+            else
+                Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
+                task.UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm)));
+            end
         case 'Hermite'
             task.UU = zeros(noDofs,1);
             counter = 1;

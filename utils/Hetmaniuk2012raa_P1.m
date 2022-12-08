@@ -12,7 +12,8 @@ task.misc.printLog = false;
 % Algorithm P1 in Hetmaniuk2013aas available at https://www.doi.org/10.1002/nme.4436
 task.V = [];
 omega_T = zeros(1,0); % Initiate with an empty row vector
-omega_T_new = [task.rom.omega(1),task.rom.omega(end)];
+omega_P = sort(task.rom.omega);
+omega_T_new = [omega_P(1),omega_P(end)];
 task.rom.history = struct();
 J_P = [];
 counter = 1;
