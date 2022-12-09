@@ -63,6 +63,8 @@ switch task.misc.method
                 task.A1 = sparse(noRows_tot,noCols_tot);
                 task.A2 = sparse(noRows_tot,noCols_tot);
                 task.A4 = sparse(noRows_tot,noCols_tot);
+                task.P_right = speye(noRows_tot,noCols_tot);
+                task.P_rightinv = speye(noRows_tot,noCols_tot);
             end
             if collectRHS
                 task.FF = complex(zeros(noRows_tot,size(task.varCol{1}.FF,2)));
@@ -139,6 +141,14 @@ switch task.misc.method
                         end
                         task.varCol{i} = rmfield(task.varCol{i},'A_C');
                     end
+                    if isfield(task.misc,'omega')
+                        omega_mean = task.omega_mean;
+                        if i > 1 && strcmp(task.varCol{2}.media, 'solid') && strcmp(task.varCol{1}.media, 'fluid')
+                            rho = task.varCol{1}.rho;
+                            task.P_right(Aindices{i,1},Aindices{i,2}) = omega_mean^2*rho.*speye(task.varCol{i}.noDofs);
+                            task.P_rightinv(Aindices{i,1},Aindices{i,2}) = 1/(omega_mean^2*rho).*speye(task.varCol{i}.noDofs);
+                        end
+                    end
                 end
                 if collectRHS && isfield(task.varCol{i},'FF')
                     if task.misc.symmetric && strcmp(task.varCol{i}.media,'solid')
@@ -169,6 +179,8 @@ switch task.misc.method
                     task.A1(allDofsToRemove,:) = [];
                     task.A2(allDofsToRemove,:) = [];
                     task.A4(allDofsToRemove,:) = [];
+                    task.P_right(allDofsToRemove,:) = [];
+                    task.P_rightinv(allDofsToRemove,:) = [];
                 end
                 if collectRHS
                     task.FF(allDofsToRemove,:) = [];
@@ -179,6 +191,8 @@ switch task.misc.method
                 task.A1(:,allDofsToRemove) = [];
                 task.A2(:,allDofsToRemove) = [];
                 task.A4(:,allDofsToRemove) = [];
+                task.P_right(:,allDofsToRemove) = [];
+                task.P_rightinv(:,allDofsToRemove) = [];
             end
             if buildA
                 if strcmp(task.misc.method,'BA')

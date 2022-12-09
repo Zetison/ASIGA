@@ -21,6 +21,7 @@ if ~task.rom.adaptiveROM
     switch basisROM
         case 'DGP'
             task = buildDGP(task);
+            task.V = task.P_rightinv*task.V; % Scale back to match scaling for task.U
             task = rmfields(task,{'A','FF','Pinv','A0','A1','A2','A4'});
         case 'Hermite'
     %         mp.Digits(400);

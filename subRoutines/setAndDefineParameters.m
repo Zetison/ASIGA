@@ -33,6 +33,7 @@ if strcmp(task.misc.scatteringCase,'MS')
     task.ffp.beta_s = task.ffp.beta;
 end
 task.misc.f = task.misc.omega/(2*pi);
+task.omega_mean = mean([min(task.misc.omega),max(task.misc.omega)]);
 
 for i = 1:noDomains
     switch task.varCol{i}.media

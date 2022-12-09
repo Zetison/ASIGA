@@ -2,6 +2,9 @@ function task = buildDGP(task,startCol)
 if nargin < 2
     startCol = 1;
 end
+% if ~all(sort(task.rom.omega) == task.rom.omega)
+%     task.V = [task.V(:,1:16), task.V(:,33:end), task.V(:,17:32)];
+% end
 algorithm = 1;
 switch algorithm
     case 1
@@ -61,8 +64,8 @@ switch algorithm
 end
 
 % Build reduced order matrices
-task.A0_am = task.V'*task.A0*task.V;
-task.A1_am = task.V'*task.A1*task.V;
-task.A2_am = task.V'*task.A2*task.V;
-task.A4_am = task.V'*task.A4*task.V;
+task.A0_am = task.V'*(task.P_rightinv'*task.A0*task.P_rightinv)*task.V;
+task.A1_am = task.V'*(task.P_rightinv'*task.A1*task.P_rightinv)*task.V;
+task.A2_am = task.V'*(task.P_rightinv'*task.A2*task.P_rightinv)*task.V;
+task.A4_am = task.V'*(task.P_rightinv'*task.A4*task.P_rightinv)*task.V;
 

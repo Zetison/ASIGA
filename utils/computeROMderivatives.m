@@ -28,8 +28,10 @@ for i = 1:noRHSs
     end
     task.U(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
 end
+
 i = 1:noRHSs;
-task.V = [task.V, task.U(:,shiftROM+i)];
+V = task.P_right*task.U(:,shiftROM+i);
+task.V = [task.V, V./max(abs(V),[],1)];
 
 if task.misc.printLog
     fprintf('using %12f seconds.', toc)

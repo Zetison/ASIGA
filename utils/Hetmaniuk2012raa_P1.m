@@ -62,6 +62,7 @@ if task.rom.computeROMresidualFine
         fprintf('using %12f seconds.', toc)
     end
 end
+task.V = task.P_rightinv*task.V; % Scale back to match scaling for task.U
 if task.rom.computeROMerror
     if task.misc.printLog
         fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM error ... ')

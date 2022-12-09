@@ -162,15 +162,15 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 2; % 7
+    msh.M = 7; % 7
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
     rom.computeROMresidualFine = true;
     rom.computeROMerror = 1;
-%     rom.J_max = 20;
-    sol.preconditioner = 'none';
+%     rom.J_max = 16;
+%     sol.preconditioner = 'none';
     misc.symmetric = 0;
 
     iem.N = 16; % 9
@@ -223,6 +223,9 @@ for i = 1:numel(BCs)
 %             f_P = [4290,1430];
 %             f_P = [4290,3146,1430];
 %             f_P = [1430,3146,4290];
+%             f_P = [1430,4290,3146];
+%             f_P = [1430,2860,3146];
+%             f_P = [1430,3146,2860];
             omega_P = 2*pi*f_P;
             f = f_P(1):12:f_P(end);
 %             f = f_P(1):120:f_P(end);

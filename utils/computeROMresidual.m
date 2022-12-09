@@ -16,17 +16,17 @@ for i = 1:n_batches
     task = getAnalyticSolutions(task);
     task = buildRHS(task,true,numel(omega));
     task = collectMatrices(task,false,true,false);
-    FFm = task.V'*task.FF;
+    FFm = task.V'*(task.P_rightinv'*task.FF);
     LHS = zeros(size(task.FF));
     for j = 1:numel(omega)
         task.misc.omega = omega(j);
         task = collectMatrices(task,false,false,true);
         Am = task.A0_am + omega(j)*task.A1_am + omega(j)^2*task.A2_am + omega(j)^4*task.A4_am;
         if strcmp(task.sol.preconditioner,'none')
-            UU = task.V*(Am\FFm(:,j));
+            UU = task.P_rightinv*(task.V*(Am\FFm(:,j)));
         else
             Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
-            UU = task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm(:,j))));
+            UU = task.P_rightinv*(task.V*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm(:,j)))));
         end
     
         LHS(:,j) = task.A*UU;

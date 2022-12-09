@@ -83,3 +83,6 @@ if ~ismember(task.misc.coreMethod,{'IGA', 'linear_FEM', 'h_FEM', 'hp_FEM', 'C0_I
     error('Unknown coreMethod')
 end
 
+if task.rom.useROM && numel(task.varCol) > 2 && task.varCol{3}.rho ~= 1000
+    error('This has not been properly implemented for ROM. Use with care!')
+end
