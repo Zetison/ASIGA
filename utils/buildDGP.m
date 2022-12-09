@@ -4,13 +4,10 @@ if nargin < 2
 end
 algorithm = 1;
 switch algorithm
-    case 0
-        task.V = task.U;
     case 1
         % Perform Gram-Schmidt orthogonalization
-        task.V = task.U;
-        for i = 1:size(task.V,2)
-%         for i = startCol:size(task.V,2)
+%         for i = 1:size(task.V,2)
+        for i = startCol:size(task.V,2)
             for j = 1:i-1
                 task.V(:,i) = task.V(:,i) - (task.V(:,j)'*task.V(:,i))*task.V(:,j);
             end
@@ -18,7 +15,6 @@ switch algorithm
         end
     case 2
         % https://blogs.mathworks.com/cleve/2016/07/25/compare-gram-schmidt-and-householder-orthogonalization-algorithms/
-        task.V = task.U;
         U = task.V;
         [n,p] = size(U);
         task.V = zeros(n,p);
@@ -34,7 +30,6 @@ switch algorithm
         end
     case 3
         % https://github.com/areslp/matlab/blob/master/drtoolbox/techniques/mgs.m
-        task.V = task.U;
         U = task.V;
         [~, n] = size(U);
         V = U;
@@ -51,7 +46,6 @@ switch algorithm
         end
         task.V = V;
     case 4
-        task.V = task.U;
         % https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
         U = task.V;
         [n,k] = size(U);

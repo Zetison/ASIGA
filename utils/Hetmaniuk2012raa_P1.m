@@ -53,14 +53,11 @@ end
 if task.rom.computeROMresidualFine
     if task.misc.printLog
         fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM residual ... ')
-    end
+    end    
+    omega = union(omega,task.rom.history(end).omega); % Add all values of omega used in adaptive algorithm to obtain interpolatory plots
     residual = computeROMresidual(task, omega);
     task.rom.history(end).residualFine = residual;
     task.rom.history(end).omegaFine = omega;
-%     semilogy(omega, residual,'DisplayName','Residual')
-%     hold on
-%     set(gca,'yscale','log')
-%     keyboard
     if task.misc.printLog
         fprintf('using %12f seconds.', toc)
     end
@@ -71,22 +68,8 @@ if task.rom.computeROMerror
     end
     relError = computeROMerror(task, omega);
     task.rom.history(end).relError = relError;
-%     semilogy(omega, relError,'DisplayName','Error')
-%     hold on
-%     set(gca,'yscale','log')
-%     keyboard
     if task.misc.printLog
         fprintf('using %12f seconds.', toc)
     end
 end
-
-% close all
-% history = task.rom.history;
-% for i = 1:numel(history)
-%     semilogy(history(i).omega, history(i).residual,'DisplayName',num2str(i))
-%     hold on
-% end
-% legend show
-% set(gca,'yscale','log')
-% keyboard
 task.misc.printLog = oldprintLog;
