@@ -19,7 +19,7 @@ J_P = [];
 counter = 1;
 while ~isempty(omega_T_new)
     J_new = zeros(1,numel(omega_T_new));
-    for p = numel(omega_T_new):-1:1
+    for p = 1:numel(omega_T_new)
         % Algorithm P2 in Hetmaniuk2013aas
         [task, J_new(p)] = Hetmaniuk2012raa_P2(task, union(omega_T_new,omega_T), omega_T_new(p));
     end

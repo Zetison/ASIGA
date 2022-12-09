@@ -162,22 +162,31 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 6; % 7
+    msh.M = 2; % 7
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
-    rom.adaptiveROM = 0;
+    rom.adaptiveROM = 1;
     rom.computeROMresidualFine = true;
-    rom.computeROMerror = 0;
-    rom.J_max = 16;
+    rom.computeROMerror = 1;
+%     rom.J_max = 20;
     sol.preconditioner = 'none';
     misc.symmetric = 0;
+
+    iem.N = 16; % 9
+    iem.p_ie = 5;
+    iem.s_ie = 2;
+    iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
+    
+    pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
+    pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+    pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
     switch misc.BC
         case {'SHBC','NBC'}
             k_pml = 9;
             k_P = linspace(9, 36, 3);
 %             k_P = [9, 36];
-            k_P = [36, 9];
+%             k_P = [36, 9];
 %             k_P = linspace(9, 36, 3)/5;
             k = k_P(1):0.05:k_P(end);
 %             k = k_P(1):1:k_P(end);
@@ -201,11 +210,17 @@ for i = 1:numel(BCs)
                 postPlot(3+j).plotResults = false;
                 postPlot(3+j).printResults = false;
             end
+
+            pml.t = 0.2*varCol{1}.R;         % thickness of PML
+            pml.gamma = 2.5;          % parameter for sigmaType = 1
+            misc.r_a = 1.2*varCol{1}.R;
+%             rom.noVecs = [8,16,24,32];
+            rom.noVecs = 32;
         case {'SSBC','NNBC'}
             k_pml = 1430*2*pi/varCol{1}.c_f;
             f_P = linspace(1430, 4290, 5);
 %             f_P = [1430,4290];
-            f_P = [4290,1430];
+%             f_P = [4290,1430];
 %             f_P = [4290,3146,1430];
 %             f_P = [1430,3146,4290];
             omega_P = 2*pi*f_P;
@@ -213,7 +228,7 @@ for i = 1:numel(BCs)
 %             f = f_P(1):120:f_P(end);
 %             f = f_P(1):1200:f_P(end);
 %             f = linspace(1430, 4290, 9);
-            f = f_P(end);
+%             f = f_P(end);
             f = sort(unique([f_P,f]));
             omega = 2*pi*f;
             misc.omega = omega;
@@ -229,31 +244,14 @@ for i = 1:numel(BCs)
                 postPlot(3+j).plotResults = true;
                 postPlot(3+j).printResults = true;
             end
-    end
-    rom.omega = omega_P;
 
-    iem.N = 16; % 9
-    iem.p_ie = 5;
-    iem.s_ie = 2;
-    iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
-    
-    pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-    pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
-    pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-    switch misc.BC
-        case {'SHBC','NBC'}
-            pml.t = 0.2*varCol{1}.R;         % thickness of PML
-            pml.gamma = 2.5;          % parameter for sigmaType = 1
-            misc.r_a = 1.2*varCol{1}.R;
-%             rom.noVecs = [8,16,24,32];
-            rom.noVecs = 32;
-        case {'SSBC','NNBC'}
 %             rom.noVecs = [4,8,12,20,32];
-            rom.noVecs = 16;
+            rom.noVecs = 20;
             pml.t = 0.2*varCol{1}.R;         % thickness of PML
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.2*varCol{1}.R;
     end
+    rom.omega = omega_P;
     if ~(pml.sigmaType == 1)
         pml.gamma = 1/(k_pml*pml.t);
     end
@@ -360,21 +358,22 @@ for i_task = 1:numel(study.tasks)
         end
         legend off
         residual = task.rom.history(end).residualFine;
-        relError = task.rom.history(end).relError;
         omegaFine = task.rom.history(end).omegaFine;
         semilogy(omegaFine/c_f,residual,'blue','DisplayName','Final relative residual')
     
         options.x = omegaFine.'/c_f;
         options.y = residual.';
         printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeResidual'], options)
-    
-        semilogy(omegaFine/c_f,relError,'green','DisplayName','Final relative error')
-    
-        options.x = omegaFine.'/c_f;
-        options.y = relError.';
-        options.xlabel = 'k';
-        options.ylabel = 'error';
-        printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeError'], options)
+        if isfield(task.rom.history(end),'relError')
+            relError = task.rom.history(end).relError;
+            semilogy(omegaFine/c_f,relError,'green','DisplayName','Final relative error')
+        
+            options.x = omegaFine.'/c_f;
+            options.y = relError.';
+            options.xlabel = 'k';
+            options.ylabel = 'error';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeError'], options)
+        end
         set(gca,'yscale','log')
         ylim([5e-16,10])
         ylabel('Relative error/residual')

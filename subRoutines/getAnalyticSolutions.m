@@ -365,11 +365,9 @@ switch varCol{1}.applyLoad
     otherwise
         error('Not implemented')
 end
-temp = zeros(numel(d_vecX),varCol{1}.noRHSs);
 c_f = varCol{1}.c_f;
 k = varCol{1}.omega/c_f;
-temp(:,2:end) = (1i./d_vecX)*m(2:end)/k;
-dp_inc_ROM = dp_incdn_(X,n).*(1i*d_vecX/c_f).^m.*(1-temp);
+dp_inc_ROM = dp_incdn_(X,n).*(1i*d_vecX/c_f).^m.*(1-(1i./d_vecX)*m/k);
 
 function p_inc_ROM = p_inc_ROM(X,varCol,p_inc_,omega,symmetric,shiftROM)
 

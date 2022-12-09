@@ -23,10 +23,10 @@ else
 end
 dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
 for i = 1:noRHSs
-    j = shiftROM + i-1;
-    b = task.FF(:,i);
+    j = shiftROM + i-1; % Derivative order
+    b = task.FF(:,i);   % Derivative of right hand side
     for k = 1:min(j,numel(dAdomega))
-        b = b - nchoosek(j,k)*dAdomega{k}*task.U(:,j-k+1);
+        b = b - nchoosek(j,k)*dAdomega{k}*task.U(:,noPrevColsU+i-k);
     end
     task.U(:,noPrevColsU+i) = task.Pinv*(dA\(task.Pinv*b));
 end
