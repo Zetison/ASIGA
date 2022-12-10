@@ -32,6 +32,8 @@ while true
     task = buildRHS(task);
     task = collectMatrices(task,false,true,false);
     task = computeROMderivatives(task,shiftROM);
+%     task.rom.omega_U = [task.rom.omega_U, omega(p)*ones(1,J-shiftROM)];
+%     task.rom.J_U = [task.rom.J_U, shiftROM:(J-1)];
     task = buildDGP(task,noColsInV+shiftROM+1);
 
     residual = computeROMresidual(task, omega_k_star);

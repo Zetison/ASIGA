@@ -1,16 +1,20 @@
 function task = Hetmaniuk2012raa_P1(task)
 
 
-if task.misc.printLog
-    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing ROM basis adaptively ... ')
+oldprintLog = task.misc.printLog;
+if oldprintLog
+    tic
+    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing ROM basis adaptively ')
 end
 omega = task.misc.omega;
 n_c = task.rom.n_c;
-oldprintLog = task.misc.printLog;
 task.misc.printLog = false;
 
 % Algorithm P1 in Hetmaniuk2013aas available at https://www.doi.org/10.1002/nme.4436
 task.V = [];
+task.U = [];
+task.rom.omega_U = [];
+task.rom.J_U = [];
 omega_T = zeros(1,0); % Initiate with an empty row vector
 omega_P = sort(task.rom.omega);
 omega_T_new = [omega_P(1),omega_P(end)];
@@ -23,6 +27,7 @@ while ~isempty(omega_T_new)
         % Algorithm P2 in Hetmaniuk2013aas
         [task, J_new(p)] = Hetmaniuk2012raa_P2(task, union(omega_T_new,omega_T), omega_T_new(p));
     end
+    fprintf('\nAdded %d new snapshots to ROM basis', numel(omega_T_new))
     [omega_T,sortIdx] = sort([omega_T,omega_T_new]);
     omega_T_new = zeros(1,0); % Initiate with an empty row vector
     J_P = [J_P,J_new];
@@ -47,30 +52,21 @@ while ~isempty(omega_T_new)
     task.rom.history(counter).omega_T_new = omega_T_new;
     counter = counter + 1;
 end
-if task.misc.printLog
-    fprintf('using %12f seconds.', toc)
+if oldprintLog
+    fprintf('Total time for adaptive ROM basis computations %12f seconds.', toc)
 end
 if task.rom.computeROMresidualFine
-    if task.misc.printLog
-        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM residual ... ')
+    if oldprintLog
+        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM residual/error ... ')
     end    
     omega = union(omega,task.rom.history(end).omega); % Add all values of omega used in adaptive algorithm to obtain interpolatory plots
-    residual = computeROMresidual(task, omega);
+    [residual, relError] = computeROMresidual(task, omega);
+    task.rom.history(end).relError = relError;
     task.rom.history(end).residualFine = residual;
     task.rom.history(end).omegaFine = omega;
-    if task.misc.printLog
+    if oldprintLog
         fprintf('using %12f seconds.', toc)
     end
 end
 task.V = task.P_rightinv*task.V; % Scale back to match scaling for task.U
-if task.rom.computeROMerror
-    if task.misc.printLog
-        fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM error ... ')
-    end
-    relError = computeROMerror(task, omega);
-    task.rom.history(end).relError = relError;
-    if task.misc.printLog
-        fprintf('using %12f seconds.', toc)
-    end
-end
 task.misc.printLog = oldprintLog;

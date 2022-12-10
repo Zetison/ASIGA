@@ -165,20 +165,23 @@ for i = 1:numel(applyLoads)
 %         rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
         rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
         rom.adaptiveROM  = true;
+        rom.computeROMresidualFine = true;
+        rom.computeROMerror = true;
         if strcmp(misc.method,'PML')
             misc.formulation = {'GSB'};
         else
             misc.formulation = {'BGC'};
         end
         msh.degree = 3:4;
-        msh.degree = 4; % 4
-        msh.M = 6:7; % 7
-        msh.M = 7; % 7
+%         msh.degree = 4; % 4
+        msh.M = 7:8; % 7
+%         msh.M = 4; % 7
         misc.symmetric = 0;
         
         misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
         
         rom.useROM = true;
+        rom.adaptiveROM = true;
 %         rom.noVecs = [4,8,16,32];
         rom.noVecs = 16;
 
@@ -196,7 +199,7 @@ for i = 1:numel(applyLoads)
         else
             loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.noVecs','rom.basisROM','misc.omega'};
         end
-%         collectIntoTasks
+        collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         misc.scatteringCase = 'BI';
@@ -237,7 +240,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-        collectIntoTasks
+%         collectIntoTasks
     end
 end
 
@@ -249,4 +252,87 @@ plot(x,y,'DisplayName','Experiment')
 legend('off');
 legend('show');
 hold on
+
+for i_task = 1:numel(study.tasks)
+    task = study.tasks(i_task).task;
+    c_f = task.varCol{1}.c_f;
+
+    if isfield(task.rom,'history')
+        history = task.rom.history;
+        a = task.varCol{1}.R1;
+        options.xlabel = 'ka';
+        options.ylabel = 'residual';
+        for i = 1:numel(history)
+            figure(20+i)
+            omega = task.rom.history(i).omega;
+            residual = task.rom.history(i).residual;
+            hold on
+        
+            omega_P = history(i).omega_P;
+            J_P = history(i).J_P;
+            semilogy(a*omega_P/c_f,1e-15*ones(size(omega_P)),'o','color','magenta','DisplayName','Interpolation points')
+            options.x = a*omega_P.'/c_f;
+            options.y = 1e-15*ones(size(omega_P)).';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_InterpolationPoints_iter' num2str(i)], options)
+            for j = 1:numel(omega_P)
+                text(a*(omega_P(j)+omega_P(end)/200)/c_f,1e-15,num2str(J_P(j)),'color','magenta')
+            end
+            options.x = a*omega_P.'/c_f;
+            options.y = J_P.';
+            options.ylabel = 'J_P';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_noDerivatives_iter' num2str(i)], options)
+    
+            semilogy(a*[omega_P(1),omega_P(end)]/c_f,task.rom.tolerance*ones(1,2),'red','DisplayName','Tolerance')
+            options.x = a*[omega_P(1),omega_P(end)].'/c_f;
+            options.y = task.rom.tolerance*ones(2,1);
+            options.ylabel = 'residual';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_tolerance'], options)
+    
+            semilogy(a*omega/c_f,residual,'*','color','black','DisplayName','Residual check points')
+            options.x = a*omega.'/c_f;
+            options.y = residual.';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_residual_iter' num2str(i)], options)
+    
+            omega_T_new = history(i).omega_T_new;
+            [~,idx] = ismember(omega,omega_T_new);
+            semilogy(a*omega_T_new/c_f,residual(logical(idx)),'o','color','cyan','DisplayName','New interpolation point')
+    
+            options.x = a*omega_T_new.'/c_f;
+            options.y = residual(logical(idx)).';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_NewInterpolationPoints_iter' num2str(i)], options)
+    
+            ylim([5e-16,10])
+            set(gca,'yscale','log')
+            legend show
+            savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
+        end
+        legend off
+        if isfield(task.rom.history(end),'residualFine')
+            residual = task.rom.history(end).residualFine;
+            omegaFine = task.rom.history(end).omegaFine;
+            semilogy(a*omegaFine/c_f,residual,'blue','DisplayName','Final relative residual')
+        
+            options.x = a*omegaFine.'/c_f;
+            options.y = residual.';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeResidual'], options)
+        end
+        if isfield(task.rom.history(end),'relError')
+            relError = task.rom.history(end).relError;
+            semilogy(a*omegaFine/c_f,relError,'green','DisplayName','Final relative error')
+        
+            options.x = a*omegaFine.'/c_f;
+            options.y = relError.';
+            options.xlabel = 'k';
+            options.ylabel = 'error';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeError'], options)
+        end
+        set(gca,'yscale','log')
+        ylim([5e-16,10])
+        ylabel('Relative error/residual')
+        xlabel('Wavenumber')
+        legend show
+        savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
+    end
+end
+
 

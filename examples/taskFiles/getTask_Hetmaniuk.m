@@ -162,18 +162,18 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 7; % 7
+    msh.M = 4; % 7
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
     rom.computeROMresidualFine = true;
     rom.computeROMerror = 1;
-%     rom.J_max = 16;
+    rom.J_max = 20;
 %     sol.preconditioner = 'none';
     misc.symmetric = 0;
 
-    iem.N = 16; % 9
+    iem.N = 3; % 9
     iem.p_ie = 5;
     iem.s_ie = 2;
     iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
@@ -226,6 +226,7 @@ for i = 1:numel(BCs)
 %             f_P = [1430,4290,3146];
 %             f_P = [1430,2860,3146];
 %             f_P = [1430,3146,2860];
+            f_P = [1430,3146,4290];
             omega_P = 2*pi*f_P;
             f = f_P(1):12:f_P(end);
 %             f = f_P(1):120:f_P(end);
@@ -335,11 +336,13 @@ for i_task = 1:numel(study.tasks)
             end
             options.x = omega_P.'/c_f;
             options.y = J_P.';
+            options.ylabel = 'J_P';
             printResultsToFile([task.resultsFolder, '/', task.saveName '_noDerivatives_iter' num2str(i)], options)
     
             semilogy([omega_P(1),omega_P(end)]/c_f,task.rom.tolerance*ones(1,2),'red','DisplayName','Tolerance')
             options.x = [omega_P(1),omega_P(end)].'/c_f;
             options.y = task.rom.tolerance*ones(2,1);
+            options.ylabel = 'residual';
             printResultsToFile([task.resultsFolder, '/', task.saveName '_tolerance'], options)
     
             semilogy(omega/c_f,residual,'*','color','black','DisplayName','Residual check points')
@@ -358,15 +361,18 @@ for i_task = 1:numel(study.tasks)
             ylim([5e-16,10])
             set(gca,'yscale','log')
             legend show
+            savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
         end
         legend off
-        residual = task.rom.history(end).residualFine;
-        omegaFine = task.rom.history(end).omegaFine;
-        semilogy(omegaFine/c_f,residual,'blue','DisplayName','Final relative residual')
-    
-        options.x = omegaFine.'/c_f;
-        options.y = residual.';
-        printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeResidual'], options)
+        if isfield(task.rom.history(end),'residualFine')
+            residual = task.rom.history(end).residualFine;
+            omegaFine = task.rom.history(end).omegaFine;
+            semilogy(omegaFine/c_f,residual,'blue','DisplayName','Final relative residual')
+        
+            options.x = omegaFine.'/c_f;
+            options.y = residual.';
+            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeResidual'], options)
+        end
         if isfield(task.rom.history(end),'relError')
             relError = task.rom.history(end).relError;
             semilogy(omegaFine/c_f,relError,'green','DisplayName','Final relative error')
@@ -382,6 +388,7 @@ for i_task = 1:numel(study.tasks)
         ylabel('Relative error/residual')
         xlabel('Wavenumber')
         legend show
+        savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
     end
 end
 

@@ -15,22 +15,38 @@ dAdomega{2} = 2*task.A2 + 12*omega^2*task.A4;
 dAdomega{3} = 24*omega*task.A4;
 dAdomega{4} = 24*task.A4;
 if shiftROM > 0
-    task.U = [task.U, zeros(size(task.FF))];
+    task.U_p = [task.U_p, zeros(size(task.FF))];
 else
-    task.U = zeros(size(task.FF));
+    task.U_p = zeros(size(task.FF));
 end
 dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
 for i = 1:noRHSs
     j = shiftROM + i-1; % Derivative order
     b = task.FF(:,i);   % Derivative of right hand side
     for k = 1:min(j,numel(dAdomega))
-        b = b - nchoosek(j,k)*dAdomega{k}*task.U(:,shiftROM+i-k);
+        b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
     end
-    task.U(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+    task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
 end
 
 i = 1:noRHSs;
-V = task.P_right*task.U(:,shiftROM+i);
+% if ~isfield(task,'U')
+%     task.U = [];
+% end
+% if 1
+%     if 0
+%         task.U = [task.U, task.U_p(:,shiftROM+i)];
+%     else
+%         V = task.P_right*task.U_p(:,shiftROM+i);
+%         task.U = [task.U, V./max(abs(V),[],1)];
+%     end
+%     V = task.P_right*task.U_p(:,shiftROM+i);
+%     task.V = [task.V, V./max(abs(V),[],1)];
+% else
+%     task.V = [task.V, task.U_p(:,shiftROM+i)];
+%     task.U = [task.U, task.P_right*task.U_p(:,shiftROM+i)];
+% end
+V = task.P_right*task.U_p(:,shiftROM+i);
 task.V = [task.V, V./max(abs(V),[],1)];
 
 if task.misc.printLog

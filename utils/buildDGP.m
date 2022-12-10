@@ -2,8 +2,22 @@ function task = buildDGP(task,startCol)
 if nargin < 2
     startCol = 1;
 end
-% if ~all(sort(task.rom.omega) == task.rom.omega)
-%     task.V = [task.V(:,1:16), task.V(:,33:end), task.V(:,17:32)];
+% if task.rom.adaptiveROM
+%     if 1
+%         if false
+%             [~, indices] = sort(task.rom.J_U);
+%             [~, indices] = sort(task.rom.omega_U(indices));
+%         else
+%             [~, indices] = sort(task.rom.omega_U);
+%         end
+%         task.V = task.U(:,indices);
+%     else
+%         task.V = task.U;
+%     end
+% else
+% %     [~, indices] = sort(task.rom.omega_U);
+% %     task.V = task.U(:,indices);
+%     task.V = task.U;
 % end
 algorithm = 1;
 switch algorithm
@@ -67,5 +81,9 @@ end
 task.A0_am = task.V'*(task.P_rightinv'*task.A0*task.P_rightinv)*task.V;
 task.A1_am = task.V'*(task.P_rightinv'*task.A1*task.P_rightinv)*task.V;
 task.A2_am = task.V'*(task.P_rightinv'*task.A2*task.P_rightinv)*task.V;
-task.A4_am = task.V'*(task.P_rightinv'*task.A4*task.P_rightinv)*task.V;
+if task.misc.symmetric
+    task.A4_am = task.V'*(task.P_rightinv'*task.A4*task.P_rightinv)*task.V;
+else
+    task.A4_am = zeros(size(task.A0_am));
+end
 
