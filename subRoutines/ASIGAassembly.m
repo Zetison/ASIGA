@@ -59,7 +59,7 @@ switch task.misc.method
                 if task.misc.printLog
                     fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Building ABC matrix ... ')
                 end
-                task.varCol{1} = addABC(task.varCol{1}); 
+                task = addABC(task); 
 
                 task.timeBuildSystem = task.timeBuildSystem + toc;
                 if task.misc.printLog

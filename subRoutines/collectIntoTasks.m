@@ -1,5 +1,5 @@
 
-structs = {'varCol','misc','msh','prePlot','sol','err','ffp','para','iem','pml','bem','mfs','rt','rom'};
+structs = {'varCol','misc','msh','prePlot','sol','err','ffp','para','iem','abc','pml','bem','mfs','rt','rom'};
 for i = 1:numel(structs)
     task.(structs{i}) = eval(structs{i});
 end
