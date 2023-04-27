@@ -22,9 +22,9 @@ misc.coreMethod = {'IGA'};
 misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
-BCs = {'SSBC'};
+% BCs = {'SSBC'};
 % BCs = {'NNBC'};
-% BCs = {'SHBC','SSBC','NNBC'};
+BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -162,7 +162,7 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 4; % 7
+    msh.M = 7; % 7
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
@@ -284,7 +284,7 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-%     collectIntoTasks
+    collectIntoTasks
     
     %% Run paraview visualization case
     misc.omega = misc.omega(end);
@@ -307,7 +307,7 @@ for i = 1:numel(BCs)
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-%     collectIntoTasks
+    collectIntoTasks
 end
 
 function addCommands_(study)
