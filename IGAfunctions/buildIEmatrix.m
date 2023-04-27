@@ -417,8 +417,8 @@ if IElocSup
     [Q, W] = gaussTensorQuad(50);
     %% Build global matrices
     
-    for e = 1:noElems
-%     parfor e = 1:noElems
+%     for e = 1:noElems
+    parfor e = 1:noElems
         patch = pIndex(e);
         knots = knotVecs{patch};
         Xi_e = elRange{1}(index(e,1),:);

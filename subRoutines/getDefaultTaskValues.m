@@ -170,6 +170,10 @@ bem.colBEM_C0        	= 0;        	% In collocation BEM: the scaling factor movi
 bem.colMethod         	= 'Grev';     	% In collocation BEM: Location of collocation points
 bem.internalPts      	= zeros(1,3);   % Internal points for the CHIEF method (Combined Helmholtz integral equation formulation)
 
+
+%% Settings for the ABC (absorbing boundary conditions)
+abc.N = 2; % order of the operator
+
 %% Settings for the IEM (infinite element method)
 iem.N     	 = 3;            % Number of basis function in the radial direction for the IEM
 iem.IEbasis	 = 'Chebyshev';  % Choose between 'Chebyshev', 'Bernstein' and 'Lagrange'

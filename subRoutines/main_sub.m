@@ -52,6 +52,7 @@ tic
 if printLog
     fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing derived quantities ... ')
 end
+
 task = computeDerivedQuantities(task);
 
 %% Check NURBS compatibility

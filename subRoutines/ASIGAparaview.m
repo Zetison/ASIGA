@@ -1,4 +1,6 @@
 function task = ASIGAparaview(task)
+resultsFolder = task.resultsFolder;
+printLog = task.misc.printLog;
 if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
     tic
     if task.misc.plotResidualError && task.analyticSolutionExist && strcmp(task.misc.formulation,'GCBIE')
@@ -59,6 +61,7 @@ if ~task.rom.useROM && ~strcmp(task.misc.method,'RT')
             vtfFileName = [resultsFolderNameParaview '/' task.saveName];
             para.name = vtfFileName;
         end
+        M = task.msh.M;
 
         para.extraXiPts = eval(para.extraXiPts);
         para.extraEtaPts = eval(para.extraEtaPts);

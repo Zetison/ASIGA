@@ -24,6 +24,11 @@ if isfield(task.msh, 'Xi')
 else
     Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 end
+if isfield(varCol{1},'theta_eta')
+    theta_eta = varCol{1}.theta_eta;
+else
+    theta_eta = pi;
+end
 if isfield(varCol{1},'c_z')
     c_x = varCol{1}.c_x;
     if isfield(varCol{1},'c_y')
@@ -88,7 +93,7 @@ if varCol{1}.boundaryMethod
     varCol{1}.patchTop = getPatchTopology(fluid);
     if numel(varCol) > 2
         if varCol{3}.R > 0
-            fluid_i = getEllipsoidData('C', varCol{2}.R, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi);
+            fluid_i = getEllipsoidData('C', varCol{2}.R, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi, 'theta_eta', theta_eta);
             fluid_i_inner = flipNURBSparametrization(subNURBS(fluid_i,'at',[0,0;0,0;1,0]),1);
             fluid_i_outer = subNURBS(solid,'at',[0,0;0,0;1,0]);
             fluid_i_inner = refineNURBSevenly(fluid_i_inner,(2^(M-1)-1)/(c_max*pi/2),{},0);
@@ -153,7 +158,7 @@ else
     c_max = max(C);
     L_gamma = 2*c_z_g;
 
-    fluid = getEllipsoidData('C', C, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi);
+    fluid = getEllipsoidData('C', C, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi, 'theta_eta', theta_eta);
     if false
         fluid = explodeNURBS(fluid,2);
     end
@@ -183,7 +188,7 @@ else
     task.misc.r_a = evaluateProlateCoords([0,0,C(end)],Upsilon);
 
     if numel(varCol) > 1
-        solid = getEllipsoidData('C', C_g, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
+        solid = getEllipsoidData('C', C_g, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi, 'theta_eta', theta_eta);
         solid = makeUniformNURBSDegree(solid,degreeVec);
         if isfield(varCol{2},'refinement')
             solid = insertKnotsInNURBS(solid,varCol{2}.refinement(M,t,t_fluid));
@@ -194,7 +199,7 @@ else
     end
 
     if numel(varCol) > 2
-        fluid_i = getEllipsoidData('C', C_g - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi);
+        fluid_i = getEllipsoidData('C', C_g - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi, 'theta_eta', theta_eta);
         fluid_i = makeUniformNURBSDegree(fluid_i,degreeVec);
         if isfield(varCol{3},'refinement')
             fluid_i = insertKnotsInNURBS(fluid_i,varCol{3}.refinement(M));

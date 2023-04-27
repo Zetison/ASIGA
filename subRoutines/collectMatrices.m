@@ -46,6 +46,8 @@ switch task.misc.method
                     AindicesInf = noCols_tot - task.varCol{1}.noDofs+(1:task.varCol{1}.noDofs_new);
                     noCols_tot = noCols_tot - task.varCol{1}.noDofs + task.varCol{1}.noDofs_new;
                     noRows_tot = noRows_tot - task.varCol{1}.noDofs + task.varCol{1}.noDofs_new;
+                elseif strcmp(task.misc.method,'ABC') 
+                    AindicesInf = noCols_tot - task.varCol{1}.noDofs + (1:task.varCol{1}.noDofs);
                 end
                 task.varCol{1}.noCols_tot = noCols_tot;
                 task.varCol{1}.noRows_tot = noRows_tot;
@@ -161,7 +163,7 @@ switch task.misc.method
                 end
             end
             
-            if collectLHS && strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG')
+            if collectLHS && (strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG') || strcmp(task.misc.method,'ABC'))
                 if isfield(task.varCol{1},'Ainf')
     	            task.A0(AindicesInf,AindicesInf) = task.A0(AindicesInf,AindicesInf) + task.varCol{1}.Ainf/task.varCol{1}.rho; 
                     task.varCol{1} = rmfield(task.varCol{1},'Ainf');

@@ -280,6 +280,8 @@ if plotResults
                 else
                     xLabel = '$$ka$$';
                 end
+            case {'varCol{1}.nepw'}
+                xLabel = 'Number of elements per wavelength';
             case 'ffp.beta'
                 xLabel = '$$\beta$$';
             case 'iem.s_ie'
