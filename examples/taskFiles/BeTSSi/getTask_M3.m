@@ -55,11 +55,11 @@ iem.boundaryMethod = 0;   % Attach infinite elements directly onto the scatterer
 iem.N = round(2.^(msh.M-1)/4+msh.degree-1); 
 pml.t = 0.25*varCol{1}.R2;         % thickness of PML
 pml.refinement = @(M) 2^(M-1)/4-1;
-pml.sigmaType = 1:3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.sigmaType = 1:3;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
 pml.n = [2,2,1];
 pml.gamma = [5,NaN,NaN];
 pml.dirichlet = [0,0,1];	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
 pml.n = 2;
 pml.gamma = 5;
 pml.dirichlet = 1;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)

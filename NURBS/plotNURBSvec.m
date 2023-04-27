@@ -375,11 +375,16 @@ for patch = 1:noPatches
     if plotControlPolygon
         coeffs = subasgnArr(nurbs.coeffs,[],size(nurbs.coeffs,1)); % Remove the weights
         dimensions = size(coeffs);
+        number = nurbs.number;
+
         if d_p == 1
             v = coeffs;
         else
-            number = nurbs.number;
-            v = zeros(d,3*prod(number)+prod(number([1,2]))+prod(number([1,3]))+prod(number([2,3])));
+            if d_p == 2
+                v = zeros(d,d_p*prod(number)+sum(number));
+            elseif d_p == 3
+                v = zeros(d,3*prod(number)+prod(number([1,2]))+prod(number([1,3]))+prod(number([2,3])));
+            end
             counter = 1;
             for i = 1:d_p
                 indices = 1:d_p+1;

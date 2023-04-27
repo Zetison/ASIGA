@@ -53,7 +53,7 @@ while ~isempty(omega_T_new)
     counter = counter + 1;
 end
 if oldprintLog
-    fprintf('Total time for adaptive ROM basis computations %12f seconds.', toc)
+    fprintf('\nTotal time for adaptive ROM basis computations %12f seconds.', toc)
 end
 if task.rom.computeROMresidualFine
     if oldprintLog

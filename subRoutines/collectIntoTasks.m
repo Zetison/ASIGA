@@ -62,6 +62,7 @@ studies(counter).loopParametersArr = loopParametersArr;
 studies(counter).runTasksInParallel = runTasksInParallel;
 studies(counter).noCoresToUse = noCoresToUse;
 studies(counter).saveStudies = saveStudies;
+studies(counter).appyCommandsAt = appyCommandsAt;
 
 
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr, connectedParameters, childrenParameters);

@@ -244,7 +244,7 @@ IEbasis	= 'Chebyshev';
 
 %% Settings for the PML (perfectly matched layers)
 gamma = -log10(1e9*eps); % choosing gamma = -log10(eps) yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-sigmaType = 2; % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = gamma*xi^2
+sigmaType = 2; % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = gamma*xi^2
 t_PML = NaN; % radius to the PML layer for spherical coordinates
 
 %% Settings for the MFS (method of fundamental solution)

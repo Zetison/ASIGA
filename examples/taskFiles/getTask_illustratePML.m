@@ -89,7 +89,7 @@ misc.r_a = c_x*1.1;
 
 loopParameters = {'msh.M','msh.degree','misc.coreMethod'};
 
-pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
 pml.n = 1;
 % misc.coreMethod = {'linear_FEM'};
 misc.coreMethod = {'IGA'};

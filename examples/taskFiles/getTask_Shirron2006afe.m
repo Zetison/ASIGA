@@ -70,7 +70,7 @@ misc.r_a = 1.25*a;
 connectedParameters = {{'pml.sigmaType','pml.n','pml.dirichlet','pml.gamma'}};
 
 pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 1:3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.sigmaType = 1:3;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
 pml.n = [2,2,1];
 pml.gamma = [5,NaN,NaN];
 pml.t = 0.25*a;         % thickness of PML
@@ -144,7 +144,7 @@ misc.progressBars = 0;
 runTasksInParallel = 1;       % Run tasks in parallel
 misc.checkNURBSweightsCompatibility = false;
 
-pml.sigmaType = 2:4;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.sigmaType = 2:4;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
 pml.n = [1,2];
 pml.refinement = @(M) 2^(M-4)-1;
 % pml.gamma = NaN;

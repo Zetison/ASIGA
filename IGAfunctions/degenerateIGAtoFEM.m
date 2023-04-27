@@ -16,7 +16,11 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
     end
     for patch = 1:numel(nurbsPatches)
         nurbs = nurbsPatches{patch};
+        d_p = nurbs.d_p;
         P = nurbs.coeffs;
+        degree = nurbs.degree;
+        number = nurbs.number;
+        t = nurbs.knots;
 
         switch nurbs.d_p
             case 3
@@ -62,81 +66,61 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         nurbs.GLL = {tXi,tEta,tZeta};
 
                     case 'hp_FEM'
-                        n_xi = nurbs.number(1);
-                        n_eta = nurbs.number(2);
-                        n_zeta = nurbs.number(3);
-                        p_xi = nurbs.degree(1);
-                        p_eta = nurbs.degree(2);
-                        p_zeta = nurbs.degree(3);
-                        t_xi = nurbs.knots{1};
-                        t_eta = nurbs.knots{2};
-                        t_zeta = nurbs.knots{3};
-                        Q = zeros(size(P)-[1 0 0 0]);
-                        for i = 1:p_xi:n_xi
-                            for j = 1:p_eta:n_eta
-                                for l = 1:p_zeta:n_zeta
-                                    Q(:,i,j,l) = P(1:3,i,j,l);
-                                end
-                            end
-                        end
-    % 
-    %                     xi_tilde = splinesGLL(t_xi,p_xi+1);
-    %                     eta_tilde = splinesGLL(t_eta,p_eta+1);
-    %                     zeta_tilde = splinesGLL(t_zeta,p_zeta+1);
-                        xi_tilde = aveknt(t_xi, p_xi+1);
-                        eta_tilde = aveknt(t_eta, p_eta+1);
-                        zeta_tilde = aveknt(t_zeta, p_zeta+1);
-
-                        parfor i = 1:n_xi
-                            for j = 1:n_eta
-                                for l = 1:n_zeta
-                                    if ~(mod(l-1,p_zeta)== 0 && mod(j-1,p_eta) == 0 && mod(i-1,p_xi) == 0)
-                                        Q(:,i,j,l) = evaluateNURBS(nurbs,[xi_tilde(i),eta_tilde(j),zeta_tilde(l)]);
-                                    end                                
-                                end
-                            end
+                        number = zeros(1,d_p);
+                        t = cell(1,d_p);
+                        xi_t = cell(1,d_p);
+                        degree = min(nurbs.degree,task.msh.degree);
+                        for i = 1:nurbs.d_p
+                            t{i} = [0,repelem(unique(nurbs.knots{i}),degree(i)),1];
+                            number(i) = numel(t{i})-(degree(i)+1);
+                            xi_t{i} = aveknt(t{i}, degree(i)+1);
+%                             xi_t{1}{i} = splinesGLL(t{i}, degree(i)+1);
                         end
 
+                        % Evaluate original nurbs at Greville abscissa for interpolation
+                        [xi,eta,zeta] = ndgrid(xi_t{1},xi_t{2},xi_t{3});                        
+                        Q = reshape(evaluateNURBSvec(nurbs,[xi(:),eta(:),zeta(:)]).',[nurbs.d,number]);
 
-                        B_xi_arr = zeros(n_xi,p_xi+1);
-                        i_xi_arr = zeros(n_xi,1);
-                        parfor i = 1:n_xi
-                            i_xi_p = findKnotSpan(n_xi, p_xi, xi_tilde(i), t_xi)        
-                            B_xi_arr(i,:) = BsplineBasis(i_xi_p, xi_tilde(i), p_xi, t_xi);
+
+                        B_xi_arr = zeros(number(1),degree(1)+1);
+                        i_xi_arr = zeros(number(1),1);
+                        parfor i = 1:number(1)
+                            i_xi_p = findKnotSpan(number(1), degree(1), xi_t{1}(i), t{1})        
+                            B_xi_arr(i,:) = BsplineBasis(i_xi_p, xi_t{1}(i), degree(1), t{1});
                             i_xi_arr(i) = i_xi_p;
                         end
 
-                        B_eta_arr = zeros(n_eta,p_eta+1);
-                        j_eta_arr = zeros(n_eta,1);
-                        parfor j = 1:n_eta
-                            j_eta_p = findKnotSpan(n_eta, p_eta, eta_tilde(j), t_eta)        
-                            B_eta_arr(j,:) = BsplineBasis(j_eta_p, eta_tilde(j), p_eta, t_eta);
+                        B_eta_arr = zeros(number(2),degree(2)+1);
+                        j_eta_arr = zeros(number(2),1);
+                        parfor j = 1:number(2)
+                            j_eta_p = findKnotSpan(number(2), degree(2), xi_t{2}(j), t{2})        
+                            B_eta_arr(j,:) = BsplineBasis(j_eta_p, xi_t{2}(j), degree(2), t{2});
                             j_eta_arr(j) = j_eta_p;
                         end
 
-                        B_zeta_arr = zeros(n_zeta,p_zeta+1);
-                        l_zeta_arr = zeros(n_zeta,1);
-                        parfor l = 1:n_zeta
-                            l_zeta_p = findKnotSpan(n_zeta, p_zeta, zeta_tilde(l), t_zeta)        
-                            B_zeta_arr(l,:) = BsplineBasis(l_zeta_p, zeta_tilde(l), p_zeta, t_zeta);
+                        B_zeta_arr = zeros(number(3),degree(3)+1);
+                        l_zeta_arr = zeros(number(3),1);
+                        parfor l = 1:number(3)
+                            l_zeta_p = findKnotSpan(number(3), degree(3), xi_t{3}(l), t{3})        
+                            B_zeta_arr(l,:) = BsplineBasis(l_zeta_p, xi_t{3}(l), degree(3), t{3});
                             l_zeta_arr(l) = l_zeta_p;
                         end
 
-                        index = zeros(n_xi*n_eta*n_zeta,3);
+                        index = zeros(prod(number),3);
                         counter = 1;
-                        for l = 1:n_zeta
-                            for j = 1:n_eta
-                                for i = 1:n_xi   
+                        for l = 1:number(3)
+                            for j = 1:number(2)
+                                for i = 1:number(1)   
                                     index(counter,:) = [i, j, l];
                                     counter = counter + 1;
                                 end
                             end
                         end
 
-                        values = zeros(n_xi*n_eta*n_zeta,(p_xi+1)*(p_eta+1)*(p_zeta+1));
-                        n_idx = zeros(n_xi*n_eta*n_zeta,(p_xi+1)*(p_eta+1)*(p_zeta+1));
-                        m_idx = zeros(n_xi*n_eta*n_zeta,(p_xi+1)*(p_eta+1)*(p_zeta+1));
-                        parfor a = 1:n_xi*n_eta*n_zeta
+                        values = zeros(prod(number),prod(degree+1));
+                        n_idx = zeros(prod(number),prod(degree+1));
+                        m_idx = zeros(prod(number),prod(degree+1));
+                        parfor a = 1:prod(number)
                             i = index(a,1);
                             j = index(a,2);
                             l = index(a,3);
@@ -146,18 +130,18 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             B_eta = B_eta_arr(j,:);
                             i_xi   = i_xi_arr(i);
                             B_xi = B_xi_arr(i,:);
-                            m = i + (j-1)*n_xi + (l-1)*n_xi*n_eta;
+                            m = i + (j-1)*number(1) + (l-1)*number(1)*number(2);
 
-                            temp = zeros(1,(p_xi+1)*(p_eta+1)*(p_zeta+1));
-                            temp2 = zeros(1,(p_xi+1)*(p_eta+1)*(p_zeta+1));
+                            temp = zeros(1,prod(degree+1));
+                            temp2 = zeros(1,prod(degree+1));
                             counter = 1;
-                            for ll = 1:p_zeta+1
-                                l_tilde = l_zeta - p_zeta + ll - 1;
-                                for jj = 1:p_eta+1
-                                    j_tilde = j_eta - p_eta + jj - 1;
-                                    for ii = 1:p_xi+1
-                                        i_tilde = i_xi - p_xi + ii - 1;
-                                        n = i_tilde + (j_tilde-1)*n_xi + (l_tilde-1)*n_xi*n_eta;
+                            for ll = 1:degree(3)+1
+                                l_tilde = l_zeta - degree(3) + ll - 1;
+                                for jj = 1:degree(2)+1
+                                    j_tilde = j_eta - degree(2) + jj - 1;
+                                    for ii = 1:degree(1)+1
+                                        i_tilde = i_xi - degree(1) + ii - 1;
+                                        n = i_tilde + (j_tilde-1)*number(1) + (l_tilde-1)*number(1)*number(2);
 
                                         temp(counter) = B_xi(ii)*B_eta(jj)*B_zeta(ll);
                                         temp2(counter) = n;
@@ -167,64 +151,64 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             end
                             values(a,:) = temp;
                             n_idx(a,:) = temp2;
-                            m_idx(a,:) = ones(1,(p_xi+1)*(p_eta+1)*(p_zeta+1))*m;
+                            m_idx(a,:) = ones(1,prod(degree+1))*m;
                         end
                         A = sparse(m_idx,n_idx,values);
 
-                        Q = reshape(Q,3,n_xi*n_eta*n_zeta);
+                        Q = reshape(Q,3,prod(number));
+                        P = ones([nurbs.d+1,number]);
                         P_tilde = zeros(size(Q));
                         P_tilde(1,:) = (A\Q(1,:)')';
                         P_tilde(2,:) = (A\Q(2,:)')';
                         P_tilde(3,:) = (A\Q(3,:)')';
-                        P(1:3,:,:,:) = reshape(P_tilde,3,n_xi,n_eta,n_zeta);
-                        P(4,:,:,:) = 1;
+                        P(1:3,:,:,:) = reshape(P_tilde,3,number(1),number(2),number(3));
                     case 'h_FEM'
-                        n_xi = nurbs.number(1);
-                        n_eta = nurbs.number(2);
-                        n_zeta = nurbs.number(3);
-                        p_xi = nurbs.degree(1);
-                        p_eta = nurbs.degree(2);
-                        p_zeta = nurbs.degree(3);
-                        for i = 1:p_xi:n_xi-p_xi
-                            for j = 1:p_eta:n_eta
-                                for k = 1:p_zeta:n_zeta
-                                    for ii = 1:p_xi-1
-                                        P(1:3,i+ii,j,k) = ((p_xi-ii)*P(1:3,i,j,k) + ii*P(1:3,i+p_xi,j,k))/p_xi;
+                        number(1) = nurbs.number(1);
+                        number(2) = nurbs.number(2);
+                        number(3) = nurbs.number(3);
+                        degree(1) = nurbs.degree(1);
+                        degree(2) = nurbs.degree(2);
+                        degree(3) = nurbs.degree(3);
+                        for i = 1:degree(1):number(1)-degree(1)
+                            for j = 1:degree(2):number(2)
+                                for k = 1:degree(3):number(3)
+                                    for ii = 1:degree(1)-1
+                                        P(1:3,i+ii,j,k) = ((degree(1)-ii)*P(1:3,i,j,k) + ii*P(1:3,i+degree(1),j,k))/degree(1);
                                     end
                                 end
                             end
                         end
-                        for i = 1:n_xi
-                            for j = 1:p_eta:n_eta-p_eta
-                                for k = 1:p_zeta:n_zeta
-                                    for jj = 1:p_eta-1
-                                        P(1:3,i,j+jj,k) = ((p_eta-jj)*P(1:3,i,j,k) + jj*P(1:3,i,j+p_eta,k))/p_eta;
+                        for i = 1:number(1)
+                            for j = 1:degree(2):number(2)-degree(2)
+                                for k = 1:degree(3):number(3)
+                                    for jj = 1:degree(2)-1
+                                        P(1:3,i,j+jj,k) = ((degree(2)-jj)*P(1:3,i,j,k) + jj*P(1:3,i,j+degree(2),k))/degree(2);
                                     end
                                 end
                             end
                         end
-                        for i = 1:n_xi
-                            for j = 1:n_eta
-                                for k = 1:p_zeta:n_zeta-p_zeta
-                                    for kk = 1:p_zeta-1
-                                        P(1:3,i,j,k+kk) = ((p_zeta-kk)*P(1:3,i,j,k) + kk*P(1:3,i,j,k+p_zeta))/p_zeta;
+                        for i = 1:number(1)
+                            for j = 1:number(2)
+                                for k = 1:degree(3):number(3)-degree(3)
+                                    for kk = 1:degree(3)-1
+                                        P(1:3,i,j,k+kk) = ((degree(3)-kk)*P(1:3,i,j,k) + kk*P(1:3,i,j,k+degree(3)))/degree(3);
                                     end
                                 end
                             end
                         end   
-                        for i = 1:n_xi
-                            for j = 1:n_eta
-                                for k = 1:n_zeta
+                        for i = 1:number(1)
+                            for j = 1:number(2)
+                                for k = 1:number(3)
                                     P(4,i,j,k) = 1;
                                 end
                             end
                         end
                     case 'linear_FEM'
-                        p_xi = nurbs.degree(1);
-                        p_eta = nurbs.degree(2);
-                        p_zeta = nurbs.degree(3);
+                        degree(1) = nurbs.degree(1);
+                        degree(2) = nurbs.degree(2);
+                        degree(3) = nurbs.degree(3);
 
-                        P = P(:,1:p_xi:end,1:p_eta:end,1:p_zeta:end);
+                        P = P(:,1:degree(1):end,1:degree(2):end,1:degree(3):end);
                         P(4,:,:,:) = 1;
                         nurbs.knots{1} = [0, unique(nurbs.knots{1}), 1];
                         nurbs.knots{2} = [0, unique(nurbs.knots{2}), 1];
@@ -266,66 +250,51 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         nurbs.GLL = {tXi,tEta};
 
                     case 'hp_FEM'
-                        n_xi = nurbs.number(1);
-                        n_eta = nurbs.number(2);
-
-                        p_xi = nurbs.degree(1);
-                        p_eta = nurbs.degree(2);
-
-                        t_xi = nurbs.knots{1};
-                        t_eta = nurbs.knots{2};
-
-                        Q = zeros(size(P)-[1 0 0]);
-
-                        for i = 1:p_xi:n_xi
-                            for j = 1:p_eta:n_eta
-                                Q(:,i,j) = P(1:3,i,j);
-                            end
-                        end
-    % 
-    %                     xi_tilde = splinesGLL(t_xi,p_xi+1);
-    %                     eta_tilde = splinesGLL(t_eta,p_eta+1);
-                        xi_tilde = aveknt(t_xi, p_xi+1);
-                        eta_tilde = aveknt(t_eta, p_eta+1);
-
-                        parfor i = 1:n_xi
-                            for j = 1:n_eta
-                                if ~(mod(j-1,p_eta) == 0 && mod(i-1,p_xi) == 0)
-                                    Q(:,i,j) = evaluateNURBS(nurbs,[xi_tilde(i),eta_tilde(j)]);
-                                end  
-                            end
+                        number = zeros(1,d_p);
+                        t = cell(1,d_p);
+                        xi_t = cell(1,d_p);
+                        degree = min(nurbs.degree,task.msh.degree);
+                        for i = 1:nurbs.d_p
+                            t{i} = [0,repelem(unique(nurbs.knots{i}),degree(i)),1];
+                            number(i) = numel(t{i})-(degree(i)+1);
+                            xi_t{i} = aveknt(t{i}, degree(i)+1);
+%                             xi_t{1}{i} = splinesGLL(t{i}, degree(i)+1);
                         end
 
+                        % Evaluate original nurbs at Greville abscissa for interpolation
+                        [xi,eta] = ndgrid(xi_t{1},xi_t{2});                        
+                        Q = reshape(evaluateNURBSvec(nurbs,[xi(:),eta(:)]).',[nurbs.d,number]);
 
-                        B_xi_arr = zeros(n_xi,p_xi+1);
-                        i_xi_arr = zeros(n_xi,1);
-                        parfor i = 1:n_xi
-                            i_xi_p = findKnotSpan(n_xi, p_xi, xi_tilde(i), t_xi)        
-                            B_xi_arr(i,:) = BsplineBasis(i_xi_p, xi_tilde(i), p_xi, t_xi);
+
+                        B_xi_arr = zeros(number(1),degree(1)+1);
+                        i_xi_arr = zeros(number(1),1);
+                        parfor i = 1:number(1)
+                            i_xi_p = findKnotSpan(number(1), degree(1), xi_t{1}(i), t{1})        
+                            B_xi_arr(i,:) = BsplineBasis(i_xi_p, xi_t{1}(i), degree(1), t{1});
                             i_xi_arr(i) = i_xi_p;
                         end
 
-                        B_eta_arr = zeros(n_eta,p_eta+1);
-                        j_eta_arr = zeros(n_eta,1);
-                        parfor j = 1:n_eta
-                            j_eta_p = findKnotSpan(n_eta, p_eta, eta_tilde(j), t_eta)        
-                            B_eta_arr(j,:) = BsplineBasis(j_eta_p, eta_tilde(j), p_eta, t_eta);
+                        B_eta_arr = zeros(number(2),degree(2)+1);
+                        j_eta_arr = zeros(number(2),1);
+                        parfor j = 1:number(2)
+                            j_eta_p = findKnotSpan(number(2), degree(2), xi_t{2}(j), t{2})        
+                            B_eta_arr(j,:) = BsplineBasis(j_eta_p, xi_t{2}(j), degree(2), t{2});
                             j_eta_arr(j) = j_eta_p;
                         end
 
-                        index = zeros(n_xi*n_eta,2);
+                        index = zeros(prod(number),2);
                         counter = 1;
-                        for j = 1:n_eta
-                            for i = 1:n_xi   
+                        for j = 1:number(2)
+                            for i = 1:number(1)   
                                 index(counter,:) = [i, j];
                                 counter = counter + 1;
                             end
                         end
 
-                        values = zeros(n_xi*n_eta,(p_xi+1)*(p_eta+1));
-                        n_idx = zeros(n_xi*n_eta,(p_xi+1)*(p_eta+1));
-                        m_idx = zeros(n_xi*n_eta,(p_xi+1)*(p_eta+1));
-                        parfor a = 1:n_xi*n_eta
+                        values = zeros(prod(number),prod(degree+1));
+                        n_idx = zeros(prod(number),prod(degree+1));
+                        m_idx = zeros(prod(number),prod(degree+1));
+                        parfor a = 1:prod(number)
                             i = index(a,1);
                             j = index(a,2);
 
@@ -333,16 +302,16 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             B_xi = B_xi_arr(i,:);
                             j_eta   = j_eta_arr(j);
                             B_eta = B_eta_arr(j,:);
-                            m = i + (j-1)*n_xi;
+                            m = i + (j-1)*number(1);
 
-                            temp = zeros(1,(p_xi+1)*(p_eta+1));
-                            temp2 = zeros(1,(p_xi+1)*(p_eta+1));
+                            temp = zeros(1,prod(degree+1));
+                            temp2 = zeros(1,prod(degree+1));
                             counter = 1;
-                            for jj = 1:p_eta+1
-                                j_tilde = j_eta - p_eta + jj - 1;
-                                for ii = 1:p_xi+1
-                                    i_tilde = i_xi - p_xi + ii - 1;
-                                    n = i_tilde + (j_tilde-1)*n_xi;
+                            for jj = 1:degree(2)+1
+                                j_tilde = j_eta - degree(2) + jj - 1;
+                                for ii = 1:degree(1)+1
+                                    i_tilde = i_xi - degree(1) + ii - 1;
+                                    n = i_tilde + (j_tilde-1)*number(1);
 
                                     temp(counter) = B_xi(ii)*B_eta(jj);
                                     temp2(counter) = n;
@@ -351,47 +320,47 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             end
                             values(a,:) = temp;
                             n_idx(a,:) = temp2;
-                            m_idx(a,:) = ones(1,(p_xi+1)*(p_eta+1))*m
+                            m_idx(a,:) = ones(1,prod(degree+1))*m
                         end
                         A = sparse(m_idx,n_idx,values);
 
-                        Q = reshape(Q,3,n_xi*n_eta);
+                        Q = reshape(Q,3,prod(number));
+                        P = ones([nurbs.d+1,number]);
                         P_tilde = zeros(size(Q));
                         P_tilde(1,:) = (A\Q(1,:)')';
                         P_tilde(2,:) = (A\Q(2,:)')';
                         P_tilde(3,:) = (A\Q(3,:)')';
-                        P(1:3,:,:,:) = reshape(P_tilde,3,n_xi,n_eta);
-                        P(4,:,:,:) = 1;
+                        P(1:3,:,:,:) = reshape(P_tilde,3,number(1),number(2));
                     case 'h_FEM'
-                        n_xi = nurbs.number(1);
-                        n_eta = nurbs.number(2);
+                        number(1) = nurbs.number(1);
+                        number(2) = nurbs.number(2);
 
-                        p_xi = nurbs.degree(1);
-                        p_eta = nurbs.degree(2);
+                        degree(1) = nurbs.degree(1);
+                        degree(2) = nurbs.degree(2);
 
-                        for i = 1:p_xi:n_xi-p_xi
-                            for j = 1:p_eta:n_eta
-                                for ii = 1:p_xi-1
-                                    P(1:3,i+ii,j) = ((p_xi-ii)*P(1:3,i,j) + ii*P(1:3,i+p_xi,j))/p_xi;
+                        for i = 1:degree(1):number(1)-degree(1)
+                            for j = 1:degree(2):number(2)
+                                for ii = 1:degree(1)-1
+                                    P(1:3,i+ii,j) = ((degree(1)-ii)*P(1:3,i,j) + ii*P(1:3,i+degree(1),j))/degree(1);
                                 end
                             end
                         end
-                        for i = 1:n_xi
-                            for j = 1:p_eta:n_eta-p_eta
-                                for jj = 1:p_eta-1
-                                    P(1:3,i,j+jj) = ((p_eta-jj)*P(1:3,i,j) + jj*P(1:3,i,j+p_eta))/p_eta;
+                        for i = 1:number(1)
+                            for j = 1:degree(2):number(2)-degree(2)
+                                for jj = 1:degree(2)-1
+                                    P(1:3,i,j+jj) = ((degree(2)-jj)*P(1:3,i,j) + jj*P(1:3,i,j+degree(2)))/degree(2);
                                 end
                             end
                         end 
-                        for i = 1:n_xi
-                            for j = 1:n_eta
+                        for i = 1:number(1)
+                            for j = 1:number(2)
                                 P(4,i,j) = 1;
                             end
                         end
                     case 'linear_FEM'
-                        p_xi = nurbs.degree(1);
-                        p_eta = nurbs.degree(2);
-                        P = P(:,1:p_xi:end,1:p_eta:end);
+                        degree(1) = nurbs.degree(1);
+                        degree(2) = nurbs.degree(2);
+                        P = P(:,1:degree(1):end,1:degree(2):end);
                         P(4,:,:) = 1;
                         nurbs.knots{1} = [0, unique(nurbs.knots{1}), 1];
                         nurbs.knots{2} = [0, unique(nurbs.knots{2}), 1];
@@ -401,6 +370,9 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
 
                 end
         end
+        nurbs.degree = degree;
+        nurbs.number = number;
+        nurbs.knots = t;
         nurbs.coeffs = P;
         nurbsPatches{patch} = nurbs;
     end

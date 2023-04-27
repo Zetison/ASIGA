@@ -117,7 +117,7 @@ runTasksInParallel = 0;       % Run tasks in parallel
 misc.checkNURBSweightsCompatibility = false;
 
 pml.eps = eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-% pml.sigmaType = 1:4;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+% pml.sigmaType = 1:4;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
 % pml.n = [1,2];
 pml.t = linspace2(0,0.25*a,100);
 pml.t = 0.25*a;

@@ -100,7 +100,7 @@ for i_col = 1:numel(studiesCol)
             if study.postPlot(i).plotResults || study.postPlot(i).printResults
                 figure(i)
                 printResultsToTextFiles(study,study.postPlot(i))
-                if isa(study.postPlot(i).addCommands,'function_handle') && i_study == numel(studiesCol{i_col}) 
+                if isa(study.postPlot(i).addCommands,'function_handle') && i_study == studiesCol{i_col}(i_study).appyCommandsAt
                     figure(i)
                     study.postPlot(i).addCommands(study,i_study,studiesCol{i_col})
                     if isempty(study.postPlot(i).subFolderName)

@@ -6,25 +6,25 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 saveStudies        = false;       % save ASIGA-struct into a .mat file
-
+appyCommandsAt = 1;
 
 %% IE simulation
-hetmaniukCase = 1; % evaluating solution at boundary not implemented
+hetmaniukCase = 1;
 
 % BC = 'NNBC';
 misc.model = 'Hetmaniuk2012raa';  % Spherical shell
 misc.coreMethod = {'IGA','C0_IGA'};
 % misc.coreMethod = {'C0_IGA'};
-misc.coreMethod = {'IGA'};
-% misc.coreMethod = {'hp_FEM'};
+% misc.coreMethod = {'IGA'};
+misc.coreMethod = {'hp_FEM'};
 % misc.applyLoad = 'pointPulsation';
 % misc.applyLoad = 'pointCharge';
 misc.applyLoad = 'planeWave';
 
-% BCs = {'SHBC'};
+BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
-BCs = {'SHBC','SSBC','NNBC'};
+% BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -42,9 +42,9 @@ warning('off','NURBS:weights')
 
 misc.r_s = 3;
 
-msh.parm = 1;
+msh.parm = 2;
 msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
-msh.refineThetaOnly = 1; % only for msh.parm = 1
+msh.refineThetaOnly = 0; % only for msh.parm = 1
 err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
@@ -54,18 +54,23 @@ prePlot.plot3Dgeometry = 0;
 prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plotFullDomain      = 0;
-prePlot.plotSubsets         = {'xz'}; 
-% prePlot.plotSubsets         = {}; 
+prePlot.plotFullDomain      = 1;
+prePlot.plotControlPolygon  = 0;
+% prePlot.plotSubsets         = {'xz'};
+prePlot.plotSubsets         = {}; 
 prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
-prePlot.resolution = [400,200,0];
-prePlot.resolution = [100,0,0];
+% prePlot.resolution = [400,200,0];
+% prePlot.resolution = [100,0,0];
 if prePlot.plotFullDomain
     prePlot.format = '-png';      % Use '-png' or '-pdf' (for vector graphics)
 else
-    prePlot.format = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
+    if strcmp(prePlot.plotSubsets{1},'xz')
+        prePlot.format = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
+    else
+        prePlot.format = '-png';      % Use '-png' or '-pdf' (for vector graphics)
+    end
 end
 
 misc.computeCondNumber = 0;
@@ -125,7 +130,7 @@ for i = 1:numel(BCs)
         msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
     end
     msh.degree = 3;
-    manuelRefinement = false;
+    manuelRefinement = 1;
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
@@ -162,7 +167,7 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 7; % 7
+    msh.M = 6; % 7 (6 if hetmaniukCase and manuelRefinement)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
@@ -179,8 +184,15 @@ for i = 1:numel(BCs)
     iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
     
     pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-    pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
-    pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+    if manuelRefinement
+        pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
+        pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+        pml.gamma = 2;
+    else
+        pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
+        pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+    end
+    
     switch misc.BC
         case {'SHBC','NBC'}
             k_pml = 9;
@@ -192,7 +204,7 @@ for i = 1:numel(BCs)
 %             k = k_P(1):1:k_P(end);
 %             k = linspace(9, 36, 5);
 %             k = k_P(end);
-            k = 36;
+%             k = 36;
             c_f = varCol{1}.c_f;
             f = k*c_f/(2*pi);
             f_P = k_P*c_f/(2*pi);
@@ -203,7 +215,12 @@ for i = 1:numel(BCs)
                 misc.P_inc = -1;
                 ffp.beta = pi/2;   
             end
-            ffp.paramPts = {[0,1,0], []};
+            if msh.parm == 1
+                ffp.paramPts = {[0,1,0], []};
+            else
+                ffp.paramPts = cell(1,12);
+                ffp.paramPts{1} = [0.5,0.5,0];
+            end
             for j = 1:3
                 postPlot(j).plotResults = true;
                 postPlot(j).printResults = true;

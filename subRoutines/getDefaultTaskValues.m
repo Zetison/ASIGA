@@ -7,7 +7,7 @@ subFolderName      = '';          % sub folder in folder <folderName> in which r
 saveStudies        = false;       % save ASIGA-struct into a .mat file
 noCoresToUse       = Inf;         % Number of processors for parallel computations (Inf uses all available cores)
 connectedParameters = {{}};       % Define set of loop parameters to be connected (i.e. connectedParameters = {{'msh.M','iem.N'}} assumes the arrays msh.M and iem.N to be of same size and loops through the elements in pairs)
-
+appyCommandsAt     = 1;           % At what study to apply study.postPlot(i).addCommands in postPlots
 
 %% Miscellaneous settings
 misc.scatteringCase      = 'BI';        % Bistatic scattering
@@ -188,7 +188,7 @@ iem.boundaryMethod = true;   % Attach infinite elements directly onto the scatte
 
 %% Settings for the PML (perfectly matched layers)
 pml.eps = 1e9*eps;              % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 3;   	        % sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = gamma*xi^n, sigmaType = 3: sigma(xi) = gamma/(1-xi)^n, sigmaType = 4: sigma(xi) = gamma*(1/(1-xi)^n - 1), sigmaType = 5: sigma from Mi2021ilc: sigma(xi) = gamma*xi^n
+pml.sigmaType = 3;   	        % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = gamma*xi^n, sigmaType = 3: sigma(xi) = gamma/(1-xi)^n, sigmaType = 4: sigma(xi) = gamma*(1/(1-xi)^n - 1), sigmaType = 5: sigma from Mi2021ilc: sigma(xi) = gamma*xi^n
 pml.gamma = NaN;                % If ~isnan(pml.gamma) the matrices will be frequency independent (needed if useROM)
 pml.t = NaN;         	        % thickness of PML
 pml.n = 1;            	        % polynomial order

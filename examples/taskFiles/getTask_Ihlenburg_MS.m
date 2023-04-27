@@ -143,7 +143,7 @@ for i = 1:numel(applyLoads)
         
         %% Settings for the PML (perfectly matched layers)
         refLength = varCol{1}.R1*pi/2;
-        pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+        pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
         pml.t = 0.25*varCol{1}.R1; % thickness of PML
         pml.n = 1;            	% polynomial order
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)

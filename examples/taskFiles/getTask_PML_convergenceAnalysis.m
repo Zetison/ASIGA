@@ -135,7 +135,7 @@ for method = {'PML','BA'} %,'IE','BA'}
                     pml.t = 0.25*varCol{1}.R;         % thickness of PML
                 end
                 if strcmp(method{1},'PML')
-                    pml.sigmaType = [3,5];   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
+                    pml.sigmaType = [3,5];   	% sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n, sigmaType = 3: sigma(xi) = C/(1-xi)^n
                     pml.n = [1,2];
                 else
                     pml.sigmaType = 3;

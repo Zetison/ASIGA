@@ -33,7 +33,7 @@ studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Mi2021ilc'; %getTask_Mi2021ilc
 % studyName = 'unitTest'; %getTask_unitTest
 % studyName = 'illustratePML'; %getTask_illustratePML
-studyName = 'transduser2D'; %getTask_transduser2D
+% studyName = 'transduser2D'; %getTask_transduser2D
 
 
 %% Venas2020ibe

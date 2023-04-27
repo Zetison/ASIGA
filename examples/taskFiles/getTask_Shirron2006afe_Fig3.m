@@ -72,7 +72,7 @@ misc.omega = 2*pi*f;
 misc.r_a = 1.25*a;
 
 pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-pml.sigmaType = 1;   	% sigmaType = 1: sigma(xi) = xi*exp(gamma*xi), sigmaType = 2: sigma(xi) = C*xi^n
+pml.sigmaType = 1;   	% sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
 pml.gamma = 5;          % parameter for sigmaType = 1
 pml.t = 0.25*a;         % thickness of PML
 pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)

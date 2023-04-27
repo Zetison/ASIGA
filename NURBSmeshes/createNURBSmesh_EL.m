@@ -213,7 +213,7 @@ varCol{1}.refLength = refLength;
 varCol{1}.dirs = dirs;
 chimin = C(end)*(1-10*eps);
 chimax = C(end)*(1+10*eps);
-if parm == 2 && degree < 4
+if parm == 2 && degree < 4 && (strcmp(task.misc.method,'IGA') || strcmp(task.misc.method,'C0_IGA'))
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
 varCol{1}.nurbs = fluid;
