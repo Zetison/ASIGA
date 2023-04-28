@@ -167,13 +167,13 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 5; % 7 (6 if hetmaniukCase and manuelRefinement)
+    msh.M = 6; % 7 (6 if hetmaniukCase and manuelRefinement)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
-    rom.computeROMresidualFine = 0;
-    rom.computeROMerror = 0;
+    rom.computeROMresidualFine = 1;
+    rom.computeROMerror = 1;
     rom.J_max = 20;
 %     sol.preconditioner = 'none';
     misc.symmetric = 0;

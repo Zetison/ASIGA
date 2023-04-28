@@ -33,6 +33,8 @@ RdR = NURBSbasisVec(I,xi,degree,knots,w,n);
 if nargin < 4
     coeffs = nurbs.coeffs(1:d,:).';
     U = reshape(coeffs(w_i,:),npts,n_en,d);
+else
+    U = reshape(U(w_i,:),npts,n_en,size(U,2));
 end
 d_p = numel(knots);
 varargout = cell(1,d_p+1);

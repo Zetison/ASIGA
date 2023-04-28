@@ -204,19 +204,15 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             end
                         end
                     case 'linear_FEM'
-                        degree(1) = nurbs.degree(1);
-                        degree(2) = nurbs.degree(2);
-                        degree(3) = nurbs.degree(3);
-
                         P = P(:,1:degree(1):end,1:degree(2):end,1:degree(3):end);
                         P(4,:,:,:) = 1;
-                        nurbs.knots{1} = [0, unique(nurbs.knots{1}), 1];
-                        nurbs.knots{2} = [0, unique(nurbs.knots{2}), 1];
-                        nurbs.knots{3} = [0, unique(nurbs.knots{3}), 1];
-                        nurbs.degree = [1,1,1];
-                        nurbs.number = [length(nurbs.knots{1})-2,...
-                                        length(nurbs.knots{2})-2,...
-                                        length(nurbs.knots{3})-2];
+                        t{1} = [0, unique(t{1}), 1];
+                        t{2} = [0, unique(t{2}), 1];
+                        t{3} = [0, unique(t{3}), 1];
+                        degree = [1,1,1];
+                        number = [length(t{1})-2,...
+                                  length(t{2})-2,...
+                                  length(t{3})-2];
                 end
             case 2
                 switch task.misc.coreMethod
@@ -358,15 +354,13 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             end
                         end
                     case 'linear_FEM'
-                        degree(1) = nurbs.degree(1);
-                        degree(2) = nurbs.degree(2);
                         P = P(:,1:degree(1):end,1:degree(2):end);
                         P(4,:,:) = 1;
-                        nurbs.knots{1} = [0, unique(nurbs.knots{1}), 1];
-                        nurbs.knots{2} = [0, unique(nurbs.knots{2}), 1];
-                        nurbs.degree = [1,1];
-                        nurbs.number = [length(nurbs.knots{1})-2,...
-                                        length(nurbs.knots{2})-2];
+                        t{1} = [0, unique(t{1}), 1];
+                        t{2} = [0, unique(t{2}), 1];
+                        degree = [1,1];
+                        number = [length(t{1})-2,...
+                                  length(t{2})-2];
 
                 end
         end
