@@ -36,7 +36,7 @@ if nargin < 4
 end
 d_p = numel(knots);
 varargout = cell(1,d_p+1);
-varargout{1} = reshape(sum(RdR{1}.*U,2),[],d);
+varargout{1} = reshape(sum(RdR{1}.*U,2),[],size(U,3));
 for i = 1:d_p
     for j = 1:n
         varargout{i+1}(:,:,j) = sum(RdR{i+1}(:,:,j).*U,2);
