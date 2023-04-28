@@ -19,15 +19,29 @@ if shiftROM > 0
 else
     task.U_p = zeros(size(task.FF));
 end
-dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
-for i = 1:noRHSs
-    j = shiftROM + i-1; % Derivative order
-    b = task.FF(:,i);   % Derivative of right hand side
-    for k = 1:min(j,numel(dAdomega))
-        b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
+tic
+if true
+    dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
+    for i = 1:noRHSs
+        j = shiftROM + i-1; % Derivative order
+        b = task.FF(:,i);   % Derivative of right hand side
+        for k = 1:min(j,numel(dAdomega))
+            b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
+        end
+        task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
     end
-    task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+else
+    dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
+    for i = 1:noRHSs
+        j = shiftROM + i-1; % Derivative order
+        b = task.FF(:,i);   % Derivative of right hand side
+        for k = 1:min(j,numel(dAdomega))
+            b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
+        end
+        task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+    end
 end
+toc
 
 i = 1:noRHSs;
 % if ~isfield(task,'U')

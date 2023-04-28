@@ -167,7 +167,7 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 6; % 7 (6 if hetmaniukCase and manuelRefinement)
+    msh.M = 4; % 7 (6 if hetmaniukCase and manuelRefinement)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
