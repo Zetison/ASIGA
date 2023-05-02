@@ -5,9 +5,10 @@ Eps = 1e-5;
 testFolder = 'examples/taskFiles/tests/';
 studyName = {'Venas2018iao_Figure6','Venas2020asi_Figure21','Venas2018iao_Table2','Venas2020asi_Figure7','Venas2019asi_Figure4','Venas2019asi_FigureB10B11B12',...
              'Venas2019asi_FigureA2A3'};
-% studyName = {'Venas2018iao_Table2'};
+studyName = {'Venas2018iao_Table2'};
 stringShift = 60;
 noFailedTests = 0;
+failMatrix = false(2,numel(studyName));
 for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
     for i = 1:numel(studyName)
         fprintf(['\n%-' num2str(stringShift) 's'], ['Running test ''' studyName{i} ''' (M_0 = ' num2str(M_0) ') ...'])
@@ -47,6 +48,7 @@ for M_0 = 1:2 % Most test are only available for M_0 = 1 and M_0 = 2
             if testFailed
                 fprintf('test failed due to incorrect results (i_study=%d, i_task=%d)! (relative error = %g)', i_study, i_task, reg_error)
                 noFailedTests = noFailedTests + 1;
+                failMatrix(M_0,i) = true;
             else
                 fprintf('successfully!')
             end

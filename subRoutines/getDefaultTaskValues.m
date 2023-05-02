@@ -94,8 +94,12 @@ prePlot.QoI                 = [];
 prePlot.QoI_ref             = [];
 
 %% Solver settings
-sol.solver = 'LU';              % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
-sol.preconditioner = 'diag';	% 'ilu', 'SSOR', 'diag'
+sol.solver          = 'LU';  % Direct solver: 'LU', Iterative solvers: 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'. NB! Not all solvers are applicable (i.e. pcg assumes symmetric positive definite matrix). For help check https://se.mathworks.com/help/matlab/math/iterative-methods-for-linear-systems.html
+sol.preconditioner  = 'diag';	% 'ilu', 'SSOR', 'diag'
+sol.tol             = 1e-10;
+sol.maxit           = 1000;
+sol.restart         = 30;       % restarts the method every RESTART iterations for GMRES. Reduce this to save memory (i.e. 2)
+sol.ilutype         = 'ilutp';  % 'ilutp', 'crout' and 'nofill' (see the ilu function in matlab)
 
 %% Error computations
 err.calculateSurfaceError = false;	% Only if scatteringCase == 'Bi'

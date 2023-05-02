@@ -12,11 +12,10 @@ switch task.misc.method
         if task.misc.printLog && ~task.rom.useROM
             fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Solving system of equations ... ')
         end
+        if useA
+            task.sol.maxit = min(task.sol.maxit, size(task.A,1));
+        end
         switch task.sol.solver
-            case 'gmres'
-                noRestarts = []; % change this to save memory
-                % noRestarts = 2;
-                task.UU = gmres(task.A,task.FF,noRestarts,1e-20,1000,task.L_A,task.U_A);
             case 'LU'
                 if ~(strcmp(task.sol.preconditioner,'diag') || strcmp(task.sol.preconditioner,'none'))
                     error('not implemented')
@@ -44,8 +43,16 @@ switch task.misc.method
                         end
                     end
                 end
+            case 'gmres'
+                task.UU = zeros(size(task.FF));
+                for i = 1:size(task.FF,2)
+                    task.UU(:,i) = gmres(task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+                end
             otherwise
-                eval(['UU = cgs' task.sol.solver '(task.A,FF,1e-20,1000,task.L_A,task.U_A);'])
+                task.UU = zeros(size(task.FF));
+                for i = 1:size(task.FF,2)
+                    eval(['task.UU(:,i) = ' task.sol.solver '(task.A,task.FF(:,i),task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
+                end
         end
         if useA
             dofs = size(task.A,1);

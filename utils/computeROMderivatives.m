@@ -20,25 +20,22 @@ else
     task.U_p = zeros(size(task.FF));
 end
 tic
-if true
+if strcmp(task.sol.solver,'LU')
     dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
-    for i = 1:noRHSs
-        j = shiftROM + i-1; % Derivative order
-        b = task.FF(:,i);   % Derivative of right hand side
-        for k = 1:min(j,numel(dAdomega))
-            b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
-        end
-        task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+end
+for i = 1:noRHSs
+    j = shiftROM + i-1; % Derivative order
+    b = task.FF(:,i);   % Derivative of right hand side
+    for k = 1:min(j,numel(dAdomega))
+        b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
     end
-else
-    dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
-    for i = 1:noRHSs
-        j = shiftROM + i-1; % Derivative order
-        b = task.FF(:,i);   % Derivative of right hand side
-        for k = 1:min(j,numel(dAdomega))
-            b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
-        end
-        task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+    switch task.sol.solver
+        case 'LU'
+            task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+        case 'gmres'
+            task.U_p(:,shiftROM+i) = gmres(task.A,b,task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+        otherwise
+            eval(['task.U_p(:,shiftROM+i) = ' task.sol.solver '(task.A,b,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
     end
 end
 toc

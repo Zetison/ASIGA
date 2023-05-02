@@ -4,9 +4,10 @@ tic
 if task.misc.printLog
     fprintf(['\n%-' num2str(task.misc.stringShift) 's'], ['Creating preconditioner (' task.sol.preconditioner ') ... '])
 end
+task.Pinv = spdiags(1./sqrt(diag(task.A)),0,size(task.A,1),size(task.A,2));
 switch task.sol.preconditioner
     case 'ilu'
-        [task.L_A,task.U_A] = ilu(task.A,struct('type','nofill'));
+        [task.L_A,task.U_A] = ilu(task.A,struct('type',task.sol.ilutype,'droptol',1e-6));
     case 'SSOR'
         D_SSOR = spdiags(spdiags(task.A,0),0,size(task.A,1),size(task.A,2));
         D_SSORinv = spdiags(1./spdiags(task.A,0),0,size(task.A,1),size(task.A,2));
