@@ -10,15 +10,23 @@ grev = aveknt(Xi, p_xi+1);
 controlPts = [grev; weights];
 nurbs = createNURBSobject(controlPts,Xi);
 
-varCol.dimension = 1;
-varCol = convertNURBS(nurbs, varCol);
-varCol = generateIGA1DMesh(varCol);
+varCol.dimension = 3;
+varCol.nurbs = nurbs;
+varCol = convertNURBS(varCol);
+varCol = generateIGAmesh(varCol);
+varCol = findDofsToRemove(varCol);
+
+degree = varCol.nurbs{1}.degree;
 
 index = varCol.index;
 noElems = varCol.noElems;
-elRangeXi = varCol.elRangeXi;
+elRange = varCol.elRange;
 element = varCol.element;
-weights = varCol.patches{1}.weights;
+element2 = varCol.element2;
+weights = varCol.weights;
+controlPts = varCol.controlPts;
+knotVecs = varCol.knotVecs;
+pIndex = varCol.pIndex;
 
 % dofsToRemove = varCol.dofsToRemove;
 noDofs = varCol.patches{1}.noDofs;
@@ -34,33 +42,35 @@ Mvalues = zeros(sizeMe,noElems);
 F_indices = zeros(n_en,noElems); 
 Fvalues   = zeros(n_en,noElems,d); 
 
-[W1D,Q1D] = gaussianQuadNURBS(64); 
+[Q1D,W1D] = gaussTensorQuad(64); 
 
 %% Build global matrices
-% for e = 1:noElems
-parfor e = 1:noElems
-    idXi = index(e,1);
-    
-    Xi_e = elRangeXi(idXi,:);
+for e = 1:noElems
+% parfor e = 1:noElems
+
+    patch = pIndex(e);
+    knots = knotVecs{patch};
+    Xi_e(1,:) = elRange{1}(index(e,1),:);
+
+    sctr = element(e,:);
+    pts = controlPts(sctr,:);
+    wgts = weights(element2(e,:),:);
+
+    xi = parent2ParametricSpace(Xi_e, Q1D);
+    I = findKnotSpans(degree, xi(1,:), knots);
+
+    R = NURBSbasis(I,xi,degree,knots,wgts);
     
     J_2 = 0.5*(Xi_e(2)-Xi_e(1));
-    
-    sctr = element(e,:);
-    wgts = weights(sctr);
     f_e = zeros(n_en,d);
     m_e = zeros(n_en);
+    f_qps = f(xi);
     
     for gp = 1:size(W1D,1)
-        pt = Q1D(gp,:);
-        wt = W1D(gp);
-
-        xi   = parent2ParametricSpace(Xi_e,  pt(1));
         
-        R = NURBS1DBasis(xi,p_xi,Xi, wgts);
+        m_e = m_e + R{1}(gp,:)'*R{1}(gp,:) * J_2 * W1D(gp);  
         
-        m_e = m_e + R'*R * J_2 * wt;  
-        
-        f_e = f_e + R'*f(xi)* J_2 * wt;
+        f_e = f_e + R{1}(gp,:)'*f_qps(gp,:)* J_2 * W1D(gp);
     end
     spIdxRow(:,e) = reshape(repmat(sctr',1,n_en),n_en^2,1);
     spIdxCol(:,e) = reshape(repmat(sctr,n_en,1),n_en^2,1);
@@ -71,6 +81,7 @@ parfor e = 1:noElems
 end
 
 %% Collect data into global matrices (and load vector)
+noDofs = noDofs/3;
 F = vectorAssembly(Fvalues,F_indices,noDofs);
 M = sparse(spIdxRow,spIdxCol,Mvalues,noDofs,noDofs);
 U = zeros(noDofs,d);
@@ -97,9 +108,6 @@ else
         U(dofsToRemoveTemp,i) = values{i};
     end
 end
-    
-
-
 
 controlPts = [U, weights].';
 

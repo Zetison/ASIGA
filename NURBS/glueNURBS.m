@@ -3,17 +3,6 @@ nurbsCol = makeUniformNURBSDegree(nurbsCol);
 nurbsCol = makeUniformNURBSDimension(nurbsCol);
 noPatches = numel(nurbsCol);
 n = zeros(noPatches,1);
-if ischar(dir)
-    warning('Using char for dir will be depricated in the future')
-    switch dir
-        case 'xi'
-            dir = 1;
-        case 'eta'
-            dir = 2;
-        case 'zeta'
-            dir = 3;
-    end
-end
 for i = 1:noPatches
     n(i) = nurbsCol{i}.number(dir);
 end

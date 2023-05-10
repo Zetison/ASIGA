@@ -1,4 +1,11 @@
 function nurbsCol = getBC_modData(a, b, L, g2, g3, alpha, beta, c, s)
+if nargin == 0
+    container = setBCParameters;
+    fieldNames = fieldnames(container);
+    for i = 1:numel(fieldNames)
+        eval([fieldNames{i} ' = container.' fieldNames{i} ';']);
+    end
+end
 
 h = g2*tan(alpha/2); % = g2/tan((pi-alpha)/2)
 x2 = g3*tan(alpha);
@@ -18,13 +25,13 @@ controlPts = [x*ones(1,n); b5*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
 coeffs(:,:,2) = controlPts;
 coeffs(1,:,1) = x;
 coeffs(4,:,1) = coeffs(4,:,2);
-backDisk = rotateNURBS(createNURBSobject(coeffs,{XiTemp, [0,0,1,1]}), 'theta', 3*p2, 'rotAxis', 'Xaxis');
+backDisk = rotateNURBS(createNURBSobject(coeffs,{XiTemp, [0,0,1,1]}), 'theta', 3*p2, 'rotAxis', [1,0,0]);
 
 x = -L-g2;
 coeffs(:,:,1) = coeffs(:,:,2);
 controlPts = [x*ones(1,n); b2*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
 coeffs(:,:,2) = controlPts;
-backCone = rotateNURBS(createNURBSobject(coeffs,{XiTemp, [0,0,1,1]}), 'theta', 3*p2, 'rotAxis', 'Xaxis');
+backCone = rotateNURBS(createNURBSobject(coeffs,{XiTemp, [0,0,1,1]}), 'theta', 3*p2, 'rotAxis', [1,0,0]);
 nurbsCol(1) = glueNURBS({backDisk{1}, backCone{1}}, 2);
 
 %% Create lower curve
@@ -39,11 +46,11 @@ lowerCpts = [  -L-g2,       b-h,        1;
 
 Xi1 = [0,0,0,1,1,2,2,2]/2;
 Eta = [0 0 0 1 1 2 2 3 3 3]/3;
-% ctrlPtsXi = parmArc(Xi1,beta);
+
 nurbs = createNURBSobject(lowerCpts,Eta);
-nurbs = revolveNURBS(nurbs, 'Xi',Xi1,'theta',beta,'rotAxis', 'Xaxis');
-% coeffs = calcTensorRotCtrlPts(ctrlPtsXi,lowerCpts);
-nurbs = rotateNURBS(nurbs,'theta', pi-3*p2,'rotAxis', 'Xaxis');
+nurbs = revolveNURBS(nurbs, 'Xi',Xi1,'theta',beta,'rotAxis', [1,0,0]);
+
+nurbs = rotateNURBS(nurbs,'theta', pi-3*p2,'rotAxis', [1,0,0]);
 nurbs = permuteNURBS(nurbs,[2,1]);
 nurbs = explodeNURBS(nurbs,2);
 nurbsCol(2) = nurbs(1);
@@ -62,8 +69,7 @@ x_b3 = -L-g2-g3/2;
 coeffs(:,:,1) = [x_b3*ones(1,n); b3*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
 x_b2 = -L-g2;
 coeffs(:,:,2) = [x_b2*ones(1,n); b2*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
-backTop = rotateNURBS(createNURBSobject(coeffs,{Xi2, [0,0,1,1]}),'theta', 30*pi/180,'rotAxis', 'Xaxis');
-backTop = backTop{1};
+backTop = rotateNURBS(createNURBSobject(coeffs,{Xi2, [0,0,1,1]}),'theta', 30*pi/180,'rotAxis', [1,0,0]);
 
 %% Upper main body
 C_4 = c + b*cos(beta/2);
@@ -98,7 +104,7 @@ nurbsCol(6) = createNURBSobject(coeffs_mainTop(:,:,2:4),{Xi3, [0,0,0,1,1,1]});
 %% Create transition
 coeffs_top = zeros(4,4*npts+1,4);
 nurbs_lower = insertKnotsInNURBS(nurbsCol(2),{[] 0.5});
-coeffs_top(:,:,1) = backTop.coeffs(:,:,2);
+coeffs_top(:,:,1) = backTop{1}.coeffs(:,:,2);
 nurbs_mainTop = insertKnotsInNURBS(nurbs_mainTop,{0.5 []});
 nurbs_mainTop = elevateNURBSdegree(nurbs_mainTop,[1,0]);
 coeffs_top(:,:,end) = nurbs_mainTop{1}.coeffs(:,:,1);
@@ -116,8 +122,8 @@ for i = 1:2*npts+2
     end
     pts(2,1) = nurbs_lower{1}.coeffs(1,1,3);
     
-    v1 = backTop.coeffs(1:3,i,1);
-    v2 = backTop.coeffs(1:3,i,2);
+    v1 = backTop{1}.coeffs(1:3,i,1);
+    v2 = backTop{1}.coeffs(1:3,i,2);
     
     g4 = nurbs_lower{1}.coeffs(1,1,2)-nurbs_lower{1}.coeffs(1,1,1);
     

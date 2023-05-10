@@ -7,6 +7,8 @@ end
 
 Eps = 1e-10;
 noPatches = numel(nurbs);
+
+%% Extract all interfaces (subnurbs) from the patches and assign each of these a unique key (stored in keys)
 keys = cell(noPatches,1);
 subnurbs = cell(noPatches,1);
 for i = 1:noPatches
@@ -21,9 +23,9 @@ for i = 1:noPatches
         d = subnurbs{i}{ii}.d;
         indices = 1:d_p;
         compScaling = 1:d; % Add more uniquness to the key (due to symmetries in many geometries)
-        compSum = sum(abs(subnurbs{i}{ii}.coeffs(1:d,:)),2);
-        bdryMeasure = dot(compSum/norm(compSum),compScaling/norm(compScaling));
-        keys{i}(ii) = int32(bdryMeasure*1e6);
+        compSum = sum(subnurbs{i}{ii}.coeffs(1:d,:),2);
+        bdryMeasure = dot(compSum,compScaling);
+        keys{i}(ii) = int32(bdryMeasure/10^ceil(log10(abs(bdryMeasure)))*1e9);
         if d_p >= 1
             % Skip adding bdries that have zero measure
             for iii = 1:d_p
@@ -43,12 +45,13 @@ for i = 1:noPatches
                 end
             end
             if zeroMeasure
-                keys{i}(ii) = -1;
+                keys{i}(ii) = intmax;
             end
         end
     end
 end
 
+%% Get topology and find free boundaries
 counter = 1;
 counterFree = 1;
 freeBdries = zeros(noPatches,2);
@@ -57,31 +60,26 @@ for i = 1:noPatches
         continue
     end
     for ii = 1:numel(subnurbs{i})
-        if keys{i}(ii) < 0
+        if keys{i}(ii) == intmax
             continue
         end
         % Add face with nonzero measure
         freeBdry = true;
         connectionFound = false;
         for j = 1:noPatches
-            if ~ismember(keys{i}(ii),keys{j})
-                continue
-            end
-            for jj = 1:numel(subnurbs{j})
+            for jj = find(keys{j} == keys{i}(ii))
                 [matchingBdries,orient] = NURBSisEqual(subnurbs{i}{ii},subnurbs{j}{jj},1);
                 if matchingBdries && ~(i == j && ii == jj)
                     freeBdry = false;
                 end
-                if ~(i == j && ii <= jj) && matchingBdries
-                    if ~connectionFound
-                        geometry.topology.connection{counter}.Attributes.master = i;
-                        geometry.topology.connection{counter}.Attributes.midx = ii;
-                        geometry.topology.connection{counter}.Attributes.slave = j;
-                        geometry.topology.connection{counter}.Attributes.sidx = jj;
-                        geometry.topology.connection{counter}.Attributes.orient = orient;
-                        connectionFound = true;
-                        counter = counter + 1;
-                    end
+                if ~(i == j && ii <= jj) && matchingBdries && ~connectionFound
+                    geometry.topology.connection{counter}.Attributes.master = i;
+                    geometry.topology.connection{counter}.Attributes.midx = ii;
+                    geometry.topology.connection{counter}.Attributes.slave = j;
+                    geometry.topology.connection{counter}.Attributes.sidx = jj;
+                    geometry.topology.connection{counter}.Attributes.orient = orient;
+                    connectionFound = true;
+                    counter = counter + 1;
                 end
             end
         end
@@ -91,6 +89,8 @@ for i = 1:noPatches
         end
     end
 end
+
+%% Create topology sets
 freeBdries(counterFree:end,:) = [];
 if isempty(geometry)
     return
@@ -134,16 +134,24 @@ if ~isempty(freeBdries)
             noCpts(j) = prod(nurbsPart{j}.number);
         end
 
+        % Collect all control points into a single array X
         X = zeros(sum(noCpts),d);
         counter = 1;
         for j = 1:numel(nurbsPart)
             X(counter:counter+noCpts(j)-1,:) = nurbsPart{j}.coeffs(1:d,:).';
             counter = counter + noCpts(j);
         end
-        [~, V] = convhull(X);
-        if V > V_max
-            I_outer = i;
-            V_max = V;
+
+        % Find the surface having the largest volume and define this to be
+        % the outermost surface
+        try
+            [~, V] = convhull(X);
+            if V > V_max
+                I_outer = i;
+                V_max = V;
+            end
+        catch
+            warning('Could not compute the convex hull. The surface may not be closed.')
         end
     end
     

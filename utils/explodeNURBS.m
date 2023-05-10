@@ -3,16 +3,6 @@ d_p = nurbs{1}.d_p;
 if nargin < 2
     dir = 1:d_p;
 end
-if ischar(dir)
-    switch dir
-        case 'xi'
-            dir = 1;
-        case 'eta'
-            dir = 2;
-        case 'zeta'
-            dir = 3;
-    end
-end
 
 if nargin < 3
     reverseDir = false;

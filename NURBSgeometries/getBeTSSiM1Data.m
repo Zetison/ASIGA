@@ -3,7 +3,8 @@ options = struct('R', 3,...
                  'L', 40,...
                  'x_0', [0,0,0], ...
                  'parm', 2, ...
-                 't', 0.02); 
+                 't', 0.02, ...
+                 'uniformDegree', true); 
 if nargin > 0
     if numel(varargin) > 1
         newOptions = varargin;
@@ -29,6 +30,9 @@ switch parm
         halfCyl = loftNURBS({arc2,arc1});
         halfCyl(1) = flipNURBSparametrization(halfCyl(1),1);
         nurbs = [halfDisk2, halfCyl, halfSphere, halfDisk1];
+        if options.uniformDegree
+            nurbs = makeUniformNURBSDegree(nurbs,2);
+        end
     case 2
         temp = getHalfDiskData('R',R,'parm',parm);
         nurbs = rotateNURBS(getQuadSphereData('R',R,'parm',parm),'rotAxis',[1,0,0],'theta',-pi/2);
@@ -38,6 +42,9 @@ switch parm
         arc2 = translateNURBS(arc,[-L,0,0]);
         nurbs(9:14) = loftNURBS({arc,arc2});
         nurbs(15:18) = translateNURBS(rotateNURBS(rotateNURBS(temp,'rotAxis',[0,0,1],'theta',pi/2),'rotAxis',[0,1,0],'theta',-pi/2),[-L,0,0]);
+        if options.uniformDegree
+            nurbs = makeUniformNURBSDegree(nurbs,4);
+        end
 end
 
 

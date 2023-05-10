@@ -18,9 +18,9 @@ function studyName = availableStudies()
 
 % studyName = 'Barrel_conv'; %getTask_Barrel_conv
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
-% studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
+studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
 % studyName = 'Safjan2002tdi_Fig1'; %getTask_Safjan2002tdi_Fig1
-studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Shirron2006afe'; %getTask_Shirron2006afe
 % studyName = 'Shirron2006afe_Fig3'; %getTask_Shirron2006afe_Fig3
 % studyName = 'FreeCAD'; %getTask_FreeCAD

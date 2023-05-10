@@ -33,6 +33,6 @@ else
     nurbs(end+1) = extrudeNURBS(subNURBS(nurbs(n),'at',{[1 0; 0 0; 0 0],[]}), 'extrudeDir',[0,-t,0], 'flip', true);
 end
 if options.uniformDegree
-    nurbs = makeUniformNURBSDegree(nurbs);
+    nurbs = makeUniformNURBSDegree(nurbs,2);
 end
 

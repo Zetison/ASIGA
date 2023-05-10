@@ -1,5 +1,5 @@
 function [h,maxC,minC] = plotNURBS(varargin)
-
+error('Depricated: Use plotNURBSvec instead')
 %% Interpret input arguments
 nurbsPatches = varargin{1};
 % set default values
