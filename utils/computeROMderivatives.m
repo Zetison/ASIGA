@@ -21,8 +21,6 @@ else
 end
 if strcmp(task.sol.solver,'LU')
     dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
-else
-    task = createPreconditioner(task);
 end
 for i = 1:noRHSs
     j = shiftROM + i-1; % Derivative order
@@ -30,12 +28,13 @@ for i = 1:noRHSs
     for k = 1:min(j,numel(dAdomega))
         b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
     end
-    if strcmp(task.sol.solver,'LU')
-        task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
-    else
-        noRestarts = []; % change this to save memory
-        % noRestarts = 2;
-        task.UU = task.Pinv*gmres(task.Pinv*task.A*task.Pinv,task.Pinv*b,noRestarts,1e-10,1000);
+    switch task.sol.solver
+        case 'LU'
+            task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+        case 'gmres'
+            task.U_p(:,shiftROM+i) = gmres(task.A,b,task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+        otherwise
+            eval(['task.U_p(:,shiftROM+i) = ' task.sol.solver '(task.A,b,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
     end
 end
 

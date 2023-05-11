@@ -69,36 +69,48 @@ no2Dpoints = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test autorefine
 % close all
-% R = 1;
+R = 5;
+% nurbs = getDiskData('R',R,'parm',1,'t',0.3*R);
+% nurbs = getDiskData('R',R,'parm',2,'t',0.3*R);
 % nurbs = getDiskData('R',R,'parm',2);
-% % nurbs = insertKnotsInNURBS(nurbs,[10,20]);
-% xi = sort(rand(1000,1));
-% eta = sort(rand(1000,1));
-% % tic
-% % v_old = zeros(100,2);
-% % dvdxi_old = zeros(100,2);
-% % dvdeta_old = zeros(100,2);
-% % for i = 1:numel(xi)
-% %     [temp,dtempdxi,dtempdeta] = evaluateNURBS(nurbs{1}, [xi(i),eta(i)],1);
-% %     v_old(i,:) = temp;
-% %     dvdxi_old(i,:) = dtempdxi;
-% %     dvdeta_old(i,:) = dtempdeta;
-% % end
-% % toc
-% % tic
-% % [v, dvdxi,dvdeta] = evaluateNURBSvec(nurbs{1}, [xi,eta],1);
-% % toc
-% % I = edgeLengths(nurbs,1);
-% % geometry = getTopology(nurbs);
-% refLength = R*pi/2;
-% M = 2;
-% % nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1),1);
-% 
-% close all
-% tic
-% plotNURBSvec(nurbs);
-% toc
+% nurbs = getEllipsoidData('C',R,'parm',1);
+% nurbs = getEllipsoidData('C',R,'parm',2);
+% nurbs = getEllipsoidData('C',R,'parm',2,'t',0.3*R);
+% nurbs = explodeNURBS(getEllipsoidData('C',R,'parm',1,'t',0.3*R));
+% nurbs = getBeTSSiM1Data('parm',1);
+% nurbs = getBeTSSiM1Data('parm',2);
+% nurbs = getBeTSSiM2Data('parm',1,'t',0.5);
+% nurbs = getBeTSSiM3Data('parm',2,'t',0.5);
+% nurbs = getBeTSSiM4Data('parm',1,'t',0.5);
+% nurbs = getBeTSSiM4Data('parm',2,'t',0.5);
+% nurbs = getBeTSSiM5Data('parm',1);
+% nurbs = getBCAData(2);
+% nurbs = getBC_modData2();
+load('BeTSSi_BCA_p2.mat')
+if 0 % Test Model4 with knot insertions
+    xi = [0.1211111142,0.621111142];
+    newKnots = cell(1,16);
+    newKnots{1} = {[], xi, []};
+    newKnots{3} = {[], xi, []};
+    newKnots{5} = {xi, [], []};
+    newKnots{7} = {[], 1-xi, []};
+    newKnots{8} = {xi, [], []};
+    nurbs = insertKnotsInNURBS(nurbs,newKnots);
+end
+if 1
+    geometry = getTopology(nurbs);
+    refLength = R*pi/2;
+    % refLength = R*pi/2/50;
+    M = 7;
+    nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1));
+end
+close all
+plotNURBSvec(nurbs,'plotParmDir',0,'plotControlPolygon',0);
 % view(0,90)
+% view(-21,32)
+% view(-60,17)
+% camlight
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find NURBS representation of part of sphere
 % p = 4;

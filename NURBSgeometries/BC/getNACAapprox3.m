@@ -8,7 +8,7 @@ if nargin < 6 || isempty(xValues)
     dofsToRemove{1} = I;
     dofsToRemove{2} = I;
     dofsToRemove{3} = I;
-    temp = f(xi_rep);
+    temp = f(xi_rep.');
 %     values{1} = [temp(1,1); temp(:,1)];
     values{1} = temp(:,1);
     values{2} = temp(:,2);
@@ -20,7 +20,7 @@ else
     dofsToRemove{1} = sort(unique([I,xIndices]));
     dofsToRemove{axisFlipIdx} = sort([I,I(idx)-1,I(idx)+1]);
     dofsToRemove{axisFlipIdx2} = I;
-    temp = f(xi_rep);
+    temp = f(xi_rep.');
     values{1} = temp(:,1);
     values{2} = temp(:,2);
     values{3} = temp(:,3);
@@ -29,4 +29,4 @@ else
     values{1} = [values{1}(1:idx-1); xValues; values{1}(idx+1:end)];
     nurbs = leastSquares1D(Xi,p,f,3,weigh_ss,dofsToRemove,values);
 end
-cntrlPts = nurbs.coeffs(1:3,:).';
+cntrlPts = nurbs{1}.coeffs(1:3,:).';

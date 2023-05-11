@@ -93,7 +93,11 @@ else
 end
 
 [Q, W] = gaussTensorQuad(degree+1+extraGP(1:d_p));
-progressBars = task.misc.progressBars;
+if isfield(task.misc,'progressBars')
+    progressBars = task.misc.progressBars;
+else
+    progressBars = false;
+end
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
     try

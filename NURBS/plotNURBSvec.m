@@ -10,7 +10,6 @@ options = struct('resolution',[32,32,32], ...
                  'plotNormalVectors', 0, ...
                  'plotJacobian', 0, ...
                  'plotParmDir', 0, ...
-                 'quiverScale', 0.2, ...
                  'coarseLinearSampling', true, ...
                  'color',jet(numel(nurbsPatches)),...
                  'alphaValue',1,...
@@ -20,7 +19,8 @@ options = struct('resolution',[32,32,32], ...
                  'colorControlPolygon', 'red', ...
                  'markerEdgeColor', 'black', ...
                  'markerColor', 'black', ...
-                 'quiverLineWidth', 1, ...
+                 'quiverScale', 0.2, ...
+                 'quiverLineWidth', 2, ...
                  'LineWidth',0.5, ...
                  'qstep',1, ...
                  'view', getView(), ...
@@ -232,6 +232,12 @@ for patch = 1:noPatches
                 surf(X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
                         'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
+            if plotElementEdges
+                plotGridLines(vElementEdges,displayName)
+            end
+            if plotNormalVectors
+                quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*normals(1:qstep:end,1:qstep:end,1),quiverScale*normals(1:qstep:end,1:qstep:end,2),quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
+            end
             if plotParmDir
                 for i = 1:d_p
                     if isfield(nurbs,'isPML') && nurbs.isPML(i)
@@ -241,12 +247,6 @@ for patch = 1:noPatches
                     end
                     quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*Up{1,i}(1:qstep:end,1:qstep:end),quiverScale*Up{2,i}(1:qstep:end,1:qstep:end),quiverScale*Up{3,i}(1:qstep:end,1:qstep:end),'color',colorParm,'LineWidth',quiverLineWidth,'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
                 end
-            end
-            if plotNormalVectors
-                quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*normals(1:qstep:end,1:qstep:end,1),quiverScale*normals(1:qstep:end,1:qstep:end,2),quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
-            end
-            if plotElementEdges
-                plotGridLines(vElementEdges,displayName)
             end
         elseif d_p == 2 && d == 3
             nuk1 = length(p_values{1});
@@ -284,10 +284,6 @@ for patch = 1:noPatches
                 surf(X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
                             'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
-            if plotNormalVectors
-                normals = reshape(normals,nuk1,nuk2,d);
-                quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*normals(1:qstep:end,1:qstep:end,1),quiverScale*normals(1:qstep:end,1:qstep:end,2),quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
-            end
             if plotElementEdges
                 stepLen = res+1;
                 vElementEdges = NaN((nuk1+1)*noUniqueKnots(2)+(nuk1+1)*noUniqueKnots(2),3);
@@ -304,6 +300,10 @@ for patch = 1:noPatches
                 noAddedPoints = noUniqueKnots(1)*(nuk2+1);
                 vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
                 plotGridLines(vElementEdges,displayName)
+            end
+            if plotNormalVectors
+                normals = reshape(normals,nuk1,nuk2,d);
+                quiver3(X(1:qstep:end,1:qstep:end,1),X(1:qstep:end,1:qstep:end,2),X(1:qstep:end,1:qstep:end,3),quiverScale*normals(1:qstep:end,1:qstep:end,1),quiverScale*normals(1:qstep:end,1:qstep:end,2),quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
             end
             if plotParmDir
                 for i = 1:d_p
@@ -348,7 +348,7 @@ for patch = 1:noPatches
                 nok1 = length(p_values{1}); % number of knots in the xi direction
                 nok2 = length(p_values{2}); % number of knots in the eta direction
                 nuk1 = length(uniqueKnots{1}); % number of unique knots in the xi direction
-                nuk2 = length(uniqueKnots{1}); % number of unique knots in the eta direction
+                nuk2 = length(uniqueKnots{2}); % number of unique knots in the eta direction
                 XI = [[kron(ones(nuk2,1),p_values{1}), kron(uniqueKnots{2}.',ones(nok1,1))];
                       [kron(uniqueKnots{1}.',ones(nok2,1)), kron(ones(nuk1,1),p_values{2})]];
                 npts = nuk2*(nok1+1)+nuk1*(nok2+1) - 1;
@@ -358,7 +358,10 @@ for patch = 1:noPatches
                               ((nok2+1):(nok2+1):(nuk1*(nok2+1))-1)+(nuk2*(nok1+1))];
                 indices(indices_NaN) = true;
                 v(~indices,:) = evaluateNURBSvec(nurbs, XI);
-                plotGridLines(v,displayName)
+
+                if plotElementEdges
+                    plotGridLines(v,displayName)
+                end
             end
         elseif d_p == 1
             C = evaluateNURBSvec(nurbs, p_values{1});

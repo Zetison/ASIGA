@@ -91,9 +91,14 @@ switch parm
         nurbs = createNURBSobject(coeffs,{Xi, Eta});
         nurbs = permuteNURBS(nurbs,[2,1]); % ensure upwards pointing normal vector
 end
-if t ~= 0
+if t == 0
+    nurbs = ensure2DNURBS(nurbs);
+else
     nurbs = extrudeNURBS(nurbs,'extrudeDir',[0,0,t],'flip',t < 0);
 end
 if options.uniformDegree
     nurbs = makeUniformNURBSDegree(nurbs);
 end
+
+
+

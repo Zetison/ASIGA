@@ -31,6 +31,9 @@ end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
+sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
+sol.preconditioner  = 'ilu';	% 'ilu', 'SSOR', 'diag'
+
 ffp.calculateFarFieldPattern    = true;     % Calculate far field pattern
 ffp.alpha_s = 0;                            % Aspect angle of incident wave
 ffp.beta_s  = -pi/2;                        % Elevation angle of incident wave
@@ -167,13 +170,13 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 4; % 7 (6 if hetmaniukCase and manuelRefinement)
+    msh.M = 3; % 7 (6 if hetmaniukCase and manuelRefinement)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
-    rom.computeROMresidualFine = 1;
-    rom.computeROMerror = 1;
+    rom.computeROMresidualFine = 0;
+    rom.computeROMerror = 0;
     rom.J_max = 20;
 %     sol.preconditioner = 'none';
     misc.symmetric = 0;
@@ -301,7 +304,7 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-    collectIntoTasks
+%     collectIntoTasks
     
     %% Run paraview visualization case
     misc.omega = misc.omega(end);
@@ -324,7 +327,7 @@ for i = 1:numel(BCs)
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-    collectIntoTasks
+%     collectIntoTasks
 end
 
 function addCommands_(study)

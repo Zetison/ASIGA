@@ -86,3 +86,8 @@ end
 if task.rom.useROM && numel(task.varCol) > 2 && task.varCol{3}.rho ~= 1000
     error('This has not been properly implemented for ROM. Use with care!')
 end
+if ~strcmp(task.sol.solver,'LU') && strcmp(task.misc.method,'BEM') 
+    warning('Using a direct solver instead of iterative solver for BEM')
+    task.sol.solver = 'LU';
+    task.sol.preconditioner = 'diag';
+end
