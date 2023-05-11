@@ -19,29 +19,25 @@ if shiftROM > 0
 else
     task.U_p = zeros(size(task.FF));
 end
-tic
-if true
+if strcmp(task.sol.solver,'LU')
     dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
-    for i = 1:noRHSs
-        j = shiftROM + i-1; % Derivative order
-        b = task.FF(:,i);   % Derivative of right hand side
-        for k = 1:min(j,numel(dAdomega))
-            b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
-        end
-        task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
-    end
 else
-    dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
-    for i = 1:noRHSs
-        j = shiftROM + i-1; % Derivative order
-        b = task.FF(:,i);   % Derivative of right hand side
-        for k = 1:min(j,numel(dAdomega))
-            b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
-        end
+    task = createPreconditioner(task);
+end
+for i = 1:noRHSs
+    j = shiftROM + i-1; % Derivative order
+    b = task.FF(:,i);   % Derivative of right hand side
+    for k = 1:min(j,numel(dAdomega))
+        b = b - nchoosek(j,k)*dAdomega{k}*task.U_p(:,shiftROM+i-k);
+    end
+    if strcmp(task.sol.solver,'LU')
         task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
+    else
+        noRestarts = []; % change this to save memory
+        % noRestarts = 2;
+        task.UU = task.Pinv*gmres(task.Pinv*task.A*task.Pinv,task.Pinv*b,noRestarts,1e-10,1000);
     end
 end
-toc
 
 i = 1:noRHSs;
 % if ~isfield(task,'U')
