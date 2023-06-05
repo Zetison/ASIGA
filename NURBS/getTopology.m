@@ -5,7 +5,6 @@ if isempty(nurbs)
     return
 end
 
-Eps = 1e-10;
 noPatches = numel(nurbs);
 
 %% Extract all interfaces (subnurbs) from the patches and assign each of these a unique key (stored in keys)
@@ -18,33 +17,15 @@ for i = 1:noPatches
     subnurbs{i} = subNURBS(nurbs(i));
     keys{i} = zeros(1,numel(subnurbs{i}),'int32');
     for ii = 1:numel(subnurbs{i})
-        coeffs = subnurbs{i}{ii}.coeffs;
         d_p = subnurbs{i}{ii}.d_p;
         d = subnurbs{i}{ii}.d;
-        indices = 1:d_p;
         compScaling = 1:d; % Add more uniquness to the key (due to symmetries in many geometries)
         compSum = sum(subnurbs{i}{ii}.coeffs(1:d,:),2);
         bdryMeasure = dot(compSum,compScaling);
         keys{i}(ii) = int32(bdryMeasure/10^ceil(log10(abs(bdryMeasure)))*1e9);
         if d_p >= 1
             % Skip adding bdries that have zero measure
-            for iii = 1:d_p
-                zeroMeasure = true;
-                temp = reshape(permute(coeffs,[1,iii+1,setdiff(indices,iii)+1]),d+1,subnurbs{i}{ii}.number(iii),[]);
-    
-                for l = 1:size(temp,3)
-                    temp2 = temp(1:d,:,l).';
-                    uniqueCoeffs = uniquetol(temp2,Eps,'ByRows',true, 'DataScale',max(norm2(temp2)), 'OutputAllIndices', true);
-                    if size(uniqueCoeffs,1) ~= 1
-                        zeroMeasure = false;
-                        break
-                    end
-                end
-                if zeroMeasure
-                    break
-                end
-            end
-            if zeroMeasure
+            if NURBShasZeroMeasure(subnurbs{i}{ii})
                 keys{i}(ii) = intmax;
             end
         end

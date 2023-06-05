@@ -13,7 +13,7 @@ if nargin > 0
     options = updateOptions(options,newOptions);
 end
 
-% If the centerCoordinate is not given, the prism is placed with its center
+% If the x_0 (center coordinate) is not given, the prism is placed with its center
 % at the options.L/2
 
 Xi = [0 0 1 1];

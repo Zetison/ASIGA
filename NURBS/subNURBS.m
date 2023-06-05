@@ -3,6 +3,9 @@ options = struct('outwardPointingNormals',false,...
                  'inwardPointingNormals',false,...
                  'useFlipping',true);
 nurbs = varargin{1};
+if ~iscell(nurbs)
+    nurbs = {nurbs};
+end
 if nargin > 1
     if numel(varargin) > 2
         newOptions = varargin(2:end);

@@ -25,7 +25,7 @@ if d_p >= 4
 end
 
 if nargout > 2
-    orientMap = cell(numel(flips)*size(indices,1),2);
+    orientMap = cell(numel(flips)*size(indices,1),3);
     counter = 1;
     for i = 1:size(indices,1)
         for j = 1:numel(flips)

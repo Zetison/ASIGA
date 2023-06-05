@@ -3,9 +3,6 @@ n_xi = length(Xi) - (p_xi+1);
 if nargin < 5 || any(isnan(weights))
     weights = ones(1,n_xi);
 end
-if isa(weights,'function_handle')
-    error('wrong use of function')
-end
 grev = aveknt(Xi, p_xi+1);
 controlPts = [grev; weights];
 nurbs = createNURBSobject(controlPts,Xi);
@@ -42,15 +39,15 @@ Mvalues = zeros(sizeMe,noElems);
 F_indices = zeros(n_en,noElems); 
 Fvalues   = zeros(n_en,noElems,d); 
 
-[Q1D,W1D] = gaussTensorQuad(64); 
+[Q1D,W1D] = gaussTensorQuad(64);
 
 %% Build global matrices
-for e = 1:noElems
-% parfor e = 1:noElems
+% for e = 1:noElems
+parfor e = 1:noElems
 
     patch = pIndex(e);
     knots = knotVecs{patch};
-    Xi_e(1,:) = elRange{1}(index(e,1),:);
+    Xi_e = elRange{1}(index(e,1),:);
 
     sctr = element(e,:);
     pts = controlPts(sctr,:);

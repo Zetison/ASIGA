@@ -1,5 +1,7 @@
 function color = getColor(type)
-
+if nargin < 1
+    type = 1;
+end
 switch type
     case 0
         color = getColor(1);

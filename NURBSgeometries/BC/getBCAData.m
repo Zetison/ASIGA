@@ -1,4 +1,7 @@
-function nurbsColFinal = getBCAData(p)
+function nurbsColFinal = getBCAData(p,useRefinements)
+if nargin < 2
+    useRefinements = true;
+end
 alpha = NaN; % avoid bug
 beta = NaN; % avoid bug
 container = setBCParameters;
@@ -31,7 +34,7 @@ for rudder_i = 1:2
         Xi = [zeros(1,p+1),linspace2(0,s1,2),s1*ones(1,p),(s1+s2_r)/2,s2_r*ones(1,p),linspace2(s2_r,1,4),ones(1,p+1)];
         idx = 2;
     end
-    [xi_rep, I] = getRepeatedKnots(Xi,p);
+    [~, I] = getRepeatedKnots(Xi,p);
     
     % Fix front (arc) part of cone part 
     z = g3/2*tan(alpha) + abs(-b+h+x2);
@@ -127,7 +130,9 @@ for rudder_i = 1:2
 
 
     topRudder = elevateNURBSdegree(topRudder,[0,p-1]);
-	topRudder = insertKnotsInNURBS(topRudder,{{[] [linspace2(0,1,4), 1.5, linspace2(2,3,4)]/3}});
+    if useRefinements
+	    topRudder = insertKnotsInNURBS(topRudder,{{[] [linspace2(0,1,4), 1.5, linspace2(2,3,4)]/3}});
+    end
     
     rudders(rudder_i) = glueNURBS([nurbs,topRudder,nurbsMir],2);
 end
@@ -164,9 +169,11 @@ coeffs(:,:,2) = [x_b3*ones(1,n); b3*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
 conePart(2) = createNURBSobject(coeffs,{XiTemp, [0,0,1,1]});
 conePart(2) = insertKnotsInNURBS(conePart(2),{[] 1-(s2_r-s1)/(1-s1)});
 conePart(2) = elevateNURBSdegree(conePart(2),[p-2,p-1]);
-conePart(2) = insertKnotsInNURBS(conePart(2),{[1,2]/3 []});
+if useRefinements
+    conePart(2) = insertKnotsInNURBS(conePart(2),{[1,2]/3 []});
+end
 
-% conePart{1} = insertKnotsInNURBS(conePart{1},{[1,2]/3 []});
+
 conePart(1) = rotateNURBS(conePart(1),'theta',pi/2+30*pi/180,'rotAxis', [1,0,0]);
 conePart(2) = rotateNURBS(conePart(2),'theta',pi+30*pi/180,'rotAxis', [1,0,0]);
 conePart(3) = rotateNURBS(conePart(2),'theta',pi/2,'rotAxis', [1,0,0]);
@@ -199,7 +206,11 @@ coeffs(1,:,1) = x;
 coeffs(4,:,1) = coeffs(4,:,2);
 backDisk = createNURBSobject(coeffs,{XiTemp, [0,0,1,1]});
 backDisk = elevateNURBSdegree(backDisk,[p-2,p-1]);
-refineXi = [1,2,7,8,10,11,16,17,19,20,22,23,25,26,28,29,31,32,34,35]/36;
+if useRefinements
+    refineXi = [1,2,7,8,10,11,16,17,19,20,22,23,25,26,28,29,31,32,34,35]/36;
+else
+    refineXi = [1,2,7,8,10,11,16,17,19,20,25,26,28,29,34,35]/36;
+end
 backDisk = insertKnotsInNURBS(backDisk,{refineXi []});
 
 x = a-58.9-l_lm;
@@ -220,7 +231,14 @@ x_b2 = -L-g2;
 coeffs(:,:,2) = [x_b2*ones(1,n); b2*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
 frontCone = createNURBSobject(coeffs,{XiTemp, [0,0,1,1]});
 frontCone = elevateNURBSdegree(frontCone,[p-2,p-1]);
-frontCone = insertKnotsInNURBS(frontCone,{[1,2,16,17,19,20,22,23,25,26,28,29,31,32,34,35]/36 linspace2(0,1,4)});
+if useRefinements
+    refineXi = [1,2,16,17,19,20,22,23,25,26,28,29,31,32,34,35]/36;
+    refineEta = linspace2(0,1,4);
+else
+    refineXi = [1,2,16,17,19,20,25,26,28,29,34,35]/36;
+    refineEta = [];
+end
+frontCone = insertKnotsInNURBS(frontCone,{refineXi refineEta});
 
 nurbsColFinal = cell(1,36);
 nurbsColFinal(1) = backDisk;
@@ -267,7 +285,9 @@ r_o = @(xi) getBeTSSiSail(xi,ones(size(xi)),a,c,l_ls,l_us,b_ls,b_us,h_s,delta_s,
 r_u = @(xi) getBeTSSiSail(xi,zeros(size(xi)),a,c,l_ls,l_us,b_ls,b_us,h_s,delta_s, s2_s);
 sail = addBeTSSiFoil3(l_ls, b_ls, l_us, b_us, x_s, c, h_s, dx_sail, [0,0], Xisail, idx, NaN, s2_s, r_o, r_u);
 sail = elevateNURBSdegree(sail,[0,p-1]);
-sail = insertKnotsInNURBS(sail,{[] 0.5});
+if useRefinements
+    sail = insertKnotsInNURBS(sail,{[] 0.5});
+end
 nurbsCol(8) = sail;
 
 %% add depthrudders
@@ -334,7 +354,9 @@ nurbsCol(4) = glueNURBS(sidePanel(1:5),2);
 nurbsCol(6) = sidePanel(9);
 leftDepthRudder = elevateNURBSdegree(leftDepthRudder,[0,p-1]);
 leftDepthRudder = flipNURBSparametrization(leftDepthRudder,2);
-leftDepthRudder = insertKnotsInNURBS(leftDepthRudder,{[] 0.5});
+if useRefinements
+    leftDepthRudder = insertKnotsInNURBS(leftDepthRudder,{[] 0.5});
+end
 nurbsCol(5) = leftDepthRudder;
 
 nurbsCol(10) = flipNURBSparametrization(mirrorNURBS(nurbsCol(4),'y'),1);
@@ -348,41 +370,81 @@ nurbsColFinal = makeUniformNURBSDegree(nurbsColFinal,p);
 %% Refine to reduce aspect ratios and to make patches compatible
 
 % refine side panels and lower part
+if useRefinements
+    refineXi = [linspace2(0,1/9,14),  linspace2(1/9,2/9,8), linspace2(2/9,3/9,1), ...
+                linspace2(3/9,4/9,1), linspace2(4/9,5/9,4), linspace2(5/9,6/9,3), linspace2(8/9,1,3)];
+else
+    refineXi = [linspace2(1/9,2/9,8), linspace2(2/9,3/9,1),linspace2(3/9,4/9,1), linspace2(5/9,6/9,3)];
+end
 for i = [13:15, 25:35]
-    nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] [linspace2(0,1/9,14),  linspace2(1/9,2/9,8), linspace2(2/9,3/9,1), ...
-                                                                linspace2(3/9,4/9,1), linspace2(4/9,5/9,4), linspace2(5/9,6/9,3), linspace2(8/9,1,3)]});
+    nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] refineXi});
 end
-% refine upper side panels
+
+% refine upper panels
+if useRefinements
+    refineXi = [linspace2(0,1/5,14),linspace2(1/5,2/5,8), linspace2(2/5,3/5,1), linspace2(3/5,4/5,1), linspace2(4/5,1,4)];
+else
+    refineXi = [linspace2(1/5,2/5,8), linspace2(2/5,3/5,1), linspace2(3/5,4/5,1)];
+end
 for i = [16, 22]
-    nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] [linspace2(0,1/5,14),linspace2(1/5,2/5,8), linspace2(2/5,3/5,1), ...
-                                                                linspace2(3/5,4/5,1), linspace2(4/5,1,4)]});
+    nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] refineXi});
 end
-% refine depth rudders
-for i = [17,23]
-    nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] [linspace2(1/5,2/5,3), linspace2(3/5,4/5,3)]});
+
+if useRefinements
+    % refine depth rudders
+    for i = [17,23]
+        nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] [linspace2(1/5,2/5,3), linspace2(3/5,4/5,3)]});
+    end
+    % refine rear deck
+    nurbsColFinal(19) = insertKnotsInNURBS(nurbsColFinal(19),{[] linspace2(0,1,14)});
+    % refine upper front side panels
+    for i = [18, 24]
+        nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] linspace2(0,1,3)});
+    end
+    % refine sail
+    nurbsColFinal(20) = insertKnotsInNURBS(nurbsColFinal(20),{[] [linspace2(1/5,2/5,3), linspace2(3/5,4/5,3)]});
 end
-% refine rear deck
-nurbsColFinal(19) = insertKnotsInNURBS(nurbsColFinal(19),{[] linspace2(0,1,14)});
-% refine upper front side panels
-for i = [18, 24]
-    nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{[] linspace2(0,1,3)});
-end
-% refine sail
-nurbsColFinal(20) = insertKnotsInNURBS(nurbsColFinal(20),{[] [linspace2(1/5,2/5,3), linspace2(3/5,4/5,3)]});
+
 % refine front deck
-nurbsColFinal(21) = insertKnotsInNURBS(nurbsColFinal(21),{[] [linspace2(0,1/5,4), linspace2(1/5,2/5,3), linspace2(4/5,1,3)]});
+if useRefinements
+    refineXi = [linspace2(0,1/5,4), linspace2(1/5,2/5,3), linspace2(4/5,1,3)];
+else
+    refineXi = linspace2(1/5,2/5,3);
+end
+nurbsColFinal(21) = insertKnotsInNURBS(nurbsColFinal(21),{[] refineXi});
 
 % refine in xi-direction for lower part
-for i = 28:35
+if useRefinements
+    indices = 28:35;
+else
+    indices = [28,29,31,32,34,35];
+end
+for i = indices
     nurbsColFinal(i) = insertKnotsInNURBS(nurbsColFinal(i),{linspace2(0,1,2) []});
 end
+
 % refine transition part
-Xi_temp = nurbsColFinal{12}.knots{1};
-nurbsColFinal(12) = insertKnotsInNURBS(nurbsColFinal(12),{insertUniform2([1/3, Xi_temp(Xi_temp>=1/3)],2) [linspace2(0,0.5,3), linspace2(0.5,1,3)]});
+if useRefinements
+    Xi_temp = nurbsColFinal{12}.knots{1};
+    refineXi = insertUniform2([1/3, Xi_temp(Xi_temp>=1/3)],2);
+    refineEta = [linspace2(0,0.5,3), linspace2(0.5,1,3)];
+else
+    refineXi = [13,14,16,17,22,23,25,26,31,32,34,35]/36;
+    refineEta = [];
+end
+nurbsColFinal(12) = insertKnotsInNURBS(nurbsColFinal(12),{refineXi refineEta});
 
 % refine bow
-Xi_temp = nurbsColFinal{end}.knots{1};
-nurbsColFinal(end) = insertKnotsInNURBS(nurbsColFinal(end),{insertUniform2([1/3, Xi_temp(Xi_temp>=1/3)],2) linspace2(0,1,14)});
+if useRefinements
+    Xi_temp = nurbsColFinal{end}.knots{1};
+    refineXi = insertUniform2([1/3, Xi_temp(Xi_temp>=1/3)],2);
+    refineEta = linspace2(0,1,14);
+else
+    refineXi = [13,14,16,17,22,23,25,26,31,32,34,35]/36;
+    refineEta = [];
+end
+
+nurbsColFinal(end) = insertKnotsInNURBS(nurbsColFinal(end),{refineXi refineEta});
 
 nurbsColFinal = explodeNURBS(nurbsColFinal,2);
 nurbsColFinal = explodeNURBS(nurbsColFinal,1);

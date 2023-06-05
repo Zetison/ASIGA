@@ -1,4 +1,4 @@
-clear all
+% clear all
 % close all
 
 addpath(genpath('../export_fig'))
@@ -27,7 +27,7 @@ no2Dpoints = 1000;
 %         nurbs = insertKnotsInNURBS(nurbs,noNewKnots*ones(1,nurbs{1}.d_p));
 % %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
 %         
-%         plotNURBS(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
+%         plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
 %         axis equal
 %         grid off
 %         axis off
@@ -43,6 +43,34 @@ no2Dpoints = 1000;
 %     end
 % end
 % nurbs = translateNURBS(nurbs,[-L/2,0,0]);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test surfaceToVolume
+
+if 1
+    geometry = getTopology(nurbs);
+    nurbs_vol = surfaceToVolume(nurbs,geometry.topology.connection,1.1);
+end
+if 0
+    load('BeTSSi_BCA_p2_unRefined.mat')
+    close all
+    axis equal
+    color = getColor();
+    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotNormalVectors',0,'color',color);
+    drawnow
+    view(getView());
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Generate and save BeTSSi BCA meshes
+% for p = 2:15
+%     nurbs = getBCAData(p,false);
+%     save(['NURBSgeometries\BCAdata\BeTSSi_BCA_p' num2str(p) '_unRefined.mat'],'nurbs')
+%     fprintf('Completed p = %d\n',p)
+% end
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test normalBasedSurface2volume
@@ -68,48 +96,81 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test autorefine
-% close all
-R = 5;
-% nurbs = getDiskData('R',R,'parm',1,'t',0.3*R);
-% nurbs = getDiskData('R',R,'parm',2,'t',0.3*R);
-% nurbs = getDiskData('R',R,'parm',2);
-% nurbs = getEllipsoidData('C',R,'parm',1);
-% nurbs = getEllipsoidData('C',R,'parm',2);
-% nurbs = getEllipsoidData('C',R,'parm',2,'t',0.3*R);
-% nurbs = explodeNURBS(getEllipsoidData('C',R,'parm',1,'t',0.3*R));
-% nurbs = getBeTSSiM1Data('parm',1);
-% nurbs = getBeTSSiM1Data('parm',2);
-% nurbs = getBeTSSiM2Data('parm',1,'t',0.5);
-% nurbs = getBeTSSiM3Data('parm',2,'t',0.5);
-% nurbs = getBeTSSiM4Data('parm',1,'t',0.5);
+% % close all
+% R = 5;
+% % nurbs = getDiskData('R',R,'parm',1,'t',0.3*R);
+% % nurbs = getDiskData('R',R,'parm',2,'t',0.3*R);
+% % nurbs = getDiskData('R',R,'parm',2);
+% % nurbs = getEllipsoidData('C',R,'parm',1);
+% % nurbs = getEllipsoidData('C',R,'parm',2);
+% % nurbs = getEllipsoidData('C',R,'parm',2,'t',0.3*R);
+% % nurbs = explodeNURBS(getEllipsoidData('C',R,'parm',1,'t',0.3*R));
+% % nurbs = getBeTSSiM1Data('parm',1);
+% % nurbs = getBeTSSiM1Data('parm',2);
+% % nurbs = getBeTSSiM2Data('parm',1,'t',0.5);
+% % nurbs = getBeTSSiM3Data('parm',2,'t',2);
+% % nurbs = getBeTSSiM4Data('parm',1,'t',0.5);
 % nurbs = getBeTSSiM4Data('parm',2,'t',0.5);
-% nurbs = getBeTSSiM5Data('parm',1);
-% nurbs = getBCAData(2);
-% nurbs = getBC_modData2();
-load('BeTSSi_BCA_p2.mat')
-if 0 % Test Model4 with knot insertions
-    xi = [0.1211111142,0.621111142];
-    newKnots = cell(1,16);
-    newKnots{1} = {[], xi, []};
-    newKnots{3} = {[], xi, []};
-    newKnots{5} = {xi, [], []};
-    newKnots{7} = {[], 1-xi, []};
-    newKnots{8} = {xi, [], []};
-    nurbs = insertKnotsInNURBS(nurbs,newKnots);
-end
-if 1
-    geometry = getTopology(nurbs);
-    refLength = R*pi/2;
-    % refLength = R*pi/2/50;
-    M = 7;
-    nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1));
-end
-close all
-plotNURBSvec(nurbs,'plotParmDir',0,'plotControlPolygon',0);
-% view(0,90)
-% view(-21,32)
-% view(-60,17)
-% camlight
+% % nurbs = getBeTSSiM5Data('parm',1);
+% % nurbs = getBeTSSiM5Data('parm',2);
+% % nurbs = getBCAData(2);
+% % nurbs = getBC_modData2();
+% % load('BeTSSi_BCA_p2.mat')
+% % nurbs = getLshapeData('d',3);
+% if 0 % Alter L-shape to test refinement algorithm
+%     nurbs{2}.coeffs(3,2,:,2) = 1.5;
+%     nurbs{3}.coeffs(1,1,2,:) = -1;
+%     nurbs{4}.coeffs(2,:,2,2) = 2.5;
+% end
+% if 1 % Test Model4 (with parm==2) with knot insertions
+%     xi = [0.1211111142,0.621111142];
+%     newKnots = cell(1,16);
+%     newKnots{1} = {[], xi, []};
+%     newKnots{3} = {[], xi, []};
+%     newKnots{5} = {xi, [], []};
+%     newKnots{7} = {[], 1-xi, []};
+%     newKnots{8} = {xi, [], []};
+%     nurbs = insertKnotsInNURBS(nurbs,newKnots);
+% end
+% if 1
+%     geometry = getTopology(nurbs);
+%     refLength = R*pi/2;
+%     % refLength = R*pi/2/50;
+%     M = 7;
+%     nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1));
+% end
+% close all
+% plotNURBSvec(nurbs,'plotParmDir',0,'plotControlPolygon',0);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test surfaceToVolume
+% 
+% nurbs_surf = getLshapeData('d',3);
+% geometry = getTopology(nurbs_surf);
+% t = 1;
+% nurbs_vol = surfaceToVolume(nurbs_surf,geometry.topology.connection,t);
+% close all
+% plotNURBSvec(nurbs_surf,'plotParmDir',0,'plotControlPolygon',0);
+% % plotNURBSvec(nurbs_vol,'plotParmDir',0,'plotControlPolygon',0);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test Gordon Hall
+
+% nurbs = getPrismData();
+% % nurbs = getRectangleData();
+% nurbs = elevateNURBSdegree(nurbs,1);
+% nurbs{1}.coeffs = nurbs{1}.coeffs - 0.3*rand([size(nurbs{1}.coeffs,1),nurbs{1}.number]);
+% nurbs = insertKnotsInNURBS(nurbs,[1,2,3]);
+% nurbs = repeatNURBSknots(nurbs);
+% 
+% subnurbs = subNURBS(nurbs);
+% nurbsGH = GordonHall(subnurbs);
+% close all
+% plotNURBSvec(explodeNURBS(nurbs),'plotParmDir',0,'plotControlPolygon',0,'plotObject',0);
+% axis equal
+% % plotNURBSvec(subnurbs,'plotParmDir',1,'plotControlPolygon',0);
+% plotNURBSvec(explodeNURBS(nurbsGH),'plotParmDir',0,'plotControlPolygon',0,'plotObject',0);
+% % plotNURBSvec(nurbs_vol,'plotParmDir',0,'plotControlPolygon',0);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find NURBS representation of part of sphere

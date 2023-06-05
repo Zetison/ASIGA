@@ -15,8 +15,8 @@ for patch = 1:noPatches
     coeffs = nurbs.coeffs;
     number = nurbs.number;
     d_p = nurbs.d_p;
-    coeffs = subasgnArr(coeffs,slc(coeffs,1:d).*repmat(slc(coeffs,d+1),[d,ones(1,d_p)]),1:d);
     d_pp1 = d_p+1;
+    coeffs = NURBSprojection(coeffs,d,d_p,'unproject');
     knots = cell(1,d_p);
     for i = 1:d_p
         if uniformRef
@@ -45,7 +45,7 @@ for patch = 1:noPatches
             coeffs = permute(coeffs,indices);
         end
     end
-    coeffs = subasgnArr(coeffs,slc(coeffs,1:d)./repmat(slc(coeffs,d+1),[d,ones(1,d_p)]),1:d);
+    coeffs = NURBSprojection(coeffs,d,d_p,'project');
     
     nurbsPatches{patch}.coeffs = coeffs;
     nurbsPatches{patch}.knots = knots;

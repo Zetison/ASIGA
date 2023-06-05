@@ -31,8 +31,8 @@ end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
-sol.preconditioner  = 'ilu';	% 'ilu', 'SSOR', 'diag'
+% sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
+% sol.preconditioner  = 'ilu';	% 'ilu', 'SSOR', 'diag'
 
 ffp.calculateFarFieldPattern    = true;     % Calculate far field pattern
 ffp.alpha_s = 0;                            % Aspect angle of incident wave
@@ -170,7 +170,7 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 3; % 7 (6 if hetmaniukCase and manuelRefinement)
+    msh.M = 1; % 7 (6 if hetmaniukCase and manuelRefinement)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
@@ -337,8 +337,6 @@ for i_task = 1:numel(study.tasks)
 
     if isfield(task.rom,'history')
         history = task.rom.history;
-        options.xlabel = 'k';
-        options.ylabel = 'residual';
         for i = 1:numel(history)
             figure(20+i)
             omega = task.rom.history(i).omega;
@@ -348,35 +346,17 @@ for i_task = 1:numel(study.tasks)
             omega_P = history(i).omega_P;
             J_P = history(i).J_P;
             semilogy(omega_P/c_f,1e-15*ones(size(omega_P)),'o','color','magenta','DisplayName','Interpolation points')
-            options.x = omega_P.'/c_f;
-            options.y = 1e-15*ones(size(omega_P)).';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_InterpolationPoints_iter' num2str(i)], options)
             for j = 1:numel(omega_P)
                 text((omega_P(j)+omega_P(end)/200)/c_f,1e-15,num2str(J_P(j)),'color','magenta')
             end
-            options.x = omega_P.'/c_f;
-            options.y = J_P.';
-            options.ylabel = 'J_P';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_noDerivatives_iter' num2str(i)], options)
     
             semilogy([omega_P(1),omega_P(end)]/c_f,task.rom.tolerance*ones(1,2),'red','DisplayName','Tolerance')
-            options.x = [omega_P(1),omega_P(end)].'/c_f;
-            options.y = task.rom.tolerance*ones(2,1);
-            options.ylabel = 'residual';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_tolerance'], options)
     
             semilogy(omega/c_f,residual,'*','color','black','DisplayName','Residual check points')
-            options.x = omega.'/c_f;
-            options.y = residual.';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_residual_iter' num2str(i)], options)
     
             omega_T_new = history(i).omega_T_new;
             [~,idx] = ismember(omega,omega_T_new);
             semilogy(omega_T_new/c_f,residual(logical(idx)),'o','color','cyan','DisplayName','New interpolation point')
-    
-            options.x = omega_T_new.'/c_f;
-            options.y = residual(logical(idx)).';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_NewInterpolationPoints_iter' num2str(i)], options)
     
             ylim([5e-16,10])
             set(gca,'yscale','log')
@@ -388,20 +368,10 @@ for i_task = 1:numel(study.tasks)
             residual = task.rom.history(end).residualFine;
             omegaFine = task.rom.history(end).omegaFine;
             semilogy(omegaFine/c_f,residual,'blue','DisplayName','Final relative residual')
-        
-            options.x = omegaFine.'/c_f;
-            options.y = residual.';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeResidual'], options)
         end
         if isfield(task.rom.history(end),'relError')
             relError = task.rom.history(end).relError;
             semilogy(omegaFine/c_f,relError,'green','DisplayName','Final relative error')
-        
-            options.x = omegaFine.'/c_f;
-            options.y = relError.';
-            options.xlabel = 'k';
-            options.ylabel = 'error';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeError'], options)
         end
         set(gca,'yscale','log')
         ylim([5e-16,10])

@@ -19,7 +19,6 @@ if shiftROM > 0
 else
     task.U_p = zeros(size(task.FF));
 end
-tic
 if strcmp(task.sol.solver,'LU')
     dA = decomposition(task.Pinv*task.A*task.Pinv,'lu');
 end
@@ -38,7 +37,6 @@ for i = 1:noRHSs
             eval(['task.U_p(:,shiftROM+i) = ' task.sol.solver '(task.A,b,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
     end
 end
-toc
 
 i = 1:noRHSs;
 % if ~isfield(task,'U')

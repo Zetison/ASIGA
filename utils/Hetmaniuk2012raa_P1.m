@@ -3,7 +3,6 @@ function task = Hetmaniuk2012raa_P1(task)
 
 oldprintLog = task.misc.printLog;
 if oldprintLog
-    tic
     fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing ROM basis adaptively ')
 end
 omega = task.misc.omega;
@@ -21,13 +20,17 @@ omega_T_new = [omega_P(1),omega_P(end)];
 task.rom.history = struct();
 J_P = [];
 counter = 1;
+task.timeBuildROM = 0;
 while ~isempty(omega_T_new)
+    tic
     J_new = zeros(1,numel(omega_T_new));
     for p = 1:numel(omega_T_new)
         % Algorithm P2 in Hetmaniuk2013aas
         [task, J_new(p)] = Hetmaniuk2012raa_P2(task, union(omega_T_new,omega_T), omega_T_new(p));
     end
-    fprintf('\nAdded %d new snapshots to ROM basis', numel(omega_T_new))
+    t_toc = toc;
+    fprintf('\nAdded %d new snapshots to ROM basis using %12f seconds.', numel(omega_T_new), t_toc)
+    task.timeBuildROM = task.timeBuildROM + t_toc;
     [omega_T,sortIdx] = sort([omega_T,omega_T_new]);
     omega_T_new = zeros(1,0); % Initiate with an empty row vector
     J_P = [J_P,J_new];
@@ -53,7 +56,7 @@ while ~isempty(omega_T_new)
     counter = counter + 1;
 end
 if oldprintLog
-    fprintf('\nTotal time for adaptive ROM basis computations %12f seconds.', toc)
+    fprintf('\nTotal time for adaptive ROM basis computations: %12f seconds.', task.timeBuildROM)
 end
 if task.rom.computeROMresidualFine
     if oldprintLog
@@ -70,3 +73,57 @@ if task.rom.computeROMresidualFine
 end
 task.V = task.P_rightinv*task.V; % Scale back to match scaling for task.U
 task.misc.printLog = oldprintLog;
+
+
+%% Print history to file
+history = task.rom.history;
+options.xlabel = 'k';
+options.ylabel = 'residual';
+c_f = task.varCol{1}.c_f;
+for i = 1:numel(history)
+    omega = task.rom.history(i).omega;
+    residual = task.rom.history(i).residual;
+
+    omega_P = history(i).omega_P;
+    J_P = history(i).J_P;
+    options.x = omega_P.'/c_f;
+    options.y = 1e-15*ones(size(omega_P)).';
+    printResultsToFile([task.resultsFolder, '/', task.saveName '_InterpolationPoints_iter' num2str(i)], options)
+
+    options.x = omega_P.'/c_f;
+    options.y = J_P.';
+    options.ylabel = 'J_P';
+    printResultsToFile([task.resultsFolder, '/', task.saveName '_noDerivatives_iter' num2str(i)], options)
+
+    options.x = [omega_P(1),omega_P(end)].'/c_f;
+    options.y = task.rom.tolerance*ones(2,1);
+    options.ylabel = 'residual';
+    printResultsToFile([task.resultsFolder, '/', task.saveName '_tolerance'], options)
+
+    options.x = omega.'/c_f;
+    options.y = residual.';
+    printResultsToFile([task.resultsFolder, '/', task.saveName '_residual_iter' num2str(i)], options)
+
+    omega_T_new = history(i).omega_T_new;
+    [~,idx] = ismember(omega,omega_T_new);
+
+    options.x = omega_T_new.'/c_f;
+    options.y = residual(logical(idx)).';
+    printResultsToFile([task.resultsFolder, '/', task.saveName '_NewInterpolationPoints_iter' num2str(i)], options)
+end
+if isfield(task.rom.history(end),'residualFine')
+    residual = task.rom.history(end).residualFine;
+    omegaFine = task.rom.history(end).omegaFine;
+
+    options.x = omegaFine.'/c_f;
+    options.y = residual.';
+    printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeResidual'], options)
+end
+if isfield(task.rom.history(end),'relError')
+    relError = task.rom.history(end).relError;
+    options.x = omegaFine.'/c_f;
+    options.y = relError.';
+    options.xlabel = 'k';
+    options.ylabel = 'error';
+    printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeError'], options)
+end
