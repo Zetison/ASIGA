@@ -15,8 +15,8 @@ hetmaniukCase = 1;
 misc.model = 'Hetmaniuk2012raa';  % Spherical shell
 misc.coreMethod = {'IGA','C0_IGA'};
 % misc.coreMethod = {'C0_IGA'};
-% misc.coreMethod = {'IGA'};
-misc.coreMethod = {'hp_FEM'};
+misc.coreMethod = {'IGA'};
+% misc.coreMethod = {'hp_FEM'};
 % misc.applyLoad = 'pointPulsation';
 % misc.applyLoad = 'pointCharge';
 misc.applyLoad = 'planeWave';
@@ -52,6 +52,7 @@ err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
+misc.preProcessOnly = false;
 
 prePlot.plot3Dgeometry = 0;
 prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
@@ -170,13 +171,13 @@ for i = 1:numel(BCs)
         end
     end
 
-    msh.M = 1; % 7 (6 if hetmaniukCase and manuelRefinement)
+    msh.M = 6; % 7 (6 if hetmaniukCase and manuelRefinement)
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
-    rom.computeROMresidualFine = 0;
-    rom.computeROMerror = 0;
+    rom.computeROMresidualFine = 1;
+    rom.computeROMerror = 1;
     rom.J_max = 20;
 %     sol.preconditioner = 'none';
     misc.symmetric = 0;
@@ -304,7 +305,7 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-%     collectIntoTasks
+    collectIntoTasks
     
     %% Run paraview visualization case
     misc.omega = misc.omega(end);
@@ -327,7 +328,7 @@ for i = 1:numel(BCs)
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-%     collectIntoTasks
+    collectIntoTasks
 end
 
 function addCommands_(study)

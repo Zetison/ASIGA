@@ -81,6 +81,9 @@ if ~isempty(freeBdries)
     % Find connected surfaces
     nurbsFaces = subNURBS(nurbs(freeBdries(:,1)),'at',num2cell(freeBdries(:,2).'));
     geometryBdry = getTopology(nurbsFaces);
+    if isempty(geometryBdry)
+        return
+    end
     connections = geometryBdry.topology.connection;
     noFaces = numel(nurbsFaces);
     connMap = num2cell(1:noFaces);

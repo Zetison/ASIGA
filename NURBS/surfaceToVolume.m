@@ -24,12 +24,14 @@ avg_v_n_threshholdAngle = 11.25*pi/180; % Threshold angle deviation between the 
 original_angles = angles;
 
 while any(angles(:) < pi) && noNakedNurbsPatches
-    [patch,maxNoSharpAngles,minSum] = findNextPatch(original_angles,sharpAngle); % Check for sharp angles in at the initial nurbs_surf first
-    midx = find(original_angles(patch,:) < sharpAngle);
-    if isinf(minSum)
-        [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle);
-        midx = find(angles(patch,:) < sharpAngle);
-    end
+%     [patch,maxNoSharpAngles,minSum] = findNextPatch(original_angles,sharpAngle); % Check for sharp angles in at the initial nurbs_surf first
+%     midx = find(original_angles(patch,:) < sharpAngle);
+%     if isinf(minSum)
+%         [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle);
+%         midx = find(angles(patch,:) < sharpAngle);
+%     end
+    [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle);
+    midx = find(angles(patch,:) < sharpAngle);
     faces = cell(1,6);
 
 %     for i = 1:numel(topologyMap(patch))
@@ -59,8 +61,8 @@ while any(angles(:) < pi) && noNakedNurbsPatches
             slave1_coeffs = reshape(slave1_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
             
             midx_opposite = midx-(-1)^midx;
-            if all(angles(patch,midx) >= pi/2)
-%             if angles(patch,midx) + angles(patch,midx_opposite)/2 > pi % Make patching normal based (less fear of intersection) % TODO: REIMPLEMENT THIS WITH TRY AND CATCH (for when Jacobian is negative - intersection)
+%             if all(angles(patch,midx) >= pi/2)
+            if angles(patch,midx) + angles(patch,midx_opposite)/2 > pi % Make patching normal based (less fear of intersection) % TODO: REIMPLEMENT THIS WITH TRY AND CATCH (for when Jacobian is negative - intersection)
                 oppositeCornerIndices = midx2corners(midx_opposite,:);
                 if midx_opposite == 1 || midx_opposite == 4
                     oppositeCornerIndices = fliplr(oppositeCornerIndices);
@@ -142,8 +144,8 @@ while any(angles(:) < pi) && noNakedNurbsPatches
                 slave1_coeffs = reshape(slave1_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
                 slave2_coeffs = faces{5}.coeffs;
                 midx_opposite = midx-(-1).^midx;
-%                 if all(angles(patch,midx) + angles(patch,midx_opposite)/2 > pi) % Make patching normal based (less fear of intersection) % TODO: REIMPLEMENT THIS WITH TRY AND CATCH (for when Jacobian is negative - intersection)
-                if all(angles(patch,midx) >= pi/2) % Make patching normal based (less fear of intersection) % TODO: REIMPLEMENT THIS WITH TRY AND CATCH (for when Jacobian is negative - intersection)
+                if all(angles(patch,midx) + angles(patch,midx_opposite)/2 > pi) % Make patching normal based (less fear of intersection) % TODO: REIMPLEMENT THIS WITH TRY AND CATCH (for when Jacobian is negative - intersection)
+%                 if all(angles(patch,midx) >= pi/2) % Make patching normal based (less fear of intersection) % TODO: REIMPLEMENT THIS WITH TRY AND CATCH (for when Jacobian is negative - intersection)
                     oppositeCornerIndices = midx2corners(midx_opposite(1),:);
                     if midx_opposite(1) == 1 || midx_opposite(1) == 4
                         oppositeCornerIndices = fliplr(oppositeCornerIndices);
@@ -393,7 +395,10 @@ xi_l = 0.75; % a somewhat arbitrary value different from 0,0.5,1 (to avoid singu
 %% Compute normal vector at the vertices
 for patch = indices
     [X,dXdxi,dXdeta] = evaluateNURBSvec(nurbs{patch},xi,1);
+    X = reshape(nurbs{patch}.coeffs(1:3,[1,end],[1,end]),3,[]).';
+    X(3:4,:) = X([4,3],:);
     cornerData(patch).X = X;
+    dXdxi = nurbs{patch}.coeffs(1:3,[1,2,end-1,end],[1,end]);
     v_t1 = dXdxi./norm2(dXdxi);
     v_t2 = dXdeta./norm2(dXdeta);
     cornerData(patch).v_t1 = v_t1;
