@@ -154,8 +154,10 @@ for i = 1:numel(BCs)
     if manuelRefinement
         pml.refinement = @(M) max(2^(M-4)-1,3);
     end
-    misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
-    ffp.extraGP = [50,0,0];    % extra quadrature points
+    if msh.refineThetaOnly
+        misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
+        ffp.extraGP = [50,0,0];    % extra quadrature points
+    end
     if noDomains > 1
         if manuelRefinement
             if msh.parm == 1
