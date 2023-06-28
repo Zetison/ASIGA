@@ -4,11 +4,17 @@ switch task.misc.method
     case {'IE','IENSG','BEM','BA','ABC','MFS','PML'}        
         %% SOLVE SYSTEM
         useA = isfield(task,'A');
+        t_start_sol = tic;
+        if task.misc.printLog
+            fprintf(['\n%-' num2str(task.misc.stringShift) 's'], ['Creating preconditioner (' task.sol.preconditioner ') ... '])
+        end
         if useA
             task = createPreconditioner(task);
         end
+        if task.misc.printLog
+            fprintf('using %12f seconds.', toc)
+        end
 
-        tic
         if task.misc.printLog && ~task.rom.useROM
             fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Solving system of equations ... ')
         end
@@ -45,13 +51,19 @@ switch task.misc.method
                 end
             case 'gmres'
                 task.UU = zeros(size(task.FF));
+                if task.sol.restart > size(task.A,1) % RESTART should be bounded by SIZE(task.A,1).
+                    task.sol.restart = size(task.A,1);
+                end
+
                 for i = 1:size(task.FF,2)
-                    task.UU(:,i) = gmres(task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+                    [task.UU(:,i),flag,relres,task.iter] = gmres(task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+%                     gmres_parf_obj = parfeval(backgroundPool,@gmres,1,task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+%                     task.UU(:,i) = fetchOutputs(gmres_parf_obj);
                 end
             otherwise
                 task.UU = zeros(size(task.FF));
                 for i = 1:size(task.FF,2)
-                    eval(['task.UU(:,i) = ' task.sol.solver '(task.A,task.FF(:,i),task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
+                    eval(['[task.UU(:,i),flag,relres,task.iter] = ' task.sol.solver '(task.A,task.FF(:,i),task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
                 end
         end
         if useA
@@ -63,7 +75,7 @@ switch task.misc.method
         if task.misc.printLog && ~task.rom.useROM
             fprintf('using %12f seconds.', toc)
         end
-        task.timeSolveSystem = toc;
+        task.timeSolveSystem = toc(t_start_sol);
         if task.misc.computeCondNumber && (size(task.A,1) == size(task.A,2))
             if task.misc.printLog
                 fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Calculating condition number ... ')

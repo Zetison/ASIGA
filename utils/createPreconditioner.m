@@ -1,20 +1,16 @@
 function task = createPreconditioner(task)
 
-tic
-if task.misc.printLog
-    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], ['Creating preconditioner (' task.sol.preconditioner ') ... '])
-end
 task.Pinv = spdiags(1./sqrt(diag(task.A)),0,size(task.A,1),size(task.A,2));
 switch task.sol.preconditioner
     case 'ilu'
         [task.L_A,task.U_A] = ilu(task.A,struct('type',task.sol.ilutype,'droptol',task.sol.droptol));
     case 'CSLP'
-        if numel(varCol) > 1
+        if numel(task.varCol) > 1
             error('Not implemented')
         end
         beta = task.sol.beta_CSLP;  
         k = task.varCol{1}.k;
-        [task.L_A,task.U_A] = ilu(task.A + 1i*beta*k^2*task.A_M,struct('type',task.sol.ilutype,'droptol',task.sol.droptol));
+        [task.L_A,task.U_A] = ilu(task.A + 1i*beta*k^2*task.varCol{1}.A_M,struct('type',task.sol.ilutype,'droptol',task.sol.droptol));
         task.varCol{1} = rmfield(task.varCol{1},'A_M');
     case 'SSOR'
         D_SSOR = spdiags(spdiags(task.A,0),0,size(task.A,1),size(task.A,2));
@@ -28,7 +24,4 @@ switch task.sol.preconditioner
         task.Pinv = spdiags(1./sqrt(diag(task.A)),0,size(task.A,1),size(task.A,2));
     case 'none'
         task.Pinv = speye(size(task.A,1),size(task.A,2));
-end
-if task.misc.printLog
-    fprintf('using %12f seconds.', toc)
 end

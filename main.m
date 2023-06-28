@@ -93,33 +93,37 @@ for i_col = 1:numel(studiesCol)
             end
         end
     end
-    close all
-    for i_study = 1:numel(studiesCol{i_col})  
-        study = studiesCol{i_col}(i_study);
-        for i = 1:numel(study.postPlot)
-            if study.postPlot(i).plotResults || study.postPlot(i).printResults
-                figure(i)
-                printResultsToTextFiles(study,study.postPlot(i))
-                if isa(study.postPlot(i).addCommands,'function_handle') && i_study == studiesCol{i_col}(i_study).appyCommandsAt
+    try
+        close all
+        for i_study = 1:numel(studiesCol{i_col})  
+            study = studiesCol{i_col}(i_study);
+            for i = 1:numel(study.postPlot)
+                if study.postPlot(i).plotResults || study.postPlot(i).printResults
                     figure(i)
-                    study.postPlot(i).addCommands(study,i_study,studiesCol{i_col})
-                    if isempty(study.postPlot(i).subFolderName)
-                        subFolderName = study.resultsFolder;
-                    else
-                        subFolderName = study.postPlot(i).subFolderName;
+                    printResultsToTextFiles(study,study.postPlot(i))
+                    if isa(study.postPlot(i).addCommands,'function_handle') && i_study == studiesCol{i_col}(i_study).appyCommandsAt
+                        figure(i)
+                        study.postPlot(i).addCommands(study,i_study,studiesCol{i_col})
+                        if isempty(study.postPlot(i).subFolderName)
+                            subFolderName = study.resultsFolder;
+                        else
+                            subFolderName = study.postPlot(i).subFolderName;
+                        end
+                        xname = study.postPlot(i).xname;
+                        yname = study.postPlot(i).yname;
+                        xname = strrep(xname, 'varCol', 'd');
+                        
+                        xname = regexprep(xname,'[^a-zA-Z1-9\s]','');
+                        yname = regexprep(yname,'[^a-zA-Z1-9\s]','');
+                        model = study.tasks(1).task.misc.model;
+                        savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
                     end
-                    xname = study.postPlot(i).xname;
-                    yname = study.postPlot(i).yname;
-                    xname = strrep(xname, 'varCol', 'd');
-                    
-                    xname = regexprep(xname,'[^a-zA-Z1-9\s]','');
-                    yname = regexprep(yname,'[^a-zA-Z1-9\s]','');
-                    model = study.tasks(1).task.misc.model;
-                    savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
                 end
             end
-        end
-    end 
+        end 
+    catch ME
+        warning(ME.message)
+    end
     if printLog
         fprintf('\n\nTotal time spent on case "%s": %12f seconds\n', studyName{i_col}, toc(t_start_study)) 
     end
