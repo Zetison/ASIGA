@@ -56,14 +56,14 @@ switch task.misc.method
                 end
 
                 for i = 1:size(task.FF,2)
-                    [task.UU(:,i),flag,relres,task.iter] = gmres(task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+                    [task.UU(:,i),task.sol.flag,task.sol.relres,task.sol.iter] = gmres(task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
 %                     gmres_parf_obj = parfeval(backgroundPool,@gmres,1,task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
 %                     task.UU(:,i) = fetchOutputs(gmres_parf_obj);
                 end
             otherwise
                 task.UU = zeros(size(task.FF));
                 for i = 1:size(task.FF,2)
-                    eval(['[task.UU(:,i),flag,relres,task.iter] = ' task.sol.solver '(task.A,task.FF(:,i),task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
+                    eval(['[task.UU(:,i),task.sol.flag,task.sol.relres,task.sol.iter] = ' task.sol.solver '(task.A,task.FF(:,i),task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
                 end
         end
         if useA

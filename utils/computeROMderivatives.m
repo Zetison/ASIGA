@@ -32,7 +32,14 @@ for i = 1:noRHSs
         case 'LU'
             task.U_p(:,shiftROM+i) = task.Pinv*(dA\(task.Pinv*b));
         case 'gmres'
-            task.U_p(:,shiftROM+i) = gmres(task.A,b,task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+            task.UU = zeros(size(task.FF));
+            if task.sol.restart > size(task.A,1) % RESTART should be bounded by SIZE(task.A,1).
+                task.sol.restart = size(task.A,1);
+            end
+
+            [task.U_p(:,shiftROM+i),task.sol.flag,task.sol.relres,task.sol.iter] = gmres(task.A,b,task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+%                     gmres_parf_obj = parfeval(backgroundPool,@gmres,1,task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+%                     task.UU(:,i) = fetchOutputs(gmres_parf_obj);
         otherwise
             eval(['task.U_p(:,shiftROM+i) = ' task.sol.solver '(task.A,b,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
     end

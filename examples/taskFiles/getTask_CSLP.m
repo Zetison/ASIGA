@@ -7,6 +7,7 @@ studies = cell(0,1);
 getDefaultTaskValues
 saveStudies        = false;       % save ASIGA-struct into a .mat file
 appyCommandsAt = 1;
+noCoresToUse       = 4;
 
 %% IE simulation
 % BC = 'NNBC';
@@ -116,7 +117,7 @@ for i = 1:numel(BCs)
     end
 
     msh.M = 1:4; % 7
-    msh.M = 6; % 7
+    msh.M = 5; % 7
     misc.symmetric = 0;
 
     iem.N = 3; % 9
