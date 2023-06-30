@@ -6,7 +6,7 @@ runTasksInParallel = false;       % Run tasks in parallel
 subFolderName      = '';          % sub folder in folder <folderName> in which results are stored
 saveStudies        = false;       % save ASIGA-struct into a .mat file
 noCoresToUse       = Inf;         % Number of processors for parallel computations (Inf uses all available cores)
-connectedParameters = {{}};       % Define set of loop parameters to be connected (i.e. connectedParameters = {{'msh.M','iem.N'}} assumes the arrays msh.M and iem.N to be of same size and loops through the elements in pairs)
+connectedParameters = {{}};       % Define set of loop parameters to be connected (i.e. connectedParameters = {{'msh.M','iem.N'}} assumes the arrays msh.M and iem.N to be of same size and loops through the elements in pairs, the first element must always be included in the variable loopParameters)
 appyCommandsAt     = 1;           % At what study to apply study.postPlot(i).addCommands in postPlots
 
 %% Miscellaneous settings
@@ -101,7 +101,7 @@ sol.maxit           = 6000;     % Maximal number of iteration for iterative solv
 sol.restart         = 30;       % restarts the method every RESTART iterations for GMRES. Reduce this to save memory (i.e. 2)
 sol.ilutype         = 'ilutp';  % 'ilutp', 'crout' and 'nofill' (see the ilu function in matlab)
 sol.droptol         = 1e-2;     % parameter for incomplete lu factorization with threshold and pivoting (ilutp)
-sol.beta_CSLP       = 0.5;      % parameter for the Complex Shifted Laplace Preconditioner (CSLP)
+sol.beta_CSLP       = 0.02;      % parameter for the Complex Shifted Laplace Preconditioner (CSLP)
 
 %% Error computations
 err.calculateSurfaceError = false;	% Only if scatteringCase == 'Bi'

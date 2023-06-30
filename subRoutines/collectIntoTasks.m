@@ -64,7 +64,11 @@ studies(counter).noCoresToUse = noCoresToUse;
 studies(counter).saveStudies = saveStudies;
 studies(counter).appyCommandsAt = appyCommandsAt;
 
-
+for i = 1:numel(connectedParameters)
+    if ~ismember(connectedParameters{i}{1},loopParameters)
+        error(['The connected parameter "' connectedParameters{i}{1} '" must be included in the variable loopParameters'])
+    end
+end
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr, connectedParameters, childrenParameters);
 if isempty(studies(counter).tasks)
     error('loopParameters contains invalid parameters')

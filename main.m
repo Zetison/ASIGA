@@ -69,11 +69,10 @@ for i_col = 1:numel(studiesCol)
             for i_task = 1:noTasks
                 plot3Dgeometry      = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.plot3Dgeometry;
                 abortAfterPlotting  = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.abortAfterPlotting;
-                preProcessOnly      = studiesCol{i_col}(i_study).tasks(i_task).task.misc.preProcessOnly;
 
                 %% Run main subroutine
                 studiesCol{i_col}(i_study).tasks(i_task).task = main_sub(studiesCol{i_col}(i_study).tasks(i_task).task,loopParameters,printLog,resultsFolder);
-                if (plot3Dgeometry || preProcessOnly) && abortAfterPlotting
+                if plot3Dgeometry&& abortAfterPlotting
                     return
                 end
                 if printLog

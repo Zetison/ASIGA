@@ -11,8 +11,9 @@ switch task.misc.method
         if useA
             task = createPreconditioner(task);
         end
+        task.timePreconditioner = toc;
         if task.misc.printLog
-            fprintf('using %12f seconds.', toc)
+            fprintf('using %12f seconds.', task.timePreconditioner)
         end
 
         if task.misc.printLog && ~task.rom.useROM

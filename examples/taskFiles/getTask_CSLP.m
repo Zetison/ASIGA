@@ -17,7 +17,7 @@ misc.applyLoad = 'planeWave';
 
 sol.preconditioner = {'CSLP','diag'};
 sol.solver = {'gmres','LU'};
-connectedParameters = {{'sol.solver','sol.preconditioner'}};
+connectedParameters = {{'sol.solver','sol.preconditioner'},{'msh.M','misc.omega','pml.gamma'}};
 
 BCs = {'SHBC'};
 % BCs = {'SSBC'};
@@ -38,7 +38,7 @@ err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
-misc.preProcessOnly = false;
+misc.preProcessOnly = 0;
 
 prePlot.plot3Dgeometry = 0;
 prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
@@ -75,7 +75,8 @@ for i = 1:numel(BCs)
     postPlot(1).plotResults  	= true;
     postPlot(1).printResults 	= true;
 %     postPlot(1).axisType      	= 'semilogy';
-    postPlot(1).axisType      	= 'loglog';
+%     postPlot(1).axisType      	= 'loglog';
+    postPlot(1).axisType      	= 'semilogy';
     postPlot(1).lineStyle    	= '*-';
     postPlot(1).xScale       	= 1;
     postPlot(1).yScale       	= 1;
@@ -91,7 +92,7 @@ for i = 1:numel(BCs)
     postPlot(1).xLoopName     	= 'sol.beta_CSLP';
     postPlot(2)                 = postPlot(1);
     postPlot(2).yname        	= 'timeSolveSystem';
-    postPlot(2).axisType      	= 'loglog';
+%     postPlot(2).axisType      	= 'loglog';
 %     postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(study);
     switch misc.BC
         case {'SHBC','NBC'}
@@ -116,8 +117,8 @@ for i = 1:numel(BCs)
         ffp.extraGP = [50,0,0];    % extra quadrature points
     end
 
-    msh.M = 1:4; % 7
-    msh.M = 5; % 7
+    msh.M = 5:7; % 5:7
+%     msh.M = 1:2;
     misc.symmetric = 0;
 
     iem.N = 3; % 9
@@ -129,22 +130,19 @@ for i = 1:numel(BCs)
     pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
     pml.dirichlet = 1;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
     
-    k_pml = 9;
-    k = linspace(9, 36, 5);
-    k = [9,18];
+    k = 5*2.^(msh.M-5);
     c_f = varCol{1}.c_f;
     f = k*c_f/(2*pi);
     omega = 2*pi*f;
     misc.omega = omega;
 
     pml.t = 0.2*varCol{1}.R;         % thickness of PML
-    pml.gamma = 2.5;          % parameter for sigmaType = 1
-    pml.gamma = 1/(k_pml*pml.t);
+    pml.gamma = 1./(k*pml.t);
     misc.r_a = 1.2*varCol{1}.R;
 
     misc.storeFullVarCol = false;
-    sol.droptol         = [1e-2,1e-4,1e-6];     % parameter for incomplete lu factorization with threshold and pivoting (ilutp)
-    sol.beta_CSLP       = linspace(0,0.8,9); 
+    sol.droptol         = [1e-2,1e-4];     % parameter for incomplete lu factorization with threshold and pivoting (ilutp)
+    sol.beta_CSLP       = [linspace(0,0.1,11),0.5]; 
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega','sol.solver','sol.droptol','sol.beta_CSLP'};
