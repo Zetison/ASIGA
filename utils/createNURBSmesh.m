@@ -39,9 +39,7 @@ if task.msh.nonLinearParam
     task = convertAllToNonLinearParam(task);
 end
 if task.msh.autoRefine
-    for i = 1:numel(task.varCol)
-        task.varCol{i}.nurbs = autoRefineNURBS(task.varCol{i}.nurbs,task.varCol{i}.geometry.topology.connection,task.varCol{1}.refLength/2^(task.msh.M-1),task.varCol{1}.dirs);
-    end
+    task.varCol = autoRefineDomains(task.varCol,task.msh.h_max,task.msh.dirs);
 end
 task = degenerateIGAtoFEM(task);
 
@@ -118,7 +116,7 @@ if isfield(task.pml,'refinement')
         noNewKnots = task.pml.refinement(task.msh.M);
     end
 else
-    noNewKnots = round(max((2^(task.msh.M-1)-1)*task.pml.t/task.varCol{1}.refLength, 3));
+    noNewKnots = max(round(2^(task.msh.M-1)*task.pml.t/task.varCol{1}.refLength)-1, 3);
 end
 nurbsPML = insertKnotsInNURBS(nurbsPML,[0,0,noNewKnots]);
 for i = 1:numel(nurbsPML)

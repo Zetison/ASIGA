@@ -81,41 +81,15 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         [xi,eta,zeta] = ndgrid(xi_t{1},xi_t{2},xi_t{3});                        
                         Q = reshape(evaluateNURBSvec(nurbs,[xi(:),eta(:),zeta(:)]).',[nurbs.d,number]);
 
-
-                        B_xi_arr = zeros(number(1),degree(1)+1);
-                        i_xi_arr = zeros(number(1),1);
-                        parfor i = 1:number(1)
-                            i_xi_p = findKnotSpan(number(1), degree(1), xi_t{1}(i), t{1})        
-                            B_xi_arr(i,:) = BsplineBasis(i_xi_p, xi_t{1}(i), degree(1), t{1});
-                            i_xi_arr(i) = i_xi_p;
+                        i_arr = cell(1,d_p);
+                        B_arr = cell(1,d_p);
+                        for i = 1:d_p
+                            i_arr{i} = findKnotSpanVec(number(i), degree(i), xi_t{i}.', t{i});   
+                            B_arr{i} = BsplineBasisVec(i_arr{i}, xi_t{i}.', degree(i), t{i});
                         end
 
-                        B_eta_arr = zeros(number(2),degree(2)+1);
-                        j_eta_arr = zeros(number(2),1);
-                        parfor j = 1:number(2)
-                            j_eta_p = findKnotSpan(number(2), degree(2), xi_t{2}(j), t{2})        
-                            B_eta_arr(j,:) = BsplineBasis(j_eta_p, xi_t{2}(j), degree(2), t{2});
-                            j_eta_arr(j) = j_eta_p;
-                        end
-
-                        B_zeta_arr = zeros(number(3),degree(3)+1);
-                        l_zeta_arr = zeros(number(3),1);
-                        parfor l = 1:number(3)
-                            l_zeta_p = findKnotSpan(number(3), degree(3), xi_t{3}(l), t{3})        
-                            B_zeta_arr(l,:) = BsplineBasis(l_zeta_p, xi_t{3}(l), degree(3), t{3});
-                            l_zeta_arr(l) = l_zeta_p;
-                        end
-
-                        index = zeros(prod(number),3);
-                        counter = 1;
-                        for l = 1:number(3)
-                            for j = 1:number(2)
-                                for i = 1:number(1)   
-                                    index(counter,:) = [i, j, l];
-                                    counter = counter + 1;
-                                end
-                            end
-                        end
+                        [arr1,arr2,arr3] = ndgrid(1:number(1),1:number(2),1:number(3));
+                        index = [arr1(:),arr2(:),arr3(:)];
 
                         values = zeros(prod(number),prod(degree+1));
                         n_idx = zeros(prod(number),prod(degree+1));
@@ -124,12 +98,12 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             i = index(a,1);
                             j = index(a,2);
                             l = index(a,3);
-                            l_zeta   = l_zeta_arr(l);
-                            B_zeta = B_zeta_arr(l,:);
-                            j_eta   = j_eta_arr(j);
-                            B_eta = B_eta_arr(j,:);
-                            i_xi   = i_xi_arr(i);
-                            B_xi = B_xi_arr(i,:);
+                            l_zeta   = i_arr{3}(l);
+                            B_zeta = B_arr{3}(l,:);
+                            j_eta   = i_arr{2}(j);
+                            B_eta = B_arr{2}(j,:);
+                            i_xi   = i_arr{1}(i);
+                            B_xi = B_arr{1}(i,:);
                             m = i + (j-1)*number(1) + (l-1)*number(1)*number(2);
 
                             temp = zeros(1,prod(degree+1));
@@ -156,11 +130,8 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         A = sparse(m_idx,n_idx,values);
 
                         Q = reshape(Q,3,prod(number));
+                        P_tilde = (A\Q.').';
                         P = ones([nurbs.d+1,number]);
-                        P_tilde = zeros(size(Q));
-                        P_tilde(1,:) = (A\Q(1,:)')';
-                        P_tilde(2,:) = (A\Q(2,:)')';
-                        P_tilde(3,:) = (A\Q(3,:)')';
                         P(1:3,:,:,:) = reshape(P_tilde,3,number(1),number(2),number(3));
                     case 'h_FEM'
                         number(1) = nurbs.number(1);
@@ -261,31 +232,16 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         [xi,eta] = ndgrid(xi_t{1},xi_t{2});                        
                         Q = reshape(evaluateNURBSvec(nurbs,[xi(:),eta(:)]).',[nurbs.d,number]);
 
-
-                        B_xi_arr = zeros(number(1),degree(1)+1);
-                        i_xi_arr = zeros(number(1),1);
-                        parfor i = 1:number(1)
-                            i_xi_p = findKnotSpan(number(1), degree(1), xi_t{1}(i), t{1})        
-                            B_xi_arr(i,:) = BsplineBasis(i_xi_p, xi_t{1}(i), degree(1), t{1});
-                            i_xi_arr(i) = i_xi_p;
+                        i_arr = cell(1,d_p);
+                        B_arr = cell(1,d_p);
+                        for i = 1:d_p
+                            i_arr{i} = findKnotSpanVec(number(i), degree(i), xi_t{i}.', t{i});   
+                            B_arr{i} = BsplineBasisVec(i_arr{i}, xi_t{i}.', degree(i), t{i});
                         end
 
-                        B_eta_arr = zeros(number(2),degree(2)+1);
-                        j_eta_arr = zeros(number(2),1);
-                        parfor j = 1:number(2)
-                            j_eta_p = findKnotSpan(number(2), degree(2), xi_t{2}(j), t{2})        
-                            B_eta_arr(j,:) = BsplineBasis(j_eta_p, xi_t{2}(j), degree(2), t{2});
-                            j_eta_arr(j) = j_eta_p;
-                        end
+                        [arr1,arr2,arr3] = ndgrid(1:number(1),1:number(2),1:number(3));
+                        index = [arr1(:),arr2(:),arr3(:)];
 
-                        index = zeros(prod(number),2);
-                        counter = 1;
-                        for j = 1:number(2)
-                            for i = 1:number(1)   
-                                index(counter,:) = [i, j];
-                                counter = counter + 1;
-                            end
-                        end
 
                         values = zeros(prod(number),prod(degree+1));
                         n_idx = zeros(prod(number),prod(degree+1));
@@ -294,10 +250,10 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             i = index(a,1);
                             j = index(a,2);
 
-                            i_xi   = i_xi_arr(i);
-                            B_xi = B_xi_arr(i,:);
-                            j_eta   = j_eta_arr(j);
-                            B_eta = B_eta_arr(j,:);
+                            i_xi   = i_arr{1}(i);
+                            B_xi = B_arr{1}(i,:);
+                            j_eta   = i_arr{2}(j);
+                            B_eta = B_arr{2}(j,:);
                             m = i + (j-1)*number(1);
 
                             temp = zeros(1,prod(degree+1));
@@ -321,11 +277,8 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         A = sparse(m_idx,n_idx,values);
 
                         Q = reshape(Q,3,prod(number));
+                        P_tilde = (A\Q.').';
                         P = ones([nurbs.d+1,number]);
-                        P_tilde = zeros(size(Q));
-                        P_tilde(1,:) = (A\Q(1,:)')';
-                        P_tilde(2,:) = (A\Q(2,:)')';
-                        P_tilde(3,:) = (A\Q(3,:)')';
                         P(1:3,:,:,:) = reshape(P_tilde,3,number(1),number(2));
                     case 'h_FEM'
                         number(1) = nurbs.number(1);

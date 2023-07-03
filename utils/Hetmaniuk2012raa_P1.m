@@ -22,15 +22,14 @@ J_P = [];
 counter = 1;
 task.timeBuildROM = 0;
 while ~isempty(omega_T_new)
-    tic
+    t_Hetmaniuk2012raa_P2_start = tic;
     J_new = zeros(1,numel(omega_T_new));
     for p = 1:numel(omega_T_new)
         % Algorithm P2 in Hetmaniuk2013aas
         [task, J_new(p)] = Hetmaniuk2012raa_P2(task, union(omega_T_new,omega_T), omega_T_new(p));
     end
-    t_toc = toc;
+    t_toc = toc(t_Hetmaniuk2012raa_P2_start);
     fprintf('\nAdded %d new snapshots to ROM basis using %12f seconds.', numel(omega_T_new), t_toc)
-    task.timeBuildROM = task.timeBuildROM + t_toc;
     [omega_T,sortIdx] = sort([omega_T,omega_T_new]);
     omega_T_new = zeros(1,0); % Initiate with an empty row vector
     J_P = [J_P,J_new];
@@ -54,11 +53,14 @@ while ~isempty(omega_T_new)
     task.rom.history(counter).J_P = J_P;
     task.rom.history(counter).omega_T_new = omega_T_new;
     counter = counter + 1;
+    task.timeBuildROM = task.timeBuildROM + t_toc;
+%     plotROMresiduals(task);
 end
 if oldprintLog
     fprintf('\nTotal time for adaptive ROM basis computations: %12f seconds.', task.timeBuildROM)
 end
 if task.rom.computeROMresidualFine
+    tic
     if oldprintLog
         fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM residual/error ... ')
     end    
@@ -74,6 +76,11 @@ end
 task.V = task.P_rightinv*task.V; % Scale back to match scaling for task.U
 task.misc.printLog = oldprintLog;
 
+if strcmp(task.sol.preconditioner,'CSLP')
+    for i = 1:numel(task.varCol)
+        task.varCol{i} = rmfield(task.varCol{i},'A_M');
+    end
+end
 
 %% Print history to file
 history = task.rom.history;

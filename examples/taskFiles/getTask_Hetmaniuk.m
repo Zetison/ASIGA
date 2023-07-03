@@ -21,18 +21,25 @@ misc.coreMethod = {'IGA'};
 % misc.applyLoad = 'pointCharge';
 misc.applyLoad = 'planeWave';
 
-BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
-% BCs = {'SHBC','SSBC','NNBC'};
+BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-% sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
-% sol.preconditioner  = 'ilu';	% 'ilu', 'SSOR', 'diag'
+HetmaniukMesh = 1;
+if HetmaniukMesh
+    sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
+    sol.preconditioner  = 'CSLP';	% 'ilu', 'SSOR', 'CSLP', 'diag'
+    BCs = {'SHBC'};
+    misc.coreMethod = {'hp_FEM'};
+else
+    sol.solver          = 'LU';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
+    sol.preconditioner  = 'diag';	% 'ilu', 'SSOR', 'CSLP', 'diag'
+end
 
 ffp.calculateFarFieldPattern    = true;     % Calculate far field pattern
 ffp.alpha_s = 0;                            % Aspect angle of incident wave
@@ -45,23 +52,29 @@ warning('off','NURBS:weights')
 
 misc.r_s = 3;
 
-msh.parm = 2;
+if HetmaniukMesh
+    msh.parm = 2;
+    msh.refineThetaOnly = 0; % only for msh.parm = 1
+else
+    msh.parm = 1;
+    msh.refineThetaOnly = 1; % only for msh.parm = 1
+    msh.autoRefine = true;
+end
 msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
-msh.refineThetaOnly = 0; % only for msh.parm = 1
 err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
-misc.preProcessOnly = false;
+misc.preProcessOnly = 0;
 
 prePlot.plot3Dgeometry = 0;
 prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plotFullDomain      = 1;
+prePlot.plotFullDomain      = 0;
 prePlot.plotControlPolygon  = 0;
-% prePlot.plotSubsets         = {'xz'};
-prePlot.plotSubsets         = {}; 
+prePlot.plotSubsets         = {'xz'};
+% prePlot.plotSubsets         = {}; 
 prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
@@ -133,14 +146,17 @@ for i = 1:numel(BCs)
     else
         msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
     end
-    msh.degree = 3;
-    manuelRefinement = 1;
+    if HetmaniukMesh
+        msh.degree = 3;
+    else
+        msh.degree = 2;
+    end
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
         misc.formulation = {'BGC'};
     end
-    if manuelRefinement
+    if HetmaniukMesh
         if msh.parm == 1
             if msh.refineThetaOnly
                 varCol{1}.refinement = @(M) [0, 2^(M-1)-1, 2^(M-4)-1];
@@ -151,7 +167,7 @@ for i = 1:numel(BCs)
             varCol{1}.refinement = @(M) [3*2^(M-3)-1, 3*2^(M-3)-1, 2^(M-1)/8-1];
         end
     end
-    if manuelRefinement
+    if HetmaniukMesh
         pml.refinement = @(M) max(2^(M-4)-1,3);
     end
     if msh.refineThetaOnly
@@ -159,7 +175,7 @@ for i = 1:numel(BCs)
         ffp.extraGP = [50,0,0];    % extra quadrature points
     end
     if noDomains > 1
-        if manuelRefinement
+        if HetmaniukMesh
             if msh.parm == 1
                 if msh.refineThetaOnly
                     varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(round(t/t_fluid)*2^(M-1),0)];
@@ -172,16 +188,23 @@ for i = 1:numel(BCs)
             end
         end
     end
-
-    msh.M = 6; % 7 (6 if hetmaniukCase and manuelRefinement)
+    if noDomains > 2
+        if HetmaniukMesh
+            error('Not implemented (Case not investigated by Hetmaniuk anyways, consider manualRefinement=false')
+        end
+    end
+    if HetmaniukMesh
+        msh.M = 6; % 6
+    else
+        msh.M = 7; % 7
+    end
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
     rom.computeROMresidualFine = 1;
     rom.computeROMerror = 1;
-    rom.J_max = 20;
-%     sol.preconditioner = 'none';
+    rom.J_max = 64;
     misc.symmetric = 0;
 
     iem.N = 3; % 9
@@ -190,13 +213,13 @@ for i = 1:numel(BCs)
     iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
     
     pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
-    if manuelRefinement
+    if HetmaniukMesh
         pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
         pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
         pml.gamma = 2;
     else
         pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
-        pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+        pml.dirichlet = 1;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
     end
     
     switch misc.BC
@@ -336,53 +359,7 @@ end
 function addCommands_(study)
 for i_task = 1:numel(study.tasks)
     task = study.tasks(i_task).task;
-    c_f = task.varCol{1}.c_f;
-
-    if isfield(task.rom,'history')
-        history = task.rom.history;
-        for i = 1:numel(history)
-            figure(20+i)
-            omega = task.rom.history(i).omega;
-            residual = task.rom.history(i).residual;
-            hold on
-        
-            omega_P = history(i).omega_P;
-            J_P = history(i).J_P;
-            semilogy(omega_P/c_f,1e-15*ones(size(omega_P)),'o','color','magenta','DisplayName','Interpolation points')
-            for j = 1:numel(omega_P)
-                text((omega_P(j)+omega_P(end)/200)/c_f,1e-15,num2str(J_P(j)),'color','magenta')
-            end
-    
-            semilogy([omega_P(1),omega_P(end)]/c_f,task.rom.tolerance*ones(1,2),'red','DisplayName','Tolerance')
-    
-            semilogy(omega/c_f,residual,'*','color','black','DisplayName','Residual check points')
-    
-            omega_T_new = history(i).omega_T_new;
-            [~,idx] = ismember(omega,omega_T_new);
-            semilogy(omega_T_new/c_f,residual(logical(idx)),'o','color','cyan','DisplayName','New interpolation point')
-    
-            ylim([5e-16,10])
-            set(gca,'yscale','log')
-            legend show
-            savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
-        end
-        legend off
-        if isfield(task.rom.history(end),'residualFine')
-            residual = task.rom.history(end).residualFine;
-            omegaFine = task.rom.history(end).omegaFine;
-            semilogy(omegaFine/c_f,residual,'blue','DisplayName','Final relative residual')
-        end
-        if isfield(task.rom.history(end),'relError')
-            relError = task.rom.history(end).relError;
-            semilogy(omegaFine/c_f,relError,'green','DisplayName','Final relative error')
-        end
-        set(gca,'yscale','log')
-        ylim([5e-16,10])
-        ylabel('Relative error/residual')
-        xlabel('Wavenumber')
-        legend show
-        savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
-    end
+    plotROMresiduals(task);
 end
 
 

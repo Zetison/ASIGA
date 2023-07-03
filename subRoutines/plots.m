@@ -47,20 +47,20 @@ no2Dpoints = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test surfaceToVolume
 
-if 1
-    geometry = getTopology(nurbs);
-    nurbs_vol = surfaceToVolume(nurbs,geometry.topology.connection,1.1);
-end
-if 0
-    load('BeTSSi_BCA_p2_unRefined.mat')
-    close all
-    axis equal
-    color = getColor();
-    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotNormalVectors',0,'color',color);
-    drawnow
-    view(getView());
-end
-
+% if 1
+%     geometry = getTopology(nurbs);
+%     nurbs_vol = surfaceToVolume(nurbs,geometry.topology.connection,1.1);
+% end
+% if 0
+%     load('BeTSSi_BCA_p2_unRefined.mat')
+%     close all
+%     axis equal
+%     color = getColor();
+%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotNormalVectors',0,'color',color);
+%     drawnow
+%     view(getView());
+% end
+% 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generate and save BeTSSi BCA meshes

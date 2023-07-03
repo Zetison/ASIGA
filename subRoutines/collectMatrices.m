@@ -102,6 +102,7 @@ switch task.misc.method
                             massMatrixScale = -eqScale*rho;
                         end
                 end
+                task.varCol{i}.massMatrixScale = massMatrixScale;
                 if collectLHS
                     if isfield(task.varCol{i},'A_K')
                         if strcmp(task.varCol{i}.media,'solid') && task.misc.symmetric
@@ -189,9 +190,6 @@ switch task.misc.method
                     task.A4(allDofsToRemove,:) = [];
                     task.P_right(allDofsToRemove,:) = [];
                     task.P_rightinv(allDofsToRemove,:) = [];
-                    if useCSLP
-                        task.varCol{1}.A_M(allDofsToRemove,:) = [];
-                    end
                 end
                 if collectRHS
                     task.FF(allDofsToRemove,:) = [];
@@ -204,9 +202,6 @@ switch task.misc.method
                 task.A4(:,allDofsToRemove) = [];
                 task.P_right(:,allDofsToRemove) = [];
                 task.P_rightinv(:,allDofsToRemove) = [];
-                if useCSLP
-                    task.varCol{1}.A_M(:,allDofsToRemove) = [];
-                end
             end
             if buildA
                 if strcmp(task.misc.method,'BA')

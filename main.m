@@ -80,15 +80,17 @@ for i_col = 1:numel(studiesCol)
                 end
             end
         end 
-        studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
-        if studiesCol{i_col}(i_study).saveStudies
-            save([resultsFolder '/studiesCol'], 'studiesCol')
-        end
-        study = studiesCol{i_col}(i_study);
-        for i = 1:numel(study.postPlot)
-            study.postPlot(i).plotResults = false;
-            if study.postPlot(i).printResults
-                printResultsToTextFiles(study,study.postPlot(i))
+        if ~studiesCol{i_col}(i_study).tasks(1).task.misc.preProcessOnly
+            studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
+            if studiesCol{i_col}(i_study).saveStudies
+                save([resultsFolder '/studiesCol'], 'studiesCol')
+            end
+            study = studiesCol{i_col}(i_study);
+            for i = 1:numel(study.postPlot)
+                study.postPlot(i).plotResults = false;
+                if study.postPlot(i).printResults
+                    printResultsToTextFiles(study,study.postPlot(i))
+                end
             end
         end
     end

@@ -61,6 +61,9 @@ switch task.misc.method
 %                     gmres_parf_obj = parfeval(backgroundPool,@gmres,1,task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
 %                     task.UU(:,i) = fetchOutputs(gmres_parf_obj);
                 end
+                if task.sol.flag
+                    warning('gmres did not converge to the required tolerance')
+                end
             otherwise
                 task.UU = zeros(size(task.FF));
                 for i = 1:size(task.FF,2)

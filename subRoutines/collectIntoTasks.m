@@ -65,7 +65,7 @@ studies(counter).saveStudies = saveStudies;
 studies(counter).appyCommandsAt = appyCommandsAt;
 
 for i = 1:numel(connectedParameters)
-    if ~ismember(connectedParameters{i}{1},loopParameters)
+    if ~isempty(connectedParameters{i}) && ~ismember(connectedParameters{i}{1},loopParameters)
         error(['The connected parameter "' connectedParameters{i}{1} '" must be included in the variable loopParameters'])
     end
 end
