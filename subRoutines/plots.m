@@ -46,21 +46,57 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test surfaceToVolume
-
-if 1
-    geometry = getTopology(nurbs);
-    nurbs_vol = surfaceToVolume(nurbs,geometry.topology.connection,1.1);
+close all
+% model = 'BCA';
+model = 'S1_interior';
+switch model
+    case 'BCA'
+        load('BeTSSi_BCA_p2_unRefined.mat')
+        t = 1.1;
+        % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
+        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
+        % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
+    case 'S1_interior'
+        nurbs = getEllipsoidData('parm',2);
+        nurbs = flipNURBSparametrization(nurbs,1);
+        t = 0.4;
+        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
 end
-if 0
-    load('BeTSSi_BCA_p2_unRefined.mat')
+if strcmp(model,'BCA')
+    uiopen('C:\Users\jonve\results\ASIGA\BCA\CAD.fig',1)
+else
     close all
     axis equal
     color = getColor();
-    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotNormalVectors',0,'color',color);
+    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
     drawnow
     view(getView());
 end
+if 1
+    geometry = getTopology(nurbs);
+    nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
+end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test meanRatioJacobian
+% close all
+% theta = pi/4;
+% % theta = pi/20;
+% nurbs = getRectangleData('L',[1,4]);
+% nurbs = insertKnotsInNURBS(nurbs,[0,3]);
+% % nurbs = getHalfDiskData('theta3',theta,'parm',3);
+% % nurbs = ensure3DNURBS(nurbs);
+% % nurbs = makeUniformNURBSDegree(nurbs);
+% figure
+% [~,maxC_patch,minC_patch] = plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi),'resolution',[100,100],'coarseLinearSampling',false);
+% colorbar
+% axis equal
+% 
+% clim([0,1])
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generate and save BeTSSi BCA meshes

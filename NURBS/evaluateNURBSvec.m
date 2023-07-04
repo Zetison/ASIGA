@@ -1,4 +1,6 @@
-function varargout = evaluateNURBSvec(nurbs, xi,n,U)
+function varargout = evaluateNURBSvec(nurbs,xi,n,U)
+% This routine evaluates all derivatives up to order n for a single NURBS patch at the parametric points xi (having sizes (npts, d_p))
+% If U is provided, it is used as coefficients instead of the NURBS coefficients.
 
 if nargin < 3
     n = 0;
@@ -41,6 +43,6 @@ varargout = cell(1,d_p+1);
 varargout{1} = reshape(sum(RdR{1}.*U,2),[],size(U,3));
 for i = 1:d_p
     for j = 1:n
-        varargout{i+1}(:,:,j) = sum(RdR{i+1}(:,:,j).*U,2);
+        varargout{i+1}(:,:,j) = reshape(sum(RdR{i+1}(:,:,j).*U,2),[],size(U,3));
     end
 end
