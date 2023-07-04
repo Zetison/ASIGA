@@ -34,6 +34,9 @@ HetmaniukMesh = 1;
 if HetmaniukMesh
     sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
     sol.preconditioner  = 'CSLP';	% 'ilu', 'SSOR', 'CSLP', 'diag'
+    sol.maxit           = 6000;     % Maximal number of iteration for iterative solver
+    sol.droptol         = 1e-4;     % parameter for incomplete lu factorization with threshold and pivoting (ilutp)
+    sol.beta_CSLP       = 0.1;      % parameter for the Complex Shifted Laplace Preconditioner (CSLP)
     BCs = {'SHBC'};
     misc.coreMethod = {'hp_FEM'};
 else

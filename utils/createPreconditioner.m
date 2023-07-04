@@ -15,7 +15,7 @@ switch task.sol.preconditioner
             else
                 massMatrixScale = omega^2*task.varCol{i}.massMatrixScale;   
             end
-            A_M(Aindices{i,1},Aindices{i,2}) = 1i*beta*massMatrixScale*task.varCol{i}.A_M;
+            A_M(Aindices{i,1},Aindices{i,2}) = 1i*beta*abs(massMatrixScale)*task.varCol{i}.A_M;
         end
         A_M(task.varCol{1}.allDofsToRemove,:) = [];
         A_M(:,task.varCol{1}.allDofsToRemove) = [];

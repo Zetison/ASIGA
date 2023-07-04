@@ -5,6 +5,9 @@ function studies = getTask_Venas2018iao_Figure6(M_0)
 
 if nargin < 1
     M_0 = 3;
+    plotResults = true;
+else
+    plotResults = false;
 end
 counter = 1;
 studies = cell(0,1);
@@ -33,6 +36,7 @@ misc.omega = c_f*k;         % Angular frequency
 msh.M = M_0; % 3:4
 msh.degree = 3;
 msh.parm = 1;
+msh.autoRefine = true;
 
 ffp.plotFarField = false; 
 ffp.alpha_s = pi;
@@ -51,9 +55,9 @@ iem.N = 4;
 
 loopParameters = {'msh.M','misc.method','misc.formulation'};
 
-postPlot(1).xname       	= 'alpha';
+postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'error_pAbs';
-postPlot(1).plotResults  	= false;
+postPlot(1).plotResults  	= plotResults;
 postPlot(1).printResults 	= false;
 postPlot(1).axisType    	= 'semilogy';
 postPlot(1).lineStyle   	= '-';

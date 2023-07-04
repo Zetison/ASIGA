@@ -92,7 +92,7 @@ end
 colBEM_C0 = task.bem.colBEM_C0;
 patches = task.varCol{1}.patches;
 
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(task.varCol{1}.nurbs);
 centerPts = findCenterPoints(patches);
 
 

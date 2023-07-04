@@ -68,7 +68,7 @@ end
 %% Create collocation points
 patches = task.varCol{1}.patches;
 
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(task.varCol{1}.nurbs);
 centerPts = findCenterPoints(patches);
 
 %% Create source points:

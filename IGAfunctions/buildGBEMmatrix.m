@@ -103,7 +103,7 @@ else
     dU = NaN;
 end
 
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(task.varCol{i_domain}.nurbs);
 centerPts = findCenterPoints(patches);
 
 n_en = prod(degree+1);

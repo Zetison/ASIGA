@@ -97,11 +97,11 @@ prePlot.QoI_ref             = [];
 sol.solver          = 'LU';  % Direct solver: 'LU', Iterative solvers: 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'. NB! Not all solvers are applicable (i.e. pcg assumes symmetric positive definite matrix). For help check https://se.mathworks.com/help/matlab/math/iterative-methods-for-linear-systems.html
 sol.preconditioner  = 'diag';	% 'ilu', 'SSOR', 'CSLP', 'diag'
 sol.tol             = 1e-10;    % Tolerance for residual error
-sol.maxit           = 600;     % Maximal number of iteration for iterative solver
+sol.maxit           = 6000;     % Maximal number of iteration for iterative solver
 sol.restart         = 30;       % restarts the method every RESTART iterations for GMRES. Reduce this to save memory (i.e. 2)
 sol.ilutype         = 'ilutp';  % 'ilutp', 'crout' and 'nofill' (see the ilu function in matlab)
 sol.droptol         = 1e-2;     % parameter for incomplete lu factorization with threshold and pivoting (ilutp)
-sol.beta_CSLP       = 0.02;      % parameter for the Complex Shifted Laplace Preconditioner (CSLP)
+sol.beta_CSLP       = 0.5;      % parameter for the Complex Shifted Laplace Preconditioner (CSLP)
 
 %% Error computations
 err.calculateSurfaceError = false;	% Only if scatteringCase == 'Bi'

@@ -68,6 +68,7 @@ if varCol{1}.boundaryMethod
         dirs = 1:3;
     end
     varCol{1}.nurbs = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', 0, 'Xi', Xi);
+    varCol{1}.nurbs = makeUniformNURBSDegree(varCol{1}.nurbs,degreeVec);
     if numel(varCol) > 1
         varCol{2}.nurbs = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
         varCol{2}.nurbs = makeUniformNURBSDegree(varCol{2}.nurbs,degreeVec);
