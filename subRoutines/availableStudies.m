@@ -20,7 +20,6 @@ function studyName = availableStudies()
 % studyName = 'Avery2007ffs'; %getTask_Avery2007ffs
 % studyName = 'Safjan2002tdi'; %getTask_Safjan2002tdi
 % studyName = 'Safjan2002tdi_Fig1'; %getTask_Safjan2002tdi_Fig1
-studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Shirron2006afe'; %getTask_Shirron2006afe
 % studyName = 'Shirron2006afe_Fig3'; %getTask_Shirron2006afe_Fig3
 % studyName = 'FreeCAD'; %getTask_FreeCAD
@@ -34,6 +33,9 @@ studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'unitTest'; %getTask_unitTest
 % studyName = 'illustratePML'; %getTask_illustratePML
 % studyName = 'transduser2D'; %getTask_transduser2D
+
+% studyName = 'CSLP'; %getTask_CSLP
+studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 
 
 %% Venas2020ibe

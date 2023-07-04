@@ -38,7 +38,7 @@ else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(varCol.nurbs);
 centerPts = findCenterPoints(patches);
 
 

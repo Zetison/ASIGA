@@ -55,7 +55,7 @@ if false
     Ly = yb(2)-yb(1);
     Lz = zb(2)-zb(1);
 
-    % delta = findMaxElementDiameter(task.varCol{1}.patches)/2;
+    % delta = findMaxElementDiameter(task.varCol{1}.nurbs)/2;
     delta = 0.08;
 
     x = linspace(xb(1),xb(2), ceil(Lx/delta)+1);

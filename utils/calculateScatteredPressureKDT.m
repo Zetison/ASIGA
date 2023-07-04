@@ -23,7 +23,7 @@ Eps = 10*eps;
 
 d_vec = task.d_vec;
 k = task.misc.omega/task.varCol{1}.c_f;
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(task.varCol{1}.nurbs);
 centerPts = findCenterPoints(patches);
 
 p_inc = task.p_inc_;

@@ -12,7 +12,11 @@ task.FEdofs = FEdofs;
 if task.misc.compute_h_max
     h_max = -Inf;
     for i = 1:task.noDomains
-        h_max_i = findMaxElementDiameter(task.varCol{i}.patches);
+        if task.msh.refineThetaOnly
+            h_max_i = findMaxElementDiameter(subNURBS(task.varCol{i}.nurbs,'at',[1,0;0,0;0,0]));
+        else
+            h_max_i = findMaxElementDiameter(task.varCol{i}.nurbs);
+        end
         if h_max < h_max_i
             h_max = h_max_i;
         end
@@ -20,9 +24,6 @@ if task.misc.compute_h_max
     task.h_max = h_max;
     if isfield(task.varCol{1},'c_f')
         task.varCol{1}.nepw = task.varCol{1}.lambda./task.h_max;
-        if task.varCol{1}.boundaryMethod
-            task.varCol{1}.tau = computeTau(task);
-        end
     end
 end
 

@@ -69,11 +69,10 @@ for i_col = 1:numel(studiesCol)
             for i_task = 1:noTasks
                 plot3Dgeometry      = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.plot3Dgeometry;
                 abortAfterPlotting  = studiesCol{i_col}(i_study).tasks(i_task).task.prePlot.abortAfterPlotting;
-                preProcessOnly      = studiesCol{i_col}(i_study).tasks(i_task).task.misc.preProcessOnly;
 
                 %% Run main subroutine
                 studiesCol{i_col}(i_study).tasks(i_task).task = main_sub(studiesCol{i_col}(i_study).tasks(i_task).task,loopParameters,printLog,resultsFolder);
-                if (plot3Dgeometry || preProcessOnly) && abortAfterPlotting
+                if plot3Dgeometry&& abortAfterPlotting
                     return
                 end
                 if printLog
@@ -81,45 +80,51 @@ for i_col = 1:numel(studiesCol)
                 end
             end
         end 
-        studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
-        if studiesCol{i_col}(i_study).saveStudies
-            save([resultsFolder '/studiesCol'], 'studiesCol')
-        end
-        study = studiesCol{i_col}(i_study);
-        for i = 1:numel(study.postPlot)
-            study.postPlot(i).plotResults = false;
-            if study.postPlot(i).printResults
-                printResultsToTextFiles(study,study.postPlot(i))
+        if ~studiesCol{i_col}(i_study).tasks(1).task.misc.preProcessOnly
+            studiesCol{i_col}(i_study).resultsFolder = resultsFolder;
+            if studiesCol{i_col}(i_study).saveStudies
+                save([resultsFolder '/studiesCol'], 'studiesCol')
             end
-        end
-    end
-    close all
-    for i_study = 1:numel(studiesCol{i_col})  
-        study = studiesCol{i_col}(i_study);
-        for i = 1:numel(study.postPlot)
-            if study.postPlot(i).plotResults || study.postPlot(i).printResults
-                figure(i)
-                printResultsToTextFiles(study,study.postPlot(i))
-                if isa(study.postPlot(i).addCommands,'function_handle') && i_study == studiesCol{i_col}(i_study).appyCommandsAt
-                    figure(i)
-                    study.postPlot(i).addCommands(study,i_study,studiesCol{i_col})
-                    if isempty(study.postPlot(i).subFolderName)
-                        subFolderName = study.resultsFolder;
-                    else
-                        subFolderName = study.postPlot(i).subFolderName;
-                    end
-                    xname = study.postPlot(i).xname;
-                    yname = study.postPlot(i).yname;
-                    xname = strrep(xname, 'varCol', 'd');
-                    
-                    xname = regexprep(xname,'[^a-zA-Z1-9\s]','');
-                    yname = regexprep(yname,'[^a-zA-Z1-9\s]','');
-                    model = study.tasks(1).task.misc.model;
-                    savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
+            study = studiesCol{i_col}(i_study);
+            for i = 1:numel(study.postPlot)
+                study.postPlot(i).plotResults = false;
+                if study.postPlot(i).printResults
+                    printResultsToTextFiles(study,study.postPlot(i))
                 end
             end
         end
-    end 
+    end
+    try
+        close all
+        for i_study = 1:numel(studiesCol{i_col})  
+            study = studiesCol{i_col}(i_study);
+            for i = 1:numel(study.postPlot)
+                if study.postPlot(i).plotResults || study.postPlot(i).printResults
+                    figure(i)
+                    printResultsToTextFiles(study,study.postPlot(i))
+                    if isa(study.postPlot(i).addCommands,'function_handle') && i_study == studiesCol{i_col}(i_study).appyCommandsAt
+                        figure(i)
+                        study.postPlot(i).addCommands(study,i_study,studiesCol{i_col})
+                        if isempty(study.postPlot(i).subFolderName)
+                            subFolderName = study.resultsFolder;
+                        else
+                            subFolderName = study.postPlot(i).subFolderName;
+                        end
+                        xname = study.postPlot(i).xname;
+                        yname = study.postPlot(i).yname;
+                        xname = strrep(xname, 'varCol', 'd');
+                        
+                        xname = regexprep(xname,'[^a-zA-Z1-9\s]','');
+                        yname = regexprep(yname,'[^a-zA-Z1-9\s]','');
+                        model = study.tasks(1).task.misc.model;
+                        savefig([subFolderName '/plot_' model '_' yname 'VS' xname])
+                    end
+                end
+            end
+        end 
+    catch ME
+        warning(ME.message)
+    end
     if printLog
         fprintf('\n\nTotal time spent on case "%s": %12f seconds\n', studyName{i_col}, toc(t_start_study)) 
     end

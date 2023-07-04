@@ -20,6 +20,7 @@ misc.coreMethod = {'IGA'};
 
 varCol = setS1Parameters('double',1);
 msh.meshFile = 'createNURBSmesh_EL';
+msh.autoRefine = true;
 
 f = 1e3;
 misc.omega = 2*pi*f;

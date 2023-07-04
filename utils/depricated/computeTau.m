@@ -1,4 +1,5 @@
 function tau = computeTau(task)
+error('Deprecated')
 dofsToRemove = task.varCol{1}.dofsToRemove;
 k = task.misc.omega/task.varCol{1}.c_f;
 lambda = 2*pi/k;

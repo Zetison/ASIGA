@@ -87,15 +87,11 @@ switch task.misc.method
     case 'MFS'
         p_h = calculateScatteredPressureMFS(task, v);
     case 'KDT'
-        k = task.misc.omega/task.varCol{1}.c_f;
-        lambda = 2*pi./k;
         switch task.misc.coreMethod
             case 'linear_FEM'
                 task = kirchApprTri(task,v);
                 p_h = task.ffp.p_h;
             case 'IGA'
-                task.varCol{1}.h_max = findMaxElementDiameter(task.varCol{1}.patches);
-                task.varCol{1}.nepw = lambda./task.varCol{1}.h_max;
                 task.dofs = task.varCol{1}.noDofs;
                 p_h = calculateScatteredPressureKDT(task, v);
         end

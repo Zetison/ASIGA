@@ -2,7 +2,7 @@ function [nurbs, maxLengths] = autoRefineNURBS(nurbs,connection,h_max,dirs)
 % Assuming all patches are compatible, this algorithm automatically refines
 % all patches in nurbs such that maximal element side length is roughly
 % h_max
-d_p = nurbs{1}.d_p;
+d_p = nurbs{1}.d_p; % Assume all patches have the same number of parametric directions
 if nargin < 4
     dirs = 1:d_p;
 end
@@ -21,12 +21,13 @@ for patch = 1:noPatches
     if all(patchRefined(patch,:))
         continue
     end
-    for refDir = 1:d_p
+    for refDir = dirs
         [nurbs, patchRefined,maxLengths] = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,false,h_max,patch);
     end
 end
 
-function [nurbs, patchRefined, patchChecked,maxLengths] = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,refine,h_max,rootPatch,master,patchChecked,maxLengths)
+function [nurbs, patchRefined, patchChecked,maxLengths] = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,...
+                                                                        refine,h_max,rootPatch,master,patchChecked,maxLengths)
 % This function goes through all patches that must be refined if master is
 % refined in direction refDir: The maximum element edges are first computed
 % and then the patches are refined based on this such that the element

@@ -171,8 +171,12 @@ switch options.noXLoopPrms
             try 
                 y(i) = eval(['study.tasks(i).task.results.' yname]);
             catch
-                y(i) = NaN;
-                warning('ASIGA:yDataNotFound', [yname ' was not found in the structure.'])
+                try 
+                    y(i) = eval(['study.tasks(i).task.' yname]);
+                catch
+                    y(i) = NaN;
+                    warning('ASIGA:yDataNotFound', [yname ' was not found in the structure.'])
+                end
             end
             if plotAnalyticSolution
                 y_ref(i) = study.tasks(i).task.results.([yname '_ref']);

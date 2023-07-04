@@ -88,7 +88,7 @@ p_inc = varCol.p_inc;
 Eps = 1e4*eps;
 
 patches = varCol.patches;
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(varCol.nurbs);
 centerPts = findCenterPoints(patches);
 
 noPatches = varCol.noPatches;

@@ -8,7 +8,11 @@ end
 if nargin < 4
     buildA = true;
 end
-
+if isfield(task,'sol')
+    useCSLP = strcmp(task.sol.preconditioner,'CSLP');
+else
+    useCSLP = false;
+end
 switch task.misc.method
     case {'IE','IENSG','BEM','BA','ABC','MFS','PML'}
         tic
@@ -98,6 +102,7 @@ switch task.misc.method
                             massMatrixScale = -eqScale*rho;
                         end
                 end
+                task.varCol{i}.massMatrixScale = massMatrixScale;
                 if collectLHS
                     if isfield(task.varCol{i},'A_K')
                         if strcmp(task.varCol{i}.media,'solid') && task.misc.symmetric
@@ -119,7 +124,9 @@ switch task.misc.method
                         else
                             task.A2(Aindices{i,1},Aindices{i,2}) = task.A2(Aindices{i,1},Aindices{i,2}) + massMatrixScale*task.varCol{i}.A_M; 
                         end
-                        task.varCol{i} = rmfield(task.varCol{i},'A_M');
+                        if ~useCSLP
+                            task.varCol{i} = rmfield(task.varCol{i},'A_M');
+                        end
                     end
                     if isfield(task.varCol{i},'A_C') && i > 1
                         Cindices1 = Aindices{i,1}(end)+(1:size(task.varCol{i}.A_C,1));
@@ -205,6 +212,9 @@ switch task.misc.method
                 end
             end
         else
+            if useCSLP
+                error('The mass matrix is not available for this method and the CSLP is thus not applicable')
+            end
             allDofsToRemove = task.varCol{1}.dofsToRemove;
             if ~(strcmp(task.misc.method,'BEM') && strcmp(task.misc.formulation(1),'C'))
                 task.varCol{1}.A_K(allDofsToRemove,:) = [];
