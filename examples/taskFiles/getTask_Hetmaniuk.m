@@ -6,7 +6,6 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 saveStudies        = false;       % save ASIGA-struct into a .mat file
-appyCommandsAt = 1;
 
 %% IE simulation
 hetmaniukCase = 1;
@@ -17,10 +16,12 @@ misc.coreMethod = {'IGA','C0_IGA'};
 % misc.coreMethod = {'C0_IGA'};
 misc.coreMethod = {'IGA'};
 % misc.coreMethod = {'hp_FEM'};
+% misc.coreMethod = {'sub_IGA'};
 % misc.applyLoad = 'pointPulsation';
 % misc.applyLoad = 'pointCharge';
 misc.applyLoad = 'planeWave';
 
+% BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
 BCs = {'SHBC','SSBC','NNBC'};
@@ -30,7 +31,7 @@ end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-HetmaniukMesh = 1;
+HetmaniukMesh = 0;
 if HetmaniukMesh
     sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
     sol.preconditioner  = 'CSLP';	% 'ilu', 'SSOR', 'CSLP', 'diag'
@@ -38,7 +39,8 @@ if HetmaniukMesh
     sol.droptol         = 1e-4;     % parameter for incomplete lu factorization with threshold and pivoting (ilutp)
     sol.beta_CSLP       = 0.1;      % parameter for the Complex Shifted Laplace Preconditioner (CSLP)
     BCs = {'SHBC'};
-    misc.coreMethod = {'hp_FEM'};
+%     misc.coreMethod = {'hp_FEM'};
+    misc.coreMethod = {'sub_IGA'};
 else
     sol.solver          = 'LU';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
     sol.preconditioner  = 'diag';	% 'ilu', 'SSOR', 'CSLP', 'diag'
@@ -60,32 +62,39 @@ if HetmaniukMesh
     msh.refineThetaOnly = 0; % only for msh.parm = 1
 else
     msh.parm = 1;
-    msh.refineThetaOnly = 1; % only for msh.parm = 1
+    msh.refineThetaOnly = 0; % only for msh.parm = 1
     msh.autoRefine = true;
 end
-msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
 err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
-misc.preProcessOnly = 0;
+misc.preProcessOnly = 1;
 
 prePlot.plot3Dgeometry = 0;
 prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
 prePlot.plotFullDomain      = 0;
-prePlot.plotControlPolygon  = 0;
+% prePlot.plotControlPolygon  = 0;
 prePlot.plotSubsets         = {'xz'};
 % prePlot.plotSubsets         = {}; 
-prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
 % prePlot.resolution = [400,200,0];
 % prePlot.resolution = [100,0,0];
+prePlot.pngResolution = '-r800';
+if msh.refineThetaOnly
+    msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
+else
+    msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
+end
+msh.explodeNURBS = prePlot.plot3Dgeometry && prePlot.plotFullDomain;   % Create patches from all C^0 interfaces
 if prePlot.plotFullDomain
     prePlot.format = '-png';      % Use '-png' or '-pdf' (for vector graphics)
+    prePlot.view   = [45,30];     % Set view angle [azimuth,elevation]
 else
+    prePlot.view                = [0,0];     % Set view angle [azimuth,elevation]
     if strcmp(prePlot.plotSubsets{1},'xz')
         prePlot.format = '-pdf';      % Use '-png' or '-pdf' (for vector graphics)
     else
@@ -96,6 +105,7 @@ end
 misc.computeCondNumber = 0;
 
 for i = 1:numel(BCs)
+    appyCommandsAt = counter;
     misc.BC = BCs{i};
 %     misc.method = {'IENSG'};
 %     misc.method = {'IE'};
@@ -114,7 +124,6 @@ for i = 1:numel(BCs)
     postPlot(1).fileDataHeaderX	= [];
     postPlot(1).noXLoopPrms   	= 0;
     postPlot(1).xLoopName       = NaN;
-    postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(study);
 
     postPlot(2) = postPlot(1);
     if hetmaniukCase
@@ -134,6 +143,8 @@ for i = 1:numel(BCs)
     for j = 4:6
         postPlot(j).xname = 'f';
     end
+    postPlot(3).addCommands   	= @(study,i_study,studies) addCommands_(study);
+    postPlot(6).addCommands   	= @(study,i_study,studies) addCommands_(study);
     switch misc.BC
         case {'SHBC','NBC'}
             noDomains = 1;
@@ -144,16 +155,9 @@ for i = 1:numel(BCs)
     end
     varCol = setHetmaniukParameters(noDomains);
     msh.meshFile = 'createNURBSmesh_EL';
-    if msh.refineThetaOnly
-        msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
-    else
-        msh.Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
-    end
-    if HetmaniukMesh
-        msh.degree = 3;
-    else
-        msh.degree = 2;
-    end
+    msh.degree = 3;
+    msh.extraSolidKnots = msh.degree;
+
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
@@ -267,22 +271,15 @@ for i = 1:numel(BCs)
             rom.noVecs = 32;
         case {'SSBC','NNBC'}
             k_pml = 1430*2*pi/varCol{1}.c_f;
-            f_P = linspace(1430, 4290, 5);
-%             f_P = [1430,4290];
-%             f_P = [4290,1430];
-%             f_P = [4290,3146,1430];
-%             f_P = [1430,3146,4290];
-%             f_P = [1430,4290,3146];
-%             f_P = [1430,2860,3146];
-%             f_P = [1430,3146,2860];
+%             f_P = linspace(1430, 4290, 5);
             f_P = [1430,3146,4290];
             omega_P = 2*pi*f_P;
             f = f_P(1):12:f_P(end);
 %             f = f_P(1):120:f_P(end);
 %             f = f_P(1):1200:f_P(end);
 %             f = linspace(1430, 4290, 9);
-%             f = f_P(end);
             f = sort(unique([f_P,f]));
+%             f = f_P(end);
             omega = 2*pi*f;
             misc.omega = omega;
             k_P = omega_P/varCol{1}.c_f;
@@ -333,8 +330,8 @@ for i = 1:numel(BCs)
     
     misc.scatteringCase = 'BI';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-    collectIntoTasks
-    
+%     collectIntoTasks
+
     %% Run paraview visualization case
     misc.omega = misc.omega(end);
     para.plotResultsInParaview = true;
@@ -356,7 +353,46 @@ for i = 1:numel(BCs)
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-    collectIntoTasks
+%     collectIntoTasks
+end
+% Study to show the influence of refining the resolution through the
+% thickness of the solid domain
+for j = 1:6
+    postPlot(j).plotResults = false;
+    postPlot(j).printResults = false;
+end
+BCs = {'SSBC','NNBC'};
+for i = 1:numel(BCs)
+    f = 4290;
+    misc.omega = 2*pi*f;
+    misc.BC = BCs{i};
+    switch misc.BC
+        case 'SSBC'
+            noDomains = 2;
+        case 'NNBC'
+            noDomains = 3;
+    end
+    varCol = setHetmaniukParameters(noDomains);
+    msh.M = 7; % 7
+    msh.degree = 3;
+    misc.method = {'PML'};
+    misc.formulation = {'GSB'};
+    msh.extraSolidKnots = 0:(msh.degree+2);
+    loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega','msh.extraSolidKnots'};
+    postPlot(7) = postPlot(1);
+    postPlot(7).plotResults = true;
+    postPlot(7).printResults = true;
+    postPlot(7).xname           = 'msh.extraSolidKnots';
+    postPlot(7).lineStyle    	= '*-';
+    postPlot(7).yname        	= 'surfaceError';
+    postPlot(7).noXLoopPrms   	= 1;
+    postPlot(7).xLoopName       = 'msh.extraSolidKnots';
+%     collectIntoTasks
+    
+    misc.method = {'BA'};
+    misc.formulation = {'SL2E'};
+    msh.extraSolidKnots = [0,(msh.degree+2)];
+%     collectIntoTasks
 end
 
 function addCommands_(study)

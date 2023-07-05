@@ -5,7 +5,7 @@ Eps = 1e-5;
 testFolder = 'examples/taskFiles/tests/';
 studyName = {'Venas2018iao_Figure6','Venas2020asi_Figure21','Venas2018iao_Table2','Venas2020asi_Figure7',...
              'Venas2019asi_Figure4','Venas2019asi_FigureB10B11B12','Venas2019asi_FigureA2A3'};
-% studyName = {'Venas2018iao_Figure6'};
+% studyName = {'Venas2018iao_Table2'};
 stringShift = 60;
 noFailedTests = 0;
 failMatrix = false(2,numel(studyName));

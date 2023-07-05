@@ -14,7 +14,7 @@ misc.scatteringCase      = 'BI';        % Bistatic scattering
 misc.applyLoad           = 'planeWave'; % Set load. I.e.: 'planeWave', 'radialPulsation', 'pointPulsation', 'SimpsonTorus'
 misc.model               = 'S1';        % Spherical shell of radius 1
 misc.method              = 'IE';        % Method for handling the unbounded domain problem
-misc.coreMethod          = 'IGA';       % Solution space: IGA, C0_IGA, hp_FEM, h_FEM, linear_FEM
+misc.coreMethod          = 'IGA';       % Solution space: IGA, C0_IGA, sub_IGA, hp_FEM, h_FEM, linear_FEM
 misc.BC                  = 'SHBC';      % Boundary condition
 misc.formulation         = 'BGU';       % Formulation
 misc.computeCondNumber   = false;       % Compute the condition number of the global matrix
@@ -31,6 +31,7 @@ misc.P_inc               = 1;           % Amplitude of incident wave
 misc.exteriorProblem  	 = true;        % Solve for the exterior problem (as opposed to the interior problem)
 misc.checkNURBSweightsCompatibility = true; % Check if the NURBS weights are compatible across patch interfaces
 misc.compute_h_max       = true;        % Compute h_max and derived quantities like nepw (number of elements per wavelength)
+misc.compute_g_max       = true;        % Compute g_max and derived quantities like ndpw (number of dofs per wavelength)
 misc.preProcessOnly      = false;       % Only run the preProcessing process
 misc.symmetric           = true;        % Use symmetric matrices for coupled problems (at the expence of having to store three more global matrices for ROM). The global matrix has better conditioning with misc.symmetric = true but the opposit is true for the reduced matrices.
 misc.omega               = [];          % Loop over these angular frequencies

@@ -208,20 +208,19 @@ for patch = 1:noPatches
                         normals(1:nuk1,counter+1:counter+nuk2,:) = reshape(normals_temp,nuk1,nuk2,d);
                     end
                     
-                    stepLen = res(indices(2:3))+1;
-                    noLines = noUniqueKnots(indices(2:3));
-                    
                     % Create element edges
-                    temp = NaN(nuk1+1, noLines(2), 3);
-                    temp(1:end-1,:,:) = X_temp(:,1:stepLen(2):end,:);
-                    noAddedPoints = noLines(2)*(nuk1+1);
-                    vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
-                    elCounter = elCounter+noAddedPoints;
-                    
-                    temp = NaN(nuk2+1, noLines(1), 3);
-                    temp(1:end-1,:,:) = permute(X_temp(1:stepLen(1):end,:,:),[2,1,3]);
-                    noAddedPoints = noLines(1)*(nuk2+1);
-                    vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
+                    nuk3 = length(p_values{indices(1)});
+                    uniqueKnots2 = nurbs.knots{indices(2)};
+                    uniqueKnots3 = nurbs.knots{indices(3)};
+                    noKnots2 = numel(uniqueKnots2);
+                    noKnots3 = numel(uniqueKnots3);
+                    [XI,ETA,ZETA] = ndgrid(p_values{indices(1)},uniqueKnots2,uniqueKnots3);
+                    XIETAZETA = [XI(:), ETA(:), ZETA(:)];
+                    X_temp2 = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1);
+                    X_temp2 = reshape(X_temp2,nuk3,noKnots2,noKnots3,d);
+                    X_temp2(end+1,:,:,:) = NaN;
+                    noAddedPoints = (nuk3+1)*noKnots2*noKnots3;
+                    vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(X_temp2,[],3);
                     elCounter = elCounter+noAddedPoints;
                     
                     counter = counter + nuk2+1;

@@ -102,6 +102,7 @@ The following methods has been implemented (with available formulations)
 
 
 Instead of IGA (coreMethod = 'IGA' or coreMethod = 'C0_IGA') the following alternatives are implemented
+- Subparametric IGA (coreMethod = 'sub_IGA')
 - Bilinear isoparametric FEM (coreMethod = 'linear_FEM')
 - Subparametric FEM with bilinear representation of geometry (coremethod = 'h_FEM')
 - Isoparametric FEM (coreMethod = 'hp_FEM')

@@ -65,13 +65,22 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         nurbs.rho = {rhoXi,rhoEta,rhoZeta};
                         nurbs.GLL = {tXi,tEta,tZeta};
 
-                    case 'hp_FEM'
+                    case {'hp_FEM','sub_IGA'}
                         number = zeros(1,d_p);
                         t = cell(1,d_p);
                         xi_t = cell(1,d_p);
                         degree = min(nurbs.degree,task.msh.degree);
                         for i = 1:nurbs.d_p
-                            t{i} = [0,repelem(unique(nurbs.knots{i}),degree(i)),1];
+                            switch task.misc.coreMethod
+                                case 'hp_FEM'
+                                    t{i} = [0,repelem(unique(nurbs.knots{i}),degree(i)),1];
+                                case 'sub_IGA'
+                                    % Lower order while maintaining continuity
+                                    uniqueKnots = unique(nurbs.knots{i});
+                                    t{i} = setdiffUnique(nurbs.knots{i},uniqueKnots);
+                                    t{i} = setdiffUnique(t{i},uniqueKnots);
+                                    t{i} = sort([t{i},uniqueKnots]);
+                            end
                             number(i) = numel(t{i})-(degree(i)+1);
                             xi_t{i} = aveknt(t{i}, degree(i)+1);
 %                             xi_t{1}{i} = splinesGLL(t{i}, degree(i)+1);
@@ -94,38 +103,20 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         values = zeros(prod(number),prod(degree+1));
                         n_idx = zeros(prod(number),prod(degree+1));
                         m_idx = zeros(prod(number),prod(degree+1));
+                        ii = 1:degree(1)+1;
+                        jj = 1:degree(2)+1;
+                        ll = 1:degree(3)+1;
                         parfor a = 1:prod(number)
                             i = index(a,1);
                             j = index(a,2);
                             l = index(a,3);
-                            l_zeta   = i_arr{3}(l);
-                            B_zeta = B_arr{3}(l,:);
-                            j_eta   = i_arr{2}(j);
-                            B_eta = B_arr{2}(j,:);
-                            i_xi   = i_arr{1}(i);
-                            B_xi = B_arr{1}(i,:);
-                            m = i + (j-1)*number(1) + (l-1)*number(1)*number(2);
 
-                            temp = zeros(1,prod(degree+1));
-                            temp2 = zeros(1,prod(degree+1));
-                            counter = 1;
-                            for ll = 1:degree(3)+1
-                                l_tilde = l_zeta - degree(3) + ll - 1;
-                                for jj = 1:degree(2)+1
-                                    j_tilde = j_eta - degree(2) + jj - 1;
-                                    for ii = 1:degree(1)+1
-                                        i_tilde = i_xi - degree(1) + ii - 1;
-                                        n = i_tilde + (j_tilde-1)*number(1) + (l_tilde-1)*number(1)*number(2);
-
-                                        temp(counter) = B_xi(ii)*B_eta(jj)*B_zeta(ll);
-                                        temp2(counter) = n;
-                                        counter = counter + 1;
-                                    end
-                                end
-                            end
-                            values(a,:) = temp;
-                            n_idx(a,:) = temp2;
-                            m_idx(a,:) = ones(1,prod(degree+1))*m;
+                            i_tilde = i_arr{1}(i) - degree(1) + ii - 1;
+                            j_tilde = i_arr{2}(j) - degree(2) + jj - 1;
+                            l_tilde = i_arr{3}(l) - degree(3) + ll - 1;
+                            values(a,:) = reshape(B_arr{1}(i,:).'.*B_arr{2}(j,:).*reshape(B_arr{3}(l,:),1,1,[]),1,[]);
+                            n_idx(a,:) = reshape(i_tilde.' + (j_tilde-1)*number(1) + (reshape(l_tilde,1,1,[])-1)*number(1)*number(2),1,[]);
+                            m_idx(a,:) = ones(1,prod(degree+1))*(i + (j-1)*number(1) + (l-1)*number(1)*number(2));
                         end
                         A = sparse(m_idx,n_idx,values);
 
@@ -216,13 +207,22 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         nurbs.rho = {rhoXi,rhoEta};
                         nurbs.GLL = {tXi,tEta};
 
-                    case 'hp_FEM'
+                    case {'hp_FEM','sub_IGA'}
                         number = zeros(1,d_p);
                         t = cell(1,d_p);
                         xi_t = cell(1,d_p);
                         degree = min(nurbs.degree,task.msh.degree);
                         for i = 1:nurbs.d_p
-                            t{i} = [0,repelem(unique(nurbs.knots{i}),degree(i)),1];
+                            switch task.misc.coreMethod
+                                case 'hp_FEM'
+                                    t{i} = [0,repelem(unique(nurbs.knots{i}),degree(i)),1];
+                                case 'sub_IGA'
+                                    % Lower order while maintaining continuity
+                                    uniqueKnots = unique(nurbs.knots{i});
+                                    t{i} = setdiffUnique(nurbs.knots{i},uniqueKnots);
+                                    t{i} = setdiffUnique(t{i},uniqueKnots);
+                                    t{i} = sort([t{i},uniqueKnots]);
+                            end
                             number(i) = numel(t{i})-(degree(i)+1);
                             xi_t{i} = aveknt(t{i}, degree(i)+1);
 %                             xi_t{1}{i} = splinesGLL(t{i}, degree(i)+1);
@@ -239,40 +239,24 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                             B_arr{i} = BsplineBasisVec(i_arr{i}, xi_t{i}.', degree(i), t{i});
                         end
 
-                        [arr1,arr2,arr3] = ndgrid(1:number(1),1:number(2),1:number(3));
-                        index = [arr1(:),arr2(:),arr3(:)];
+                        [arr1,arr2] = ndgrid(1:number(1),1:number(2));
+                        index = [arr1(:),arr2(:)];
 
 
                         values = zeros(prod(number),prod(degree+1));
                         n_idx = zeros(prod(number),prod(degree+1));
                         m_idx = zeros(prod(number),prod(degree+1));
+                        ii = 1:degree(1)+1;
+                        jj = 1:degree(2)+1;
                         parfor a = 1:prod(number)
                             i = index(a,1);
                             j = index(a,2);
 
-                            i_xi   = i_arr{1}(i);
-                            B_xi = B_arr{1}(i,:);
-                            j_eta   = i_arr{2}(j);
-                            B_eta = B_arr{2}(j,:);
-                            m = i + (j-1)*number(1);
-
-                            temp = zeros(1,prod(degree+1));
-                            temp2 = zeros(1,prod(degree+1));
-                            counter = 1;
-                            for jj = 1:degree(2)+1
-                                j_tilde = j_eta - degree(2) + jj - 1;
-                                for ii = 1:degree(1)+1
-                                    i_tilde = i_xi - degree(1) + ii - 1;
-                                    n = i_tilde + (j_tilde-1)*number(1);
-
-                                    temp(counter) = B_xi(ii)*B_eta(jj);
-                                    temp2(counter) = n;
-                                    counter = counter + 1;
-                                end
-                            end
-                            values(a,:) = temp;
-                            n_idx(a,:) = temp2;
-                            m_idx(a,:) = ones(1,prod(degree+1))*m
+                            i_tilde = i_arr{1}(i) - degree(1) + ii - 1;
+                            j_tilde = i_arr{2}(j) - degree(2) + jj - 1;
+                            values(a,:) = reshape(B_arr{1}(i,:).'.*B_arr{2}(j,:),1,[]);
+                            n_idx(a,:) = reshape(i_tilde.' + (j_tilde-1)*number(1),1,[]);
+                            m_idx(a,:) = ones(1,prod(degree+1))*(i + (j-1)*number(1));
                         end
                         A = sparse(m_idx,n_idx,values);
 

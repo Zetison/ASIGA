@@ -24,7 +24,6 @@ function studyName = availableStudies()
 % studyName = 'Shirron2006afe_Fig3'; %getTask_Shirron2006afe_Fig3
 % studyName = 'FreeCAD'; %getTask_FreeCAD
 % studyName = 'FreeCADsphere'; %getTask_FreeCADsphere
-% studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 % studyName = 'test'; %getTask_test
 % studyName = 'PMLstudy'; %getTask_PMLstudy
 % studyName = 'Prism'; %getTask_Prism
@@ -35,7 +34,8 @@ function studyName = availableStudies()
 % studyName = 'transduser2D'; %getTask_transduser2D
 
 % studyName = 'CSLP'; %getTask_CSLP
-studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 
 
 %% Venas2020ibe

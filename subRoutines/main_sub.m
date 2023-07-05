@@ -68,7 +68,9 @@ if printLog
     fprintf('using %12f seconds.', toc)
     fprintf('\nTotal number of elements = %d', task.totNoElems)
     fprintf('\nFinite element dofs = %d', task.FEdofs)
-    fprintf('\nNumber of elements per wavelength = %.2g', min(task.varCol{1}.nepw(:)))
+    fprintf('\nFinite element dofs at Gamma = %d', task.surfDofs)
+    fprintf('\nNumber of elements per wavelength = %.3g', min(task.varCol{1}.nepw(:)))
+    fprintf('\nNumber of dofs per wavelength = %.3g', min(task.varCol{1}.ndpw(:)))
 end
 
 if (task.prePlot.plot3Dgeometry || task.misc.preProcessOnly) && task.prePlot.abortAfterPlotting

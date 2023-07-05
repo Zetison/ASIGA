@@ -101,7 +101,7 @@ switch task.misc.method
         end
         if task.misc.clearGlobalMatrices
             task.varCol = rmfields(task.varCol,{'A_K','A_M','A_C','Ainf','Ainf1','Ainf2'});
-            task = rmfields(task,{'A','FF','Pinv'});
+            task = rmfields(task,{'A','FF','Pinv','P_rightinv','P_right'});
             if ~task.rom.useROM
                 task = rmfields(task,{'A0','A1','A2','A4'});
             end
