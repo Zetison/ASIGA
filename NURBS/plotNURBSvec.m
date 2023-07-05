@@ -115,7 +115,7 @@ for patch = 1:noPatches
         p_values{i} = insertUniform(uniqueKnots{i}, res(i));
     end
     if isnan(qstep)
-        qstep = round(res(1)/2);
+        qstep = max(round(res(1)/2),1);
     end
     if d_p == 3
         indicesMat = [1,2,3;
@@ -179,6 +179,8 @@ for patch = 1:noPatches
                                 n(isnan(n)) = 10;
                                 dXdzeta = reshape(dX_temp(:,:,:,3),nuk1*nuk2,3);
                                 C_temp = colorFun(X_temp,n,dXdzeta./norm2(dXdzeta));
+                            case 4
+                                C_temp = colorFun(XIETAZETA(:,indicesMat2(ii,:)),nurbs,NaN,NaN);
                         end
                         C(1:nuk1,counter+1:counter+nuk2) = reshape(C_temp,nuk1,nuk2);
                     end
@@ -280,7 +282,7 @@ for patch = 1:noPatches
         dX = zeros(nuk1*nuk2, d, d_p);
         dX(:,:,1) = dvdxi./norm2(dvdxi);
         dX(:,:,2) = dvdeta./norm2(dvdeta);
-        dX = reshape(dX,nuk1,nuk2, 3, d_p);
+        dX = reshape(dX,nuk1,nuk2, d, d_p);
         if plotNormalVectors || (plotSolution && nargin(colorFun) == 2)
             normal = cross(dvdxi,dvdeta,2);
             normals = normal./norm2(normal);
@@ -291,6 +293,8 @@ for patch = 1:noPatches
                     C = colorFun(X);
                 case 2
                     C = colorFun(X,normals);
+                case 4
+                    C = colorFun([XI(:) ETA(:)],nurbs,NaN,NaN);
             end
             C = reshape(C,nuk1,nuk2);
         end
@@ -349,38 +353,78 @@ for patch = 1:noPatches
         end
     elseif d_p == 2 && d == 2
         if options.plotObject
-            % Find the curve counter-clockwise around the patch
-            XI = zeros(2*length(p_values{1})+2*length(p_values{2})-4, d);
-            counter = 1;
-            
-            % along eta = 0
-            xi = p_values{1};
-            npts = size(xi,1);
-            XI(counter:counter+npts-1,:) = [xi, zeros(npts,1)];
-            counter = counter + npts;
-    
-            % along xi = 1
-            eta = p_values{2}(2:end);
-            npts = size(eta,1);
-            XI(counter:counter+npts-1,:) = [ones(npts,1), eta];
-            counter = counter + npts;
-    
-            % along eta = 1
-            xi = p_values{1}(end-1:-1:1);
-            npts = size(xi,1);
-            XI(counter:counter+npts-1,:) = [xi, ones(npts,1)];
-            counter = counter + npts;
-            
-            % along xi = 0
-            eta = p_values{2}(end-1:-1:2); % Skip the end-point as the fill-function will automatically connect the curve
-            npts = size(eta,1);
-            XI(counter:counter+npts-1,:) = [zeros(npts,1), eta];
-    
-            % evaluate NURBS
-            v = evaluateNURBSvec(nurbs, XI);
-    
-            % reverse back order of arrays
-            fill(v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
+            if plotSolution || plotParmDir
+                nuk1 = length(p_values{1});
+                nuk2 = length(p_values{2});
+                C = zeros(length(p_values{1}), length(p_values{2}));
+                [XI,ETA] = ndgrid(p_values{1},p_values{2});
+                [X,dvdxi,dvdeta] = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1);
+                L_gamma = norm(X(end,:)-X(1,:));
+                if isnan(quiverScale)
+                    quiverScale = L_gamma/20;
+                end
+                dX = zeros(nuk1*nuk2, d, d_p);
+                dX(:,:,1) = dvdxi./norm2(dvdxi);
+                dX(:,:,2) = dvdeta./norm2(dvdeta);
+                dX = reshape(dX,nuk1,nuk2, d, d_p);
+                if plotSolution
+                    switch nargin(colorFun)
+                        case 1
+                            C = colorFun(X);
+                        case 4
+                            C = colorFun([XI(:) ETA(:)],nurbs,NaN,NaN);
+                    end
+                    C = reshape(C,nuk1,nuk2);
+                end
+                X = reshape(X,nuk1,nuk2,d);
+
+                maxC = max(max(C));
+                minC = min(min(C));
+                surf(X(:,:,1),X(:,:,2),C-maxC,C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', faceLighting, 'DisplayName',displayName)
+                colorbar
+                if plotParmDir
+                    for i = 1:d_p
+                        quiver(X(1:qstep:end,1:qstep:end,1), ...
+                                X(1:qstep:end,1:qstep:end,2), ...
+                                quiverScale*dX(1:qstep:end,1:qstep:end,1,i), ...
+                                quiverScale*dX(1:qstep:end,1:qstep:end,2,i),'LineWidth',quiverLineWidth,'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                    end
+                end
+            else
+                % Find the curve counter-clockwise around the patch
+                XI = zeros(2*length(p_values{1})+2*length(p_values{2})-4, d);
+                counter = 1;
+                
+                % along eta = 0
+                xi = p_values{1};
+                npts = size(xi,1);
+                XI(counter:counter+npts-1,:) = [xi, zeros(npts,1)];
+                counter = counter + npts;
+        
+                % along xi = 1
+                eta = p_values{2}(2:end);
+                npts = size(eta,1);
+                XI(counter:counter+npts-1,:) = [ones(npts,1), eta];
+                counter = counter + npts;
+        
+                % along eta = 1
+                xi = p_values{1}(end-1:-1:1);
+                npts = size(xi,1);
+                XI(counter:counter+npts-1,:) = [xi, ones(npts,1)];
+                counter = counter + npts;
+                
+                % along xi = 0
+                eta = p_values{2}(end-1:-1:2); % Skip the end-point as the fill-function will automatically connect the curve
+                npts = size(eta,1);
+                XI(counter:counter+npts-1,:) = [zeros(npts,1), eta];
+        
+                % evaluate NURBS
+                v = evaluateNURBSvec(nurbs, XI);
+        
+                % reverse back order of arrays
+                fill(v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
+            end
+                
         end
 
         if plotElementEdges

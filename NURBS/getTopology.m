@@ -8,6 +8,7 @@ end
 noPatches = numel(nurbs);
 
 %% Extract all interfaces (subnurbs) from the patches and assign each of these a unique key (stored in keys)
+randomNumbers = [0.141886338627215,0.421761282626275,0.915735525189067];
 keys = cell(noPatches,1);
 subnurbs = cell(noPatches,1);
 for i = 1:noPatches
@@ -19,7 +20,7 @@ for i = 1:noPatches
     for ii = 1:numel(subnurbs{i})
         d_p = subnurbs{i}{ii}.d_p;
         d = subnurbs{i}{ii}.d;
-        compScaling = 1:d; % Add more uniquness to the key (due to symmetries in many geometries)
+        compScaling = randomNumbers(1:d); % Add more uniquness to the key (due to symmetries in many geometries)
         compSum = sum(subnurbs{i}{ii}.coeffs(1:d,:),2);
         bdryMeasure = dot(compSum,compScaling);
         keys{i}(ii) = int32(bdryMeasure/10^ceil(log10(abs(bdryMeasure)))*1e9);
