@@ -116,6 +116,7 @@ else
         end
         
         if ~task.rom.useROM
+            task.misc.omega = omega_arr;
             task = postProcessSolution(task);
             if task.err.calculateSurfaceError || task.err.calculateVolumeError
                 task = calculateErrors(task, printLog, task.misc.stringShift);
@@ -138,10 +139,10 @@ end
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
 task = ASIGAparaview(task);
 
-task.varCol{1}.tot_time = toc(t_start);
+task.tot_time = toc(t_start);
 
 if printLog
-    fprintf('\nTotal time spent on task: %12f', task.varCol{1}.tot_time)  
+    fprintf('\nTotal time spent on task: %12f', task.tot_time)  
 end
 
 if ~task.misc.storeFullVarCol

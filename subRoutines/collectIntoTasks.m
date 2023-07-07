@@ -65,8 +65,15 @@ studies(counter).saveStudies = saveStudies;
 studies(counter).appyCommandsAt = appyCommandsAt;
 
 for i = 1:numel(connectedParameters)
-    if ~isempty(connectedParameters{i}) && ~ismember(connectedParameters{i}{1},loopParameters)
-        error(['The connected parameter "' connectedParameters{i}{1} '" must be included in the variable loopParameters'])
+    if ~isempty(connectedParameters{i})
+        if ~ismember(connectedParameters{i}{1},loopParameters)
+            error(['The connected parameter "' connectedParameters{i}{1} '" must be included in the variable loopParameters'])
+        end
+        for j = 1:numel(connectedParameters{i})
+            if eval(['length(' connectedParameters{i}{j} ')']) ~= eval(['length(' connectedParameters{i}{1} ')'])
+                error(['The connected parameter "' connectedParameters{i}{1} '" must have the same number of elements as the connected parameter "' connectedParameters{i}{j} '"'])
+            end
+        end
     end
 end
 studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr, connectedParameters, childrenParameters);

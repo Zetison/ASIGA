@@ -31,19 +31,23 @@ end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-HetmaniukMesh = 0;
+HetmaniukMesh = 1;
 if HetmaniukMesh
+    BCs = {'SHBC'};
+%     misc.coreMethod = {'sub_IGA','hp_FEM'};
+    misc.coreMethod = {'hp_FEM','sub_IGA'};
+    connectedParameters = {{'msh.M','misc.coreMethod'}};
+end
+if 1
+    sol.solver          = 'LU';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
+    sol.preconditioner  = 'diag';	% 'ilu', 'SSOR', 'CSLP', 'diag'
+    connectedParameters = {{}};
+else
     sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
     sol.preconditioner  = 'CSLP';	% 'ilu', 'SSOR', 'CSLP', 'diag'
     sol.maxit           = 6000;     % Maximal number of iteration for iterative solver
     sol.droptol         = 1e-4;     % parameter for incomplete lu factorization with threshold and pivoting (ilutp)
     sol.beta_CSLP       = 0.1;      % parameter for the Complex Shifted Laplace Preconditioner (CSLP)
-    BCs = {'SHBC'};
-%     misc.coreMethod = {'hp_FEM'};
-    misc.coreMethod = {'sub_IGA'};
-else
-    sol.solver          = 'LU';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
-    sol.preconditioner  = 'diag';	% 'ilu', 'SSOR', 'CSLP', 'diag'
 end
 
 ffp.calculateFarFieldPattern    = true;     % Calculate far field pattern
@@ -62,15 +66,16 @@ if HetmaniukMesh
     msh.refineThetaOnly = 0; % only for msh.parm = 1
 else
     msh.parm = 1;
-    msh.refineThetaOnly = 0; % only for msh.parm = 1
+    msh.refineThetaOnly = 1; % only for msh.parm = 1
     msh.autoRefine = true;
 end
 err.calculateSurfaceError = 1;
 err.calculateVolumeError  = 0;
 misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
-misc.preProcessOnly = 1;
+misc.preProcessOnly = 0;
 
+prePlot.useCamlight    = 0;        % Toggle camlight on (in plotNURBSvec)
 prePlot.plot3Dgeometry = 0;
 prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
@@ -195,13 +200,12 @@ for i = 1:numel(BCs)
             end
         end
     end
-    if noDomains > 2
-        if HetmaniukMesh
-            error('Not implemented (Case not investigated by Hetmaniuk anyways, consider manualRefinement=false')
-        end
+    if noDomains > 2 && HetmaniukMesh
+        error('Not implemented (Case not investigated by Hetmaniuk anyways')
     end
     if HetmaniukMesh
-        msh.M = 6; % 6
+        msh.M = [7,6]; % 6
+        msh.M = [4,3]; % 6
     else
         msh.M = 7; % 7
     end
@@ -212,6 +216,7 @@ for i = 1:numel(BCs)
     rom.computeROMresidualFine = 1;
     rom.computeROMerror = 1;
     rom.J_max = 64;
+    rom.useROMconditioner = true;
     misc.symmetric = 0;
 
     iem.N = 3; % 9
@@ -223,7 +228,8 @@ for i = 1:numel(BCs)
     if HetmaniukMesh
         pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
         pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-        pml.gamma = 2;
+%         pml.gamma = 2;
+        pml.gamma = 2.5;
     else
         pml.sigmaType = 3;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
         pml.dirichlet = 1;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
@@ -316,21 +322,22 @@ for i = 1:numel(BCs)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     rom.useROM = false;
-    for j = 1:6
-        postPlot(j).noXLoopPrms   	= 1;
-        switch misc.BC
-            case {'SHBC','NBC'}
-                postPlot(j).xname = 'varCol{1}.k';
-            case {'SSBC','NNBC'}
-                postPlot(j).xname = 'f';
-        end
-        postPlot(j).xLoopName     	= 'misc.omega';
-    end
+%     for j = 1:6
+%         postPlot(j).noXLoopPrms   	= 1;
+%         switch misc.BC
+%             case {'SHBC','NBC'}
+%                 postPlot(j).xname = 'varCol{1}.k';
+%             case {'SSBC','NNBC'}
+%                 postPlot(j).xname = 'f';
+%         end
+%         postPlot(j).xLoopName     	= 'misc.omega';
+%     end
 %     misc.omega = misc.omega(1);
     
-    misc.scatteringCase = 'BI';
-    loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
-%     collectIntoTasks
+%     misc.scatteringCase = 'BI';
+%     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
+    loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC'};
+    collectIntoTasks
 
     %% Run paraview visualization case
     misc.omega = misc.omega(end);
@@ -344,16 +351,18 @@ for i = 1:numel(BCs)
     end
     para.extraEtaPts             = '0';  % Extra visualization points in the eta-direction per element
     para.extraZetaPts            = '0';   % Extra visualization points in the zeta-direction per element
+    misc.scatteringCase = 'BI';
 %     collectIntoTasks
     
     %% Run BA sweep
+    misc.scatteringCase = 'Sweep';
     misc.omega = omega;
 %     misc.omega = misc.omega(1);
     para.plotResultsInParaview = 0;
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-%     collectIntoTasks
+    collectIntoTasks
 end
 % Study to show the influence of refining the resolution through the
 % thickness of the solid domain

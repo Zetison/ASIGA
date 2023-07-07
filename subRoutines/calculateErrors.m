@@ -22,24 +22,24 @@ for i_o = 1:numel(omega)
             if printLog
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
             end
-            surfaceError = calcSurfErrorBndryMethodVec(task);
+            surfaceError_i = calcSurfErrorBndryMethodVec(task,i_o);
             if printLog
                 fprintf('using %12f seconds.', toc)   
-                fprintf('\nSurface error = %.16g%%', max(surfaceError))
+                fprintf('\nSurface error = %.16g%%', max(surfaceError_i))
             end
-            task.results.surfaceError(i_o) = surfaceError;
+            surfaceError(i_o) = surfaceError_i;
         end
         if task.err.calculateSurfEnrgErr
             tic 
             if printLog
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface energy error ... ')
             end
-            surfEnergyError = calcEnergyErrorBEM(task,1);
+            surfEnergyError_i = calcEnergyErrorBEM(task,i_o);
             if printLog
                 fprintf('using %12f seconds.', toc)   
-                fprintf('\nSurface energy error = %.16g%%', max(surfEnergyError))
+                fprintf('\nSurface energy error = %.16g%%', max(surfEnergyError_i))
             end
-            task.results.energyError(i_o) = surfEnergyError;
+            energyError(i_o) = surfEnergyError_i;
         end
     else
         if task.err.calculateSurfaceError
@@ -48,9 +48,9 @@ for i_o = 1:numel(omega)
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
             end
             if strcmp(task.misc.coreMethod,'SEM')
-                surfaceError = calcSurfErrorSEM(task,1);
+                surfaceError(i_o) = calcSurfErrorSEM(task,1);
             else
-                surfaceError = calcSurfErrorVec(task,1);
+                surfaceError(i_o) = calcSurfErrorVec(task,1,i_o);
             end
             if printLog
                 fprintf('using %12f seconds.', toc) 
@@ -63,20 +63,20 @@ for i_o = 1:numel(omega)
                 fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating error ... ')
             end
             if strcmp(task.misc.coreMethod,'SEM')
-                [L2Error, H1Error, H1sError, energyError] = calcErrorSEM(task);
+                [L2Error_i, H1Error_i, H1sError_i, energyError_i] = calcErrorSEM(task);
             else
-                [L2Error, H1Error, H1sError, energyError] = calcErrorVec(task);
+                [L2Error_i, H1Error_i, H1sError_i, energyError_i] = calcErrorVec(task,i_o);
             end
             if printLog
                 fprintf('using %12f seconds.', toc)
-                fprintf('\nVolume L2-error = %.16g%%', max(L2Error))
-                fprintf('\nVolume H1-error = %.16g%%', max(H1Error))
-                fprintf('\nVolume Energy-error = %.16g%%', max(energyError))
+                fprintf('\nVolume L2-error = %.16g%%', max(L2Error_i))
+                fprintf('\nVolume H1-error = %.16g%%', max(H1Error_i))
+                fprintf('\nVolume Energy-error = %.16g%%', max(energyError_i))
             end
-            energyError(i_o) = energyError;
-            L2Error(i_o) = L2Error;
-            H1Error(i_o) = H1Error;
-            H1sError(i_o) = H1sError;
+            energyError(i_o) = energyError_i;
+            L2Error(i_o) = L2Error_i;
+            H1Error(i_o) = H1Error_i;
+            H1sError(i_o) = H1sError_i;
         end
     end
 end

@@ -152,7 +152,7 @@ switch task.misc.method
                     end
                     if isfield(task.misc,'omega')
                         omega_mean = task.omega_mean;
-                        if i > 1 && strcmp(task.varCol{2}.media, 'solid') && strcmp(task.varCol{1}.media, 'fluid')
+                        if strcmp(task.varCol{i}.media, 'solid') && strcmp(task.varCol{2}.media, 'solid') && strcmp(task.varCol{1}.media, 'fluid') && task.rom.useROMconditioner
                             rho = task.varCol{1}.rho;
                             task.P_right(Aindices{i,1},Aindices{i,2}) = omega_mean^2*rho.*speye(task.varCol{i}.noDofs);
                             task.P_rightinv(Aindices{i,1},Aindices{i,2}) = 1/(omega_mean^2*rho).*speye(task.varCol{i}.noDofs);

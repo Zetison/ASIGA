@@ -60,7 +60,7 @@ if oldprintLog
     fprintf('\nTotal time for adaptive ROM basis computations: %12f seconds.', task.timeBuildROM)
 end
 if task.rom.computeROMresidualFine
-    tic
+    t_start_computeROMresidualFine = tic;
     if oldprintLog
         fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM residual/error ... ')
     end    
@@ -69,8 +69,9 @@ if task.rom.computeROMresidualFine
     task.rom.history(end).relError = relError;
     task.rom.history(end).residualFine = residual;
     task.rom.history(end).omegaFine = omega;
+    task.timeComputeROMresidualFine = toc(t_start_computeROMresidualFine);
     if oldprintLog
-        fprintf('using %12f seconds.', toc)
+        fprintf('using %12f seconds.', task.timeComputeROMresidualFine)
     end
 end
 task.V = task.P_rightinv*task.V; % Scale back to match scaling for task.U

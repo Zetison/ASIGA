@@ -76,10 +76,13 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                                     t{i} = [0,repelem(unique(nurbs.knots{i}),degree(i)),1];
                                 case 'sub_IGA'
                                     % Lower order while maintaining continuity
-                                    uniqueKnots = unique(nurbs.knots{i});
-                                    t{i} = setdiffUnique(nurbs.knots{i},uniqueKnots);
-                                    t{i} = setdiffUnique(t{i},uniqueKnots);
-                                    t{i} = sort([t{i},uniqueKnots]);
+                                    t{i} = nurbs.knots{i};
+                                    uniqueKnots = unique(t{i});
+                                    for j = 1:(nurbs.degree(i) - task.msh.degree)
+                                        t{i} = setdiffUnique(t{i},uniqueKnots);
+                                        t{i} = setdiffUnique(t{i},uniqueKnots);
+                                        t{i} = sort([t{i},uniqueKnots]);
+                                    end
                             end
                             number(i) = numel(t{i})-(degree(i)+1);
                             xi_t{i} = aveknt(t{i}, degree(i)+1);

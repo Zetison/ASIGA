@@ -37,11 +37,13 @@ for i = 1:noRHSs
                 task.sol.restart = size(task.A,1);
             end
 
-            [task.U_p(:,shiftROM+i),task.sol.flag,task.sol.relres,task.sol.iter] = gmres(task.A,b,task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+            [task.U_p(:,shiftROM+i),task.sol.flag,task.sol.relres,task.sol.iter] = gmres(task.Pinv*task.A*task.Pinv,task.Pinv*b,task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
 %                     gmres_parf_obj = parfeval(backgroundPool,@gmres,1,task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
 %                     task.UU(:,i) = fetchOutputs(gmres_parf_obj);
+            task.U_p(:,shiftROM+i) = task.Pinv*task.U_p(:,shiftROM+i);
         otherwise
-            eval(['task.U_p(:,shiftROM+i) = ' task.sol.solver '(task.A,b,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
+            eval(['task.U_p(:,shiftROM+i) = ' task.sol.solver '(task.Pinv*task.A*task.Pinv,task.Pinv*b,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
+            task.U_p(:,shiftROM+i) = task.Pinv*task.U_p(:,shiftROM+i);
     end
 end
 

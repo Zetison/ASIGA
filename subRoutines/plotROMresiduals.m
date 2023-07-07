@@ -36,6 +36,7 @@ if isfield(task.rom,'history')
         title(strrep(titleName,'_',', '))
         savefig([task.resultsFolder, '/', titleName])
     end
+    figure(counter)
     legend off
     if isfield(task.rom.history(end),'residualFine')
         residual = task.rom.history(end).residualFine;

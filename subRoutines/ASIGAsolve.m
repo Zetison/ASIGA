@@ -57,9 +57,10 @@ switch task.misc.method
                 end
 
                 for i = 1:size(task.FF,2)
-                    [task.UU(:,i),task.sol.flag,task.sol.relres,task.sol.iter] = gmres(task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
+                    [task.UU(:,i),task.sol.flag,task.sol.relres,task.sol.iter] = gmres(task.Pinv*task.A*task.Pinv,task.Pinv*task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
 %                     gmres_parf_obj = parfeval(backgroundPool,@gmres,1,task.A,task.FF(:,i),task.sol.restart,task.sol.tol,task.sol.maxit,task.L_A,task.U_A);
 %                     task.UU(:,i) = fetchOutputs(gmres_parf_obj);
+                    task.UU(:,i) = task.Pinv*task.UU(:,i);
                 end
                 if task.sol.flag
                     warning('gmres did not converge to the required tolerance')
@@ -67,7 +68,8 @@ switch task.misc.method
             otherwise
                 task.UU = zeros(size(task.FF));
                 for i = 1:size(task.FF,2)
-                    eval(['[task.UU(:,i),task.sol.flag,task.sol.relres,task.sol.iter] = ' task.sol.solver '(task.A,task.FF(:,i),task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
+                    eval(['[task.UU(:,i),task.sol.flag,task.sol.relres,task.sol.iter] = ' task.sol.solver '(task.Pinv*task.A*task.Pinv,task.Pinv*task.FF(:,i),task.sol.tol,task.sol.maxit,task.L_A,task.U_A);'])
+                    task.UU(:,i) = task.Pinv*task.UU(:,i);
                 end
         end
         if useA

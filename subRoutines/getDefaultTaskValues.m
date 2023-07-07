@@ -223,4 +223,5 @@ rom.n_c          = 9;       % Number of points to evaluate residual for each uni
 rom.tolerance    = 1e-3;    % Tolerance for the residual error for when to stop adaptive ROM
 rom.computeROMresidualFine = false; % Compute final residual error after adaptive ROM
 rom.computeROMerror = false; % Compute final error after adaptive ROM
+rom.useROMconditioner = true;   % Scale the ROM basis for acoustic structure interaction problems
 
