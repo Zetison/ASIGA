@@ -21,17 +21,17 @@ misc.coreMethod = {'IGA'};
 % misc.applyLoad = 'pointCharge';
 misc.applyLoad = 'planeWave';
 
-% BCs = {'SHBC'};
+BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
-BCs = {'SHBC','SSBC','NNBC'};
+% BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-HetmaniukMesh = 1;
+HetmaniukMesh = 0;
 if HetmaniukMesh
     BCs = {'SHBC'};
 %     misc.coreMethod = {'sub_IGA','hp_FEM'};
@@ -113,8 +113,8 @@ for i = 1:numel(BCs)
     appyCommandsAt = counter;
     misc.BC = BCs{i};
 %     misc.method = {'IENSG'};
-%     misc.method = {'IE'};
-    misc.method = {'PML'};
+    misc.method = {'IE'};
+%     misc.method = {'PML'};
 
     postPlot(1).xname           = 'varCol{1}.k';
     postPlot(1).yname        	= 'surfaceError';
@@ -219,15 +219,15 @@ for i = 1:numel(BCs)
     rom.useROMconditioner = true;
     misc.symmetric = 0;
 
-    iem.N = 3; % 9
-    iem.p_ie = 5;
+    iem.N = 9; % 9
+    iem.p_ie = msh.degree;
     iem.s_ie = 2;
     iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
     
     pml.eps = 1e9*eps;      % choosing eps = eps yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
     if HetmaniukMesh
         pml.sigmaType = 1;  % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
-        pml.dirichlet = 0;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
+        pml.dirichlet = 0;
 %         pml.gamma = 2;
         pml.gamma = 2.5;
     else
@@ -244,7 +244,7 @@ for i = 1:numel(BCs)
 %             k_P = linspace(9, 36, 3)/5;
             k = k_P(1):0.05:k_P(end);
 %             k = k_P(1):1:k_P(end);
-%             k = linspace(9, 36, 5);
+            k = linspace(9, 36, 2);
 %             k = k_P(end);
 %             k = 36;
             c_f = varCol{1}.c_f;
@@ -318,7 +318,7 @@ for i = 1:numel(BCs)
     misc.scatteringCase = 'Sweep';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','rom.basisROM'};
     
-    collectIntoTasks
+%     collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     rom.useROM = false;

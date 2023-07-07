@@ -152,7 +152,8 @@ switch task.misc.method
                     end
                     if isfield(task.misc,'omega')
                         omega_mean = task.omega_mean;
-                        if strcmp(task.varCol{i}.media, 'solid') && strcmp(task.varCol{2}.media, 'solid') && strcmp(task.varCol{1}.media, 'fluid') && task.rom.useROMconditioner
+                        if strcmp(task.varCol{i}.media, 'solid') && strcmp(task.varCol{2}.media, 'solid') ...
+                                && strcmp(task.varCol{1}.media, 'fluid') && task.rom.useROMconditioner
                             rho = task.varCol{1}.rho;
                             task.P_right(Aindices{i,1},Aindices{i,2}) = omega_mean^2*rho.*speye(task.varCol{i}.noDofs);
                             task.P_rightinv(Aindices{i,1},Aindices{i,2}) = 1/(omega_mean^2*rho).*speye(task.varCol{i}.noDofs);
@@ -172,12 +173,13 @@ switch task.misc.method
             
             if collectLHS && (strcmp(task.misc.method,'IE') || strcmp(task.misc.method,'IENSG') || strcmp(task.misc.method,'ABC'))
                 if isfield(task.varCol{1},'Ainf')
-    	            task.A0(AindicesInf,AindicesInf) = task.A0(AindicesInf,AindicesInf) + task.varCol{1}.Ainf/task.varCol{1}.rho; 
+                    eqScale = 1/task.varCol{1}.rho;
+    	            task.A0(AindicesInf,AindicesInf) = task.A0(AindicesInf,AindicesInf) + task.varCol{1}.Ainf.*eqScale; 
                     task.varCol{1} = rmfield(task.varCol{1},'Ainf');
                     if task.rom.useROM
-                        task.A1(AindicesInf,AindicesInf) = task.A1(AindicesInf,AindicesInf) + task.varCol{1}.Ainf1/task.varCol{1}.rho/task.varCol{1}.c_f; 
+                        task.A1(AindicesInf,AindicesInf) = task.A1(AindicesInf,AindicesInf) + task.varCol{1}.Ainf1.*eqScale; 
                         task.varCol{1} = rmfield(task.varCol{1},'Ainf1');
-                        task.A2(AindicesInf,AindicesInf) = task.A2(AindicesInf,AindicesInf) + task.varCol{1}.Ainf2/task.varCol{1}.rho/task.varCol{1}.c_f^2; 
+                        task.A2(AindicesInf,AindicesInf) = task.A2(AindicesInf,AindicesInf) + task.varCol{1}.Ainf2.*eqScale; 
                         task.varCol{1} = rmfield(task.varCol{1},'Ainf2');
                     end  
                 end

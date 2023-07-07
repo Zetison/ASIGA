@@ -39,7 +39,12 @@ noDofs = task.varCol{1}.noDofs;
 weights = task.varCol{1}.weights;
 controlPts = task.varCol{1}.controlPts;
 
-k = task.misc.omega/task.varCol{1}.c_f;
+omega = task.misc.omega;
+if strcmp(formulation(end),'U') % unconjugated formulation
+    k = omega/task.varCol{1}.c_f;
+else
+    k = 1/task.varCol{1}.c_f; % multiply with task.misc.omega later (in order to facilitate storage of frequency independent matrices)
+end
 Upsilon = task.iem.Upsilon;
 if task.varCol{1}.boundaryMethod
     noElems = task.varCol{1}.noElems;
@@ -397,8 +402,6 @@ if IElocSup
     controlPts = varCol_ie.controlPts;
     pIndex = varCol_ie.pIndex;
     noDofs_ie = varCol_ie.noDofs;
-
-    varrho2 = k*r_a;
     
     %% Preallocation and initiallizations
     n_en = prod(degree+1);
@@ -525,9 +528,9 @@ if IElocSup
 else
     Ntot = N;
 end
-
 switch formulation
     case {'PGU', 'BGU', 'WBGU'}
+        varrho2 = k*r_a;
         K1 = K1*exp(-2*1i*varrho2);
         K2 = K2*exp(-2*1i*varrho2);
         K3 = K3*exp(-2*1i*varrho2);
@@ -535,9 +538,9 @@ switch formulation
         K5 = K5*exp(-2*1i*varrho2);
 end
 if task.rom.useROM
-    A_2 =  kron(K1_2/k^2,A1values) ...
-         + kron(K3/k^2,A3values);
-    A_1 =  kron(K1_1/k,A1values);
+    A_2 =  kron(K1_2,A1values) ...
+         + kron(K3,A3values);
+    A_1 =  kron(K1_1,A1values);
     A =    kron(K1,A1values) ...
          + kron(K2,A2values) ...
          + kron(K4,A4values) ...
@@ -545,7 +548,7 @@ if task.rom.useROM
 else
     switch formulation
         case {'PGC', 'BGC', 'WBGC'}
-            K1 = K1 + K1_1 + K1_2;
+            K1 = K1 + K1_1*omega + K1_2*omega^2;
     end
     A =   kron(K1,A1values) ...
         + kron(K2,A2values) ...

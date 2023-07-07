@@ -34,7 +34,7 @@ function studyName = availableStudies()
 % studyName = 'transduser2D'; %getTask_transduser2D
 
 % studyName = 'CSLP'; %getTask_CSLP
-studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
+% studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 % studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 
 
@@ -131,7 +131,7 @@ studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
 %% Regression tests
 % studyName = 'Venas2018iao_Figure6'; % getTask_Venas2018iao_Figure6        % Test CCBIE BEM (Simpson case)
 % studyName = 'Venas2020asi_Figure21'; % getTask_Venas2020asi_Figure21      % Test MFS
-% studyName = 'Venas2018iao_Table2'; % getTask_Venas2018iao_Table2        % Test FEM implementations and ASI implementation
+studyName = 'Venas2018iao_Table2'; % getTask_Venas2018iao_Table2        % Test FEM implementations and ASI implementation
 % studyName = 'Venas2020asi_Figure7'; % getTask_Venas2020asi_Figure7      % Test SEM implementation
 % studyName = 'Venas2019asi_Figure4'; % getTask_Venas2019asi_Figure4      % Test KDT implementation
 % studyName = 'Venas2019asi_FigureB10B11B12'; % getTask_Venas2019asi_FigureB10B11B12      % Test RT implementation
