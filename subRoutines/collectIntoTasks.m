@@ -63,6 +63,7 @@ studies(counter).runTasksInParallel = runTasksInParallel;
 studies(counter).noCoresToUse = noCoresToUse;
 studies(counter).saveStudies = saveStudies;
 studies(counter).appyCommandsAt = appyCommandsAt;
+studies(counter).connectedParameters = connectedParameters;
 
 for i = 1:numel(connectedParameters)
     if ~isempty(connectedParameters{i})
@@ -76,7 +77,17 @@ for i = 1:numel(connectedParameters)
         end
     end
 end
-studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr, connectedParameters, childrenParameters);
+indices = [];
+for i = 1:numel(loopParameters)
+    for ii = 1:numel(connectedParameters)
+        if ismember(loopParameters{i},connectedParameters{ii}(2:end)) % Task should only be made for master parameter in connected Parameters
+            indices = [indices,i];
+        end
+    end
+end
+indices = setdiff(1:numel(loopParameters),indices);
+studies(counter).tasks = createTasks([], 1, task, 1, loopParameters(indices), loopParametersArr(indices), connectedParameters, childrenParameters);
+
 if isempty(studies(counter).tasks)
     error('loopParameters contains invalid parameters')
 end

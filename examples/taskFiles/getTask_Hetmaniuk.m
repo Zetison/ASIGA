@@ -31,17 +31,23 @@ end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-HetmaniukMesh = 0;
+HetmaniukMesh = 1;
 if HetmaniukMesh
     BCs = {'SHBC'};
-%     misc.coreMethod = {'sub_IGA','hp_FEM'};
-    misc.coreMethod = {'hp_FEM','sub_IGA'};
+    if 0
+        misc.coreMethod = {'sub_IGA','hp_FEM'};
+        msh.M = [7,6]; % 6
+%         msh.M = [5,4]; % 6
+    else
+        misc.coreMethod = {'hp_FEM','sub_IGA'};
+        msh.M = [6,7]; % 6
+%         msh.M = [4,5]; % 6
+    end
     connectedParameters = {{'msh.M','misc.coreMethod'}};
 end
 if 1
     sol.solver          = 'LU';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
     sol.preconditioner  = 'diag';	% 'ilu', 'SSOR', 'CSLP', 'diag'
-    connectedParameters = {{}};
 else
     sol.solver          = 'gmres';  % 'LU', 'gmres', 'cgs', 'bicgstab', 'bicgstabl', 'lsqr', 'bicg'
     sol.preconditioner  = 'CSLP';	% 'ilu', 'SSOR', 'CSLP', 'diag'
@@ -88,7 +94,8 @@ prePlot.plotSubsets         = {'xz'};
 prePlot.resolution = [100,40,0];
 % prePlot.resolution = [400,200,0];
 % prePlot.resolution = [100,0,0];
-prePlot.pngResolution = '-r800';
+prePlot.pngResolution = '-r200';
+% prePlot.pngResolution = '-r800';
 if msh.refineThetaOnly
     msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 else
@@ -113,8 +120,8 @@ for i = 1:numel(BCs)
     appyCommandsAt = counter;
     misc.BC = BCs{i};
 %     misc.method = {'IENSG'};
-    misc.method = {'IE'};
-%     misc.method = {'PML'};
+%     misc.method = {'IE'};
+    misc.method = {'PML'};
 
     postPlot(1).xname           = 'varCol{1}.k';
     postPlot(1).yname        	= 'surfaceError';
@@ -166,7 +173,7 @@ for i = 1:numel(BCs)
     if strcmp(misc.method{1},'PML')
         misc.formulation = {'GSB'};
     else
-        misc.formulation = {'BGC'};
+        misc.formulation = {'PGC'};
     end
     if HetmaniukMesh
         if msh.parm == 1
@@ -203,24 +210,21 @@ for i = 1:numel(BCs)
     if noDomains > 2 && HetmaniukMesh
         error('Not implemented (Case not investigated by Hetmaniuk anyways')
     end
-    if HetmaniukMesh
-        msh.M = [7,6]; % 6
-        msh.M = [4,3]; % 6
-    else
+    if ~HetmaniukMesh
         msh.M = 7; % 7
     end
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.adaptiveROM = 1;
-    rom.computeROMresidualFine = 1;
-    rom.computeROMerror = 1;
+    rom.computeROMresidualFine = ~HetmaniukMesh;
+    rom.computeROMerror = ~HetmaniukMesh;
     rom.J_max = 64;
     rom.useROMconditioner = true;
     misc.symmetric = 0;
 
-    iem.N = 9; % 9
-    iem.p_ie = msh.degree;
+    iem.N = 50; % 9
+    iem.p_ie = 5;
     iem.s_ie = 2;
     iem.IElocSup = 1;        % Toggle usage of radial shape functions in IE with local support
     
@@ -244,7 +248,7 @@ for i = 1:numel(BCs)
 %             k_P = linspace(9, 36, 3)/5;
             k = k_P(1):0.05:k_P(end);
 %             k = k_P(1):1:k_P(end);
-            k = linspace(9, 36, 2);
+%             k = linspace(9, 36, 5);
 %             k = k_P(end);
 %             k = 36;
             c_f = varCol{1}.c_f;
@@ -318,7 +322,7 @@ for i = 1:numel(BCs)
     misc.scatteringCase = 'Sweep';
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','rom.basisROM'};
     
-%     collectIntoTasks
+    collectIntoTasks
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     rom.useROM = false;
@@ -337,7 +341,7 @@ for i = 1:numel(BCs)
 %     misc.scatteringCase = 'BI';
 %     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC'};
-    collectIntoTasks
+%     collectIntoTasks
 
     %% Run paraview visualization case
     misc.omega = misc.omega(end);
