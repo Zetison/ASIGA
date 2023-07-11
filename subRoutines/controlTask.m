@@ -79,7 +79,7 @@ end
 if task.err.calculateVolumeError && isBoundaryMethod(task)
     warning('There is no volumetric errors to compute for boundary methods')
 end
-if ~ismember(task.misc.coreMethod,{'IGA', 'linear_FEM', 'h_FEM', 'hp_FEM', 'C0_IGA', 'SEM'})
+if ~ismember(task.misc.coreMethod,{'IGA', 'linear_FEM', 'h_FEM', 'hp_FEM', 'C0_IGA', 'sub_IGA', 'SEM'})
     error('Unknown coreMethod')
 end
 

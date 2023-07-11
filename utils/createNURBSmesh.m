@@ -115,10 +115,8 @@ if isfield(task.pml,'refinement')
     else
         noNewKnots = task.pml.refinement(task.msh.M);
     end
-else
-    noNewKnots = max(round(2^(task.msh.M-1)*task.pml.t/task.varCol{1}.refLength)-1, 3);
+    nurbsPML = insertKnotsInNURBS(nurbsPML,[0,0,noNewKnots]);
 end
-nurbsPML = insertKnotsInNURBS(nurbsPML,[0,0,noNewKnots]);
 for i = 1:numel(nurbsPML)
     nurbsPML{i}.isPML = [false,false,true];
 end

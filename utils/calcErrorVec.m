@@ -1,4 +1,4 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(task)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(task,i_o)
 
 noDomains = length(task.varCol);
 nodes = cell(noDomains,1);
@@ -6,7 +6,11 @@ factors = cell(noDomains,1);
 u_hs = cell(noDomains,1);
 du_hs = cell(noDomains,1);
 for i = 1:noDomains
-    U = task.varCol{i}.U;
+    if nargin < 1
+        U = task.varCol{i}.U;
+    else
+        U = task.varCol{i}.U(:,i_o);
+    end
     %% Extract all needed data from task.varCol
     if i == 1 && strcmp(task.misc.method,'PML')
         varCol_dummy = task.varCol{1};

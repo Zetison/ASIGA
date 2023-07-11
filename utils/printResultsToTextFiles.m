@@ -36,7 +36,17 @@ noParms = numel(loopParameters);
 model = study.tasks(1).task.misc.model;
 sizes = zeros(1,length(loopParametersArr));
 for i = 1:length(loopParametersArr)
-    sizes(i) = numel(loopParametersArr{i});
+    isPartOfConnectedParameters = false;
+    for ii = 1:numel(study.connectedParameters)
+        if ismember(loopParameters{i},study.connectedParameters{ii}(2:end)) % Task should only be made for master parameter in connected Parameters
+            isPartOfConnectedParameters = true;
+        end
+    end
+    if isPartOfConnectedParameters
+        sizes(i) = 1;
+    else
+        sizes(i) = numel(loopParametersArr{i});
+    end
 end
 if length(loopParametersArr) == 1
     sizes = [sizes,1];

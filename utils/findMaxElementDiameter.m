@@ -1,7 +1,10 @@
-function [hmax, hmin, diagsMax] = findMaxElementDiameter(nurbs)
+function [hmax, hmin, diagsMax] = findMaxElementDiameter(nurbs,useGrevPts)
 
 if ~iscell(nurbs)
     nurbs = {nurbs};
+end
+if nargin < 2
+    useGrevPts = false;
 end
 H_max = zeros(numel(nurbs),1);
 H_min = zeros(numel(nurbs),1);
@@ -12,7 +15,11 @@ for patch = 1:numel(nurbs)
     uniqueKnots = cell(1,d_p);
     noKnots = zeros(1,d_p);
     for i = 1:d_p
-        uniqueKnots{i} = unique(nurbs{patch}.knots{i});
+        if useGrevPts
+            uniqueKnots{i} = aveknt(nurbs{patch}.knots{i},nurbs{patch}.degree(i)+1);
+        else
+            uniqueKnots{i} = unique(nurbs{patch}.knots{i});
+        end
         noKnots(i) = numel(uniqueKnots{i});
     end
 

@@ -10,6 +10,8 @@ n_batches = n_batches + 1;
 computeError = task.rom.computeROMerror && nargout == 2;
 if computeError
     relError = cell(size(omega_cell));
+else
+    relError = NaN;
 end
 residual = cell(size(omega_cell));
 for i = 1:n_batches
@@ -30,8 +32,8 @@ for i = 1:n_batches
         if strcmp(task.sol.preconditioner,'none')
             UU(:,j) = (task.P_rightinv*task.V)*(Am\FFm(:,j));
         else
-            Pinv = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
-            UU(:,j) = (task.P_rightinv*task.V)*(Pinv*((Pinv*Am*Pinv)\(Pinv*FFm(:,j))));
+            Pinv_m = spdiags(1./sqrt(diag(Am)),0,size(Am,1),size(Am,2));
+            UU(:,j) = (task.P_rightinv*task.V)*(Pinv_m*((Pinv_m*Am*Pinv_m)\(Pinv_m*FFm(:,j))));
         end
         if computeError
             task = createPreconditioner(task);

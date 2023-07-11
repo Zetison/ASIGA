@@ -64,11 +64,11 @@ if varCol{1}.boundaryMethod
         degreeVec = [2,degree,degree];
         dirs = [2,3];
     else
-        degreeVec = degree;
+        degreeVec = degree*ones(1,3);
         dirs = 1:3;
     end
     varCol{1}.nurbs = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', 0, 'Xi', Xi);
-    varCol{1}.nurbs = makeUniformNURBSDegree(varCol{1}.nurbs,degreeVec);
+    varCol{1}.nurbs = makeUniformNURBSDegree(varCol{1}.nurbs,degreeVec(1:2));
     if numel(varCol) > 1
         varCol{2}.nurbs = getEllipsoidData('C', [c_x,c_y,c_z], 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi);
         varCol{2}.nurbs = makeUniformNURBSDegree(varCol{2}.nurbs,degreeVec);
@@ -81,15 +81,13 @@ if varCol{1}.boundaryMethod
         theta_m = asec(sqrt(3));
         refLength = c_max*(pi-2*theta_m);
     end
-    if ~task.msh.autoRefine
-        if isfield(varCol{1},'refinement')
-            varCol{1}.nurbs = insertKnotsInNURBS(varCol{1}.nurbs,varCol{1}.refinement(M));
-        end
-        if numel(varCol) > 1
-            if isfield(varCol{2},'refinement')
-                t_fluid = c_z*2*pi/(32-pi);
-                varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,varCol{2}.refinement(M,t,t_fluid));
-            end
+    if isfield(varCol{1},'refinement')
+        varCol{1}.nurbs = insertKnotsInNURBS(varCol{1}.nurbs,varCol{1}.refinement(M));
+    end
+    if numel(varCol) > 1
+        if isfield(varCol{2},'refinement')
+            t_fluid = c_z*2*pi/(32-pi);
+            varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,varCol{2}.refinement(M,t,t_fluid));
         end
     end
     varCol{1}.patchTop = getPatchTopology(varCol{1}.nurbs);
@@ -154,18 +152,21 @@ else
     c_min = c_g_min+t_fluid;
     Upsilon = sqrt(c_max^2-c_min^2);
     C = C+t_fluid;
-    c_max = max(C);
     L_gamma = 2*c_z_g;
 
     varCol{1}.nurbs = getEllipsoidData('C', C, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi, 'theta_eta', theta_eta);
-    if false
-        varCol{1}.nurbs = explodeNURBS(varCol{1}.nurbs,2);
+    if strcmp(task.misc.method,'PML')
+        C = C + task.pml.t;
     end
+    c_max = max(C);
     if parm == 1
         refLength = c_max*pi/2;
     else
         theta_m = asec(sqrt(3));
         refLength = c_max*(pi-2*theta_m);
+    end
+    if false
+        varCol{1}.nurbs = explodeNURBS(varCol{1}.nurbs,2);
     end
     if task.msh.refineThetaOnly
         if parm ~= 1
@@ -188,35 +189,27 @@ else
         varCol{3}.nurbs = getEllipsoidData('C', C_g - t, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', varCol{2}.R-varCol{3}.R, 'Xi', Xi, 'theta_eta', theta_eta);
         varCol{3}.nurbs = makeUniformNURBSDegree(varCol{3}.nurbs,degreeVec);
     end
-    if ~task.msh.autoRefine
-        if isfield(varCol{1},'refinement')
-            varCol{1}.nurbs = insertKnotsInNURBS(varCol{1}.nurbs,varCol{1}.refinement(M));
-        else
-            [varCol{1}.nurbs,newKnotsIns] = refineNURBSevenly(varCol{1}.nurbs,(2^(M-1)-1)/refLength,{},0,dirs);
+    if isfield(varCol{1},'refinement')
+        varCol{1}.nurbs = insertKnotsInNURBS(varCol{1}.nurbs,varCol{1}.refinement(M));
+    end
+    if numel(varCol) > 1
+        if isfield(varCol{2},'refinement')
+            varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,varCol{2}.refinement(M,t,t_fluid));
         end
-        if numel(varCol) > 1
-            if isfield(varCol{2},'refinement')
-                varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,varCol{2}.refinement(M,t,t_fluid));
-            else
-                varCol{2}.nurbs = refineNURBSevenly(varCol{2}.nurbs,(2^(M-1)-1)/refLength,{},0,3);
-                varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,{newKnotsIns{1}{1},newKnotsIns{1}{2},{}});
-            end
+        if isfield(task.msh,'extraSolidKnots')
+            varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,[0,0,task.msh.extraSolidKnots]);
         end
-    
-        if numel(varCol) > 2
-            if isfield(varCol{3},'refinement')
-                varCol{3}.nurbs = insertKnotsInNURBS(varCol{3}.nurbs,varCol{3}.refinement(M));
-            else
-                varCol{3}.nurbs = refineNURBSevenly(varCol{3}.nurbs,(2^(M-1)-1)/refLength,{},0,3);
-                varCol{3}.nurbs = insertKnotsInNURBS(varCol{3}.nurbs,{newKnotsIns{1}{1},newKnotsIns{1}{2},{}});
-            end
+    end
+
+    if numel(varCol) > 2
+        if isfield(varCol{3},'refinement')
+            varCol{3}.nurbs = insertKnotsInNURBS(varCol{3}.nurbs,varCol{3}.refinement(M));
         end
     end
 end
 task.msh.h_max = refLength/2^(M-1);
 task.msh.dirs = dirs;
 varCol{1}.refLength = refLength;
-varCol{1}.dirs = dirs;
 chimin = C(end)*(1-10*eps);
 chimax = C(end)*(1+10*eps);
 if parm == 2 && degree < 4 && (strcmp(task.misc.method,'IGA') || strcmp(task.misc.method,'C0_IGA'))

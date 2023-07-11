@@ -68,7 +68,9 @@ if printLog
     fprintf('using %12f seconds.', toc)
     fprintf('\nTotal number of elements = %d', task.totNoElems)
     fprintf('\nFinite element dofs = %d', task.FEdofs)
-    fprintf('\nNumber of elements per wavelength = %.2g', min(task.varCol{1}.nepw(:)))
+    fprintf('\nFinite element dofs at Gamma = %d', task.surfDofs)
+    fprintf('\nNumber of elements per wavelength = %.3g', min(task.varCol{1}.nepw(:)))
+    fprintf('\nNumber of dofs per wavelength = %.3g', min(task.varCol{1}.ndpw(:)))
 end
 
 if (task.prePlot.plot3Dgeometry || task.misc.preProcessOnly) && task.prePlot.abortAfterPlotting
@@ -114,6 +116,7 @@ else
         end
         
         if ~task.rom.useROM
+            task.misc.omega = omega_arr;
             task = postProcessSolution(task);
             if task.err.calculateSurfaceError || task.err.calculateVolumeError
                 task = calculateErrors(task, printLog, task.misc.stringShift);
@@ -136,10 +139,10 @@ end
 %% Calculate errors (if analyticSolutionExist) and plot result in Paraview
 task = ASIGAparaview(task);
 
-task.varCol{1}.tot_time = toc(t_start);
+task.tot_time = toc(t_start);
 
 if printLog
-    fprintf('\nTotal time spent on task: %12f', task.varCol{1}.tot_time)  
+    fprintf('\nTotal time spent on task: %12f', task.tot_time)  
 end
 
 if ~task.misc.storeFullVarCol

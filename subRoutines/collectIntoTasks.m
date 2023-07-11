@@ -63,13 +63,31 @@ studies(counter).runTasksInParallel = runTasksInParallel;
 studies(counter).noCoresToUse = noCoresToUse;
 studies(counter).saveStudies = saveStudies;
 studies(counter).appyCommandsAt = appyCommandsAt;
+studies(counter).connectedParameters = connectedParameters;
 
 for i = 1:numel(connectedParameters)
-    if ~isempty(connectedParameters{i}) && ~ismember(connectedParameters{i}{1},loopParameters)
-        error(['The connected parameter "' connectedParameters{i}{1} '" must be included in the variable loopParameters'])
+    if ~isempty(connectedParameters{i})
+        if ~ismember(connectedParameters{i}{1},loopParameters)
+            error(['The connected parameter "' connectedParameters{i}{1} '" must be included in the variable loopParameters'])
+        end
+        for j = 1:numel(connectedParameters{i})
+            if eval(['length(' connectedParameters{i}{j} ')']) ~= eval(['length(' connectedParameters{i}{1} ')'])
+                error(['The connected parameter "' connectedParameters{i}{1} '" must have the same number of elements as the connected parameter "' connectedParameters{i}{j} '"'])
+            end
+        end
     end
 end
-studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr, connectedParameters, childrenParameters);
+indices = [];
+for i = 1:numel(loopParameters)
+    for ii = 1:numel(connectedParameters)
+        if ismember(loopParameters{i},connectedParameters{ii}(2:end)) % Task should only be made for master parameter in connected Parameters
+            indices = [indices,i];
+        end
+    end
+end
+indices = setdiff(1:numel(loopParameters),indices);
+studies(counter).tasks = createTasks([], 1, task, 1, loopParameters(indices), loopParametersArr(indices), connectedParameters, childrenParameters);
+
 if isempty(studies(counter).tasks)
     error('loopParameters contains invalid parameters')
 end

@@ -54,14 +54,8 @@ for patch = 1:numel(patches)
                 end
             end
 
-            counter = 1;
-            for j = 1:noElemsArr(2)
-                for i = 1:noElemsArr(1)
-                    index(counter,1) = i;
-                    index(counter,2) = j;
-                    counter = counter + 1;
-                end
-            end
+            [arr1,arr2] = ndgrid(1:noElemsArr(1),1:noElemsArr(2));
+            index = [arr1(:),arr2(:)];
         case 3
             e = 1;
             for kk = 1:noElemsArr(3)
@@ -85,17 +79,8 @@ for patch = 1:numel(patches)
                 end
             end
 
-            counter = 1;
-            for k = 1:noElemsArr(3)
-                for j = 1:noElemsArr(2)
-                    for i = 1:noElemsArr(1)
-                        index(counter,1) = i;
-                        index(counter,2) = j;
-                        index(counter,3) = k;
-                        counter = counter + 1;
-                    end
-                end
-            end
+            [arr1,arr2,arr3] = ndgrid(1:noElemsArr(1),1:noElemsArr(2),1:noElemsArr(3));
+            index = [arr1(:),arr2(:),arr3(:)];
     end
     patches{patch}.element = element;
     patches{patch}.index = index;

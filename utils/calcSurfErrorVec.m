@@ -1,11 +1,15 @@
-function relError = calcSurfErrorVec(task, i_domain)
+function relError = calcSurfErrorVec(task, i_domain, i_o)
 
 LpOrder = task.err.LpOrder;
 degree = task.varCol{i_domain}.degree(1:2);
 weights = task.varCol{i_domain}.weights;
 controlPts = task.varCol{i_domain}.controlPts;
 
-U = task.varCol{i_domain}.U;
+if nargin < 2
+    U = task.varCol{i_domain}.U;
+else
+    U = task.varCol{i_domain}.U(:,i_o);
+end
 
 varColBdry = meshBoundary(task.varCol{i_domain},'Gamma');
 

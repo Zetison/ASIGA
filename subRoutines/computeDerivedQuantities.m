@@ -26,6 +26,23 @@ if task.misc.compute_h_max
         task.varCol{1}.nepw = task.varCol{1}.lambda./task.h_max;
     end
 end
+if task.misc.compute_g_max
+    g_max = -Inf;
+    for i = 1:task.noDomains
+        if task.msh.refineThetaOnly
+            g_max_i = findMaxElementDiameter(subNURBS(task.varCol{i}.nurbs,'at',[1,0;0,0;0,0]),true);
+        else
+            g_max_i = findMaxElementDiameter(task.varCol{i}.nurbs,true);
+        end
+        if g_max < g_max_i
+            g_max = g_max_i;
+        end
+    end
+    task.g_max = g_max;
+    if isfield(task.varCol{1},'c_f')
+        task.varCol{1}.ndpw = task.varCol{1}.lambda./task.g_max;
+    end
+end
 
 task.surfDofs = getNoSurfDofs(task);
 for field = {'a','R','L'}

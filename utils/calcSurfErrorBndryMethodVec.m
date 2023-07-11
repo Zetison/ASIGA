@@ -1,4 +1,4 @@
-function relError = calcSurfErrorBndryMethodVec(task)
+function relError = calcSurfErrorBndryMethodVec(task,i_o)
 
 i = 1;
 LpOrder = task.err.LpOrder;
@@ -14,7 +14,11 @@ controlPts = task.varCol{i}.controlPts;
 knotVecs = task.varCol{i}.knotVecs;
 pIndex = task.varCol{i}.pIndex;
 d_p = task.varCol{i}.patches{1}.nurbs.d_p;
-U = task.varCol{i}.U;
+if nargin < 1
+    U = task.varCol{i}.U;
+else
+    U = task.varCol{i}.U(:,i_o);
+end
 k = task.misc.omega/task.varCol{i}.c_f;
 
 if strcmp(task.misc.coreMethod, 'XI')

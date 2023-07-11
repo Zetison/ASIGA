@@ -34,8 +34,8 @@ prePlot.abortAfterPlotting = 1;       % Abort simulation after pre plotting
 prePlot.plotControlPolygon = 0;       % Plot the control polygon for the NURBS mesh
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 %     prePlot.resolution = [20,20,0];
-prePlot.resolution = [400,100,0];
-prePlot.resolution = [120,40,0];
+prePlot.resolution = [400,200,0];
+prePlot.resolution = [120,200,0];
 prePlot.plotFullDomain      = 0;
 prePlot.plotSubsets         = {'xy'}; 
 % prePlot.plotSubsets         = {'innerCoupling','outerCoupling','inner','outer'}; 
@@ -59,9 +59,6 @@ ffp.beta_s = 0;
 ffp.alpha = ffp.alpha_s;                            % Aspect angles of observation points
 ffp.beta = ffp.beta_s;  
 msh.meshFile = 'createNURBSmesh_M3'; 
-if msh.refineThetaOnly
-    ffp.extraGP = [100,0,0];                      % Extra Gauss points used for the integration routine
-end
 for i = 1:numel(applyLoads)
     misc.applyLoad = applyLoads{i};
     % BCs = {'SHBC','SSBC'};
@@ -142,20 +139,16 @@ for i = 1:numel(applyLoads)
         msh.explodeNURBS = 0;   % Create patches from all C^0 interfaces
         
         %% Settings for the PML (perfectly matched layers)
-        refLength = varCol{1}.R1*pi/2;
         pml.sigmaType = 3;   	% sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = C*xi^n
         pml.t = 0.25*varCol{1}.R1; % thickness of PML
         pml.n = 1;            	% polynomial order
         pml.dirichlet = true;	% use homogeneous Dirichlet condition at Gamma_b (as opposed to homogeneous Neumann condition)
-        pml.refinement = @(M) max(round((2^(M-1)-1)*pml.t/refLength),2);   
         pml.gamma = 1/(k_P(1)*pml.t);     
-        
-        varCol{1}.refinement = @(M) [0, 2^(M-1)-1, max(2^(M-4)-1,2)];
-        if noDomains > 1
-            varCol{2}.refinement = @(M,t,t_fluid) [0, 2^(M-1)-1, max(ceil(t/t_fluid)*2^(M-1),0)];
-        end
-        scale = (varCol{1}.R1+varCol{1}.L+varCol{1}.R2)/1.36; % Scaling between experimental and theoretical setup
-        msh.x_0 = [-varCol{1}.L/2,0,0];       % Move the origin to the center of the model
+
+%         scale = (varCol{1}.R1+varCol{1}.L+varCol{1}.R2)/1.36; % Scaling between experimental and theoretical setup
+%         scale = varCol{1}.L/1.36; % = 49.99691, scaling between experimental and theoretical setup
+        scale = 50; % Scaling between experimental and theoretical setup
+        msh.x_0 = [0,0,0];       % Control the origin (by default the center of the model
         misc.r_s = 3*scale;                   % Distance from the center of the model to the point charge
         msh.c_z = 45;
     %     c_xy = 15;
@@ -165,8 +158,8 @@ for i = 1:numel(applyLoads)
 %         rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
         rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
         rom.adaptiveROM  = true;
-        rom.computeROMresidualFine = true;
-        rom.computeROMerror = true;
+        rom.computeROMresidualFine = 1;
+        rom.computeROMerror = 0;
         if strcmp(misc.method,'PML')
             misc.formulation = {'GSB'};
         else
@@ -175,15 +168,17 @@ for i = 1:numel(applyLoads)
         msh.degree = 3:4;
 %         msh.degree = 4; % 4
         msh.M = 7:8; % 7
-%         msh.M = 4; % 7
+        msh.M = 7; % 7
+        msh.autoRefine = true;
         misc.symmetric = 0;
-        
-        misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
+        msh.extraSolidKnots = 3;
+        if msh.refineThetaOnly
+            ffp.extraGP = [50,0,0];    % extra quadrature points
+            misc.extraGP = [9-msh.degree(1),0,0];    % extra quadrature points
+        end
         
         rom.useROM = true;
         rom.adaptiveROM = true;
-%         rom.noVecs = [4,8,16,32];
-        rom.noVecs = 16;
 
         misc.r_a = 1.25*varCol{1}.R1;
         postPlot(1).xScale = varCol{1}.R1;
@@ -195,14 +190,15 @@ for i = 1:numel(applyLoads)
         
         misc.storeFullVarCol = false;
         if strcmp(misc.scatteringCase, 'Sweep')
-            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.noVecs','rom.basisROM'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.basisROM'};
         else
-            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.noVecs','rom.basisROM','misc.omega'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.basisROM','misc.omega'};
         end
         collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        misc.scatteringCase = 'BI';
+        misc.scatteringCase = 'Sweep';
+%         misc.scatteringCase = 'BI';
         if strcmp(misc.scatteringCase,'Sweep')
             postPlot(1).noXLoopPrms   	= 0;
             if strcmp(misc.applyLoad,'pointPulsation')
@@ -223,7 +219,7 @@ for i = 1:numel(applyLoads)
             postPlot(2).xname = 'varCol{1}.k';
         end
         rom.useROM = false;
-        if 1 %strcmp(misc.scatteringCase, 'BI')
+        if 0 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
             para.extraXiPts              = '60';  % Extra visualization points in the xi-direction per element
             para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
@@ -240,7 +236,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-%         collectIntoTasks
+        collectIntoTasks
     end
 end
 
@@ -252,87 +248,9 @@ plot(x,y,'DisplayName','Experiment')
 legend('off');
 legend('show');
 hold on
-
 for i_task = 1:numel(study.tasks)
     task = study.tasks(i_task).task;
-    c_f = task.varCol{1}.c_f;
-
-    if isfield(task.rom,'history')
-        history = task.rom.history;
-        a = task.varCol{1}.R1;
-        options.xlabel = 'ka';
-        options.ylabel = 'residual';
-        for i = 1:numel(history)
-            figure(20+i)
-            omega = task.rom.history(i).omega;
-            residual = task.rom.history(i).residual;
-            hold on
-        
-            omega_P = history(i).omega_P;
-            J_P = history(i).J_P;
-            semilogy(a*omega_P/c_f,1e-15*ones(size(omega_P)),'o','color','magenta','DisplayName','Interpolation points')
-            options.x = a*omega_P.'/c_f;
-            options.y = 1e-15*ones(size(omega_P)).';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_InterpolationPoints_iter' num2str(i)], options)
-            for j = 1:numel(omega_P)
-                text(a*(omega_P(j)+omega_P(end)/200)/c_f,1e-15,num2str(J_P(j)),'color','magenta')
-            end
-            options.x = a*omega_P.'/c_f;
-            options.y = J_P.';
-            options.ylabel = 'J_P';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_noDerivatives_iter' num2str(i)], options)
-    
-            semilogy(a*[omega_P(1),omega_P(end)]/c_f,task.rom.tolerance*ones(1,2),'red','DisplayName','Tolerance')
-            options.x = a*[omega_P(1),omega_P(end)].'/c_f;
-            options.y = task.rom.tolerance*ones(2,1);
-            options.ylabel = 'residual';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_tolerance'], options)
-    
-            semilogy(a*omega/c_f,residual,'*','color','black','DisplayName','Residual check points')
-            options.x = a*omega.'/c_f;
-            options.y = residual.';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_residual_iter' num2str(i)], options)
-    
-            omega_T_new = history(i).omega_T_new;
-            [~,idx] = ismember(omega,omega_T_new);
-            semilogy(a*omega_T_new/c_f,residual(logical(idx)),'o','color','cyan','DisplayName','New interpolation point')
-    
-            options.x = a*omega_T_new.'/c_f;
-            options.y = residual(logical(idx)).';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_NewInterpolationPoints_iter' num2str(i)], options)
-    
-            ylim([5e-16,10])
-            set(gca,'yscale','log')
-            legend show
-            savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
-        end
-        legend off
-        if isfield(task.rom.history(end),'residualFine')
-            residual = task.rom.history(end).residualFine;
-            omegaFine = task.rom.history(end).omegaFine;
-            semilogy(a*omegaFine/c_f,residual,'blue','DisplayName','Final relative residual')
-        
-            options.x = a*omegaFine.'/c_f;
-            options.y = residual.';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeResidual'], options)
-        end
-        if isfield(task.rom.history(end),'relError')
-            relError = task.rom.history(end).relError;
-            semilogy(a*omegaFine/c_f,relError,'green','DisplayName','Final relative error')
-        
-            options.x = a*omegaFine.'/c_f;
-            options.y = relError.';
-            options.xlabel = 'k';
-            options.ylabel = 'error';
-            printResultsToFile([task.resultsFolder, '/', task.saveName '_FinalRelativeError'], options)
-        end
-        set(gca,'yscale','log')
-        ylim([5e-16,10])
-        ylabel('Relative error/residual')
-        xlabel('Wavenumber')
-        legend show
-        savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
-    end
+    plotROMresiduals(task);
 end
 
 

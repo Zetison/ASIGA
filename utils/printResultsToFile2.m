@@ -76,6 +76,14 @@ switch format
             totTimeString = convertTimeToString(task.timeSolveSystem);
             fprintf(fid, '%% Time spent solving system: %s\n', totTimeString);
         end
+        if isfield(task,'tot_time')
+            totTimeString = convertTimeToString(task.tot_time);
+            fprintf(fid, '%% Time spent on task: %s\n', totTimeString);
+        end
+        if isfield(task,'timeComputeROMresidualFine')
+            totTimeString = convertTimeToString(task.timeComputeROMresidualFine);
+            fprintf(fid, '%% Time spent on computing ROM residual (fine sweep): %s\n', totTimeString);
+        end
         if ~isnan(xLoopName)
             fprintf(fid, '%% Basis for x-data: variation in %s\n', xLoopName);
         end

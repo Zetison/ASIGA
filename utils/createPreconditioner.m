@@ -19,8 +19,7 @@ switch task.sol.preconditioner
         end
         A_M(task.varCol{1}.allDofsToRemove,:) = [];
         A_M(:,task.varCol{1}.allDofsToRemove) = [];
-        [task.L_A,task.U_A] = ilu(task.A + A_M,struct('type',task.sol.ilutype,'droptol',task.sol.droptol));
-%         task.Pinv = spdiags(1./sqrt(diag(task.A)),0,size(task.A,1),size(task.A,2));
+        [task.L_A,task.U_A] = ilu(task.Pinv*task.A*task.Pinv + task.Pinv*A_M*task.Pinv,struct('type',task.sol.ilutype,'droptol',task.sol.droptol));
 %         [task.L_A,task.U_A] = ilu(task.Pinv*(task.A + A_M)*task.Pinv,struct('type',task.sol.ilutype,'droptol',task.sol.droptol));
 % %         [task.L_A,task.U_A] = ilu(task.Pinv*task.A*task.Pinv,struct('type',task.sol.ilutype,'droptol',task.sol.droptol));
     case 'SSOR'
@@ -31,8 +30,4 @@ switch task.sol.preconditioner
         omega_SSOR = 1.5;
         task.L_A = (D_SSOR-omega_SSOR*E_SSOR)*D_SSORinv;
         task.U_A = D_SSOR-omega_SSOR*F_SSOR;
-    case 'diag'
-        task.Pinv = spdiags(1./sqrt(diag(task.A)),0,size(task.A,1),size(task.A,2));
-    case 'none'
-        task.Pinv = speye(size(task.A,1),size(task.A,2));
 end

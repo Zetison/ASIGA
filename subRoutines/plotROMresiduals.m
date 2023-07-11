@@ -3,7 +3,11 @@ c_f = task.varCol{1}.c_f;
 if isfield(task.rom,'history')
     history = task.rom.history;
     for i = 1:numel(history)
-        figure(20+i)
+        counter = 21;
+        while ishandle(counter)
+            counter = counter + 1;
+        end
+        figure(counter)
         omega = task.rom.history(i).omega;
         residual = task.rom.history(i).residual;
         hold on
@@ -24,10 +28,15 @@ if isfield(task.rom,'history')
         semilogy(omega_T_new/c_f,residual(logical(idx)),'o','color','cyan','DisplayName','New interpolation point')
 
         ylim([5e-16,200])
+        ylabel('Relative error/residual')
+        xlabel('Wavenumber')
         set(gca,'yscale','log')
         legend show
-        savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
+        titleName = [task.saveName '_adaptiveROM_iter' num2str(i)];
+        title(strrep(titleName,'_',', '))
+        savefig([task.resultsFolder, '/', titleName])
     end
+    figure(counter)
     legend off
     if isfield(task.rom.history(end),'residualFine')
         residual = task.rom.history(end).residualFine;
@@ -40,8 +49,6 @@ if isfield(task.rom,'history')
     end
     set(gca,'yscale','log')
     ylim([5e-16,200])
-    ylabel('Relative error/residual')
-    xlabel('Wavenumber')
     legend show
     savefig([task.resultsFolder, '/', task.saveName '_adaptiveROM_iter' num2str(i)])
 end
