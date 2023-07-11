@@ -1,6 +1,9 @@
-function nurbs = loftNURBS(nurbsCol,p)
+function nurbs = loftNURBS(nurbsCol,p,dir)
 if nargin < 2
     p = 1;
+end
+if nargin < 3
+    dir = 3;
 end
 for i = 1:numel(nurbsCol)
     nurbsCol{i} = ensure3DNURBS(nurbsCol{i});
@@ -18,4 +21,11 @@ for patch = 1:noPatches
     Eta = 0:(n-p);
     Eta = [zeros(1,p),Eta/(n-p),ones(1,p)];
     nurbs(patch) = createNURBSobject(coeffs,[nurbsCol{1}{patch}.knots(:)', {Eta}]);
+end
+% Change the parametric direction of lofting to be aligned with the parametric direction dir
+switch dir
+    case 1
+        nurbs = permuteNURBS(nurbs,[3,1,2]);
+    case 2
+        nurbs = permuteNURBS(nurbs,[2,3,1]);
 end

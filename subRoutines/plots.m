@@ -47,8 +47,9 @@ no2Dpoints = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test surfaceToVolume
 close all
-% model = 'BCA';
-model = 'S1_interior';
+model = 'BCA';
+% model = 'S1_interior';
+% model = 'S1';
 switch model
     case 'BCA'
         load('BeTSSi_BCA_p2_unRefined.mat')
@@ -61,8 +62,12 @@ switch model
         % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
         % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
     case 'S1_interior'
-        nurbs = getEllipsoidData('parm',2);
+        nurbs = getEllipsoidData('parm',2,'S2V_algorithm',{'A1_2'});
         nurbs = flipNURBSparametrization(nurbs,1);
+        t = 0.4;
+        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+    case 'S1'
+        nurbs = getEllipsoidData('parm',1);
         t = 0.4;
         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
 end
