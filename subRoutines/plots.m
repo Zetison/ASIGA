@@ -46,45 +46,84 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test surfaceToVolume
+% close all
+% model = 'BCA';
+% % model = 'S1_interior';
+% % model = 'S1';
+% switch model
+%     case 'BCA'
+%         load('BeTSSi_BCA_p2_unRefined.mat')
+%         t = 1.1;
+%         % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
+%         sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
+%         % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
+%     case 'S1_interior'
+%         nurbs = getEllipsoidData('parm',2,'S2V_algorithm',{'A1_2'});
+%         nurbs = flipNURBSparametrization(nurbs,1);
+%         t = 0.4;
+%         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+%     case 'S1'
+%         nurbs = getEllipsoidData('parm',1);
+%         t = 0.4;
+%         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+% end
+% if strcmp(model,'BCA')
+%     uiopen('C:\Users\jonve\results\ASIGA\BCA\CAD.fig',1)
+% else
+%     close all
+%     axis equal
+%     color = getColor();
+%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+%     drawnow
+%     view(getView());
+% end
+% if 1
+%     geometry = getTopology(nurbs);
+%     nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
+% end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% NURBS parametrization of circle
 close all
-model = 'BCA';
-% model = 'S1_interior';
-% model = 'S1';
-switch model
-    case 'BCA'
-        load('BeTSSi_BCA_p2_unRefined.mat')
-        t = 1.1;
-        % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
-        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
-        % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
-    case 'S1_interior'
-        nurbs = getEllipsoidData('parm',2,'S2V_algorithm',{'A1_2'});
-        nurbs = flipNURBSparametrization(nurbs,1);
-        t = 0.4;
-        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
-    case 'S1'
-        nurbs = getEllipsoidData('parm',1);
-        t = 0.4;
-        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
-end
-if strcmp(model,'BCA')
-    uiopen('C:\Users\jonve\results\ASIGA\BCA\CAD.fig',1)
-else
-    close all
-    axis equal
-    color = getColor();
-    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
-    drawnow
-    view(getView());
-end
-if 1
-    geometry = getTopology(nurbs);
-    nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
-end
+% knots = {[0,0,0,1,1,1]};
+% coeffs = [1,0,1;
+%           1,1,0.5;
+%           -1,0,1].';
+% nurbs = createNURBSobject(coeffs,knots);
+% nurbs = insertKnotsInNURBS(nurbs,5);
+% figure(1)
+% plotNURBSvec(nurbs,'resolution',1000,'plotControlPolygon',true);
+% axis equal
+% nurbs{1}.knots{1}
+% 
+% rotationMatrix(2*atan(2/10),'Zaxis')*[-2/10,1,0].'
+% rotationMatrix(2*atan(1/4),'Zaxis')*[-13/15,6/10,0].'
+% 
+% 
+% 
+% 
+% % nurbs{1}.coeffs(:,6) = [-13/15,6/10,0.5];
+% % nurbs{1}.coeffs(:,7) = [-79/75,-4/100,0.5];
+% figure(1)
+% plotNURBSvec(nurbs,'resolution',1000,'plotControlPolygon',true);
+% 
+% figure(2)
+% C = abs(norm2(evaluateNURBSvec(nurbs{1},xi))-1);
+% semilogy(xi,C);
+nurbs = getArcData('theta',120*pi/180,'Xi',[0,0,0,1,1,1]);
+plotNURBSvec(nurbs,'resolution',10000,'plotControlPolygon',true);
+axis equal
+nurbs{1}.coeffs(3,2) = -nurbs{1}.coeffs(3,2);
+plotNURBSvec(nurbs,'resolution',10000,'plotControlPolygon',true);
+figure(2)
+xi = linspace(0,1,1000).';
+C = abs(norm2(evaluateNURBSvec(nurbs{1},xi))-1);
+semilogy(xi,C);
+hold on 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test meanRatioJacobian
