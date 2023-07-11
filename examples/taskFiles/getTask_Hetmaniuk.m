@@ -23,8 +23,8 @@ misc.applyLoad = 'planeWave';
 
 % BCs = {'SHBC'};
 % BCs = {'SSBC'};
-% BCs = {'NNBC'};
-BCs = {'SHBC','SSBC','NNBC'};
+BCs = {'NNBC'};
+% BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
@@ -82,20 +82,20 @@ misc.checkNURBSweightsCompatibility = false;
 misc.preProcessOnly = 0;
 
 prePlot.useCamlight    = 0;        % Toggle camlight on (in plotNURBSvec)
-prePlot.plot3Dgeometry = 0;
-prePlot.view                = [23,18];     % Set view angle [azimuth,elevation]
+prePlot.plot3Dgeometry = 1;
+prePlot.view                = [43.314595761442661,30.547666224651493];     % Set view angle [azimuth,elevation]
 prePlot.plotGeometryInfo    = false;      % Plot domain boundaries (i.e. Gamma, Gamma_a, Neumann, Dirichlet, ...)
 prePlot.abortAfterPlotting  = true;       % Abort simulation after pre plotting
-prePlot.plotFullDomain      = 0;
+prePlot.plotFullDomain      = 1;
 % prePlot.plotControlPolygon  = 0;
-prePlot.plotSubsets         = {'xz'};
-% prePlot.plotSubsets         = {}; 
+% prePlot.plotSubsets         = {'xz'};
+prePlot.plotSubsets         = {}; 
 % prePlot.colorFun = @(v) abs(norm2(v)-1);
 prePlot.resolution = [100,40,0];
 % prePlot.resolution = [400,200,0];
 % prePlot.resolution = [100,0,0];
-prePlot.pngResolution = '-r200';
-% prePlot.pngResolution = '-r800';
+% prePlot.pngResolution = '-r200';
+prePlot.pngResolution = '-r800';
 if msh.refineThetaOnly
     msh.Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 else
@@ -211,7 +211,7 @@ for i = 1:numel(BCs)
         error('Not implemented (Case not investigated by Hetmaniuk anyways')
     end
     if ~HetmaniukMesh
-        msh.M = 7; % 7
+        msh.M = 6; % 7
     end
     rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
     rom.basisROM = {'Pade','DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
@@ -251,12 +251,9 @@ for i = 1:numel(BCs)
 %             k = linspace(9, 36, 5);
 %             k = k_P(end);
 %             k = 36;
-            c_f = varCol{1}.c_f;
             f = k*c_f/(2*pi);
-            f_P = k_P*c_f/(2*pi);
             omega = 2*pi*f;
             misc.omega = omega;
-            omega_P = 2*pi*f_P;
             if hetmaniukCase
                 misc.P_inc = -1;
                 ffp.beta = pi/2;   
@@ -320,6 +317,9 @@ for i = 1:numel(BCs)
             pml.gamma = 2.0;          % parameter for sigmaType = 1
             misc.r_a = 1.2*varCol{1}.R;
     end
+    c_f = varCol{1}.c_f;
+    f_P = k_P*c_f/(2*pi);
+    omega_P = 2*pi*f_P;
     rom.omega = omega_P;
     if ~(pml.sigmaType == 1)
         pml.gamma = 1/(k_pml*pml.t);
