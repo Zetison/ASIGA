@@ -35,7 +35,7 @@ misc.compute_g_max       = true;        % Compute g_max and derived quantities l
 misc.preProcessOnly      = false;       % Only run the preProcessing process
 misc.symmetric           = true;        % Use symmetric matrices for coupled problems (at the expence of having to store three more global matrices for ROM). The global matrix has better conditioning with misc.symmetric = true but the opposit is true for the reduced matrices.
 misc.omega               = [];          % Loop over these angular frequencies
-misc.stringShift         = 40;          % Number of spaces in tabbing for output in command window
+misc.stringShift         = 50;          % Number of spaces in tabbing for output in command window
 
 %% Mesh settings
 msh.M                   = 1;	   % Mesh number
@@ -224,4 +224,5 @@ rom.tolerance    = 1e-3;    % Tolerance for the residual error for when to stop 
 rom.computeROMresidualFine = false; % Compute final residual error after adaptive ROM
 rom.computeROMerror = false; % Compute final error after adaptive ROM
 rom.useROMconditioner = true;   % Scale the ROM basis for acoustic structure interaction problems
+rom.upper_threshold = 0.5; % All relative residual values above this threshold is considered the same (above 50% by default)
 

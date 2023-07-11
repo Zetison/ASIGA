@@ -20,7 +20,8 @@ for i_o = 1:numel(omega)
         if task.err.calculateSurfaceError
             tic 
             if printLog
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
+                s = sprintf('Calculating surface error (%d/%d) ... ', i_o, numel(omega));
+                fprintf(['\n%-' num2str(stringShift) 's'], s)
             end
             surfaceError_i = calcSurfErrorBndryMethodVec(task,i_o);
             if printLog
@@ -32,7 +33,8 @@ for i_o = 1:numel(omega)
         if task.err.calculateSurfEnrgErr
             tic 
             if printLog
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface energy error ... ')
+                s = sprintf('Calculating surface energy error (%d/%d) ... ', i_o, numel(omega));
+                fprintf(['\n%-' num2str(stringShift) 's'], s)
             end
             surfEnergyError_i = calcEnergyErrorBEM(task,i_o);
             if printLog
@@ -45,7 +47,8 @@ for i_o = 1:numel(omega)
         if task.err.calculateSurfaceError
             tic 
             if printLog
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating surface error ... ')
+                s = sprintf('Calculating surface error (%d/%d) ... ', i_o, numel(omega));
+                fprintf(['\n%-' num2str(stringShift) 's'], s)
             end
             if strcmp(task.misc.coreMethod,'SEM')
                 surfaceError(i_o) = calcSurfErrorSEM(task,1);
@@ -60,7 +63,8 @@ for i_o = 1:numel(omega)
         if task.err.calculateVolumeError
             tic 
             if printLog
-                fprintf(['\n%-' num2str(stringShift) 's'], 'Calculating error ... ')
+                s = sprintf('Calculating error (%d/%d) ... ', i_o, numel(omega));
+                fprintf(['\n%-' num2str(stringShift) 's'], s)
             end
             if strcmp(task.misc.coreMethod,'SEM')
                 [L2Error_i, H1Error_i, H1sError_i, energyError_i] = calcErrorSEM(task);

@@ -23,50 +23,79 @@ counter = 1;
 task.timeBuildROM = 0;
 while ~isempty(omega_T_new)
     t_Hetmaniuk2012raa_P2_start = tic;
+    s = sprintf('Adding %d new snapshots to ROM basis using ...', numel(omega_T_new));
+    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], s)
     J_new = zeros(1,numel(omega_T_new));
     for p = 1:numel(omega_T_new)
         % Algorithm P2 in Hetmaniuk2013aas
         [task, J_new(p)] = Hetmaniuk2012raa_P2(task, union(omega_T_new,omega_T), omega_T_new(p));
     end
-    t_toc = toc(t_Hetmaniuk2012raa_P2_start);
-    fprintf('\nAdded %d new snapshots to ROM basis using %12f seconds.', numel(omega_T_new), t_toc)
+    fprintf('using %12f seconds.', toc(t_Hetmaniuk2012raa_P2_start))
+    t_Hetmaniuk2012raa_P1_residual_start = tic;
+    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Evaluating relative residual at checkpoints ...')
     [omega_T,sortIdx] = sort([omega_T,omega_T_new]);
     omega_T_new = zeros(1,0); % Initiate with an empty row vector
     J_P = [J_P,J_new];
     J_P = J_P(sortIdx);
-    task.rom.history(counter).residual = [];
-    task.rom.history(counter).omega = [];
-    for p = 1:numel(omega_T)-1
-        omega_p = omega_T(p);
-        omega_pp1 = omega_T(p+1);
-        j = 1:n_c;
-        omega_cj = omega_p + j/(n_c+1)*(omega_pp1 - omega_p);
-        residual = computeROMresidual(task, omega_cj);
-        task.rom.history(counter).residual = [task.rom.history(counter).residual, residual];
-        task.rom.history(counter).omega = [task.rom.history(counter).omega, omega_cj];
-        [~,j_max] = max(residual);
-        if residual(j_max) > task.rom.tolerance
-            omega_T_new = union(omega_T_new,omega_cj(j_max));
+
+    omega_p = omega_T(1:end-1);
+    omega_pp1 = omega_T(2:end);
+    j = (1:n_c).';
+    omega_cj = omega_p + j/(n_c+1).*(omega_pp1 - omega_p);
+    residual = computeROMresidual(task, omega_cj(:).');
+    task.rom.history(counter).residual = residual;
+    task.rom.history(counter).omega = omega_cj(:).';
+    residual = reshape(residual,n_c,[]);
+    for p = 1:size(residual,2)
+        indices = find(residual(:,p) >= task.rom.upper_threshold);
+        residual(indices,p) = task.rom.upper_threshold;
+        [~,j_max] = max(residual(:,p));
+        indices = union(indices,j_max);
+        j_max = indices(round(numel(indices)/2));
+        if residual(j_max,p) > task.rom.tolerance
+            omega_T_new = union(omega_T_new,omega_cj(j_max,p));
         end
     end
+
+
+%     task.rom.history(counter).residual = [];
+%     task.rom.history(counter).omega = [];
+%     for p = 1:numel(omega_T)-1
+%         omega_p = omega_T(p);
+%         omega_pp1 = omega_T(p+1);
+%         j = 1:n_c;
+%         omega_cj = omega_p + j/(n_c+1)*(omega_pp1 - omega_p);
+%         residual = computeROMresidual(task, omega_cj);
+%         task.rom.history(counter).residual = [task.rom.history(counter).residual, residual];
+%         task.rom.history(counter).omega = [task.rom.history(counter).omega, omega_cj];
+%         [~,j_max] = max(residual);
+%         if residual(j_max) > task.rom.tolerance
+%             omega_T_new = union(omega_T_new,omega_cj(j_max));
+%         end
+%     end
     task.rom.history(counter).omega_P = omega_T;
     task.rom.history(counter).J_P = J_P;
     task.rom.history(counter).omega_T_new = omega_T_new;
     counter = counter + 1;
+    t_toc = toc(t_Hetmaniuk2012raa_P2_start);
     task.timeBuildROM = task.timeBuildROM + t_toc;
+    fprintf('using %12f seconds.', toc(t_Hetmaniuk2012raa_P1_residual_start))
 %     plotROMresiduals(task);
 end
 if oldprintLog
-    fprintf('\nTotal time for adaptive ROM basis computations: %12f seconds.', task.timeBuildROM)
+    s = sprintf('Total time for adaptive ROM basis computations: %12f seconds.', task.timeBuildROM);
+    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], s)
 end
 if task.rom.computeROMresidualFine
     t_start_computeROMresidualFine = tic;
     if oldprintLog
         fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Computing final ROM residual/error ... ')
-    end    
+    end
     omega = union(omega,task.rom.history(end).omega); % Add all values of omega used in adaptive algorithm to obtain interpolatory plots
     [residual, relError] = computeROMresidual(task, omega);
-    task.rom.history(end).relError = relError;
+    if task.rom.computeROMerror
+        task.rom.history(end).relError = relError;
+    end
     task.rom.history(end).residualFine = residual;
     task.rom.history(end).omegaFine = omega;
     task.timeComputeROMresidualFine = toc(t_start_computeROMresidualFine);

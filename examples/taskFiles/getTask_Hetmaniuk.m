@@ -21,17 +21,17 @@ misc.coreMethod = {'IGA'};
 % misc.applyLoad = 'pointCharge';
 misc.applyLoad = 'planeWave';
 
-BCs = {'SHBC'};
+% BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
-% BCs = {'SHBC','SSBC','NNBC'};
+BCs = {'SHBC','SSBC','NNBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-HetmaniukMesh = 1;
+HetmaniukMesh = 0;
 if HetmaniukMesh
     BCs = {'SHBC'};
     if 0
@@ -281,18 +281,27 @@ for i = 1:numel(BCs)
             rom.noVecs = 32;
         case {'SSBC','NNBC'}
             k_pml = 1430*2*pi/varCol{1}.c_f;
-%             f_P = linspace(1430, 4290, 5);
-            f_P = [1430,3146,4290];
-            omega_P = 2*pi*f_P;
-            f = f_P(1):12:f_P(end);
-%             f = f_P(1):120:f_P(end);
-%             f = f_P(1):1200:f_P(end);
-%             f = linspace(1430, 4290, 9);
-            f = sort(unique([f_P,f]));
-%             f = f_P(end);
+            if false
+% %             f_P = linspace(1430, 4290, 5);
+%             f_P = [1430,3146,4290];
+%             omega_P = 2*pi*f_P;
+%             f = f_P(1):12:f_P(end);
+% %             f = f_P(1):120:f_P(end);
+% %             f = f_P(1):1200:f_P(end);
+% %             f = linspace(1430, 4290, 9);
+%             f = sort(unique([f_P,f]));
+% %             f = f_P(end);
+            else
+                k_P = linspace(9, 18, 3);
+
+                k = k_P(1):0.01:k_P(end);
+%                 k = linspace(9, 18, 5);
+
+                c_f = varCol{1}.c_f;
+                f = k*c_f/(2*pi);
+            end
             omega = 2*pi*f;
             misc.omega = omega;
-            k_P = omega_P/varCol{1}.c_f;
             if hetmaniukCase
                 misc.P_inc = 1;
                 ffp.beta = -pi/2;   
@@ -341,7 +350,7 @@ for i = 1:numel(BCs)
 %     misc.scatteringCase = 'BI';
 %     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega'};
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC'};
-%     collectIntoTasks
+    collectIntoTasks
 
     %% Run paraview visualization case
     misc.omega = misc.omega(end);

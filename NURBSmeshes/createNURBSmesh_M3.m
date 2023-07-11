@@ -113,8 +113,12 @@ else
     if numel(varCol) > 1
         solid = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', t, 'L', L, 'parm', parm, 'Xi', Xi, 'x_0', task.msh.x_0);
         solid = makeUniformNURBSDegree(solid,degreeVec);
-    end
-    if numel(varCol) > 1
+        if parm == 1 && t(1) > t(2) % Refine around singularity
+            newEtaKnots = linspace2(0,t(2)/R1(1),task.msh.extraSolidKnots);
+            solid(10:15) = insertKnotsInNURBS(solid(10:15),{[],newEtaKnots,[]});
+            solid(1:6) = insertKnotsInNURBS(solid(1:6),{[],1-newEtaKnots,[]});
+        end
+
         varCol{2}.nurbs = solid;
         if isfield(task.msh,'extraSolidKnots')
             varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,[0,0,task.msh.extraSolidKnots]);
@@ -128,6 +132,11 @@ else
         chimax = 27.2;
         varCol{1}.nurbs = loftNURBS({solid_outer,Gamma_a});
         varCol{1}.nurbs = makeUniformNURBSDegree(varCol{1}.nurbs,degreeVec);
+
+        if parm == 1 && t(1) > t(2) && numel(varCol) > 1 % for compatibilty due to extra refinement around singularity in solid
+            varCol{1}.nurbs(7:9) = insertKnotsInNURBS(varCol{1}.nurbs(7:9),{[],newEtaKnots,[]});
+            varCol{1}.nurbs(1:3) = insertKnotsInNURBS(varCol{1}.nurbs(1:3),{[],1-newEtaKnots,[]});
+        end
     end
 end
 task.msh.h_max = refLength/2^(M-1);

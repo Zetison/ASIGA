@@ -8,7 +8,7 @@ getDefaultTaskValues
 
 saveStudies = false;
 noCoresToUse = 32;         % Number of processors for parallel computations (Inf uses all available cores)
-noCoresToUse = 4;         % Number of processors for parallel computations (Inf uses all available cores)
+% noCoresToUse = 4;         % Number of processors for parallel computations (Inf uses all available cores)
 
 
 %% IE simulation
@@ -156,8 +156,8 @@ for i = 1:numel(applyLoads)
 %         rom.basisROM = {'Pade','Taylor','DGP','Hermite','Bernstein'};  % do not put basisROMcell in loopParameters (this is done automatically)
         rom.basisROM = {'DGP'};  % do not put basisROMcell in loopParameters (this is done automatically)
         rom.adaptiveROM  = true;
-        rom.computeROMresidualFine = true;
-        rom.computeROMerror = true;
+        rom.computeROMresidualFine = 1;
+        rom.computeROMerror = 0;
         if strcmp(misc.method,'PML')
             misc.formulation = {'GSB'};
         else
@@ -166,7 +166,7 @@ for i = 1:numel(applyLoads)
         msh.degree = 3:4;
 %         msh.degree = 4; % 4
         msh.M = 7:8; % 7
-        msh.M = 7; % 7
+        msh.M = 1; % 7
         msh.autoRefine = true;
         misc.symmetric = 0;
         msh.extraSolidKnots = 3;
@@ -177,8 +177,6 @@ for i = 1:numel(applyLoads)
         
         rom.useROM = true;
         rom.adaptiveROM = true;
-%         rom.noVecs = [4,8,16,32];
-        rom.noVecs = 16;
 
         misc.r_a = 1.25*varCol{1}.R1;
         postPlot(1).xScale = varCol{1}.R1;
@@ -190,14 +188,15 @@ for i = 1:numel(applyLoads)
         
         misc.storeFullVarCol = false;
         if strcmp(misc.scatteringCase, 'Sweep')
-            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.noVecs','rom.basisROM'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.basisROM'};
         else
-            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.noVecs','rom.basisROM','misc.omega'};
+            loopParameters = {'msh.M','msh.degree','misc.method','misc.BC','misc.applyLoad','rom.basisROM','misc.omega'};
         end
         collectIntoTasks
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        misc.scatteringCase = 'BI';
+        misc.scatteringCase = 'Sweep';
+%         misc.scatteringCase = 'BI';
         if strcmp(misc.scatteringCase,'Sweep')
             postPlot(1).noXLoopPrms   	= 0;
             if strcmp(misc.applyLoad,'pointPulsation')
@@ -218,7 +217,7 @@ for i = 1:numel(applyLoads)
             postPlot(2).xname = 'varCol{1}.k';
         end
         rom.useROM = false;
-        if 1 %strcmp(misc.scatteringCase, 'BI')
+        if 0 %strcmp(misc.scatteringCase, 'BI')
             para.plotResultsInParaview	 = true;	% Only if misc.scatteringCase == 'Bi'
             para.extraXiPts              = '60';  % Extra visualization points in the xi-direction per element
             para.extraEtaPts             = '1';  % Extra visualization points in the eta-direction per element
@@ -235,7 +234,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-%         collectIntoTasks
+        collectIntoTasks
     end
 end
 

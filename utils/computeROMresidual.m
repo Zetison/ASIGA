@@ -10,6 +10,8 @@ n_batches = n_batches + 1;
 computeError = task.rom.computeROMerror && nargout == 2;
 if computeError
     relError = cell(size(omega_cell));
+else
+    relError = NaN;
 end
 residual = cell(size(omega_cell));
 for i = 1:n_batches

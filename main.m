@@ -72,7 +72,7 @@ for i_col = 1:numel(studiesCol)
 
                 %% Run main subroutine
                 studiesCol{i_col}(i_study).tasks(i_task).task = main_sub(studiesCol{i_col}(i_study).tasks(i_task).task,loopParameters,printLog,resultsFolder);
-                if plot3Dgeometry&& abortAfterPlotting
+                if plot3Dgeometry && abortAfterPlotting
                     return
                 end
                 if printLog
