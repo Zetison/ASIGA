@@ -523,6 +523,7 @@ if extraArg == 1
             view(ax,options.view)
         end
     end
+    h = ax;
 else
     if d_max < 3
         view(0,90)
@@ -537,10 +538,10 @@ else
             view(options.view)
         end
     end
+    h = gcf;
 end
 % axis equal
 drawnow
-h = gcf;
 
 function plotGridLines(v,displayName)
 if size(v,2) > 2

@@ -19,6 +19,7 @@ if nargin > 1
     end
     options = updateOptions(options,newOptions);
 end
+nurbs_surf = cleanNURBS(nurbs_surf,[],1e-6);
 
 if options.explodeNURBSsurface
     nurbs_surf = explodeNURBS(nurbs_surf);
@@ -28,6 +29,11 @@ if isfield(options,'connection')
 else
     geometry = getTopology(nurbs_surf);
     connection = geometry.topology.connection;
+end
+if isfield(options,'ax')
+    ax = options.ax;
+else
+    ax = gca;
 end
 
 d_p = nurbs_surf{1}.d_p;
@@ -44,10 +50,14 @@ nurbs_bdry = nurbs_surf;
 nurbs_vol = cell(1,4*numel(nurbs_surf));
 counter = 1;
 % colors = colormap('hsv');
-colors = colormap('jet');
-colors = colors(1:4:end,:);
-colormap(flipud(colors))
-no_colors = size(colors,1);
+% colors = colormap('jet');
+% getColorMap
+% step = max(4,size(colors,1)/(2*noBdryPatches));
+% colors = colors(1:step:end,:);
+% colormap(flipud(colors))
+% no_colors = size(colors,1);
+no_colors = max(8,noBdryPatches/10);
+colors = turbo(no_colors);
 minC = Inf;
 maxC = -Inf;
 
@@ -67,17 +77,18 @@ while counter == 1 || (any(angles(:) < pi) && any(~isnan(angles(1:noBdryPatches,
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Plotting
     if true
-        plotNURBSvec(nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
+        plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
             'color',colors(mod(counter-1,no_colors)+1,:)); % colors(mod(round(counter*no_colors/(2*noBdryPatches))-1,no_colors)+1,:)
     else
-        [~,maxC_patch,minC_patch] = plotNURBSvec(nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,'displayName',['Patch ' num2str(counter)],'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi));
+        [~,maxC_patch,minC_patch] = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,...
+                        'displayName',['Patch ' num2str(counter)],'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi));
         if minC_patch < minC
             minC = minC_patch;
         end
         if maxC_patch > maxC
             maxC = maxC_patch;
         end
-        clim([minC,maxC])
+        clim(ax,[minC,maxC])
     end
     drawnow
     pause(0.001)
