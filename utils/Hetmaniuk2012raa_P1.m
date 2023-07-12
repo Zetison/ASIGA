@@ -23,7 +23,7 @@ counter = 1;
 task.timeBuildROM = 0;
 while ~isempty(omega_T_new)
     t_Hetmaniuk2012raa_P2_start = tic;
-    s = sprintf('Adding %d new snapshots to ROM basis using ...', numel(omega_T_new));
+    s = sprintf('Adding %d new snapshots to ROM basis ...', numel(omega_T_new));
     fprintf(['\n%-' num2str(task.misc.stringShift) 's'], s)
     J_new = zeros(1,numel(omega_T_new));
     for p = 1:numel(omega_T_new)
@@ -83,8 +83,8 @@ while ~isempty(omega_T_new)
 %     plotROMresiduals(task);
 end
 if oldprintLog
-    s = sprintf('Total time for adaptive ROM basis computations: %12f seconds.', task.timeBuildROM);
-    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], s)
+    fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Total time for adaptive ROM basis computations:')
+    fprintf('%18f seconds.', task.timeBuildROM)
 end
 if task.rom.computeROMresidualFine
     t_start_computeROMresidualFine = tic;

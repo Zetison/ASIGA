@@ -224,5 +224,5 @@ rom.tolerance    = 1e-3;    % Tolerance for the residual error for when to stop 
 rom.computeROMresidualFine = false; % Compute final residual error after adaptive ROM
 rom.computeROMerror = false; % Compute final error after adaptive ROM
 rom.useROMconditioner = true;   % Scale the ROM basis for acoustic structure interaction problems
-rom.upper_threshold = 0.5; % All relative residual values above this threshold is considered the same (above 50% by default)
+rom.upper_threshold = 1.0; % All relative residual values above this threshold is considered the same (above 100% by default)
 

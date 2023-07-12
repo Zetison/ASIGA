@@ -46,41 +46,84 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test surfaceToVolume
+% close all
+% % model = 'BCA';
+% model = 'S1_interior';
+% switch model
+%     case 'BCA'
+%         load('BeTSSi_BCA_p2_unRefined.mat')
+%         t = 1.1;
+%         % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
+%         sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
+%         % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
+%     case 'S1_interior'
+%         nurbs = getEllipsoidData('parm',2);
+%         nurbs = flipNURBSparametrization(nurbs,1);
+%         t = 0.4;
+%         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+% end
+% if strcmp(model,'BCA')
+%     uiopen('C:\Users\jonve\results\ASIGA\BCA\CAD.fig',1)
+% else
+%     close all
+%     axis equal
+%     color = getColor();
+%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+%     drawnow
+%     view(getView());
+% end
+% if 1
+%     geometry = getTopology(nurbs);
+%     nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
+% end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test C1 NURBS curve
 close all
-% model = 'BCA';
-model = 'S1_interior';
-switch model
-    case 'BCA'
-        load('BeTSSi_BCA_p2_unRefined.mat')
-        t = 1.1;
-        % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
-        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
-        % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
-    case 'S1_interior'
-        nurbs = getEllipsoidData('parm',2);
-        nurbs = flipNURBSparametrization(nurbs,1);
-        t = 0.4;
-        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+% coeffs = [1,0,1;
+%           1,1,0.5;
+%           -1,1,0.5;
+%           -1,0,1].';
+% knots = {[0,0,0,0.5,1,1,1]};
+
+xi = linspace(0,1,10000).';
+dofs = 3;
+if true
+    options = optimset('Display','iter','TolX',10*eps,'TolFun',10*eps,'MaxFunEvals',1e5,'MaxIter',1e5);
+    w = fminsearchbnd(@(w) f_obj(w,xi),[0.5,0.5,0.25],[-10,-10,0],[10,10,1],options);
 end
-if strcmp(model,'BCA')
-    uiopen('C:\Users\jonve\results\ASIGA\BCA\CAD.fig',1)
-else
-    close all
-    axis equal
-    color = getColor();
-    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
-    drawnow
-    view(getView());
-end
-if 1
-    geometry = getTopology(nurbs);
-    nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
+[coeffs,knots] = getNURBScoeffAndKnots(w);
+nurbs = createNURBSobject(coeffs,knots);
+plotNURBSvec(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
+axis equal
+
+C = evaluateNURBSvec(nurbs{1},xi);
+NURBS_error = abs(norm2(C)-1);
+figure
+semilogy(xi,NURBS_error)
+
+function [coeffs,knots] = getNURBScoeffAndKnots(w)
+
+coeffs = [1,0,1;
+          1,1,w(1);
+          -1,1,w(2);
+          -1,-1,w(2);
+          1,-1,w(1);
+          1,0,1].';
+knots = {[0,0,0,w(3),0.5,1-w(3),1,1,1]};
+
 end
 
+function NURBS_error = f_obj(w,xi)
+[coeffs,knots] = getNURBScoeffAndKnots(w);
+nurbs = createNURBSobject(coeffs,knots);
+C = evaluateNURBSvec(nurbs{1},xi);
+NURBS_error = norm(abs(norm2(C)-1));
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test meanRatioJacobian
 % close all
