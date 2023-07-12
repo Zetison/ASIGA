@@ -44,99 +44,210 @@ no2Dpoints = 1000;
 % end
 % nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Test surfaceToVolume
-% close all
-% model = 'BCA';
-% % model = 'S1_interior';
-% % model = 'S1';
-% switch model
-%     case 'BCA'
-%         load('BeTSSi_BCA_p2_unRefined.mat')
-%         t = 1.1;
-%         % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
-%         sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
-%         % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
-%         % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
-%         % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
-%         % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
-%         % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
-%     case 'S1_interior'
-%         nurbs = getEllipsoidData('parm',2,'S2V_algorithm',{'A1_2'});
-%         nurbs = flipNURBSparametrization(nurbs,1);
-%         t = 0.4;
-%         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
-%     case 'S1'
-%         nurbs = getEllipsoidData('parm',1);
-%         t = 0.4;
-%         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+%% Test Capablanca
+% nurbs_vol = read_g2('../IGA-geometries/Chess/Capablanca.g2');
+% if false
+%     nurbs_vol = nurbs_vol([121,280]);
+%     coeffs1 = nurbs_vol{2}.coeffs(:,:,1,end);
+%     coeffs2 = nurbs_vol{1}.coeffs(:,:,1,1);
+%     knots = {[0,0,0,1,1,1]};
+%     nurbs_circ1 = createNURBSobject(coeffs1,knots);
+%     nurbs_circ2 = createNURBSobject(coeffs2,knots);
+%     
+%     xi = linspace(0,1,1000).';
+%     C = evaluateNURBSvec(nurbs_circ1{1},xi);
+%     NURBS_error = abs(norm2(C(:,1:2)+[3,3])-0.7528);
+%     figure
+%     semilogy(xi,NURBS_error)
+%     hold on
+%     C = evaluateNURBSvec(nurbs_circ2{1},xi);
+%     NURBS_error = abs(norm2(C(:,1:2)+[3,3])-0.7528);
+%     semilogy(xi,NURBS_error)
+%     
+%     close all
+%     axis equal
+%     plotNURBSvec([nurbs_circ1,nurbs_circ2],'plotControlPolygon',1,'plotParmDir',0,'resolution',[100,100,100]);
 % end
-% if strcmp(model,'BCA')
-%     uiopen('C:\Users\jonve\results\ASIGA\BCA\CAD.fig',1)
-% else
+% nurbs_vol = cleanNURBS(nurbs_vol,[],1e-6);
+% % nurbs_vol = nurbs_vol([109:128,273:298]);
+% % nurbs_vol = nurbs_vol([13,28]);
+% nurbs_vol = nurbs_vol(setdiff(1:numel(nurbs_vol),[109:128,299:318]));
+% geometry = getTopology(nurbs_vol);
+% if false
+%     nurbs = extractFreeSurface(nurbs_vol,'topologysets',geometry.topologysets);
+%     save('../../results/ASIGA/Capablanca/nurbs.mat','nurbs')
+%     save('../../results/ASIGA/Capablanca/nurbs_woRook.mat','nurbs')
+% end
+% refLength = 2;
+% M = 5;
+% % nurbs_vol = autoRefineNURBS(nurbs_vol,geometry.topology.connection,refLength/2^(M-1));
+% if 1
 %     close all
 %     axis equal
 %     color = getColor();
-%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+%     plotNURBSvec(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+% %     plotNURBSvec(nurbs_vol,'plotControlPolygon',1,'plotParmDir',0);
 %     drawnow
 %     view(getView());
 % end
-% if 1
-%     geometry = getTopology(nurbs);
-%     nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
-% end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test surfaceToVolume
+close all
+% model = 'Capablanca_woRooks';
+% model = 'Capablanca';
+model = 'BCA';
+% model = 'S1_interior';
+% model = 'S1';
+% model = 'Mutter';
+switch model
+    case 'Mutter'
+        nurbs_vol = read_g2('../IGA-geometries/Mutter/Mutter.g2');
+        nurbs_vol = cleanNURBS(nurbs_vol,[],1e-2);
+        nurbs = extractFreeSurface(nurbs_vol);
+
+        t = 1.1;
+        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+    case 'Capablanca'
+        load('../../results/ASIGA/Capablanca/nurbs.mat')
+
+        t = 1.1;
+        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+        uiopen('../../results/ASIGA/Capablanca/CAD.fig',1)
+    case 'Capablanca_woRooks'
+        load('../../results/ASIGA/Capablanca/nurbs_woRook.mat')
+        t = 1.1;
+        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+        uiopen('../../results/ASIGA/Capablanca/CADwoRook.fig',1)
+    case 'BCA'
+        load('BeTSSi_BCA_p2_unRefined.mat')
+        t = 1.1;
+        % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
+        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
+        % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
+        uiopen('../../results/ASIGA/BCA/CAD.fig',1)
+    case 'S1_interior'
+        nurbs = getEllipsoidData('parm',2,'S2V_algorithm',{'A1_2'});
+        nurbs = flipNURBSparametrization(nurbs,1);
+        t = 0.4;
+        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+    case 'S1'
+        nurbs = getEllipsoidData('parm',1);
+        t = 0.4;
+        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+end
+if ~strcmp(model,'BCA') && ~strcmp(model,'Capablanca') && ~strcmp(model,'Capablanca_woRooks')
+    close all
+    axis equal
+    color = getColor();
+    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+    drawnow
+    view(getView());
+end
+if 0
+    close all
+    axis equal
+    color = getColor();
+    plotNURBSvec(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(x) log10(abs(norm2(x(:,[1,3]))-6)));
+    drawnow
+    view(getView());
+end
+if 1
+    geometry = getTopology(nurbs);
+    nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test C1 NURBS curve
-close all
+% close all
+% clear all
+% 
+% syms theta x
+% % theta = 30*vpa('pi')/180;
+% a = cos(theta/2);
+% PI = vpa('pi');
+% phi = (PI-theta)/2;
+% w = cos(theta/2);
+% third = int(x^2,0,1);
+% fift = int(x^4,0,1);
+% sixt = int(x^5,0,1);
+% coeffs = [cos(phi),sin(phi),1;
+%           0,1/w,-w;
+%           -cos(phi),sin(phi),1].';
+% knots = {[0,0,0,1,1,1]};
+% nurbs = createNURBSobject(coeffs,knots);
+% % nurbs = insertKnotsInNURBS(nurbs,{[third,2*third]});
+% % nurbs = insertKnotsInNURBS(nurbs,{[fift,2*fift,3*fift,4*fift]});
+% nurbs = insertKnotsInNURBS(nurbs,{[sixt,2*sixt,3*sixt,4*sixt,5*sixt]});
+% 
+% % theta_num = 30*pi/180;
+% theta_num = 1*pi/180;
+% nurbs{1}.coeffs = subs(nurbs{1}.coeffs,'theta',theta_num);
+% nurbs{1}.coeffs = subs(nurbs{1}.coeffs,'pi',pi);
+% nurbs{1}.knots{1} = subs(nurbs{1}.knots{1},'theta',theta_num);
+% nurbs{1}.knots{1} = subs(nurbs{1}.knots{1},'pi',pi);
+% nurbs{1}.coeffs = double(nurbs{1}.coeffs);
+% nurbs{1}.knots{1} = double(nurbs{1}.knots{1});
+% xi = linspace(0,1,1000).';
+% plotNURBSvec(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
+% axis equal
+% 
+% C = evaluateNURBSvec(nurbs{1},xi);
+% NURBS_error = abs(norm2(C)-1);
+% figure
+% semilogy(xi,NURBS_error)
+% return
+% w = [1.5,0.5,0.5,1/3];
+% if 1
+%     options = optimset('Display','iter','TolX',10*eps,'TolFun',10*eps,'MaxFunEvals',1e5,'MaxIter',1e5);
+%     w = fminsearchbnd(@(w) f_obj(w,xi),w,[0,0,0,0.1],[10,10,10,0.4],options);
+% end
+% [coeffs,knots] = getNURBScoeffAndKnots(w);
+% nurbs = createNURBSobject(coeffs,knots);
+% plotNURBSvec(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
+% axis equal
+% 
+% C = evaluateNURBSvec(nurbs{1},xi);
+% NURBS_error = abs(norm2(C)-1);
+% figure
+% semilogy(xi,NURBS_error)
+% 
+% function [coeffs,knots] = getNURBScoeffAndKnots(w)
+% 
+% x = w(1);
+% y = -(x^2+1)/(x^2-1);
+% coeffs = [0,1,1;
+%           -x,1,w(2);
+%           0,y,w(3);
+%           x,1,w(2);
+%           0,1,1].';
+% knots = {[0,0,0,w(4),1-w(4),1,1,1]};
+% 
+% end
+% 
+% function NURBS_error = f_obj(w,xi)
+% [coeffs,knots] = getNURBScoeffAndKnots(w);
+% nurbs = createNURBSobject(coeffs,knots);
+% C = evaluateNURBSvec(nurbs{1},xi);
+% NURBS_error = norm(abs(norm2(C)-1));
+% end
+%% NURBS parametrization of circle
+% close all
+% knots = {[0,0,0,1/2,1,1,1]};
 % coeffs = [1,0,1;
 %           1,1,0.5;
 %           -1,1,0.5;
 %           -1,0,1].';
-% knots = {[0,0,0,0.5,1,1,1]};
-
-xi = linspace(0,1,10000).';
-dofs = 3;
-if true
-    options = optimset('Display','iter','TolX',10*eps,'TolFun',10*eps,'MaxFunEvals',1e5,'MaxIter',1e5);
-    w = fminsearchbnd(@(w) f_obj(w,xi),[0.5,0.5,0.25],[-10,-10,0],[10,10,1],options);
-end
-[coeffs,knots] = getNURBScoeffAndKnots(w);
-nurbs = createNURBSobject(coeffs,knots);
-plotNURBSvec(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
-axis equal
-
-C = evaluateNURBSvec(nurbs{1},xi);
-NURBS_error = abs(norm2(C)-1);
-figure
-semilogy(xi,NURBS_error)
-
-function [coeffs,knots] = getNURBScoeffAndKnots(w)
-
-coeffs = [1,0,1;
-          1,1,w(1);
-          -1,1,w(2);
-          -1,-1,w(2);
-          1,-1,w(1);
-          1,0,1].';
-knots = {[0,0,0,w(3),0.5,1-w(3),1,1,1]};
-
-end
-
-function NURBS_error = f_obj(w,xi)
-[coeffs,knots] = getNURBScoeffAndKnots(w);
-nurbs = createNURBSobject(coeffs,knots);
-C = evaluateNURBSvec(nurbs{1},xi);
-NURBS_error = norm(abs(norm2(C)-1));
-end
-%% NURBS parametrization of circle
-% close all
-% knots = {[0,0,0,1,1,1]};
-% coeffs = [1,0,1;
-%           1,1,0.5;
-%           -1,0,1].';
 % nurbs = createNURBSobject(coeffs,knots);
-% nurbs = insertKnotsInNURBS(nurbs,5);
+% nurbs = elevateNURBSdegree(nurbs,1);
+% nurbs = insertKnotsInNURBS(nurbs,6);
 % figure(1)
 % plotNURBSvec(nurbs,'resolution',1000,'plotControlPolygon',true);
 % axis equal
@@ -144,8 +255,8 @@ end
 % 
 % rotationMatrix(2*atan(2/10),'Zaxis')*[-2/10,1,0].'
 % rotationMatrix(2*atan(1/4),'Zaxis')*[-13/15,6/10,0].'
-% 
-% 
+
+
 % 
 % 
 % % nurbs{1}.coeffs(:,6) = [-13/15,6/10,0.5];

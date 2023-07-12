@@ -45,6 +45,7 @@ nurbs_vol = cell(1,4*numel(nurbs_surf));
 counter = 1;
 % colors = colormap('hsv');
 colors = colormap('jet');
+colors = colors(1:4:end,:);
 colormap(flipud(colors))
 no_colors = size(colors,1);
 minC = Inf;
@@ -66,7 +67,8 @@ while counter == 1 || (any(angles(:) < pi) && any(~isnan(angles(1:noBdryPatches,
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Plotting
     if true
-        plotNURBSvec(nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], 'color',colors(mod(round(counter*no_colors/(2*noBdryPatches))-1,no_colors)+1,:));
+        plotNURBSvec(nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
+            'color',colors(mod(counter-1,no_colors)+1,:)); % colors(mod(round(counter*no_colors/(2*noBdryPatches))-1,no_colors)+1,:)
     else
         [~,maxC_patch,minC_patch] = plotNURBSvec(nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,'displayName',['Patch ' num2str(counter)],'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi));
         if minC_patch < minC
@@ -311,13 +313,18 @@ switch maxNoSharpAngles
                         error('Self intersection!')
                     end
                 catch
-                    len1 = norm(slave1_coeffs(1:3,end,1,1) - slave1_coeffs(1:3,1,1,1));
-                    len2 = norm(slave1_coeffs(1:3,end,1,end) - slave1_coeffs(1:3,1,1,end));
-                    t = mean([len1,len2]);
-                    faces(2) = faceFromNormals(nurbs_bdry{patch},patch,cornerData,t,options);
-                    faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-                    nurbs = loftNURBS({faces(1),faces(2)},1,1);
-                    nurbs{1}.coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
+                    try
+                        len1 = norm(slave1_coeffs(1:3,end,1,1) - slave1_coeffs(1:3,1,1,1));
+                        len2 = norm(slave1_coeffs(1:3,end,1,end) - slave1_coeffs(1:3,1,1,end));
+                        t = mean([len1,len2]);
+                        faces(2) = faceFromNormals(nurbs_bdry{patch},patch,cornerData,t,options);
+                        faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+                        nurbs = loftNURBS({faces(1),faces(2)},1,1);
+                        nurbs{1}.coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
+                    catch
+                        coeffs = master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:);
+                        nurbs = createNURBSobject(coeffs,knots);
+                    end
                 end
             case 'A13_2'
                 coeffs = master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:);

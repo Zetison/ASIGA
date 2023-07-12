@@ -1,6 +1,9 @@
 function nurbs = read_g2(inputFileName)
 
 fid = fopen(inputFileName,'r','b');
+if fid == -1
+    error('Could not open file')
+end
 nurbs = cell(1,1000);
 counter = 1;
 while ~feof(fid)

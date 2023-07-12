@@ -2,6 +2,13 @@ function [h,maxC,minC] = plotNURBSvec(varargin)
 
 %% Interpret input arguments
 nurbsPatches = varargin{1};
+if isgraphics(nurbsPatches)
+    ax = nurbsPatches;
+    nurbsPatches = varargin{2};
+    extraArg = 1;
+else
+    extraArg = 0;
+end
 % set default values
 options = struct('resolution',[32,32,32], ...
                  'plotObject',true, ...
@@ -28,11 +35,11 @@ options = struct('resolution',[32,32,32], ...
                  'colorParmDirs', {{getColor(12),getColor(13),getColor(7)}}, ...
                  'samplingDistance', NaN, ...
                  'elementBasedSamples',false);
-if nargin > 1
-    if numel(varargin) > 2
-        newOptions = varargin(2:end);
+if nargin > 1+extraArg
+    if numel(varargin) > 2+extraArg
+        newOptions = varargin(2+extraArg:end);
     else
-        newOptions = varargin{2};
+        newOptions = varargin{2+extraArg};
     end
     options = updateOptions(options,newOptions);
 end
@@ -72,8 +79,11 @@ plotJacobian = options.plotJacobian;
 plotSolution = isa(colorFun, 'function_handle');
 maxC = NaN;
 minC = NaN;
-
-hold on
+if extraArg == 1
+    hold(ax,'on')
+else
+    hold on
+end
 d_max = -Inf;
 for patch = 1:noPatches
     if isempty(options.displayName)
@@ -235,10 +245,10 @@ for patch = 1:noPatches
             maxC = max(max(C));
             minC = min(min(C));
             if plotSolution || plotJacobian
-                surf(X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName)
+                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName)
                 colorbar
             else
-                surf(X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
                         'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
         end
@@ -249,7 +259,7 @@ for patch = 1:noPatches
             quiverScale = L_gamma/20;
         end
         if plotNormalVectors
-            quiver3(X(1:qstep:end,1:qstep:end,1), ...
+            quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                     X(1:qstep:end,1:qstep:end,2), ...
                     X(1:qstep:end,1:qstep:end,3), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,1), ...
@@ -263,7 +273,7 @@ for patch = 1:noPatches
                 else
                     colorParm = colorParmDirs{i};
                 end
-                quiver3(X(1:qstep:end,1:qstep:end,1), ...
+                quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                         X(1:qstep:end,1:qstep:end,2), ...
                         X(1:qstep:end,1:qstep:end,3), ...
                         quiverScale*Up{1,i}(1:qstep:end,1:qstep:end), ...
@@ -302,13 +312,13 @@ for patch = 1:noPatches
     
         if options.plotObject
             if plotSolution
-                surf(X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
                             'FaceLighting', faceLighting, 'DisplayName',displayName)
                 maxC = max(max(C));
                 minC = min(min(C));
                 colorbar
             else
-                surf(X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
                             'FaceLighting', faceLighting, 'DisplayName',displayName)
             end
         end
@@ -334,7 +344,7 @@ for patch = 1:noPatches
         end
         if plotNormalVectors
             normals = reshape(normals,nuk1,nuk2,d);
-            quiver3(X(1:qstep:end,1:qstep:end,1), ...
+            quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                     X(1:qstep:end,1:qstep:end,2), ...
                     X(1:qstep:end,1:qstep:end,3), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,1), ...
@@ -343,7 +353,7 @@ for patch = 1:noPatches
         end
         if plotParmDir
             for i = 1:d_p
-                quiver3(X(1:qstep:end,1:qstep:end,1), ...
+                quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                         X(1:qstep:end,1:qstep:end,2), ...
                         X(1:qstep:end,1:qstep:end,3), ...
                         quiverScale*dX(1:qstep:end,1:qstep:end,1,i), ...
@@ -380,7 +390,7 @@ for patch = 1:noPatches
 
                 maxC = max(max(C));
                 minC = min(min(C));
-                surf(X(:,:,1),X(:,:,2),C-maxC,C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', faceLighting, 'DisplayName',displayName)
+                surf(ax,X(:,:,1),X(:,:,2),C-maxC,C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', faceLighting, 'DisplayName',displayName)
                 colorbar
                 if plotParmDir
                     for i = 1:d_p
@@ -422,7 +432,7 @@ for patch = 1:noPatches
                 v = evaluateNURBSvec(nurbs, XI);
         
                 % reverse back order of arrays
-                fill(v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
+                fill(ax,v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
             end
                 
         end
@@ -450,12 +460,16 @@ for patch = 1:noPatches
         C = evaluateNURBSvec(nurbs, p_values{1});
         switch d
             case 1
-                plot(C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName);  
+                plot(ax,C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName);  
             case 2
-                plot(C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName);  
+                plot(ax,C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName);  
             case 3
-                plot3(C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName); 
+                plot3(ax,C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName); 
         end  
+        C = evaluateNURBSvec(nurbs, uniqueKnots{1}.');
+        if plotElementEdges
+            plot(ax,C(:,1), C(:,2), 'x', 'color',lineColor, 'DisplayName',[displayName, ' - elements']);
+        end
     end
     if plotControlPolygon
         coeffs = subasgnArr(nurbs.coeffs,[],size(nurbs.coeffs,1)); % Remove the weights
@@ -485,28 +499,43 @@ for patch = 1:noPatches
         end
         switch d
             case 1
-                plot(v,zeros(size(v)),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
+                plot(ax,v,zeros(size(v)),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
                             'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'])
             case 2
-                plot(v(1,:),v(2,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
+                plot(ax,v(1,:),v(2,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
                                     'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'])
             case 3
-                plot3(v(1,:),v(2,:),v(3,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
+                plot3(ax,v(1,:),v(2,:),v(3,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
                                             'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'])
         end
     end
 end
-if d_max < 3
-    view(0,90)
-    axis on
+if extraArg == 1
+    if d_max < 3
+        view(0,90)
+        axis(ax,'on')
+    else
+        axis(ax,'off')
+        ax.Clipping = 'off';    % turn clipping off
+    %     ax.SortMethod = 'ChildOrder';
+        camproj(ax,'perspective')
+        if ~isnan(options.view)
+            view(ax,options.view)
+        end
+    end
 else
-    axis off
-    ax = gca;               % get the current axis
-    ax.Clipping = 'off';    % turn clipping off
-%     ax.SortMethod = 'ChildOrder';
-    camproj('perspective')
-    if ~isnan(options.view)
-        view(options.view)
+    if d_max < 3
+        view(0,90)
+        axis on
+    else
+        axis off
+        ax = gca;               % get the current axis
+        ax.Clipping = 'off';    % turn clipping off
+    %     ax.SortMethod = 'ChildOrder';
+        camproj('perspective')
+        if ~isnan(options.view)
+            view(options.view)
+        end
     end
 end
 % axis equal
@@ -515,9 +544,9 @@ h = gcf;
 
 function plotGridLines(v,displayName)
 if size(v,2) > 2
-    plot3(v(:,1),v(:,2),v(:,3),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+    plot3(ax,v(:,1),v(:,2),v(:,3),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
 else
-    plot(v(:,1),v(:,2),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+    plot(ax,v(:,1),v(:,2),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
 end
 end
 end
