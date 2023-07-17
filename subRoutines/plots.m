@@ -9,40 +9,40 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot all shapes
-% R = 1;
-% shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
-%            'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
-% shapes = {'Barrel'};
-% for shape = shapes
-%     for parm = 2
+R = 1;
+shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
+           'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
+shapes = {'Barrel'};
+for shape = shapes
+    for parm = 2
 %         close all
-%         options.parm = parm;
-% %         options.theta = 2*pi;r
-% %         options.theta_eta = 0.9*2*pi;
-% %         options.R = 2;
-%         nurbs = eval(['get' shape{1} 'Data(options)']);
-%         resolution = 10*[1,1,1];
-%         M = 1;
-%         noNewKnots = 2^(M-1)-1;
+        options.parm = parm;
+%         options.theta = 2*pi;r
+%         options.theta_eta = 0.9*2*pi;
+%         options.R = 2;
+        nurbs = eval(['get' shape{1} 'Data(options)']);
+        resolution = 32*[1,1,1];
+        M = 1;
+        noNewKnots = 2^(M-1)-1;
 %         nurbs = insertKnotsInNURBS(nurbs,noNewKnots*ones(1,nurbs{1}.d_p));
-% %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
-%         
-%         plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
-%         axis equal
-%         grid off
-%         axis off
-%         view(getView(0))
-% %         view(getView(1))
-%         camlight
-%         material dull
-%         ax = gca;               % get the current axis
-%         ax.Clipping = 'off';    % turn clipping off
-%         axis on
-% %         figureFullScreen(gcf)
-% %         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
-%     end
-% end
-% nurbs = translateNURBS(nurbs,[-L/2,0,0]);
+%         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
+        figure
+        plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
+        axis equal
+        grid off
+        axis off
+        view(getView(0))
+%         view(getView(1))
+        camlight
+        material dull
+        ax = gca;               % get the current axis
+        ax.Clipping = 'off';    % turn clipping off
+        axis on
+%         figureFullScreen(gcf)
+%         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
+    end
+end
+nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,74 +95,74 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test surfaceToVolume
-close all
-% model = 'Capablanca_woRooks';
-% model = 'Capablanca';
-model = 'BCA';
+% close all
+% % model = 'Capablanca_woRooks';
+% % model = 'Capablanca';
+% % model = 'BCA';
 % model = 'S1_interior';
-% model = 'S1';
-% model = 'Mutter';
-switch model
-    case 'Mutter'
-        nurbs_vol = read_g2('../IGA-geometries/Mutter/Mutter.g2');
-        nurbs_vol = cleanNURBS(nurbs_vol,[],1e-2);
-        nurbs = extractFreeSurface(nurbs_vol);
-
-        t = 1.1;
-        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
-    case 'Capablanca'
-        load('../../results/ASIGA/Capablanca/nurbs.mat')
-
-        t = 1.1;
-        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
-        uiopen('../../results/ASIGA/Capablanca/CAD.fig',1)
-    case 'Capablanca_woRooks'
-        load('../../results/ASIGA/Capablanca/nurbs_woRook.mat')
-        t = 1.1;
-        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
-        uiopen('../../results/ASIGA/Capablanca/CADwoRook.fig',1)
-    case 'BCA'
-        load('BeTSSi_BCA_p2_unRefined.mat')
-        t = 1.1;
-        % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
-        sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
-        % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
-        uiopen('../../results/ASIGA/BCA/CAD.fig',1)
-    case 'S1_interior'
-        nurbs = getEllipsoidData('parm',2,'S2V_algorithm',{'A1_2'});
-        nurbs = flipNURBSparametrization(nurbs,1);
-        t = 0.4;
-        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
-    case 'S1'
-        nurbs = getEllipsoidData('parm',1);
-        t = 0.4;
-        sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
-end
-if ~strcmp(model,'BCA') && ~strcmp(model,'Capablanca') && ~strcmp(model,'Capablanca_woRooks')
-    close all
-    axis equal
-    color = getColor();
-    plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
-    drawnow
-    view(getView());
-end
-if 0
-    close all
-    axis equal
-    color = getColor();
-    plotNURBSvec(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
-%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(x) log10(abs(norm2(x(:,[1,3]))-6)));
-    drawnow
-    view(getView());
-end
-if 1
-    geometry = getTopology(nurbs);
-    nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
-end
+% % model = 'S1';
+% % model = 'Mutter';
+% switch model
+%     case 'Mutter'
+%         nurbs_vol = read_g2('../IGA-geometries/Mutter/Mutter.g2');
+%         nurbs_vol = cleanNURBS(nurbs_vol,[],1e-2);
+%         nurbs = extractFreeSurface(nurbs_vol);
+% 
+%         t = 1.1;
+%         sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+%     case 'Capablanca'
+%         load('../../results/ASIGA/Capablanca/nurbs.mat')
+% 
+%         t = 1.1;
+%         sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+%         uiopen('../../results/ASIGA/Capablanca/CAD.fig',1)
+%     case 'Capablanca_woRooks'
+%         load('../../results/ASIGA/Capablanca/nurbs_woRook.mat')
+%         t = 1.1;
+%         sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+%         uiopen('../../results/ASIGA/Capablanca/CADwoRook.fig',1)
+%     case 'BCA'
+%         load('BeTSSi_BCA_p2_unRefined.mat')
+%         t = 1.1;
+%         % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
+%         sharpAngle = 120*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
+%         % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
+%         % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
+%         uiopen('../../results/ASIGA/BCA/CAD.fig',1)
+%     case 'S1_interior'
+%         nurbs = getEllipsoidData('parm',2,'S2V_algorithm',{'A1_2'});
+%         nurbs = flipNURBSparametrization(nurbs,1);
+%         t = 0.4;
+%         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+%     case 'S1'
+%         nurbs = getEllipsoidData('parm',1);
+%         t = 0.4;
+%         sharpAngle = 140*pi/180; % Threshold for a "sharp" angle
+% end
+% if ~strcmp(model,'BCA') && ~strcmp(model,'Capablanca') && ~strcmp(model,'Capablanca_woRooks')
+%     close all
+%     axis equal
+%     color = getColor();
+%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+%     drawnow
+%     view(getView());
+% end
+% if 0
+%     close all
+%     axis equal
+%     color = getColor();
+%     plotNURBSvec(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+% %     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(x) log10(abs(norm2(x(:,[1,3]))-6)));
+%     drawnow
+%     view(getView());
+% end
+% if 1
+%     geometry = getTopology(nurbs);
+%     nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test C1 NURBS curve

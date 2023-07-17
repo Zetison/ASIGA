@@ -26,7 +26,7 @@ for i_o = 1:numel(omega)
             surfaceError_i = calcSurfErrorBndryMethodVec(task,i_o);
             if printLog
                 fprintf('using %12f seconds.', toc)   
-                fprintf('\nSurface error = %.16g%%', max(surfaceError_i))
+                fprintf('\nSurface error = %.16g%%', surfaceError_i)
             end
             surfaceError(i_o) = surfaceError_i;
         end
@@ -39,7 +39,7 @@ for i_o = 1:numel(omega)
             surfEnergyError_i = calcEnergyErrorBEM(task,i_o);
             if printLog
                 fprintf('using %12f seconds.', toc)   
-                fprintf('\nSurface energy error = %.16g%%', max(surfEnergyError_i))
+                fprintf('\nSurface energy error = %.16g%%', surfEnergyError_i)
             end
             energyError(i_o) = surfEnergyError_i;
         end
@@ -57,7 +57,7 @@ for i_o = 1:numel(omega)
             end
             if printLog
                 fprintf('using %12f seconds.', toc) 
-                fprintf('\nSurface error = %.16g%%', max(surfaceError))
+                fprintf('\nSurface error = %.16g%%', surfaceError)
             end
         end
         if task.err.calculateVolumeError
@@ -73,9 +73,9 @@ for i_o = 1:numel(omega)
             end
             if printLog
                 fprintf('using %12f seconds.', toc)
-                fprintf('\nVolume L2-error = %.16g%%', max(L2Error_i))
-                fprintf('\nVolume H1-error = %.16g%%', max(H1Error_i))
-                fprintf('\nVolume Energy-error = %.16g%%', max(energyError_i))
+                fprintf('\nVolume L2-error = %.16g%%', L2Error_i)
+                fprintf('\nVolume H1-error = %.16g%%', H1Error_i)
+                fprintf('\nVolume Energy-error = %.16g%%', energyError_i)
             end
             energyError(i_o) = energyError_i;
             L2Error(i_o) = L2Error_i;

@@ -1,4 +1,4 @@
-function [h,maxC,minC] = plotNURBSvec(varargin)
+function [handles,maxC,minC] = plotNURBSvec(varargin)
 
 %% Interpret input arguments
 nurbsPatches = varargin{1};
@@ -13,28 +13,29 @@ end
 options = struct('resolution',[32,32,32], ...
                  'plotObject',true, ...
                  'plotElementEdges',true,...
-                 'plotControlPolygon', 0, ...
-                 'plotNormalVectors', 0, ...
-                 'plotJacobian', 0, ...
-                 'plotParmDir', 0, ...
+                 'plotControlPolygon', false, ...
+                 'plotNormalVectors', false, ...
+                 'plotParmDir', false, ...
+                 'plotJacobian', false, ...
+                 'plotColorFun', true, ...
                  'coarseLinearSampling', true, ...
                  'color',jet(numel(nurbsPatches)),...
                  'alphaValue',1,...
                  'plotAt',true(3,2),...
-                 'colorFun', NaN,...
                  'lineColor', 'black', ...
+                 'quiverScale', NaN, ...
+                 'quiverLineWidth', 2, ...
+                 'qstep',NaN, ...
+                 'quiverAutoScale','on', ...
+                 'LineWidth',0.5, ...
+                 'view', NaN, ...
+                 'displayName', '', ...
+                 'colorFun', NaN,...
                  'colorControlPolygon', 'red', ...
                  'markerEdgeColor', 'black', ...
                  'markerColor', 'black', ...
-                 'quiverScale', NaN, ...
-                 'quiverLineWidth', 2, ...
-                 'LineWidth',0.5, ...
-                 'qstep',NaN, ...
-                 'view', NaN, ...
-                 'displayName', '', ...
                  'colorParmDirs', {{getColor(12),getColor(13),getColor(7)}}, ...
-                 'samplingDistance', NaN, ...
-                 'elementBasedSamples',false);
+                 'colorNormals', getColor(6));
 if nargin > 1+extraArg
     if numel(varargin) > 2+extraArg
         newOptions = varargin(2+extraArg:end);
@@ -51,11 +52,16 @@ plotElementEdges = options.plotElementEdges;
 plotControlPolygon = options.plotControlPolygon;
 plotNormalVectors = options.plotNormalVectors;
 plotParmDir = options.plotParmDir;
+plotColorFun = options.plotColorFun;
 quiverScale = options.quiverScale;
+quiverAutoScale = options.quiverAutoScale;
 quiverLineWidth = options.quiverLineWidth;
 markerEdgeColor = options.markerEdgeColor;
 plotAt = options.plotAt;
 colorFun = options.colorFun;
+if ~isa(colorFun, 'function_handle')
+    plotColorFun = false;
+end
 lineWidth = options.LineWidth;
 lineColor = options.lineColor;
 qstep = options.qstep;
@@ -64,6 +70,7 @@ markerColor = options.markerColor;
 color = options.color;
 alphaValue = options.alphaValue;
 colorParmDirs = options.colorParmDirs;
+colorNormals = options.colorNormals;
 if alphaValue ~= 1
     faceLighting = 'none';
 else
@@ -73,18 +80,24 @@ noPatches = numel(nurbsPatches);
 if size(color,1) == 1 && noPatches > 1
     color = repmat(color,noPatches,1);
 elseif size(color,1) < noPatches
-    error('A color must exist for each patch')
+    color = repmat(color,ceil(noPatches/size(color,1)),1);
 end
 plotJacobian = options.plotJacobian;
-plotSolution = isa(colorFun, 'function_handle');
 maxC = NaN;
 minC = NaN;
 if extraArg == 1
     hold(ax,'on')
 else
     hold on
+    ax = gca;               % get the current axis
 end
 d_max = -Inf;
+controlPolygonHandle = gobjects(1,noPatches);
+elementEdgesHandle = gobjects(1,noPatches);
+objectHandle = gobjects(1,noPatches);
+normalVectorsHandle = gobjects(1,noPatches);
+d_p = nurbsPatches{1}.d_p; % Assume d_p to be the same for all patches for parmDir
+parmDirHandle = gobjects(d_p,noPatches);
 for patch = 1:noPatches
     if isempty(options.displayName)
         displayName = sprintf('Patch %d ', patch);
@@ -102,7 +115,7 @@ for patch = 1:noPatches
     if d > d_max
         d_max = d;
     end
-    if plotSolution && plotJacobian && d_p == 3
+    if plotColorFun && plotJacobian && d_p == 3
         warning('Plotting solution from function handle instead of Jacobian')
     end
     p_values = cell(1,d_p);
@@ -116,16 +129,18 @@ for patch = 1:noPatches
         uniqueKnots{i} = unique(nurbs.knots{i});
         noUniqueKnots(i) = numel(uniqueKnots{i});
         noElemsDir(i) = noUniqueKnots(i)-1;
+
         p = nurbs.degree(i);
         if p == 1 && options.coarseLinearSampling
             res(i) = 0;
         else
-            res(i) = round(resolution(i)/noElemsDir(i));
+            noC0elements = numel(find(knotRepetitions(nurbs.knots{i},uniqueKnots{i}) >= nurbs.degree(i)))-1;
+            res(i) = round(noC0elements*resolution(i)/noElemsDir(i));
         end
         p_values{i} = insertUniform(uniqueKnots{i}, res(i));
     end
     if isnan(qstep)
-        qstep = max(round(res(1)/2),1);
+        qstep = max(round(max(res)/2),1);
     end
     if d_p == 3
         indicesMat = [1,2,3;
@@ -172,12 +187,12 @@ for patch = 1:noPatches
                     dX_temp(:,:,1) = dvdxi./norm2(dvdxi);
                     dX_temp(:,:,2) = dvdeta./norm2(dvdeta);
                     dX_temp(:,:,3) = dvdzeta./norm2(dvdzeta);
-                    if plotNormalVectors || (plotSolution && nargin(colorFun) == 2)
+                    if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
                         normal = cross(dX_temp(:,:,indices(2)),dX_temp(:,:,indices(3)),2);
                         normals_temp = (-1)^jj*normal./norm2(normal);
                     end
                     dX_temp = reshape(dX_temp,nuk1,nuk2, d, d_p);
-                    if plotSolution
+                    if plotColorFun
                         switch nargin(colorFun)
                             case 1
                                 C_temp = colorFun(X_temp);
@@ -244,27 +259,29 @@ for patch = 1:noPatches
         if options.plotObject
             maxC = max(max(C));
             minC = min(min(C));
-            if plotSolution || plotJacobian
-                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName)
-                colorbar
+            if plotColorFun || plotJacobian
+                objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
+                        'LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName);
             else
-                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-                        'FaceLighting', faceLighting, 'DisplayName',displayName)
+                objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,...
+                        'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                        'FaceLighting', faceLighting, 'DisplayName',displayName);
             end
         end
         if plotElementEdges
-            plotGridLines(vElementEdges,displayName)
+            elementEdgesHandle(patch) = plotGridLines(vElementEdges,displayName);
         end
         if isnan(quiverScale)
             quiverScale = L_gamma/20;
         end
         if plotNormalVectors
-            quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
+            normalVectorsHandle(patch) = quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                     X(1:qstep:end,1:qstep:end,2), ...
                     X(1:qstep:end,1:qstep:end,3), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,1), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,2), ...
-                    quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
+                    quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScale,...
+                    'DisplayName',[displayName, ' - normal vectors'],'color',colorNormals);
         end
         if plotParmDir
             for i = 1:d_p
@@ -273,12 +290,14 @@ for patch = 1:noPatches
                 else
                     colorParm = colorParmDirs{i};
                 end
-                quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
+                parmDirHandle(i,patch) = quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                         X(1:qstep:end,1:qstep:end,2), ...
                         X(1:qstep:end,1:qstep:end,3), ...
                         quiverScale*Up{1,i}(1:qstep:end,1:qstep:end), ...
                         quiverScale*Up{2,i}(1:qstep:end,1:qstep:end), ...
-                        quiverScale*Up{3,i}(1:qstep:end,1:qstep:end),'color',colorParm,'LineWidth',quiverLineWidth,'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                        quiverScale*Up{3,i}(1:qstep:end,1:qstep:end),'color',colorParm,...
+                        'LineWidth',quiverLineWidth,'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScale,...
+                        'DisplayName',[displayName, ' - parm dir ' num2str(i)]);
             end
         end
     elseif d_p == 2 && d == 3
@@ -293,11 +312,11 @@ for patch = 1:noPatches
         dX(:,:,1) = dvdxi./norm2(dvdxi);
         dX(:,:,2) = dvdeta./norm2(dvdeta);
         dX = reshape(dX,nuk1,nuk2, d, d_p);
-        if plotNormalVectors || (plotSolution && nargin(colorFun) == 2)
+        if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
             normal = cross(dvdxi,dvdeta,2);
             normals = normal./norm2(normal);
         end
-        if plotSolution
+        if plotColorFun
             switch nargin(colorFun)
                 case 1
                     C = colorFun(X);
@@ -311,15 +330,16 @@ for patch = 1:noPatches
         X = reshape(X,nuk1,nuk2,d);
     
         if options.plotObject
-            if plotSolution
-                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-                            'FaceLighting', faceLighting, 'DisplayName',displayName)
+            if plotColorFun
+                objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
+                            'LineStyle','none','FaceAlpha',alphaValue, ...
+                            'FaceLighting', faceLighting, 'DisplayName',displayName);
                 maxC = max(max(C));
                 minC = min(min(C));
-                colorbar
             else
-                surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-                            'FaceLighting', faceLighting, 'DisplayName',displayName)
+                objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,...
+                            'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
+                            'FaceLighting', faceLighting, 'DisplayName',displayName);
             end
         end
         if plotElementEdges
@@ -337,104 +357,110 @@ for patch = 1:noPatches
             temp(1:end-1,:,:) = permute(X(1:stepLen(1):end,:,:),[2,1,3]);
             noAddedPoints = noUniqueKnots(1)*(nuk2+1);
             vElementEdges(elCounter:elCounter+noAddedPoints-1,:) = reshape(temp,[],3);
-            plotGridLines(vElementEdges,displayName)
+            elementEdgesHandle(patch) = plotGridLines(vElementEdges,displayName);
         end
         if isnan(quiverScale)
             quiverScale = L_gamma/20;
         end
         if plotNormalVectors
             normals = reshape(normals,nuk1,nuk2,d);
-            quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
+            normalVectorsHandle(patch) = quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                     X(1:qstep:end,1:qstep:end,2), ...
                     X(1:qstep:end,1:qstep:end,3), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,1), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,2), ...
-                    quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale','off','DisplayName',[displayName, ' - normal vectors'])
+                    quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScale,...
+                    'DisplayName',[displayName, ' - normal vectors'],'color',colorNormals);
         end
         if plotParmDir
             for i = 1:d_p
-                quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
+                parmDirHandle(i,patch) = quiver3(ax,X(1:qstep:end,1:qstep:end,1), ...
                         X(1:qstep:end,1:qstep:end,2), ...
                         X(1:qstep:end,1:qstep:end,3), ...
                         quiverScale*dX(1:qstep:end,1:qstep:end,1,i), ...
                         quiverScale*dX(1:qstep:end,1:qstep:end,2,i), ...
-                        quiverScale*dX(1:qstep:end,1:qstep:end,3,i),'LineWidth',quiverLineWidth,'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
+                        quiverScale*dX(1:qstep:end,1:qstep:end,3,i),'LineWidth',quiverLineWidth,...
+                        'color',colorParmDirs{i},'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScale,...
+                        'DisplayName',[displayName, ' - parm dir ' num2str(i)]);
             end
         end
     elseif d_p == 2 && d == 2
-        if options.plotObject
-            if plotSolution || plotParmDir
-                nuk1 = length(p_values{1});
-                nuk2 = length(p_values{2});
-                C = zeros(length(p_values{1}), length(p_values{2}));
-                [XI,ETA] = ndgrid(p_values{1},p_values{2});
-                [X,dvdxi,dvdeta] = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1);
-                L_gamma = norm(X(end,:)-X(1,:));
-                if isnan(quiverScale)
-                    quiverScale = L_gamma/20;
-                end
-                dX = zeros(nuk1*nuk2, d, d_p);
-                dX(:,:,1) = dvdxi./norm2(dvdxi);
-                dX(:,:,2) = dvdeta./norm2(dvdeta);
-                dX = reshape(dX,nuk1,nuk2, d, d_p);
-                if plotSolution
-                    switch nargin(colorFun)
-                        case 1
-                            C = colorFun(X);
-                        case 4
-                            C = colorFun([XI(:) ETA(:)],nurbs,NaN,NaN);
-                    end
-                    C = reshape(C,nuk1,nuk2);
-                end
-                X = reshape(X,nuk1,nuk2,d);
-
-                maxC = max(max(C));
-                minC = min(min(C));
-                surf(ax,X(:,:,1),X(:,:,2),C-maxC,C,'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', faceLighting, 'DisplayName',displayName)
-                colorbar
-                if plotParmDir
-                    for i = 1:d_p
-                        quiver(X(1:qstep:end,1:qstep:end,1), ...
-                                X(1:qstep:end,1:qstep:end,2), ...
-                                quiverScale*dX(1:qstep:end,1:qstep:end,1,i), ...
-                                quiverScale*dX(1:qstep:end,1:qstep:end,2,i),'LineWidth',quiverLineWidth,'color',colorParmDirs{i},'AutoScale','off','DisplayName',[displayName, ' - parm dir ' num2str(i)])
-                    end
-                end
-            else
-                % Find the curve counter-clockwise around the patch
-                XI = zeros(2*length(p_values{1})+2*length(p_values{2})-4, d);
-                counter = 1;
-                
-                % along eta = 0
-                xi = p_values{1};
-                npts = size(xi,1);
-                XI(counter:counter+npts-1,:) = [xi, zeros(npts,1)];
-                counter = counter + npts;
-        
-                % along xi = 1
-                eta = p_values{2}(2:end);
-                npts = size(eta,1);
-                XI(counter:counter+npts-1,:) = [ones(npts,1), eta];
-                counter = counter + npts;
-        
-                % along eta = 1
-                xi = p_values{1}(end-1:-1:1);
-                npts = size(xi,1);
-                XI(counter:counter+npts-1,:) = [xi, ones(npts,1)];
-                counter = counter + npts;
-                
-                % along xi = 0
-                eta = p_values{2}(end-1:-1:2); % Skip the end-point as the fill-function will automatically connect the curve
-                npts = size(eta,1);
-                XI(counter:counter+npts-1,:) = [zeros(npts,1), eta];
-        
-                % evaluate NURBS
-                v = evaluateNURBSvec(nurbs, XI);
-        
-                % reverse back order of arrays
-                fill(ax,v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName)
+        if plotColorFun || plotParmDir
+            nuk1 = length(p_values{1});
+            nuk2 = length(p_values{2});
+            C = zeros(length(p_values{1}), length(p_values{2}));
+            [XI,ETA] = ndgrid(p_values{1},p_values{2});
+            [X,dvdxi,dvdeta] = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1);
+            L_gamma = norm(X(end,:)-X(1,:));
+            if isnan(quiverScale)
+                quiverScale = L_gamma/20;
             end
-                
+            dX = zeros(nuk1*nuk2, d, d_p);
+            dX(:,:,1) = dvdxi./norm2(dvdxi);
+            dX(:,:,2) = dvdeta./norm2(dvdeta);
+            dX = reshape(dX,nuk1,nuk2, d, d_p);
+            if plotColorFun
+                switch nargin(colorFun)
+                    case 1
+                        C = colorFun(X);
+                    case 4
+                        C = colorFun([XI(:) ETA(:)],nurbs,NaN,NaN);
+                end
+                C = reshape(C,nuk1,nuk2);
+            end
+            X = reshape(X,nuk1,nuk2,d);
+
+            maxC = max(max(C));
+            minC = min(min(C));
+            if options.plotObject
+                objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),C-maxC,C,'EdgeColor','none',...
+                            'LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', faceLighting, ...
+                            'DisplayName',displayName);
+            end
+            if plotParmDir
+                for i = 1:d_p
+                    parmDirHandle(i,patch) = quiver(X(1:qstep:end,1:qstep:end,1), ...
+                            X(1:qstep:end,1:qstep:end,2), ...
+                            quiverScale*dX(1:qstep:end,1:qstep:end,1,i), ...
+                            quiverScale*dX(1:qstep:end,1:qstep:end,2,i),'LineWidth',quiverLineWidth,...
+                            'color',colorParmDirs{i},'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScale,...
+                            'DisplayName',[displayName, ' - parm dir ' num2str(i)]);
+                end
+            end
+        else
+            % Find the curve counter-clockwise around the patch
+            XI = zeros(2*length(p_values{1})+2*length(p_values{2})-4, d);
+            counter = 1;
+            
+            % along eta = 0
+            xi = p_values{1};
+            npts = size(xi,1);
+            XI(counter:counter+npts-1,:) = [xi, zeros(npts,1)];
+            counter = counter + npts;
+    
+            % along xi = 1
+            eta = p_values{2}(2:end);
+            npts = size(eta,1);
+            XI(counter:counter+npts-1,:) = [ones(npts,1), eta];
+            counter = counter + npts;
+    
+            % along eta = 1
+            xi = p_values{1}(end-1:-1:1);
+            npts = size(xi,1);
+            XI(counter:counter+npts-1,:) = [xi, ones(npts,1)];
+            counter = counter + npts;
+            
+            % along xi = 0
+            eta = p_values{2}(end-1:-1:2); % Skip the end-point as the fill-function will automatically connect the curve
+            npts = size(eta,1);
+            XI(counter:counter+npts-1,:) = [zeros(npts,1), eta];
+    
+            % evaluate NURBS
+            v = evaluateNURBSvec(nurbs, XI);
+    
+            if options.plotObject
+                objectHandle(patch) = fill(ax,v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName);
+            end
         end
 
         if plotElementEdges
@@ -453,22 +479,22 @@ for patch = 1:noPatches
             v(~indices,:) = evaluateNURBSvec(nurbs, XI);
 
             if plotElementEdges
-                plotGridLines(v,displayName)
+                elementEdgesHandle(patch) = plotGridLines(v,displayName);
             end
         end
     elseif d_p == 1 && options.plotObject
         C = evaluateNURBSvec(nurbs, p_values{1});
         switch d
             case 1
-                plot(ax,C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName);  
+                objectHandle(patch) = plot(ax,C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName);  
             case 2
-                plot(ax,C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName);  
+                objectHandle(patch) = plot(ax,C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName);  
             case 3
-                plot3(ax,C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName); 
+                objectHandle(patch) = plot3(ax,C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName); 
         end  
         C = evaluateNURBSvec(nurbs, uniqueKnots{1}.');
         if plotElementEdges
-            plot(ax,C(:,1), C(:,2), 'x', 'color',lineColor, 'DisplayName',[displayName, ' - elements']);
+            elementEdgesHandle(patch) = plot(ax,C(:,1), C(:,2), 'x', 'color',lineColor, 'DisplayName',[displayName, ' - elements']);
         end
     end
     if plotControlPolygon
@@ -499,20 +525,20 @@ for patch = 1:noPatches
         end
         switch d
             case 1
-                plot(ax,v,zeros(size(v)),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
-                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'])
+                controlPolygonHandle(patch) = plot(ax,v,zeros(size(v)),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
+                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon']);
             case 2
-                plot(ax,v(1,:),v(2,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
-                                    'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'])
+                controlPolygonHandle(patch) = plot(ax,v(1,:),v(2,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
+                                    'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon']);
             case 3
-                plot3(ax,v(1,:),v(2,:),v(3,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
-                                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'])
+                controlPolygonHandle(patch) = plot3(ax,v(1,:),v(2,:),v(3,:),'o-','color',colorControlPolygon,'MarkerFaceColor', markerColor, ...
+                                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon']);
         end
     end
 end
 if extraArg == 1
     if d_max < 3
-        view(0,90)
+        view(ax,[0,90])
         axis(ax,'on')
     else
         axis(ax,'off')
@@ -523,7 +549,7 @@ if extraArg == 1
             view(ax,options.view)
         end
     end
-    h = ax;
+    handles.ax = ax;
 else
     if d_max < 3
         view(0,90)
@@ -538,16 +564,24 @@ else
             view(options.view)
         end
     end
-    h = gcf;
+    handles.ax = gcf;
+    if plotColorFun
+        colorbar
+    end
 end
+handles.controlPolygonHandle = controlPolygonHandle;
+handles.elementEdgesHandle = elementEdgesHandle;
+handles.objectHandle = objectHandle;
+handles.normalVectorsHandle = normalVectorsHandle;
+handles.parmDirHandle = parmDirHandle;
 % axis equal
 drawnow
 
-function plotGridLines(v,displayName)
+function h = plotGridLines(v,displayName)
 if size(v,2) > 2
-    plot3(ax,v(:,1),v(:,2),v(:,3),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+    h = plot3(ax,v(:,1),v(:,2),v(:,3),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges']);
 else
-    plot(ax,v(:,1),v(:,2),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'])
+    h = plot(ax,v(:,1),v(:,2),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges']);
 end
 end
 end

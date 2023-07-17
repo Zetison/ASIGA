@@ -1,6 +1,6 @@
 function geometry = getTopology(nurbs)
 
-geometry = [];
+geometry.topology.connection = {};
 if isempty(nurbs)
     return
 end
@@ -74,7 +74,7 @@ end
 
 %% Create topology sets
 freeBdries(counterFree:end,:) = [];
-if isempty(geometry)
+if isempty(geometry.topology.connection)
     return
 end
 geometry.topologysets.set = {};
@@ -110,64 +110,69 @@ if ~isempty(freeBdries)
     % Find the outer surface
     connMap = connMap(~cellfun('isempty',connMap));
     d = nurbsFaces{1}.d;
-    V_max = -Inf;
-    for i = 1:numel(connMap)
-        nurbsPart = nurbsFaces(connMap{i});
-%         noCpts = 0;
-        noCpts = zeros(numel(nurbsPart),1);
-        for j = 1:numel(nurbsPart)
-            noCpts(j) = prod(nurbsPart{j}.number);
-        end
-
-        % Collect all control points into a single array X
-        X = zeros(sum(noCpts),d);
-        counter = 1;
-        for j = 1:numel(nurbsPart)
-            X(counter:counter+noCpts(j)-1,:) = nurbsPart{j}.coeffs(1:d,:).';
-            counter = counter + noCpts(j);
-        end
-
-        % Find the surface having the largest volume and define this to be
-        % the outermost surface
-        try
-            [~, V] = convhull(X);
-            if V > V_max
-                I_outer = i;
-                V_max = V;
+    d_p = nurbsFaces{1}.d_p;
+    if d == 3 && d_p == 2
+        V_max = -Inf;
+        I_outer = NaN;
+        for i = 1:numel(connMap)
+            nurbsPart = nurbsFaces(connMap{i});
+    %         noCpts = 0;
+            noCpts = zeros(numel(nurbsPart),1);
+            for j = 1:numel(nurbsPart)
+                noCpts(j) = prod(nurbsPart{j}.number);
             end
-        catch
-            warning('Could not compute the convex hull. The surface may not be closed.')
-        end
-    end
     
-    % Generate topologysets
-    counterFreeSurfOuter = 1;
-    counterFreeSurfInner = 1;
-    inneritem = cell(0);
-    outeritem = cell(0);
-    for i = 1:numel(nurbsFaces)
-        if ismember(i,connMap{I_outer})
-            outeritem{counterFreeSurfOuter}.Attributes.patch = freeBdries(i,1);
-            outeritem{counterFreeSurfOuter}.Text = freeBdries(i,2);
-            counterFreeSurfOuter = counterFreeSurfOuter + 1;
-        else
-            inneritem{counterFreeSurfInner}.Attributes.patch = freeBdries(i,1);
-            inneritem{counterFreeSurfInner}.Text = freeBdries(i,2);
-            counterFreeSurfInner = counterFreeSurfInner + 1;
+            % Collect all control points into a single array X
+            X = zeros(sum(noCpts),d);
+            counter = 1;
+            for j = 1:numel(nurbsPart)
+                X(counter:counter+noCpts(j)-1,:) = nurbsPart{j}.coeffs(1:d,:).';
+                counter = counter + noCpts(j);
+            end
+    
+            % Find the surface having the largest volume and define this to be
+            % the outermost surface
+            try
+                [~, V] = convhull(X);
+                if V > V_max
+                    I_outer = i;
+                    V_max = V;
+                end
+            catch
+                warning('Could not compute the convex hull. The surface may not be closed.')
+            end
         end
-    end
-    idx = 1;
-    if ~isempty(inneritem)
-        geometry.topologysets.set{idx}.item = inneritem;
-        geometry.topologysets.set{idx}.Attributes.name = 'inner';
-        geometry.topologysets.set{idx}.Attributes.type = 'face';
-        geometry.topologysets.set{idx}.Attributes.normal = 'inward';
-        idx = idx + 1;
-    end
-    if ~isempty(outeritem)
-        geometry.topologysets.set{idx}.item = outeritem;
-        geometry.topologysets.set{idx}.Attributes.name = 'outer';
-        geometry.topologysets.set{idx}.Attributes.type = 'face';
-        geometry.topologysets.set{idx}.Attributes.normal = 'outward';
+        if ~isnan(I_outer)
+            % Generate topologysets
+            counterFreeSurfOuter = 1;
+            counterFreeSurfInner = 1;
+            inneritem = cell(0);
+            outeritem = cell(0);
+            for i = 1:numel(nurbsFaces)
+                if ismember(i,connMap{I_outer})
+                    outeritem{counterFreeSurfOuter}.Attributes.patch = freeBdries(i,1);
+                    outeritem{counterFreeSurfOuter}.Text = freeBdries(i,2);
+                    counterFreeSurfOuter = counterFreeSurfOuter + 1;
+                else
+                    inneritem{counterFreeSurfInner}.Attributes.patch = freeBdries(i,1);
+                    inneritem{counterFreeSurfInner}.Text = freeBdries(i,2);
+                    counterFreeSurfInner = counterFreeSurfInner + 1;
+                end
+            end
+            idx = 1;
+            if ~isempty(inneritem)
+                geometry.topologysets.set{idx}.item = inneritem;
+                geometry.topologysets.set{idx}.Attributes.name = 'inner';
+                geometry.topologysets.set{idx}.Attributes.type = 'face';
+                geometry.topologysets.set{idx}.Attributes.normal = 'inward';
+                idx = idx + 1;
+            end
+            if ~isempty(outeritem)
+                geometry.topologysets.set{idx}.item = outeritem;
+                geometry.topologysets.set{idx}.Attributes.name = 'outer';
+                geometry.topologysets.set{idx}.Attributes.type = 'face';
+                geometry.topologysets.set{idx}.Attributes.normal = 'outward';
+            end
+        end
     end
 end

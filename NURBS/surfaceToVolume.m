@@ -45,6 +45,7 @@ topologyMap = createTopologyMap(connection,noBdryPatches,d_p);
 [cornerData, angles] = computeCornerData(nurbs_surf,topologyMap,options);
 
 nurbs_bdry = nurbs_surf;
+options.noBdryPatches = noBdryPatches;
 
 
 nurbs_vol = cell(1,4*numel(nurbs_surf));
@@ -56,13 +57,18 @@ counter = 1;
 % colors = colors(1:step:end,:);
 % colormap(flipud(colors))
 % no_colors = size(colors,1);
-no_colors = max(8,noBdryPatches/10);
-colors = turbo(no_colors);
+if isfield(options,'no_colors')
+    no_colors = options.no_colors;
+else
+    no_colors = max(8,noBdryPatches/10);
+end
+colors = getColorMap('shsv',ax,no_colors);
+% colors = turbo(no_colors);
 minC = Inf;
 maxC = -Inf;
+handles = [];
 
-
-while counter == 1 || (any(angles(:) < pi) && any(~isnan(angles(1:noBdryPatches,:)),'all'))
+while counter == 1 || any(angles(:) < pi) || any(~isnan(angles(1:noBdryPatches,:)),'all')
 %     if counter == 12
 %         keyboard
 %     end
@@ -77,10 +83,10 @@ while counter == 1 || (any(angles(:) < pi) && any(~isnan(angles(1:noBdryPatches,
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Plotting
     if true
-        plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
+        h = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
             'color',colors(mod(counter-1,no_colors)+1,:)); % colors(mod(round(counter*no_colors/(2*noBdryPatches))-1,no_colors)+1,:)
     else
-        [~,maxC_patch,minC_patch] = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,...
+        [h,maxC_patch,minC_patch] = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,...
                         'displayName',['Patch ' num2str(counter)],'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi));
         if minC_patch < minC
             minC = minC_patch;
@@ -183,7 +189,7 @@ sharpAngle = options.sharpAngle;
 avg_v_n_threshholdAngle = options.avg_v_n_threshholdAngle;
 acuteAngleAdjustment = 1.2;
 if nargin < 6
-    [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle);
+    [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle,options.noBdryPatches);
     midx = find(angles(patch,:) < sharpAngle);
 end
 faces = cell(1,6);
@@ -657,27 +663,24 @@ switch maxNoSharpAngles
 
 end
 
-function [patch,maxNoSharpAngles,minSum] = findNextPatch(angles,sharpAngle)
-
-%     midx = find(angles(patch,:) < sharpAngle);
+function [patch,maxNoSharpAngles,minSum] = findNextPatch(angles,sharpAngle,noBdryPatches)
 
 sharpAngles = angles < sharpAngle;
-% midx = NaN(size(sharpAngles));
-% midx(sharpAngles) = find(sharpAngles);
 indices_op = or(and(sharpAngles(:,1),sharpAngles(:,2)),and(sharpAngles(:,3),sharpAngles(:,4)));
-indices_nan = and(any(isnan(angles),2),~all(isnan(angles),2));
+indices_covered = all(isnan(angles),2);
+indices_nan = and(any(isnan(angles),2),~indices_covered);
 
 noSharpAngles = sum(sharpAngles,2);
 noSharpAngles(indices_op) = noSharpAngles(indices_op) + 0.1; % Prioritize cases where oposite faces are known
 noSharpAngles(indices_nan) = noSharpAngles(indices_nan) + 0.2; % Prioritize cases containing singularities
+noSharpAngles(1:noBdryPatches) = noSharpAngles(1:noBdryPatches) + 0.01; % Prioritize cases containing singularities
 maxNoSharpAngles = max(noSharpAngles);
-candidates = noSharpAngles == maxNoSharpAngles;
+candidates = and(noSharpAngles == maxNoSharpAngles,~indices_covered);
 avgAngles = Inf(size(sharpAngles,1),1);
 for i = 1:size(sharpAngles,1)
     if candidates(i)
         angles_i = angles(i,:);
         angles_i(isnan(angles_i)) = [];
-%             avgAngles(i) = sum(angles_i)/numel(angles_i);
         avgAngles(i) = min(angles_i);
     end
 end
