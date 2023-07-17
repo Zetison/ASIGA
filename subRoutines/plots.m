@@ -42,7 +42,7 @@ for shape = shapes
 %         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
     end
 end
-nurbs = translateNURBS(nurbs,[-L/2,0,0]);
+% nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -769,6 +769,43 @@ nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 % end
 % plot(theta, P_t)
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Plot of Spherical Bessel functions
+% close all
+% no2Dpoints = 100;
+% x = linspace(0,1,no2Dpoints);
+% % x = 1;
+% noBesselFunctions = 10000;
+% J = zeros(noBesselFunctions,no2Dpoints);
+% Y = zeros(noBesselFunctions,no2Dpoints);
+% Hr = zeros(noBesselFunctions,no2Dpoints);
+% dH = zeros(noBesselFunctions,no2Dpoints);
+% % DJ = zeros(noBesselFunctions,no2Dpoints);
+% N_arr = 0:noBesselFunctions-1;
+% for n = N_arr
+%     z = x*n;
+%     J(n+1,:) = besselj(n,z);
+%     Y(n+1,:) = bessely(n,z);
+%     j1 = sqrt(pi/2)./sqrt(z).*besselj(n+0.5,z);
+%     j2 = sqrt(pi/2)./sqrt(z).*besselj(n+0.5+1,z);
+%     y1 = sqrt(pi/2)./sqrt(z).*bessely(n+0.5,z);
+%     y2 = sqrt(pi/2)./sqrt(z).*bessely(n+0.5+1,z);
+%     h1 = j1 + 1i*y1;
+%     h2 = j2 + 1i*y2;
+%     Hr(n+1,:) = abs(h2./h1).*z/n;
+%     dH(n+1,:) = abs(h1)./abs(n./z.*h1 + h2);
+% end
+% % plot(x,J.')
+% % plot(N_arr,Y.')
+% % semilogy(N_arr,-Y.','color','red')
+% % hold on
+% % semilogy(N_arr,J.','color','blue')
+% % semilogy(N_arr,Hr.','color','blue')
+% semilogy(N_arr,dH.')
+% % ylim([-1.5 1.1])
+% % legend('j_0','j_1','Dj_0','Dj_1','Location','Best')
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot of Bessel functions of first kind
 % x = linspace(0,20,no2Dpoints);
@@ -778,12 +815,12 @@ nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 % for n = 0:noBesselFunctions-1
 %     J(n+1,:) = besselj(n,x);
 %     DJ(n+1,:) = besseljDeriv(n,x);
-%     fid = fopen(['../plotData/fundamentalFunctions/bessel1_n' num2str(n) '.txt'],'wt+','b');
-%     fprintf(fid,'x\t\t\ty\n');
-%     for m = 1:length(x)
-%         fprintf(fid,'%1.15f\t%1.15f\n',x(m),J(n+1,m));
-%     end
-%     fclose(fid);
+% %     fid = fopen(['../plotData/fundamentalFunctions/bessel1_n' num2str(n) '.txt'],'wt+','b');
+% %     fprintf(fid,'x\t\t\ty\n');
+% %     for m = 1:length(x)
+% %         fprintf(fid,'%1.15f\t%1.15f\n',x(m),J(n+1,m));
+% %     end
+% %     fclose(fid);
 % end
 % plot(x,J)
 % ylim([-1.5 1.1])
