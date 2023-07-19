@@ -1,8 +1,8 @@
-function nurbs_vol = surfaceToVolume(varargin)
+function S2Vobj = surfaceToVolume(varargin)
 % This routine assumes nurbs_surf to be a closed NURBS-surface with all
 % patches having normal vectors pointing outwards.
 
-% set default values
+% Set default values
 options = struct('t', 1, ...                                % thickness of patch created from a surface patch having all angles larger than "sharpAngle" w.r.t. neighbouring patches
                  'sharpAngle', 120*pi/180,...               % Threshold for a "sharp" angle
                  'Eps', 1e-10, ...                          % Threshold for assuming two physical points in the l2-norm to be identical
@@ -10,7 +10,7 @@ options = struct('t', 1, ...                                % thickness of patch
                  'S2V_algorithm',{{'A1_1','A13_1'}}, ...    % Specify the desired algorithm to be used. Here 'A1_1' mean ("A"lgorithm for when only side patch 1 is known and the first of the available algorithms)
                  'avg_v_n_threshholdAngle', 11.25*pi/180);  % Threshold angle deviation between the normal vectors v_n avg_v_n
 
-nurbs_surf = varargin{1};
+S2Vobj = varargin{1};
 if nargin > 1
     if numel(varargin) > 2
         newOptions = varargin(2:end);
@@ -19,177 +19,171 @@ if nargin > 1
     end
     options = updateOptions(options,newOptions);
 end
-nurbs_surf = cleanNURBS(nurbs_surf,[],1e-6);
-
-if options.explodeNURBSsurface
-    nurbs_surf = explodeNURBS(nurbs_surf);
-end
-if isfield(options,'connection')
-    connection = options.connection;
+if isfield(S2Vobj,'nurbs_bdry')
+    counter = S2Vobj.counter;
 else
-    geometry = getTopology(nurbs_surf);
-    connection = geometry.topology.connection;
-end
-if isfield(options,'ax')
-    ax = options.ax;
-else
-    ax = gca;
-end
-
-d_p = nurbs_surf{1}.d_p;
-
-noBdryPatches = numel(nurbs_surf);
-
-topologyMap = createTopologyMap(connection,noBdryPatches,d_p);
-
-[cornerData, angles] = computeCornerData(nurbs_surf,topologyMap,options);
-
-nurbs_bdry = nurbs_surf;
-options.noBdryPatches = noBdryPatches;
-
-
-nurbs_vol = cell(1,4*numel(nurbs_surf));
-counter = 1;
-% colors = colormap('hsv');
-% colors = colormap('jet');
-% getColorMap
-% step = max(4,size(colors,1)/(2*noBdryPatches));
-% colors = colors(1:step:end,:);
-% colormap(flipud(colors))
-% no_colors = size(colors,1);
-if isfield(options,'no_colors')
-    no_colors = options.no_colors;
-else
-    no_colors = max(8,noBdryPatches/10);
-end
-colors = getColorMap('shsv',ax,no_colors);
-% colors = turbo(no_colors);
-minC = Inf;
-maxC = -Inf;
-handles = [];
-
-while counter == 1 || any(angles(:) < pi) || any(~isnan(angles(1:noBdryPatches,:)),'all')
-%     if counter == 12
-%         keyboard
-%     end
-    [nurbs_vol(counter), nurbs_covered,nurbs_newBdry] = addPatch(nurbs_bdry,topologyMap,cornerData,angles,options);
+    nurbs_surf = cleanNURBS(S2Vobj.nurbs_surf,[],1e-6);
     
-    if ~isempty(nurbs_newBdry)
-        % Remove faces with zero measure
-        zeroMeasure = NURBShasZeroMeasure(nurbs_newBdry);
-        nurbs_newBdry(zeroMeasure) = [];
+    if options.explodeNURBSsurface
+        nurbs_surf = explodeNURBS(nurbs_surf);
     end
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Plotting
-    if true
-        h = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
-            'color',colors(mod(counter-1,no_colors)+1,:)); % colors(mod(round(counter*no_colors/(2*noBdryPatches))-1,no_colors)+1,:)
+    d_p = nurbs_surf{1}.d_p;
+    
+    S2Vobj.noBdryPatches = numel(nurbs_surf);
+    if isfield(options,'connection')
+        connection = options.connection;
     else
-        [h,maxC_patch,minC_patch] = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,...
-                        'displayName',['Patch ' num2str(counter)],'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi));
-        if minC_patch < minC
-            minC = minC_patch;
-        end
-        if maxC_patch > maxC
-            maxC = maxC_patch;
-        end
-        clim(ax,[minC,maxC])
+        geometry = getTopology(nurbs_surf);
+        connection = geometry.topology.connection;
     end
-    drawnow
-    pause(0.001)
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if ~isempty(nurbs_newBdry)
-        noNewBdryPatches = numel(nurbs_newBdry);
-        newBdryPatches = (numel(nurbs_bdry)+1):(numel(nurbs_bdry)+noNewBdryPatches);
+    S2Vobj.topologyMap = createTopologyMap(connection,S2Vobj.noBdryPatches,d_p);
     
-        % Add new patches to the global set of surface patches, nurbs_bdry
-        nurbs_bdry = [nurbs_bdry, nurbs_newBdry];
     
-        % Find the surrounding patches to the patches that has been covered
-        surroundingPatches = 4*numel(nurbs_covered);
-        counter2 = 1;
-        for i = 1:numel(nurbs_covered)
-            patch_i = nurbs_covered(i);
-            for midx_i = 1:numel(topologyMap{patch_i})
-                if ~isempty(topologyMap{patch_i}(midx_i).slave)
-                    surroundingPatches(counter2) = topologyMap{patch_i}(midx_i).slave;
-                    counter2 = counter2 + 1;
-                end
+    S2Vobj.nurbs_bdry = nurbs_surf;
+    S2Vobj = computeCornerData(S2Vobj,options);
+    
+    
+    S2Vobj.nurbs_vol = cell(1,4*numel(nurbs_surf));
+    counter = 0;
+% 
+%     if isfield(options,'no_colors')
+%         no_colors = options.no_colors;
+%     else
+%         no_colors = max(8,noBdryPatches/10);
+%     end
+%     colors = getColorMap('shsv',ax,no_colors);
+end
+% if isfield(options,'ax')
+%     ax = options.ax;
+% else
+%     ax = gca;
+% end
+
+counter = counter + 1;
+
+
+% Attach new volumetric patch on nurbs_bdry
+[S2Vobj.nurbs_vol(counter), nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options);
+
+if ~isempty(nurbs_newBdry)
+    % Remove faces with zero measure
+    zeroMeasure = NURBShasZeroMeasure(nurbs_newBdry);
+    nurbs_newBdry(zeroMeasure) = [];
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Plotting
+% if true
+%     h = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
+%         'color',colors(mod(counter-1,no_colors)+1,:)); % colors(mod(round(counter*no_colors/(2*noBdryPatches))-1,no_colors)+1,:)
+% else
+%     [h,maxC_patch,minC_patch] = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,...
+%                     'displayName',['Patch ' num2str(counter)],'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi));
+%     if minC_patch < minC
+%         minC = minC_patch;
+%     end
+%     if maxC_patch > maxC
+%         maxC = maxC_patch;
+%     end
+%     clim(ax,[minC,maxC])
+% end
+% drawnow
+% pause(0.001)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isempty(nurbs_newBdry)
+    noNewBdryPatches = numel(nurbs_newBdry);
+    newBdryPatches = (numel(S2Vobj.nurbs_bdry)+1):(numel(S2Vobj.nurbs_bdry)+noNewBdryPatches);
+
+    % Add new patches to the global set of surface patches, nurbs_bdry
+    S2Vobj.nurbs_bdry = [S2Vobj.nurbs_bdry, nurbs_newBdry];
+
+    % Find the surrounding patches to the patches that has been covered
+    surroundingPatches = 4*numel(nurbs_covered);
+    counter2 = 1;
+    for i = 1:numel(nurbs_covered)
+        patch_i = nurbs_covered(i);
+        for midx_i = 1:numel(S2Vobj.topologyMap{patch_i})
+            if ~isempty(S2Vobj.topologyMap{patch_i}(midx_i).slave)
+                surroundingPatches(counter2) = S2Vobj.topologyMap{patch_i}(midx_i).slave;
+                counter2 = counter2 + 1;
             end
         end
-        surroundingPatches(counter2:end) = [];
-        surroundingPatches = setdiff(surroundingPatches,nurbs_covered); % Remove the patches that is replaced
-    
-    
-        % Update topologyMap
-        local2global = [surroundingPatches,newBdryPatches];
-        geometry = getTopology(nurbs_bdry(local2global));
-        connectionSub = geometry.topology.connection;
-    
-        for patch_i = newBdryPatches
-            topologyMap{patch_i} = struct('slave', cell(1, 4), ...
-                                          'sidx', cell(1, 4), ...
-                                          'orient', cell(1, 4));
-        end
-    
-        for i = 1:numel(connectionSub)
-            patch_i = local2global(connectionSub{i}.Attributes.master);
-            slave_i = local2global(connectionSub{i}.Attributes.slave);
-            midx_i = connectionSub{i}.Attributes.midx;
-            sidx_i = connectionSub{i}.Attributes.sidx;
-            orient = connectionSub{i}.Attributes.orient;
-    
-            topologyMap{patch_i}(midx_i).slave = slave_i;
-            topologyMap{patch_i}(midx_i).sidx = sidx_i;
-            topologyMap{patch_i}(midx_i).orient = orient;
-        end
-    
-        try
-            % Update angles
-            [cornerData,angles] = computeCornerData(nurbs_bdry,topologyMap,options,newBdryPatches,cornerData,angles);
-        catch ME
-            warning(ME.message)
-            nurbs_vol(counter) = [];
-            counter = counter - 1;
+    end
+    surroundingPatches(counter2:end) = [];
+    surroundingPatches = setdiff(surroundingPatches,nurbs_covered); % Remove the patches that is replaced
+
+
+    % Update topologyMap
+    local2global = [surroundingPatches,newBdryPatches];
+    geometry = getTopology(S2Vobj.nurbs_bdry(local2global));
+    connectionSub = geometry.topology.connection;
+
+    for patch_i = newBdryPatches
+        S2Vobj.topologyMap{patch_i} = struct('slave', cell(1, 4), ...
+                                      'sidx', cell(1, 4), ...
+                                      'orient', cell(1, 4));
+    end
+
+    for i = 1:numel(connectionSub)
+        patch_i = local2global(connectionSub{i}.Attributes.master);
+        slave_i = local2global(connectionSub{i}.Attributes.slave);
+        midx_i = connectionSub{i}.Attributes.midx;
+        sidx_i = connectionSub{i}.Attributes.sidx;
+        orient = connectionSub{i}.Attributes.orient;
+
+        S2Vobj.topologyMap{patch_i}(midx_i).slave = slave_i;
+        S2Vobj.topologyMap{patch_i}(midx_i).sidx = sidx_i;
+        S2Vobj.topologyMap{patch_i}(midx_i).orient = orient;
+    end
+    for i = nurbs_covered
+        for j = 1:4
+            S2Vobj.topologyMap{i}(j).slave = [];
+            S2Vobj.topologyMap{i}(j).sidx = [];
+            S2Vobj.topologyMap{i}(j).orient = [];
         end
     end
-    angles(nurbs_covered,:) = NaN;
-%     if counter == 1
-%         for patch = 1:numel(cornerData)
-%             if ~all(isnan(angles(patch,:)))
-%                 quiver3(cornerData(patch).X(:,1), ...
-%                         cornerData(patch).X(:,2), ...
-%                         cornerData(patch).X(:,3), ...
-%                         cornerData(patch).avg_v_n(:,1), ...
-%                         cornerData(patch).avg_v_n(:,2), ...
-%                         cornerData(patch).avg_v_n(:,3),'LineWidth',1,'AutoScale','off','DisplayName',['Patch ' num2str(patch)])
-%             end
-%         end
-%         keyboard
-%     end
 
-    counter = counter + 1;
-
+    try
+        % Update angles
+        S2Vobj = computeCornerData(S2Vobj,options,newBdryPatches);
+    catch ME
+        warning(ME.message)
+        S2Vobj.nurbs_vol(counter) = [];
+        counter = counter - 1;
+    end
 end
-nurbs_vol(counter:end) = [];
+S2Vobj.angles(nurbs_covered,:) = NaN;
+S2Vobj.S2Vcompleted = ~(counter == 1 || any(S2Vobj.angles(:) < pi) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
+
+if S2Vobj.S2Vcompleted
+    S2Vobj.nurbs_vol(counter+1:end) = [];
+end
+
+% Collect changes into the "Surface to volume" object
+S2Vobj.counter = counter;
 
 
-function [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(nurbs_bdry,topologyMap,cornerData,angles,options,patch,midx,maxNoSharpAngles)
+function [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,midx,maxNoSharpAngles)
 %     [patch,maxNoSharpAngles,minSum] = findNextPatch(original_angles,sharpAngle); % Check for sharp angles in at the initial nurbs_surf first
 %     midx = find(original_angles(patch,:) < sharpAngle);
 %     if isinf(minSum)
 %         [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle);
 %         midx = find(angles(patch,:) < sharpAngle);
 %     end
+nurbs_bdry = S2Vobj.nurbs_bdry;
+topologyMap = S2Vobj.topologyMap;
+cornerData = S2Vobj.cornerData;
+angles = S2Vobj.angles;
+
+
 d = 3; % dimension
 t = options.t;
 % original_angles = angles;
 sharpAngle = options.sharpAngle;
 avg_v_n_threshholdAngle = options.avg_v_n_threshholdAngle;
 acuteAngleAdjustment = 1.2;
-if nargin < 6
-    [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle,options.noBdryPatches);
+if nargin < 3
+    [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle,S2Vobj.noBdryPatches);
     midx = find(angles(patch,:) < sharpAngle);
 end
 faces = cell(1,6);
@@ -350,9 +344,9 @@ switch maxNoSharpAngles
         nurbs_covered = [patch,slave];
         nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;1,1],'outwardPointingNormals',true);
     case 2
-        midx_regular = singularFromRegular(topologyMap,patch,setdiff(1:4,midx),nurbs_bdry);
+        midx_regular = singularFromRegular(topologyMap,patch,setdiff(1:4,midx));
         if ~isempty(midx_regular)
-            [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(nurbs_bdry,topologyMap,cornerData,angles,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
+            [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
             return
         end
         if all(ceil(midx/2) == [1,2]) % Fill a patch in a corner
@@ -567,7 +561,7 @@ switch maxNoSharpAngles
     case 3
         midx_regular = singularFromRegular(topologyMap,patch,setdiff(1:4,midx));
         if ~isempty(midx_regular)
-            [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(nurbs_bdry,topologyMap,cornerData,angles,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
+            [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
             return
         end
         midx = correct_midx_order(midx);
@@ -687,15 +681,17 @@ end
 maxNoSharpAngles = floor(maxNoSharpAngles);
 [minSum,patch] = min(avgAngles);
 
-function [cornerData,angles] = computeCornerData(nurbs,topologyMap,options,indices,cornerData,angles)
+function S2Vobj = computeCornerData(S2Vobj,options,indices)
+
+nurbs = S2Vobj.nurbs_bdry;
 noBdryPatches = numel(nurbs);
 d_p = nurbs{1}.d_p;
 d = 3; % dimension
-if nargin < 5
+if nargin < 3
     indices = 1:noBdryPatches;
 end
-if nargin < 6
-    cornerData = struct('X', cell(1, noBdryPatches), ...
+if ~isfield(S2Vobj,'cornerData')
+    S2Vobj.cornerData = struct('X', cell(1, noBdryPatches), ...
                         'v_t1', cell(1, noBdryPatches), ...
                         'v_t2', cell(1, noBdryPatches), ...
                         'v_xi', cell(1, noBdryPatches), ...
@@ -703,10 +699,10 @@ if nargin < 6
                         'cornerAngle', cell(1, noBdryPatches), ...
                         'v_n', cell(1, noBdryPatches), ...
                         'avg_v_n', cell(1, noBdryPatches));
-    angles = NaN(noBdryPatches,2*d_p);
+    S2Vobj.angles = NaN(noBdryPatches,2*d_p);
 else
-    noNewFields = noBdryPatches-numel(cornerData);
-    cornerData = [cornerData, struct('X', cell(1, noNewFields), ...
+    noNewFields = noBdryPatches-numel(S2Vobj.cornerData);
+    S2Vobj.cornerData = [S2Vobj.cornerData, struct('X', cell(1, noNewFields), ...
                                      'v_t1', cell(1, noNewFields), ...
                                      'v_t2', cell(1, noNewFields), ...
                                      'v_xi', cell(1, noNewFields), ...
@@ -714,7 +710,7 @@ else
                                      'cornerAngle', cell(1, noNewFields), ...
                                      'v_n', cell(1, noNewFields), ...
                                      'avg_v_n', cell(1, noNewFields))];
-    angles = [angles; NaN(noNewFields,2*d_p)];
+    S2Vobj.angles = [S2Vobj.angles; NaN(noNewFields,2*d_p)];
 end
 Eps = options.Eps;
 
@@ -771,14 +767,14 @@ for patch = indices
     cornerAngle = acos(dot(v_t1,v_t2,2));
 
     v_n = v_n./norm2(v_n);
-    cornerData(patch).X = X;
-    cornerData(patch).v_xi = v_xi;
-    cornerData(patch).v_eta = v_eta;
-    cornerData(patch).v_t1 = v_t1;
-    cornerData(patch).v_t2 = v_t2;
-    cornerData(patch).v_n = v_n;
-    cornerData(patch).cornerAngle = cornerAngle;
-    if any(isnan(cornerData(patch).v_n(:)))
+    S2Vobj.cornerData(patch).X = X;
+    S2Vobj.cornerData(patch).v_xi = v_xi;
+    S2Vobj.cornerData(patch).v_eta = v_eta;
+    S2Vobj.cornerData(patch).v_t1 = v_t1;
+    S2Vobj.cornerData(patch).v_t2 = v_t2;
+    S2Vobj.cornerData(patch).v_n = v_n;
+    S2Vobj.cornerData(patch).cornerAngle = cornerAngle;
+    if any(isnan(S2Vobj.cornerData(patch).v_n(:)))
         error('Could not compute normal vector at corner. Case not accounted for')
     end
 end
@@ -786,7 +782,7 @@ end
 %% Compute average normal vector in all vertices
 noCorners = 2^d_p;
 for patch = indices
-    cornerData(patch).avg_v_n = zeros(4,d);
+    S2Vobj.cornerData(patch).avg_v_n = zeros(4,d);
     for i_corner = 1:noCorners
         v_n = zeros(1,d);
         slave_i_corner = i_corner;
@@ -801,21 +797,21 @@ for patch = indices
                 error('Topology is inconsistent')
             end
 
-            if ~any(isnan(cornerData(slave).v_n))
-                cornerAngle = cornerData(slave).cornerAngle(slave_i_corner);
-                v_n = v_n + cornerAngle*cornerData(slave).v_n(slave_i_corner,:)/(2*pi); % weight the normal vector with the angle of the respetive corner
+            if ~any(isnan(S2Vobj.cornerData(slave).v_n))
+                cornerAngle = S2Vobj.cornerData(slave).cornerAngle(slave_i_corner);
+                v_n = v_n + cornerAngle*S2Vobj.cornerData(slave).v_n(slave_i_corner,:)/(2*pi); % weight the normal vector with the angle of the respetive corner
             end
             slave_prev = slave;
             midx = corner2midx(slave_i_corner);
-            slave_temp = topologyMap{slave}(midx).slave;
+            slave_temp = S2Vobj.topologyMap{slave}(midx).slave;
             if isempty(slave_temp)
                 idx = mod(find(corner2midx(1:4) == midx)-2,4)+1;
                 midx = corner2midx(idx);
-                slave = topologyMap{slave}(midx).slave;
+                slave = S2Vobj.topologyMap{slave}(midx).slave;
             else
                 slave = slave_temp;
             end
-            sidx = topologyMap{slave_prev}(midx).sidx;
+            sidx = S2Vobj.topologyMap{slave_prev}(midx).sidx;
 
             slave_i_corner = sidx2leftCorner(sidx);
             neighbours(counter,1) = slave;
@@ -829,10 +825,10 @@ for patch = indices
         for i = 1:counter+1
             slave = neighbours(i,1);
             slave_i_corner = neighbours(i,2);
-            X = cornerData(slave).X(slave_i_corner,:);
+            X = S2Vobj.cornerData(slave).X(slave_i_corner,:);
             for j = 1:4
-                if norm(X-cornerData(slave).X(j,:)) < Eps
-                    cornerData(slave).avg_v_n(j,:) = v_n;
+                if norm(X-S2Vobj.cornerData(slave).X(j,:)) < Eps
+                    S2Vobj.cornerData(slave).avg_v_n(j,:) = v_n;
                 end
             end
         end
@@ -841,31 +837,31 @@ end
 %% Compute angle between all pairs of connected patches
 for patch = indices
     for midx = 1:2*d_p
-        if isnan(angles(patch,midx))
-            slave = topologyMap{patch}(midx).slave;
+        if isnan(S2Vobj.angles(patch,midx))
+            slave = S2Vobj.topologyMap{patch}(midx).slave;
             if isempty(slave)
                 continue
             end
-            sidx = topologyMap{patch}(midx).sidx;
-            orient = topologyMap{patch}(midx).orient;
+            sidx = S2Vobj.topologyMap{patch}(midx).sidx;
+            orient = S2Vobj.topologyMap{patch}(midx).orient;
             sgn_m = (-1)^midx;
             i_corners_m = midx2corners(midx);
             switch midx
                 case {1,2}
-                    v_tm = sgn_m*cornerData(patch).v_xi(i_corners_m,:);
+                    v_tm = sgn_m*S2Vobj.cornerData(patch).v_xi(i_corners_m,:);
                 case {3,4}
-                    v_tm = sgn_m*cornerData(patch).v_eta(i_corners_m,:);
+                    v_tm = sgn_m*S2Vobj.cornerData(patch).v_eta(i_corners_m,:);
             end
-            v_nm = cornerData(patch).v_n(i_corners_m,:);
+            v_nm = S2Vobj.cornerData(patch).v_n(i_corners_m,:);
             i_corners_s = midx2corners(sidx);
             sgn_s = (-1)^sidx;
             switch sidx
                 case {1,2}
-                    v_ts = sgn_s*cornerData(slave).v_xi(i_corners_s,:);
+                    v_ts = sgn_s*S2Vobj.cornerData(slave).v_xi(i_corners_s,:);
                 case {3,4}
-                    v_ts = sgn_s*cornerData(slave).v_eta(i_corners_s,:);
+                    v_ts = sgn_s*S2Vobj.cornerData(slave).v_eta(i_corners_s,:);
             end
-            v_ns = cornerData(slave).v_n(i_corners_s,:);
+            v_ns = S2Vobj.cornerData(slave).v_n(i_corners_s,:);
             if orient
                 v_ts = flipud(v_ts);
                 v_ns = flipud(v_ns);
@@ -881,26 +877,26 @@ for patch = indices
             angle(indices) = pi - angle(indices);
             angle(~indices) = pi + angle(~indices); % the boundary at these corners are convex
             
-            angles(patch,midx) = max(angle);
-            angles(slave,sidx) = angles(patch,midx);
+            S2Vobj.angles(patch,midx) = max(angle);
+            S2Vobj.angles(slave,sidx) = S2Vobj.angles(patch,midx);
         end
     end
 end
 if 0
     for patch = 1:noBdryPatches
-        if ~all(isnan(angles(patch,:)))
-            quiver3(cornerData(patch).X(:,1), ...
-                    cornerData(patch).X(:,2), ...
-                    cornerData(patch).X(:,3), ...
-                    cornerData(patch).avg_v_n(:,1), ...
-                    cornerData(patch).avg_v_n(:,2), ...
-                    cornerData(patch).avg_v_n(:,3),'LineWidth',1,'AutoScale','off','DisplayName',['Patch ' num2str(patch)])
+        if ~all(isnan(S2Vobj.angles(patch,:)))
+            quiver3(S2Vobj.cornerData(patch).X(:,1), ...
+                    S2Vobj.cornerData(patch).X(:,2), ...
+                    S2Vobj.cornerData(patch).X(:,3), ...
+                    S2Vobj.cornerData(patch).avg_v_n(:,1), ...
+                    S2Vobj.cornerData(patch).avg_v_n(:,2), ...
+                    S2Vobj.cornerData(patch).avg_v_n(:,3),'LineWidth',1,'AutoScale','off','DisplayName',['Patch ' num2str(patch)])
         end
     end
     keyboard
 end
 
-function midx_regular = singularFromRegular(topologyMap,patch,midx,nurbs_bdry)
+function midx_regular = singularFromRegular(topologyMap,patch,midx)
 % Check if singularity originates from a regular patch-grid
 midx_regular = [];
 for i = 1:numel(midx)

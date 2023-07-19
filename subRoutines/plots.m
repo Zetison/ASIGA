@@ -9,40 +9,40 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot all shapes
-R = 1;
-shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
-           'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
-shapes = {'Barrel'};
-for shape = shapes
-    for parm = 2
-%         close all
-        options.parm = parm;
-%         options.theta = 2*pi;r
-%         options.theta_eta = 0.9*2*pi;
-%         options.R = 2;
-        nurbs = eval(['get' shape{1} 'Data(options)']);
-        resolution = 32*[1,1,1];
-        M = 1;
-        noNewKnots = 2^(M-1)-1;
-%         nurbs = insertKnotsInNURBS(nurbs,noNewKnots*ones(1,nurbs{1}.d_p));
-%         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
-        figure
-        plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
-        axis equal
-        grid off
-        axis off
-        view(getView(0))
-%         view(getView(1))
-        camlight
-        material dull
-        ax = gca;               % get the current axis
-        ax.Clipping = 'off';    % turn clipping off
-        axis on
-%         figureFullScreen(gcf)
-%         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
-    end
-end
-% nurbs = translateNURBS(nurbs,[-L/2,0,0]);
+% R = 1;
+% shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
+%            'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
+% shapes = {'Barrel'};
+% for shape = shapes
+%     for parm = 2
+% %         close all
+%         options.parm = parm;
+% %         options.theta = 2*pi;r
+% %         options.theta_eta = 0.9*2*pi;
+% %         options.R = 2;
+%         nurbs = eval(['get' shape{1} 'Data(options)']);
+%         resolution = 32*[1,1,1];
+%         M = 1;
+%         noNewKnots = 2^(M-1)-1;
+% %         nurbs = insertKnotsInNURBS(nurbs,noNewKnots*ones(1,nurbs{1}.d_p));
+% %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
+%         figure
+%         plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,'plotNormalVectors',1);
+%         axis equal
+%         grid off
+%         axis off
+%         view(getView(0))
+% %         view(getView(1))
+%         camlight
+%         material dull
+%         ax = gca;               % get the current axis
+%         ax.Clipping = 'off';    % turn clipping off
+%         axis on
+% %         figureFullScreen(gcf)
+% %         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
+%     end
+% end
+% % nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -773,38 +773,76 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot of Spherical Bessel functions
 % close all
-% no2Dpoints = 100;
-% x = linspace(0,1,no2Dpoints);
-% % x = 1;
-% noBesselFunctions = 10000;
-% J = zeros(noBesselFunctions,no2Dpoints);
-% Y = zeros(noBesselFunctions,no2Dpoints);
-% Hr = zeros(noBesselFunctions,no2Dpoints);
-% dH = zeros(noBesselFunctions,no2Dpoints);
-% % DJ = zeros(noBesselFunctions,no2Dpoints);
-% N_arr = 0:noBesselFunctions-1;
-% for n = N_arr
-%     z = x*n;
-%     J(n+1,:) = besselj(n,z);
-%     Y(n+1,:) = bessely(n,z);
-%     j1 = sqrt(pi/2)./sqrt(z).*besselj(n+0.5,z);
-%     j2 = sqrt(pi/2)./sqrt(z).*besselj(n+0.5+1,z);
-%     y1 = sqrt(pi/2)./sqrt(z).*bessely(n+0.5,z);
-%     y2 = sqrt(pi/2)./sqrt(z).*bessely(n+0.5+1,z);
-%     h1 = j1 + 1i*y1;
-%     h2 = j2 + 1i*y2;
-%     Hr(n+1,:) = abs(h2./h1).*z/n;
-%     dH(n+1,:) = abs(h1)./abs(n./z.*h1 + h2);
+figure
+no2Dpoints = 900;
+% x = linspace(0,100,no2Dpoints);
+x = linspace2(0,1/2,no2Dpoints);
+x = x(end);
+% x = 8.04/9;
+% x = 8.04;
+no2Dpoints = numel(x);
+noBesselFunctions = 100000;
+J = zeros(noBesselFunctions,no2Dpoints);
+j = zeros(noBesselFunctions,no2Dpoints);
+dj = zeros(noBesselFunctions,no2Dpoints);
+Y = zeros(noBesselFunctions,no2Dpoints);
+H = zeros(noBesselFunctions,no2Dpoints);
+Hr = zeros(noBesselFunctions,no2Dpoints);
+dHr = zeros(noBesselFunctions,no2Dpoints);
+% DJ = zeros(noBesselFunctions,no2Dpoints);
+N_arr = 0:noBesselFunctions-1;
+% N_arr = 1:noBesselFunctions;
+for n = N_arr
+    z = x*n;
+%     z = x;
+    J(n+1,:) = besselj(n,z);
+    Y(n+1,:) = bessely(n,z);
+    j1 = sqrt(pi/2)./sqrt(z).*besselj(n+0.5,z);
+    j2 = sqrt(pi/2)./sqrt(z).*besselj(n+0.5+1,z);
+    y1 = sqrt(pi/2)./sqrt(z).*bessely(n+0.5,z);
+    y2 = sqrt(pi/2)./sqrt(z).*bessely(n+0.5+1,z);
+    h1 = j1 + 1i*y1;
+    h2 = j2 + 1i*y2;
+    j(n+1,:) = abs(j1);
+    dj_temp = n./z.*j1 - j2;
+    dy_temp = n./z.*y1 - y2;
+    dj(n+1,:) = abs(dj_temp);
+    H(n+1,:) = abs(h1);
+    Hr(n+1,:) = abs(h2./h1).*z/n;
+%     dHr(n+1,:) = abs(h1)./abs(n./z.*h1 - h2);
+    indices = n > z;
+    dHr(n+1,indices) = abs(h1(indices))./abs(n./z(indices).*h1(indices) - h2(indices));
+%     dHr(n+1,:) = abs(h1)./abs(dj_temp + 1i*dy_temp);
+end
+% plot(x,J.')
+% plot(N_arr,Y.')
+% semilogy(N_arr,-Y.','color','red')
+% hold on
+% semilogy(N_arr,J.','color','blue')
+% semilogy(N_arr,Hr.','color','blue')
+semilogy(N_arr,dHr.')
+% semilogy(ones(2,1).*ceil(x(1)+eps),ylim.'.*ones(1,1),'--','color','black')
+% figure
+% plot(x,dHr(end,:))
+% hold on
+% plot(x,-log(1-x))
+% % plot(x,-0.911665108328680*log(0.995188245896694 -1.005057731715838*x))
+% plot(x,1./(1-x).^0.5)
+% if true
+% %     semilogy(N_arr,j.','color','red')
+% %     hold on
+% %     semilogy(N_arr,dj.','color','blue')
+% %     semilogy(x,j,'color','red')
+% %     hold on
+% %     semilogy(x,dj,'color','blue')
+%     semilogy(x,H)
+% else
+%     semilogy(N_arr(1:end-1),j(1:end-1,:).','color','red')
+%     hold on
+%     semilogy(N_arr(2:end),dj(2:end,:).','color','blue')
 % end
-% % plot(x,J.')
-% % plot(N_arr,Y.')
-% % semilogy(N_arr,-Y.','color','red')
-% % hold on
-% % semilogy(N_arr,J.','color','blue')
-% % semilogy(N_arr,Hr.','color','blue')
-% semilogy(N_arr,dH.')
-% % ylim([-1.5 1.1])
-% % legend('j_0','j_1','Dj_0','Dj_1','Location','Best')
+% ylim([-1.5 1.1])
+% legend('j_0','j_1','Dj_0','Dj_1','Location','Best')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot of Bessel functions of first kind
