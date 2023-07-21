@@ -499,6 +499,31 @@ switch maxNoSharpAngles
                 faces(6) = GordonHall(edges);
                 
                 nurbs = GordonHall(faces);
+                faces_old = faces;
+                opposite_patchID = [patch,slave3,slave5];
+                counter = 1;
+                for i_face = [1,3,5]
+                    if checkOrientation(nurbs, 10)
+                        faces = faces_old;
+                        face = faceFromNormals(faces{i_face},opposite_patchID(counter),cornerData,len2,options);
+                        faces{i_face+1}.coeffs(:,2:end,2:end) = face{1}.coeffs(:,2:end,2:end);
+                        switch i_face
+                            case 1
+                                faces{4}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
+                                faces{6}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
+                            case 3
+                                faces{6}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
+                                faces{2}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
+                            case 5
+                                faces{2}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
+                                faces{4}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
+                        end
+                        nurbs = GordonHall(faces);
+                    else
+                        break
+                    end
+                    counter = counter + 1;
+                end
                 if checkOrientation(nurbs, 10)
                     error('Self intersection!')
                 end
