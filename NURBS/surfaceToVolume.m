@@ -143,14 +143,14 @@ if ~isempty(nurbs_newBdry)
         end
     end
 
-    try
+%     try
         % Update angles
         S2Vobj = computeCornerData(S2Vobj,options,newBdryPatches);
-    catch ME
-        warning(ME.message)
-        S2Vobj.nurbs_vol(counter) = [];
-        counter = counter - 1;
-    end
+%     catch ME
+%         warning(ME.message)
+%         S2Vobj.nurbs_vol(counter) = [];
+%         counter = counter - 1;
+%     end
 end
 S2Vobj.angles(nurbs_covered,:) = NaN;
 S2Vobj.S2Vcompleted = ~(counter == 1 || any(S2Vobj.angles(:) < pi) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
@@ -173,6 +173,7 @@ function [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,mi
 nurbs_bdry = S2Vobj.nurbs_bdry;
 topologyMap = S2Vobj.topologyMap;
 cornerData = S2Vobj.cornerData;
+edgeData = S2Vobj.edgeData;
 angles = S2Vobj.angles;
 
 
@@ -192,8 +193,7 @@ switch maxNoSharpAngles
         faces(1) = nurbs_bdry(patch);
         switch options.S2V_algorithm{maxNoSharpAngles+1}
             case 'A1_1'
-                faces(1) = nurbs_bdry(patch);
-                faces(2) = faceFromNormals(nurbs_bdry{patch},patch,cornerData,t,options);
+                faces(2) = faceFromNormals(patch,S2Vobj,options,t);
             case 'A1_2'
                 X = zeros(4,3);
                 for i_corner = 1:4
@@ -210,14 +210,12 @@ switch maxNoSharpAngles
         sidx = topologyMap{patch}(midx).sidx;
 
         % Set the patch with oposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
-        corners_opposite = midx2corners(midx-(-1)^midx);
-        v_n_1 = cornerData(patch).v_n(corners_opposite,:);
-        avg_v_n_i = cornerData(patch).avg_v_n(corners_opposite,:);
+        v_n_1 = edgeData(patch).v_n{midx};
+        avg_v_n_i = edgeData(patch).avg_v_n{midx};
         angle_v_n_diff_i = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
 
-        corners_opposite = midx2corners(sidx-(-1)^sidx);
-        v_n_1 = cornerData(slave).v_n(corners_opposite,:);
-        avg_v_n_i = cornerData(slave).avg_v_n(corners_opposite,:);
+        v_n_1 = edgeData(slave).v_n{midx};
+        avg_v_n_i = edgeData(slave).avg_v_n{midx};
         angle_v_n_diff_i_s = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
         if angle_v_n_diff_i_s < angle_v_n_diff_i
             patch = slave;
@@ -239,103 +237,28 @@ switch maxNoSharpAngles
         slave1_coeffs = permute(faces{3}.coeffs,[1,3,2]);
         slave1_coeffs = reshape(slave1_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
         
-        midx_opposite = midx-(-1)^midx;
         switch options.S2V_algorithm{maxNoSharpAngles+1}
             case 'A13_1'
                 try
-                    oppositeCornerIndices = midx2corners(midx_opposite);
-                    if midx_opposite == 1 || midx_opposite == 4
-                        oppositeCornerIndices = fliplr(oppositeCornerIndices);
-                    end
-                    cornerNormal = cornerData(patch).avg_v_n(oppositeCornerIndices,:).';
-                    v_n = cornerData(patch).v_n(oppositeCornerIndices,:).';
-                    if 1
-                        indices = acos(abs(dot(cornerNormal,v_n,1))) > avg_v_n_threshholdAngle;
-                        cornerNormal(:, indices) = v_n(:,indices);
-                    else
-                        if all(acos(abs(dot(cornerNormal,v_n,1))) > avg_v_n_threshholdAngle)
-                            cornerNormal = v_n;
-                        end
-                    end
-        
-                    acuteConnection = (angles(patch,midx) + angles(patch,midx_opposite)/2) < pi;
-                    if true
-                        if acuteConnection
-                            error('acute angles found')
-                        end
-                    else
-                        if acuteConnection
-                            sgn = (-1)^midx;
-                            switch midx
-                                case {1,2}
-                                    v_t = cornerData(patch).v_xi(oppositeCornerIndices,:);
-                                case {3,4}
-                                    v_t = cornerData(patch).v_eta(oppositeCornerIndices,:);
-                            end
-                            v_n = cornerData(patch).v_n(oppositeCornerIndices,:);
-                            theta = angles(patch,midx)*acuteAngleAdjustment;
-        
-                            cornerNormal = (-sgn*v_t*cos(theta) + v_n*sin(theta)).';
-                        end
-                    end
-        
-                    len1 = norm(slave1_coeffs(1:3,end,1,1) - slave1_coeffs(1:3,1,1,1));
-                    len2 = norm(slave1_coeffs(1:3,end,1,end) - slave1_coeffs(1:3,1,1,end));
+                    len = vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1);
+                    face_normals = faceFromNormals(patch,S2Vobj,options);
+                    face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+
                     g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-                    coeffs1 = zeros(d+1,number(1));
-                    coeffs1(1:3,:) = master_coeffs(1:3,1,end,1) + len1*cornerNormal(:,1).*g;
-                    coeffs1(4,:) = [master_coeffs(4,1,end,1), slave1_coeffs(4,2:end,1,1)]; % Use the weights based on the weights on opposite side
-                    coeffs2 = zeros(d+1,number(1));
-                    coeffs2(1:3,:) = master_coeffs(1:3,1,end,end) + len2*cornerNormal(:,2).*g;
-                    coeffs2(4,:) = [master_coeffs(4,1,end,end), slave1_coeffs(4,2:end,1,end)]; % Use the weights based on the weights on opposite side
-                    g = reshape(aveknt(knots{3}, degree(3)+1),1,[]);
-                    coeffs4 = coeffs1(:,end).*(1-g) + coeffs2(:,end).*g;
-        
-                    edges = cell(1,4);
-                    edges(1) = createNURBSobject(coeffs1,knots{1});
-                    edges(2) = createNURBSobject(coeffs2,knots{1});
-                    edges(3) = subNURBS(faces(1),'at',[0,1;0,0]);
-                    edges(4) = createNURBSobject(coeffs4,knots{3});
-                    faces(4) = GordonHall(edges);
-        
-                    edges(1) = subNURBS(faces(3),'at',[0,0;0,1]);
-                    edges(2) = subNURBS(faces(4),'at',[0,0;0,1]);
-                    g = reshape(aveknt(knots{2}, degree(2)+1),1,[]);
-                    coeffs3 = edges{1}.coeffs(:,1).*(1-g) + edges{2}.coeffs(:,1).*g;
-                    edges(3) = createNURBSobject(coeffs3,knots{2});
-                    coeffs4 = edges{1}.coeffs(:,end).*(1-g) + edges{2}.coeffs(:,end).*g;
-                    edges(4) = createNURBSobject(coeffs4,knots{2});
-                    faces(2) = GordonHall(edges);
-        
-                    edges(1) = subNURBS(faces(1),'at',[0,0;1,0]);
-                    edges(2) = subNURBS(faces(2),'at',[0,0;1,0]);
-                    edges(3) = subNURBS(faces(3),'at',[1,0;0,0]);
-                    edges(4) = subNURBS(faces(4),'at',[1,0;0,0]);
-                    faces(5) = GordonHall(edges);
-                    edges(1) = subNURBS(faces(1),'at',[0,0;0,1]);
-                    edges(2) = subNURBS(faces(2),'at',[0,0;0,1]);
-                    edges(3) = subNURBS(faces(3),'at',[0,1;0,0]);
-                    edges(4) = subNURBS(faces(4),'at',[0,1;0,0]);
-                    faces(6) = GordonHall(edges);
-                    
-                    nurbs = GordonHall(faces);
-                    
+                    coeffs = zeros([d+1,number]);
+                    coeffs(4,1,:,:) = master_coeffs(4,1,:,:);
+                    coeffs(4,2:end,:,:) = master_coeffs(4,1,:,:).*slave1_coeffs(4,2:end,1,1);
+                    coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
+                    coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
+                    nurbs = createNURBSobject(coeffs,knots);
+%                     
                     if checkOrientation(nurbs, 10)
                         error('Self intersection!')
                     end
-                catch
-                    try
-                        len1 = norm(slave1_coeffs(1:3,end,1,1) - slave1_coeffs(1:3,1,1,1));
-                        len2 = norm(slave1_coeffs(1:3,end,1,end) - slave1_coeffs(1:3,1,1,end));
-                        t = mean([len1,len2]);
-                        faces(2) = faceFromNormals(nurbs_bdry{patch},patch,cornerData,t,options);
-                        faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-                        nurbs = loftNURBS({faces(1),faces(2)},1,1);
-                        nurbs{1}.coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
-                    catch
-                        coeffs = master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:);
-                        nurbs = createNURBSobject(coeffs,knots);
-                    end
+                catch ME
+                    warning(ME.message)
+                    coeffs = master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:);
+                    nurbs = createNURBSobject(coeffs,knots);
                 end
             case 'A13_2'
                 coeffs = master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:);
@@ -431,99 +354,115 @@ switch maxNoSharpAngles
             slave2_coeffs = faces{5}.coeffs;
 
             try
-                midx_opposite = midx-(-1).^midx;
-                cornerIndices = intermediateCorner(midx);
-                oppositeCornerIndices = intermediateCorner(midx_opposite);
+%                 midx_opposite = midx-(-1).^midx;
+%                 cornerIndices = intermediateCorner(midx);
+%                 oppositeCornerIndices = intermediateCorner(midx_opposite);
+% 
+%                 normals = cornerData(patch).avg_v_n(oppositeCornerIndices,:).';
+%                 v_n = cornerData(patch).v_n(oppositeCornerIndices,:).';
+%                 indices = acos(abs(dot(normals,v_n,1))) > avg_v_n_threshholdAngle;
+%                 normals(:, indices) = v_n(:,indices);
+%                 acuteConnection = (angles(patch,midx) + angles(patch,midx_opposite)/2) < pi;
+%                 if true
+%                     if any(acuteConnection)
+%                         error('acute angles found')
+%                     end
+%                 else
+%                     if all(acuteConnection) % Make opposite sides "parallel"
+%                         normals = cornerData(patch).v_t2(cornerIndices,:).';
+%                     else
+%                         for i = 1:2
+%                             sgn = (-1)^midx(i);
+%                             if acuteConnection(i)
+%                                 switch midx(i)
+%                                     case {1,2}
+%                                         v_t = cornerData(patch).v_xi(oppositeCornerIndices,:);
+%                                     case {3,4}
+%                                         v_t = cornerData(patch).v_eta(oppositeCornerIndices,:);
+%                                 end
+%                                 v_n = cornerData(patch).v_n(oppositeCornerIndices,:);
+% %                                 phi = acos(dot(v_t,v_n));
+%                                 theta = angles(patch,midx(i))*acuteAngleAdjustment;
+% %                                 cornerNormal = ([v_t; v_n]\[cos(theta); cos(theta-phi)]);
+% %                                 cornerNormal = cornerNormal./vecnorm(cornerNormal,1);
+%         
+%                                 normals = (-sgn*v_t*cos(theta) + v_n*sin(theta)).';
+%                             end
+%                         end
+%                     end
+%                 end
+% 
+%                 len2 = norm(slave1_coeffs(1:3,end,1,end) - slave1_coeffs(1:3,1,1,end));
+%                 g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
+%                 coeffs2 = zeros(d+1,number(1));
+%                 coeffs2(1:3,:) = master_coeffs(1:3,1,end,end) + len2*normals.*g;
+%                 coeffs2(4,:) = [master_coeffs(4,1,end,end), slave1_coeffs(4,2:end,1,end)]; % Use the weights based on the weights on opposite side
+% 
+%                 edges = cell(1,4);
+%                 edges(1) = subNURBS(faces(5),'at',[0,0;0,1]);
+%                 edges(2) = createNURBSobject(coeffs2,knots{1});
+%                 edges(3) = subNURBS(faces(1),'at',[0,1;0,0]);
+%                 g = reshape(aveknt(knots{3}, degree(3)+1),1,[]);
+%                 coeffs4 = edges{1}.coeffs(:,end).*(1-g) + coeffs2(:,end).*g;
+%                 edges(4) = createNURBSobject(coeffs4,knots{3});
+%                 faces(4) = GordonHall(edges);
+% 
+%                 edges(1) = subNURBS(faces(3),'at',[0,0;0,1]);
+%                 edges(2) = subNURBS(faces(4),'at',[0,0;0,1]);
+%                 edges(3) = subNURBS(faces(5),'at',[0,1;0,0]);
+%                 g = reshape(aveknt(knots{2}, degree(2)+1),1,[]);
+%                 coeffs4 = edges{1}.coeffs(:,end).*(1-g) + edges{2}.coeffs(:,end).*g;
+%                 edges(4) = createNURBSobject(coeffs4,knots{2});
+%                 faces(2) = GordonHall(edges);
+% 
+%                 edges(1) = subNURBS(faces(1),'at',[0,0;0,1]);
+%                 edges(2) = subNURBS(faces(2),'at',[0,0;0,1]);
+%                 edges(3) = subNURBS(faces(3),'at',[0,1;0,0]);
+%                 edges(4) = subNURBS(faces(4),'at',[0,1;0,0]);
+%                 faces(6) = GordonHall(edges);
+%                 
+%                 nurbs = GordonHall(faces);
+%                 faces_old = faces;
+%                 opposite_patchID = [patch,slave3,slave5];
+%                 counter = 1;
+%                 for i_face = [1,3,5]
+%                     if checkOrientation(nurbs, 10)
+%                         faces = faces_old;
+%                         face = faceFromNormals(opposite_patchID(counter),S2Vobj,options,len2);
+%                         face = orientNURBS(face{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+%                         faces{i_face+1}.coeffs(:,2:end,2:end) = face{1}.coeffs(:,2:end,2:end);
+%                         switch i_face
+%                             case 1
+%                                 faces{4}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
+%                                 faces{6}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
+%                             case 3
+%                                 faces{6}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
+%                                 faces{2}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
+%                             case 5
+%                                 faces{2}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
+%                                 faces{4}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
+%                         end
+%                         nurbs = GordonHall(faces);
+%                     else
+%                         break
+%                     end
+%                     counter = counter + 1;
+%                 end
 
-                cornerNormal = cornerData(patch).avg_v_n(oppositeCornerIndices,:).';
-                v_n = cornerData(patch).v_n(oppositeCornerIndices,:).';
-                indices = acos(abs(dot(cornerNormal,v_n,1))) > avg_v_n_threshholdAngle;
-                cornerNormal(:, indices) = v_n(:,indices);
-                acuteConnection = (angles(patch,midx) + angles(patch,midx_opposite)/2) < pi;
-                if true
-                    if any(acuteConnection)
-                        error('acute angles found')
-                    end
-                else
-                    if all(acuteConnection) % Make opposite sides "parallel"
-                        cornerNormal = cornerData(patch).v_t2(cornerIndices,:).';
-                    else
-                        for i = 1:2
-                            sgn = (-1)^midx(i);
-                            if acuteConnection(i)
-                                switch midx(i)
-                                    case {1,2}
-                                        v_t = cornerData(patch).v_xi(oppositeCornerIndices,:);
-                                    case {3,4}
-                                        v_t = cornerData(patch).v_eta(oppositeCornerIndices,:);
-                                end
-                                v_n = cornerData(patch).v_n(oppositeCornerIndices,:);
-%                                 phi = acos(dot(v_t,v_n));
-                                theta = angles(patch,midx(i))*acuteAngleAdjustment;
-%                                 cornerNormal = ([v_t; v_n]\[cos(theta); cos(theta-phi)]);
-%                                 cornerNormal = cornerNormal./vecnorm(cornerNormal,1);
-        
-                                cornerNormal = (-sgn*v_t*cos(theta) + v_n*sin(theta)).';
-                            end
-                        end
-                    end
-                end
+                len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,number(2)]);
+                len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,number(3)]);
+                len = mean(len1,len2,1);
+                face_normals = faceFromNormals(patch,S2Vobj,options);
+                face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
 
-                len2 = norm(slave1_coeffs(1:3,end,1,end) - slave1_coeffs(1:3,1,1,end));
                 g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-                coeffs2 = zeros(d+1,number(1));
-                coeffs2(1:3,:) = master_coeffs(1:3,1,end,end) + len2*cornerNormal.*g;
-                coeffs2(4,:) = [master_coeffs(4,1,end,end), slave1_coeffs(4,2:end,1,end)]; % Use the weights based on the weights on opposite side
-
-                edges = cell(1,4);
-                edges(1) = subNURBS(faces(5),'at',[0,0;0,1]);
-                edges(2) = createNURBSobject(coeffs2,knots{1});
-                edges(3) = subNURBS(faces(1),'at',[0,1;0,0]);
-                g = reshape(aveknt(knots{3}, degree(3)+1),1,[]);
-                coeffs4 = edges{1}.coeffs(:,end).*(1-g) + coeffs2(:,end).*g;
-                edges(4) = createNURBSobject(coeffs4,knots{3});
-                faces(4) = GordonHall(edges);
-
-                edges(1) = subNURBS(faces(3),'at',[0,0;0,1]);
-                edges(2) = subNURBS(faces(4),'at',[0,0;0,1]);
-                edges(3) = subNURBS(faces(5),'at',[0,1;0,0]);
-                g = reshape(aveknt(knots{2}, degree(2)+1),1,[]);
-                coeffs4 = edges{1}.coeffs(:,end).*(1-g) + edges{2}.coeffs(:,end).*g;
-                edges(4) = createNURBSobject(coeffs4,knots{2});
-                faces(2) = GordonHall(edges);
-
-                edges(1) = subNURBS(faces(1),'at',[0,0;0,1]);
-                edges(2) = subNURBS(faces(2),'at',[0,0;0,1]);
-                edges(3) = subNURBS(faces(3),'at',[0,1;0,0]);
-                edges(4) = subNURBS(faces(4),'at',[0,1;0,0]);
-                faces(6) = GordonHall(edges);
-                
-                nurbs = GordonHall(faces);
-                faces_old = faces;
-                opposite_patchID = [patch,slave3,slave5];
-                counter = 1;
-                for i_face = [1,3,5]
-                    if checkOrientation(nurbs, 10)
-                        faces = faces_old;
-                        face = faceFromNormals(faces{i_face},opposite_patchID(counter),cornerData,len2,options);
-                        faces{i_face+1}.coeffs(:,2:end,2:end) = face{1}.coeffs(:,2:end,2:end);
-                        switch i_face
-                            case 1
-                                faces{4}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
-                                faces{6}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
-                            case 3
-                                faces{6}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
-                                faces{2}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
-                            case 5
-                                faces{2}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
-                                faces{4}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
-                        end
-                        nurbs = GordonHall(faces);
-                    else
-                        break
-                    end
-                    counter = counter + 1;
-                end
+                coeffs = zeros([d+1,number]);
+                coeffs(4,1,:,:) = master_coeffs(4,1,:,:);
+                coeffs(4,2:end,:,:) = master_coeffs(4,1,:,:).*mean(slave1_coeffs(4,2:end,1,1),slave2_coeffs(4,2:end,1,1),2);
+                coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
+                coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
+                coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
+                nurbs = createNURBSobject(coeffs,knots);
                 if checkOrientation(nurbs, 10)
                     error('Self intersection!')
                 end
@@ -692,7 +631,7 @@ indices_nan = and(any(isnan(angles),2),~indices_covered);
 noSharpAngles = sum(sharpAngles,2);
 noSharpAngles(indices_op) = noSharpAngles(indices_op) + 0.1; % Prioritize cases where oposite faces are known
 noSharpAngles(indices_nan) = noSharpAngles(indices_nan) + 0.2; % Prioritize cases containing singularities
-noSharpAngles(1:noBdryPatches) = noSharpAngles(1:noBdryPatches) + 0.01; % Prioritize cases containing singularities
+noSharpAngles(1:noBdryPatches) = noSharpAngles(1:noBdryPatches) + 0.21; % Prioritize input surface
 maxNoSharpAngles = max(noSharpAngles);
 candidates = and(noSharpAngles == maxNoSharpAngles,~indices_covered);
 avgAngles = Inf(size(sharpAngles,1),1);
@@ -708,9 +647,9 @@ maxNoSharpAngles = floor(maxNoSharpAngles);
 
 function S2Vobj = computeCornerData(S2Vobj,options,indices)
 
-nurbs = S2Vobj.nurbs_bdry;
-noBdryPatches = numel(nurbs);
-d_p = nurbs{1}.d_p;
+nurbs_bdry = S2Vobj.nurbs_bdry;
+noBdryPatches = numel(nurbs_bdry);
+d_p = nurbs_bdry{1}.d_p;
 d = 3; % dimension
 if nargin < 3
     indices = 1:noBdryPatches;
@@ -724,6 +663,12 @@ if ~isfield(S2Vobj,'cornerData')
                         'cornerAngle', cell(1, noBdryPatches), ...
                         'v_n', cell(1, noBdryPatches), ...
                         'avg_v_n', cell(1, noBdryPatches));
+    S2Vobj.edgeData = struct('X', cell(1, noBdryPatches), ...
+                        'v_xi', cell(1, noBdryPatches), ...
+                        'v_eta', cell(1, noBdryPatches), ...
+                        'v_n', cell(1, noBdryPatches), ...
+                        'avg_v_n', cell(1, noBdryPatches), ...
+                        'collapsed', cell(1, noBdryPatches));
     S2Vobj.angles = NaN(noBdryPatches,2*d_p);
 else
     noNewFields = noBdryPatches-numel(S2Vobj.cornerData);
@@ -735,6 +680,12 @@ else
                                      'cornerAngle', cell(1, noNewFields), ...
                                      'v_n', cell(1, noNewFields), ...
                                      'avg_v_n', cell(1, noNewFields))];
+    S2Vobj.edgeData = [S2Vobj.edgeData, struct('X', cell(1, noNewFields), ...
+                                     'v_xi', cell(1, noNewFields), ...
+                                     'v_eta', cell(1, noNewFields), ...
+                                     'v_n', cell(1, noNewFields), ...
+                                     'avg_v_n', cell(1, noNewFields), ...
+                                     'collapsed', cell(1, noNewFields))];
     S2Vobj.angles = [S2Vobj.angles; NaN(noNewFields,2*d_p)];
 end
 Eps = options.Eps;
@@ -747,7 +698,7 @@ xi = [0,0;
 
 %% Compute normal vector at the vertices
 for patch = indices
-    [X,dXdxi,dXdeta] = evaluateNURBSvec(nurbs{patch},xi,1);
+    [X,dXdxi,dXdeta] = evaluateNURBSvec(nurbs_bdry{patch},xi,1);
     v_xi = dXdxi./norm2(dXdxi);
     v_eta = dXdeta./norm2(dXdeta);
     v_t1 = [v_xi(1,:); v_eta(2,:); -v_xi(3,:); -v_eta(4,:)];
@@ -782,7 +733,7 @@ for patch = indices
                   1-Eps2,Eps2;
                   1-Eps2,1-Eps2;
                   Eps2,1-Eps2]; 
-        [~,dXdxi_m2,dXdeta_m2] = evaluateNURBSvec(nurbs{patch},xi_eps(singularCorners,:),1);
+        [~,dXdxi_m2,dXdeta_m2] = evaluateNURBSvec(nurbs_bdry{patch},xi_eps(singularCorners,:),1);
         v_xi(singularCorners,:) = dXdxi_m2./norm2(dXdxi_m2);
         v_eta(singularCorners,:) = dXdeta_m2./norm2(dXdeta_m2);
         if ~isempty(singularCorners_v_n)
@@ -838,7 +789,7 @@ for patch = indices
             end
             sidx = S2Vobj.topologyMap{slave_prev}(midx).sidx;
 
-            slave_i_corner = sidx2leftCorner(sidx);
+            slave_i_corner = midx2leftCorner(sidx);
             neighbours(counter,1) = slave;
             neighbours(counter,2) = slave_i_corner;
         end
@@ -859,6 +810,66 @@ for patch = indices
         end
     end
 end
+
+%% Compute normal vector at the edges
+for patch = indices
+    knots = nurbs_bdry{patch}.knots;
+    degree = nurbs_bdry{patch}.degree;
+    number = nurbs_bdry{patch}.number;
+    S2Vobj.edgeData(patch).collapsed = zeros(1,4);
+    for midx = 1:4
+        switch midx
+            case 1
+                xi = [zeros(number(2),1), aveknt(knots{2},degree(2)+1).'];
+            case 2
+                xi = [ones(number(2),1), aveknt(knots{2},degree(2)+1).'];
+            case 3
+                xi = [aveknt(knots{1},degree(1)+1).', zeros(number(1),1)];
+            case 4
+                xi = [aveknt(knots{1},degree(1)+1).', ones(number(1),1)];
+        end
+        [X,dXdxi,dXdeta] = evaluateNURBSvec(nurbs_bdry{patch},xi,1);
+        v_xi = dXdxi./norm2(dXdxi);
+        v_eta = dXdeta./norm2(dXdeta);
+        v_n = cross(v_xi, v_eta, 2);
+    
+        % Handle edges collapsed into a single point
+        if norm(X(1,:)-X(end,:)) < Eps
+            S2Vobj.edgeData(patch).collapsed(midx) = true;
+            v_n = repmat(S2Vobj.cornerData(patch).v_n(midx2leftCorner(midx),:),size(v_n,1),1);
+        else
+            S2Vobj.edgeData(patch).collapsed(midx) = false;
+            i_corners = midx2corners(midx);
+            v_n(1,:) = S2Vobj.cornerData(patch).v_n(i_corners(1),:);
+            v_n(end,:) = S2Vobj.cornerData(patch).v_n(i_corners(2),:);
+        end
+
+        S2Vobj.edgeData(patch).X{midx} = X;
+        S2Vobj.edgeData(patch).v_xi{midx} = v_xi;
+        S2Vobj.edgeData(patch).v_eta{midx} = v_eta;
+        S2Vobj.edgeData(patch).v_n{midx} = v_n;
+    end
+end
+
+%% Compute average normal vector at the edges
+for patch = indices
+    for midx = 1:4
+        slave = S2Vobj.topologyMap{patch}(midx).slave;
+        if isempty(slave)
+            S2Vobj.edgeData(patch).avg_v_n{midx} = repmat(S2Vobj.cornerData(patch).avg_v_n(midx2leftCorner(midx),:),size(S2Vobj.edgeData(patch).v_n{midx},1),1);
+        else
+            sidx = S2Vobj.topologyMap{patch}(midx).sidx;
+            v_nm = S2Vobj.edgeData(patch).v_n{midx};
+            v_ns = S2Vobj.edgeData(slave).v_n{sidx};
+            avg_v_n = (v_nm+v_ns)/2;
+            i_corners = midx2corners(midx);
+            avg_v_n(1,:) = S2Vobj.cornerData(patch).avg_v_n(i_corners(1),:);
+            avg_v_n(end,:) = S2Vobj.cornerData(patch).avg_v_n(i_corners(2),:);
+            S2Vobj.edgeData(patch).avg_v_n{midx} = avg_v_n./norm2(avg_v_n);
+        end
+    end
+end
+
 %% Compute angle between all pairs of connected patches
 for patch = indices
     for midx = 1:2*d_p
@@ -870,26 +881,48 @@ for patch = indices
             sidx = S2Vobj.topologyMap{patch}(midx).sidx;
             orient = S2Vobj.topologyMap{patch}(midx).orient;
             sgn_m = (-1)^midx;
-            i_corners_m = midx2corners(midx);
-            switch midx
-                case {1,2}
-                    v_tm = sgn_m*S2Vobj.cornerData(patch).v_xi(i_corners_m,:);
-                case {3,4}
-                    v_tm = sgn_m*S2Vobj.cornerData(patch).v_eta(i_corners_m,:);
-            end
-            v_nm = S2Vobj.cornerData(patch).v_n(i_corners_m,:);
-            i_corners_s = midx2corners(sidx);
-            sgn_s = (-1)^sidx;
-            switch sidx
-                case {1,2}
-                    v_ts = sgn_s*S2Vobj.cornerData(slave).v_xi(i_corners_s,:);
-                case {3,4}
-                    v_ts = sgn_s*S2Vobj.cornerData(slave).v_eta(i_corners_s,:);
-            end
-            v_ns = S2Vobj.cornerData(slave).v_n(i_corners_s,:);
-            if orient
-                v_ts = flipud(v_ts);
-                v_ns = flipud(v_ns);
+            if false
+                i_corners_m = midx2corners(midx);
+                switch midx
+                    case {1,2}
+                        v_tm = sgn_m*S2Vobj.cornerData(patch).v_xi(i_corners_m,:);
+                    case {3,4}
+                        v_tm = sgn_m*S2Vobj.cornerData(patch).v_eta(i_corners_m,:);
+                end
+                v_nm = S2Vobj.cornerData(patch).v_n(i_corners_m,:);
+                i_corners_s = midx2corners(sidx);
+                sgn_s = (-1)^sidx;
+                switch sidx
+                    case {1,2}
+                        v_ts = sgn_s*S2Vobj.cornerData(slave).v_xi(i_corners_s,:);
+                    case {3,4}
+                        v_ts = sgn_s*S2Vobj.cornerData(slave).v_eta(i_corners_s,:);
+                end
+                v_ns = S2Vobj.cornerData(slave).v_n(i_corners_s,:);
+                if orient
+                    v_ts = flipud(v_ts);
+                    v_ns = flipud(v_ns);
+                end
+            else
+                switch midx
+                    case {1,2}
+                        v_tm = sgn_m*S2Vobj.edgeData(patch).v_xi{midx};
+                    case {3,4}
+                        v_tm = sgn_m*S2Vobj.edgeData(patch).v_eta{midx};
+                end
+                v_nm = S2Vobj.edgeData(patch).v_n{midx};
+                sgn_s = (-1)^sidx;
+                switch sidx
+                    case {1,2}
+                        v_ts = sgn_s*S2Vobj.edgeData(slave).v_xi{sidx};
+                    case {3,4}
+                        v_ts = sgn_s*S2Vobj.edgeData(slave).v_eta{sidx};
+                end
+                v_ns = S2Vobj.edgeData(slave).v_n{sidx};
+                if orient
+                    v_ts = flipud(v_ts);
+                    v_ns = flipud(v_ns);
+                end
             end
             nanIndices = or(any(isnan(v_tm),2), any(isnan(v_ts),2));
             v_tm(nanIndices,:) = [];
@@ -908,14 +941,28 @@ for patch = indices
     end
 end
 if 0
+%     for patch = 1:noBdryPatches
+%         if ~all(isnan(S2Vobj.angles(patch,:)))
+%             quiver3(S2Vobj.cornerData(patch).X(:,1), ...
+%                     S2Vobj.cornerData(patch).X(:,2), ...
+%                     S2Vobj.cornerData(patch).X(:,3), ...
+%                     S2Vobj.cornerData(patch).avg_v_n(:,1), ...
+%                     S2Vobj.cornerData(patch).avg_v_n(:,2), ...
+%                     S2Vobj.cornerData(patch).avg_v_n(:,3),'LineWidth',1,'AutoScale','off','DisplayName',['Patch ' num2str(patch)])
+%         end
+%     end
+    figure,axis equal
+    plotNURBSvec(nurbs_bdry)
     for patch = 1:noBdryPatches
         if ~all(isnan(S2Vobj.angles(patch,:)))
-            quiver3(S2Vobj.cornerData(patch).X(:,1), ...
-                    S2Vobj.cornerData(patch).X(:,2), ...
-                    S2Vobj.cornerData(patch).X(:,3), ...
-                    S2Vobj.cornerData(patch).avg_v_n(:,1), ...
-                    S2Vobj.cornerData(patch).avg_v_n(:,2), ...
-                    S2Vobj.cornerData(patch).avg_v_n(:,3),'LineWidth',1,'AutoScale','off','DisplayName',['Patch ' num2str(patch)])
+            for midx = 1:4
+                quiver3(S2Vobj.edgeData(patch).X{midx}(:,1), ...
+                        S2Vobj.edgeData(patch).X{midx}(:,2), ...
+                        S2Vobj.edgeData(patch).X{midx}(:,3), ...
+                        S2Vobj.edgeData(patch).avg_v_n{midx}(:,1), ...
+                        S2Vobj.edgeData(patch).avg_v_n{midx}(:,2), ...
+                        S2Vobj.edgeData(patch).avg_v_n{midx}(:,3),'LineWidth',1,'AutoScale','off','DisplayName',['Patch ' num2str(patch)])
+            end
         end
     end
     keyboard
@@ -987,13 +1034,13 @@ end
 function idx_oposite = get_oposite_corner_index(idx)
 idx_oposite = mod(idx+2-1,4)+1;
 
-function i = sidx2leftCorner(sidx)
+function i = midx2leftCorner(midx)
 map = [4,2,1,3]; % This map gives the i_corner for the corner (to the left) of the patch from a given side. 
-i = map(sidx);
+i = map(midx);
 
-function i = sidx2rightCorner(sidx)
+function i = midx2rightCorner(midx)
 map = [1,3,2,4]; % This map gives the i_corner for the corner (to the right) of the patch from a given side. 
-i = map(sidx);
+i = map(midx);
 
 function midx = midxToLeftmidx(sidx)
 map = [4,3,1,2]; % This map gives the side index to the left of a given side
@@ -1014,6 +1061,12 @@ indices = map(midx,:);
 function idx = corner2midx(i)
 map =  [1,3,2,4]; % This map gives the midx for the side of the patch sharing a given corner to the left of that side. 
 idx = map(i);
+
+function idx = idx1To_idx2(idx1,idx2)
+map = [1,3,2,4];
+i_map1 = find(map == idx1);
+map = circshift(map,1-i_map1);
+idx = map([1,3,2,4] == idx2);
 
 function orient = idx1To_idx2_orient(idx1,idx2,flip)
 if nargin < 3
@@ -1040,35 +1093,64 @@ else
 end
 orient = map(idx1);
 
-function face = faceFromNormals(nurbs,patch,cornerData,t,options)
+function face = faceFromNormals(patch,S2Vobj,options,t,useAvgNormals)
+if nargin < 5
+    useAvgNormals = true;
+end
+nurbs = S2Vobj.nurbs_bdry{patch};
 d = nurbs.d;
-Eps = options.Eps;
 knots = nurbs.knots;
 degree = nurbs.degree;
 gxi = aveknt(knots{1}, degree(1)+1);
 geta = aveknt(knots{2}, degree(2)+1);
 [XI,ETA] = ndgrid(gxi,geta);
-[X,dXdxi,dXdeta] = evaluateNURBSvec(nurbs,[XI(:),ETA(:)],1);
+[~,dXdxi,dXdeta] = evaluateNURBSvec(nurbs,[XI(:),ETA(:)],1);
 v_xi = dXdxi./norm2(dXdxi);
 v_eta = dXdeta./norm2(dXdeta);
 v_n = cross(v_xi, v_eta, 2);
 v_n = v_n./norm2(v_n);
 v_n = reshape(v_n,numel(gxi),numel(geta),d);
-X = reshape(X,numel(gxi),numel(geta),d);
 
-% Handle edges collapsed into a single point
-if norm(reshape(X(1,1,:)-X(end,1,:),d,[])) < Eps
-    v_n(:,1,:) = repmat(cornerData(patch).v_n(1,:),numel(gxi),1);
-end
-if norm(reshape(X(end,1,:)-X(end,end,:),d,[])) < Eps
-    v_n(end,:,:) = repmat(cornerData(patch).v_n(2,:),numel(geta),1);
-end
-if norm(reshape(X(1,end,:)-X(end,end,:),d,[])) < Eps
-    v_n(:,end,:) = repmat(cornerData(patch).v_n(3,:),numel(gxi),1);
-end
-if norm(reshape(X(1,1,:)-X(1,end,:),d,[])) < Eps
-    v_n(1,:,:) = repmat(cornerData(patch).v_n(4,:),numel(geta),1);
+% Use corrected normal vectors at the boundaries
+v_n(1,:,:) = S2Vobj.edgeData(patch).v_n{1};
+v_n(end,:,:) = S2Vobj.edgeData(patch).v_n{2};
+v_n(:,1,:) = S2Vobj.edgeData(patch).v_n{3};
+v_n(:,end,:) = S2Vobj.edgeData(patch).v_n{4};
+
+if useAvgNormals
+    for midx2 = 1:4
+        avg_v_n = S2Vobj.edgeData(patch).avg_v_n{midx2};
+        v_n_temp = S2Vobj.edgeData(patch).v_n{midx2};
+        indices = acos(abs(dot(avg_v_n,v_n_temp,2))) > options.avg_v_n_threshholdAngle;
+        v_n_temp(indices,:) = v_n_temp(indices,:);
+        switch midx2
+            case 1
+                v_n(1,:,:) = v_n_temp;
+            case 2
+                v_n(end,:,:) = v_n_temp;
+            case 3
+                v_n(:,1,:) = v_n_temp;
+            case 4
+                v_n(:,end,:) = v_n_temp;
+        end
+    end
 end
 coeffs = nurbs.coeffs;
-coeffs(1:3,:,:) = coeffs(1:3,:,:) + t*permute(v_n,[3,1,2]);
+if nargin < 4
+    coeffs(1:3,:,:) = permute(v_n,[3,1,2]);
+else
+    coeffs(1:3,:,:) = coeffs(1:3,:,:) + t.*permute(v_n,[3,1,2]);
+end
 face = createNURBSobject(coeffs,knots);
+
+
+
+
+
+
+
+
+
+
+
+
