@@ -45,19 +45,7 @@ else
     
     S2Vobj.nurbs_vol = cell(1,4*numel(nurbs_surf));
     counter = 0;
-% 
-%     if isfield(options,'no_colors')
-%         no_colors = options.no_colors;
-%     else
-%         no_colors = max(8,noBdryPatches/10);
-%     end
-%     colors = getColorMap('shsv',ax,no_colors);
 end
-% if isfield(options,'ax')
-%     ax = options.ax;
-% else
-%     ax = gca;
-% end
 
 counter = counter + 1;
 
@@ -71,25 +59,6 @@ if ~isempty(nurbs_newBdry)
     nurbs_newBdry(zeroMeasure) = [];
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Plotting
-% if true
-%     h = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotParmDir',0,'displayName',['Patch ' num2str(counter)], ...
-%         'color',colors(mod(counter-1,no_colors)+1,:)); % colors(mod(round(counter*no_colors/(2*noBdryPatches))-1,no_colors)+1,:)
-% else
-%     [h,maxC_patch,minC_patch] = plotNURBSvec(ax,nurbs_vol(counter),'plotControlPolygon',0,'plotNormalVectors',0,...
-%                     'displayName',['Patch ' num2str(counter)],'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi));
-%     if minC_patch < minC
-%         minC = minC_patch;
-%     end
-%     if maxC_patch > maxC
-%         maxC = maxC_patch;
-%     end
-%     clim(ax,[minC,maxC])
-% end
-% drawnow
-% pause(0.001)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(nurbs_newBdry)
     noNewBdryPatches = numel(nurbs_newBdry);
     newBdryPatches = (numel(S2Vobj.nurbs_bdry)+1):(numel(S2Vobj.nurbs_bdry)+noNewBdryPatches);
@@ -120,8 +89,8 @@ if ~isempty(nurbs_newBdry)
 
     for patch_i = newBdryPatches
         S2Vobj.topologyMap{patch_i} = struct('slave', cell(1, 4), ...
-                                      'sidx', cell(1, 4), ...
-                                      'orient', cell(1, 4));
+                                             'sidx', cell(1, 4), ...
+                                             'orient', cell(1, 4));
     end
 
     for i = 1:numel(connectionSub)
@@ -143,14 +112,13 @@ if ~isempty(nurbs_newBdry)
         end
     end
 
-%     try
-        % Update angles
+    try % to update angles
         S2Vobj = computeCornerData(S2Vobj,options,newBdryPatches);
-%     catch ME
-%         warning(ME.message)
-%         S2Vobj.nurbs_vol(counter) = [];
-%         counter = counter - 1;
-%     end
+    catch ME
+        warning(ME.message)
+        S2Vobj.nurbs_vol(counter) = [];
+        counter = counter - 1;
+    end
 end
 S2Vobj.angles(nurbs_covered,:) = NaN;
 S2Vobj.S2Vcompleted = ~(counter == 1 || any(S2Vobj.angles(:) < pi) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
@@ -449,16 +417,16 @@ switch maxNoSharpAngles
 %                     counter = counter + 1;
 %                 end
 
-                len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,number(2)]);
-                len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,number(3)]);
-                len = mean(len1,len2,1);
+                len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
+                len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
+                len = mean(cat(1,len1,len2),1);
                 face_normals = faceFromNormals(patch,S2Vobj,options);
                 face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
 
                 g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
                 coeffs = zeros([d+1,number]);
                 coeffs(4,1,:,:) = master_coeffs(4,1,:,:);
-                coeffs(4,2:end,:,:) = master_coeffs(4,1,:,:).*mean(slave1_coeffs(4,2:end,1,1),slave2_coeffs(4,2:end,1,1),2);
+                coeffs(4,2:end,:,:) = master_coeffs(4,1,:,:).*mean(cat(1,slave1_coeffs(4,2:end,1,1),slave2_coeffs(4,2:end,1,1)),1);
                 coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
                 coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
                 coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
@@ -466,7 +434,8 @@ switch maxNoSharpAngles
                 if checkOrientation(nurbs, 10)
                     error('Self intersection!')
                 end
-            catch
+            catch ME
+                warning(ME.message)
                 noStrategies = 2;
                 nurbs = cell(1,noStrategies);
                 mean_J_r = zeros(1,noStrategies);
@@ -843,6 +812,7 @@ for patch = indices
             v_n(1,:) = S2Vobj.cornerData(patch).v_n(i_corners(1),:);
             v_n(end,:) = S2Vobj.cornerData(patch).v_n(i_corners(2),:);
         end
+        v_n = v_n./norm2(v_n); % Normalize normal vector
 
         S2Vobj.edgeData(patch).X{midx} = X;
         S2Vobj.edgeData(patch).v_xi{midx} = v_xi;

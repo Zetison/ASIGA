@@ -109,8 +109,7 @@ controlPolygonHandle = gobjects(1,noPatches);
 elementEdgesHandle = gobjects(1,noPatches);
 objectHandle = gobjects(1,noPatches);
 normalVectorsHandle = gobjects(1,noPatches);
-d_p = nurbsPatches{1}.d_p; % Assume d_p to be the same for all patches for parmDir
-parmDirHandle = gobjects(d_p,noPatches);
+parmDirHandle = gobjects(3,noPatches);
 for patch = 1:noPatches
     if isempty(options.displayName)
         displayName = sprintf('Patch %d ', patch);
@@ -584,6 +583,7 @@ else
     if plotColorFun
         colorbar
     end
+    drawnow
 end
 handles.controlPolygonHandle = controlPolygonHandle;
 handles.elementEdgesHandle = elementEdgesHandle;
@@ -591,7 +591,6 @@ handles.objectHandle = objectHandle;
 handles.normalVectorsHandle = normalVectorsHandle;
 handles.parmDirHandle = parmDirHandle;
 % axis equal
-drawnow
 
 function h = plotGridLines(v,displayName)
 if size(v,2) > 2
