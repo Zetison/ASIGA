@@ -1,4 +1,4 @@
-% clear all
+clear all
 % close all
 
 addpath(genpath('../export_fig'))
@@ -10,17 +10,18 @@ no2Dpoints = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot all shapes
 R = 1;
-shapes = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
+models = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
            'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
-shapes = {'BeTSSiM1'};
-for shape = shapes
+models = {'BeTSSiM4'};
+for model = models
     for parm = 2
 %         close all
         options.parm = parm;
 %         options.theta = 2*pi;r
 %         options.theta_eta = 0.9*2*pi;
 %         options.R = 2;
-        nurbs = eval(['get' shape{1} 'Data(options)']);
+%         options.t = 0.1;
+        nurbs = eval(['get' model{1} 'Data(options)']);
         resolution = 32*[1,1,1];
         M = 2;
         refLength = 1;
@@ -29,19 +30,22 @@ for shape = shapes
 %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
         figure
         plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,...
-            'plotNormalVectors',0,'plotParmDir',1);
+            'plotNormalVectors',0,'plotParmDir',0,'plotWeights',1,'coarseLinearSampling',false);
         axis equal
         grid off
         axis off
+        colorbar
         view(getView(0))
 %         view(getView(1))
 %         camlight
         material dull
         ax = gca;               % get the current axis
         ax.Clipping = 'off';    % turn clipping off
+
+%         write_g2(nurbs,['NURBSgeometries/g2files/' model{1} '_parm' num2str(parm)])
 %         axis on
 %         figureFullScreen(gcf)
-%         export_fig(['../../graphics/ASIGAmodels/' shape{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
+%         export_fig(['../../graphics/ASIGAmodels/' model{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
     end
 end
 % nurbs = translateNURBS(nurbs,[-L/2,0,0]);

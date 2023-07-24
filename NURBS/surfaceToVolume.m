@@ -149,7 +149,6 @@ d = 3; % dimension
 t = options.t;
 % original_angles = angles;
 sharpAngle = options.sharpAngle;
-avg_v_n_threshholdAngle = options.avg_v_n_threshholdAngle;
 acuteAngleAdjustment = 1.2;
 if nargin < 3
     [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle,S2Vobj.noBdryPatches);
@@ -214,8 +213,7 @@ switch maxNoSharpAngles
 
                     g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
                     coeffs = zeros([d+1,number]);
-                    coeffs(4,1,:,:) = master_coeffs(4,1,:,:);
-                    coeffs(4,2:end,:,:) = master_coeffs(4,1,:,:).*slave1_coeffs(4,2:end,1,1);
+                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
                     coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
                     coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
                     nurbs = createNURBSobject(coeffs,knots);
@@ -425,8 +423,7 @@ switch maxNoSharpAngles
 
                 g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
                 coeffs = zeros([d+1,number]);
-                coeffs(4,1,:,:) = master_coeffs(4,1,:,:);
-                coeffs(4,2:end,:,:) = master_coeffs(4,1,:,:).*mean(cat(1,slave1_coeffs(4,2:end,1,1),slave2_coeffs(4,2:end,1,1)),1);
+                coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
                 coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
                 coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
                 coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);

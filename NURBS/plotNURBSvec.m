@@ -16,8 +16,9 @@ options = struct('resolution',[32,32,32], ...
                  'plotControlPolygon', false, ...
                  'plotNormalVectors', false, ...
                  'plotParmDir', false, ...
-                 'plotJacobian', false, ...
                  'plotColorFun', true, ...
+                 'plotWeights', false, ...
+                 'plotJacobian', false, ...
                  'coarseLinearSampling', true, ...
                  'color',jet(numel(nurbsPatches)),...
                  'alphaValue',1,...
@@ -96,6 +97,11 @@ elseif size(color,1) < noPatches
     color = repmat(color,ceil(noPatches/size(color,1)),1);
 end
 plotJacobian = options.plotJacobian;
+plotWeights = options.plotWeights;
+if plotColorFun + plotJacobian + plotWeights > 1
+    warning('Only one of the options plotColorFun, plotJacobian and plotWeights will be used')
+end
+
 maxC = NaN;
 minC = NaN;
 if extraArg == 1
@@ -127,7 +133,7 @@ for patch = 1:noPatches
     if d > d_max
         d_max = d;
     end
-    if plotColorFun && plotJacobian && d_p == 3
+    if plotColorFun && ((plotJacobian && d_p == 3) || plotWeights)
         warning('Plotting solution from function handle instead of Jacobian')
     end
     p_values = cell(1,d_p);
@@ -204,6 +210,26 @@ for patch = 1:noPatches
                         normals_temp = (-1)^jj*normal./norm2(normal);
                     end
                     dX_temp = reshape(dX_temp,nuk1,nuk2, d, d_p);
+                    if plotParmDir
+                        for i_c = 1:d_p
+                            for j_c = 1:d_p
+                                Up{i_c,j_c}(1:nuk1,counter+1:counter+nuk2) = dX_temp(:,:,i_c,j_c);
+                            end
+                        end
+                    end
+                    if plotJacobian
+                        J_1 = dot(dX_temp(:,:,:,1),cross(dX_temp(:,:,:,2),dX_temp(:,:,:,3),3),3);
+                        J_1(J_1 < eps) = eps;
+                        if any(J_1(:) < -10*eps)
+                            warning('Negative Jacobian encountered')
+                        end
+                        C(1:nuk1,counter+1:counter+nuk2) = J_1;
+                    end
+                    if plotWeights
+                        C_temp = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1, nurbs.coeffs(4,:).');
+                        C_temp = reshape(C_temp,nuk1,nuk2);
+                        C(1:nuk1,counter+1:counter+nuk2) = C_temp;
+                    end
                     if plotColorFun
                         switch nargin(colorFun)
                             case 1
@@ -220,21 +246,6 @@ for patch = 1:noPatches
                                 C_temp = colorFun(XIETAZETA(:,indicesMat2(ii,:)),nurbs,NaN,NaN);
                         end
                         C(1:nuk1,counter+1:counter+nuk2) = reshape(C_temp,nuk1,nuk2);
-                    end
-                    if plotParmDir
-                        for i_c = 1:d_p
-                            for j_c = 1:d_p
-                                Up{i_c,j_c}(1:nuk1,counter+1:counter+nuk2) = dX_temp(:,:,i_c,j_c);
-                            end
-                        end
-                    end
-                    if plotJacobian
-                        J_1 = dot(dX_temp(:,:,:,1),cross(dX_temp(:,:,:,2),dX_temp(:,:,:,3),3),3);
-                        J_1(J_1 < eps) = eps;
-                        if any(J_1(:) < -10*eps)
-                            warning('Negative Jacobian encountered')
-                        end
-                        C(1:nuk1,counter+1:counter+nuk2) = log10(J_1);
                     end
                     L_gamma_temp = norm(X_temp(end,:)-X_temp(1,:));
                     if L_gamma_temp > L_gamma
@@ -271,7 +282,7 @@ for patch = 1:noPatches
         if options.plotObject
             maxC = max(max(C));
             minC = min(min(C));
-            if plotColorFun || plotJacobian
+            if plotColorFun || plotJacobian || plotWeights
                 objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
                         'LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName);
             else
@@ -328,6 +339,10 @@ for patch = 1:noPatches
             normal = cross(dvdxi,dvdeta,2);
             normals = normal./norm2(normal);
         end
+        if plotWeights
+            C = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
+            C = reshape(C,nuk1,nuk2);
+        end
         if plotColorFun
             switch nargin(colorFun)
                 case 1
@@ -342,7 +357,7 @@ for patch = 1:noPatches
         X = reshape(X,nuk1,nuk2,d);
     
         if options.plotObject
-            if plotColorFun
+            if plotColorFun || plotWeights
                 objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
                             'LineStyle','none','FaceAlpha',alphaValue, ...
                             'FaceLighting', faceLighting, 'DisplayName',displayName);
@@ -411,6 +426,10 @@ for patch = 1:noPatches
             dX(:,:,1) = dvdxi./norm2(dvdxi);
             dX(:,:,2) = dvdeta./norm2(dvdeta);
             dX = reshape(dX,nuk1,nuk2, d, d_p);
+            if plotWeights
+                C = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
+                C = reshape(C,nuk1,nuk2);
+            end
             if plotColorFun
                 switch nargin(colorFun)
                     case 1
