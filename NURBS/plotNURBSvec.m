@@ -123,6 +123,10 @@ for patch = 1:noPatches
         displayName = [options.displayName ', patch ' num2str(patch)];
     end
     nurbs = nurbsPatches{patch};
+    if isempty(nurbs)
+        warning('Empty NURBS patch encountered')
+        continue
+    end
     if isfield(nurbs,'isPML') && any(nurbs.isPML)
         colorPatch = getColor(11);
     else

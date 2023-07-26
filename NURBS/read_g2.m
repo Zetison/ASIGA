@@ -34,7 +34,7 @@ while ~feof(fid)
     end
     A = fscanf(fid,'%d\n',2);
     d = A(1);
-    rational = A(2);
+    isRational = A(2);
     number = zeros(1,d_p);
     degree = zeros(1,d_p);
     knots = cell(1,d_p);
@@ -45,11 +45,11 @@ while ~feof(fid)
         knots{i} = fscanf(fid,'%f\n',number(i)+degree(i)+1)';
     end
 
-    coeffs = zeros([d+rational,number]);
+    coeffs = zeros([d+isRational,number]);
     for i = 1:prod(number)
-        coeffs(:,i) = fscanf(fid,'%f\n',d+rational)';
+        coeffs(:,i) = fscanf(fid,'%f\n',d+isRational)';
     end
-    if rational
+    if isRational
         coeffs(1:d,:) = coeffs(1:d,:)./coeffs(end,:);
     else
         coeffs(end+1,:) = 1;

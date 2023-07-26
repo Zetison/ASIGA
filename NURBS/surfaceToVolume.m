@@ -112,13 +112,13 @@ if ~isempty(nurbs_newBdry)
         end
     end
 
-    try % to update angles
+%     try % to update angles
         S2Vobj = computeCornerData(S2Vobj,options,newBdryPatches);
-    catch ME
-        warning(ME.message)
-        S2Vobj.nurbs_vol(counter) = [];
-        counter = counter - 1;
-    end
+%     catch ME
+%         warning(ME.message)
+%         S2Vobj.nurbs_vol(counter) = [];
+%         counter = counter - 1;
+%     end
 end
 S2Vobj.angles(nurbs_covered,:) = NaN;
 S2Vobj.S2Vcompleted = ~(counter == 1 || any(S2Vobj.angles(:) < pi) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
@@ -414,20 +414,28 @@ switch maxNoSharpAngles
 %                     end
 %                     counter = counter + 1;
 %                 end
-
-                len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
-                len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
-                len = mean(cat(1,len1,len2),1);
-                face_normals = faceFromNormals(patch,S2Vobj,options);
-                face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-
-                g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-                coeffs = zeros([d+1,number]);
-                coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
-                coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
-                coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
-                coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
-                nurbs = createNURBSobject(coeffs,knots);
+                if 1
+                    len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
+                    len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
+                    len = mean(cat(1,len1,len2),1);
+                    face_normals = faceFromNormals(patch,S2Vobj,options);
+                    face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+    
+                    g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
+                    coeffs = zeros([d+1,number]);
+                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
+                    coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
+                    coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
+                    coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
+                    nurbs = createNURBSobject(coeffs,knots);
+                else
+                    face_normals1 = faceFromNormals(patch,S2Vobj,options);
+                    face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+                    face_normals2 = faceFromNormals(slave3,S2Vobj,options);
+                    face_normals2 = orientNURBS(face_normals2{1}, idx1To_idx2_orient(sidx3,3)); % Make "sidx = 3"
+                    face_normals3 = faceFromNormals(slave5,S2Vobj,options);
+                    face_normals3 = orientNURBS(face_normals3{1}, idx1To_idx2_orient(sidx5,1)); % Make "sidx = 1"
+                end
                 if checkOrientation(nurbs, 10)
                     error('Self intersection!')
                 end
@@ -721,68 +729,17 @@ for patch = indices
     end
 end
 
-%% Compute average normal vector in all vertices
-noCorners = 2^d_p;
-for patch = indices
-    S2Vobj.cornerData(patch).avg_v_n = zeros(4,d);
-    for i_corner = 1:noCorners
-        v_n = zeros(1,d);
-        slave_i_corner = i_corner;
-        counter = 0;
-        slave = patch;
-        
-        neighbours = zeros(100,2); % Allocate redundant amount of neighbours
-        % track counter clockwise around the given vertice for all patches connected to this vertice
-        while slave ~= patch || counter == 0
-            counter = counter + 1;
-            if counter > 100
-                error('Topology is inconsistent')
-            end
-
-            if ~any(isnan(S2Vobj.cornerData(slave).v_n))
-                cornerAngle = S2Vobj.cornerData(slave).cornerAngle(slave_i_corner);
-                v_n = v_n + cornerAngle*S2Vobj.cornerData(slave).v_n(slave_i_corner,:)/(2*pi); % weight the normal vector with the angle of the respetive corner
-            end
-            slave_prev = slave;
-            midx = corner2midx(slave_i_corner);
-            slave_temp = S2Vobj.topologyMap{slave}(midx).slave;
-            if isempty(slave_temp)
-                idx = mod(find(corner2midx(1:4) == midx)-2,4)+1;
-                midx = corner2midx(idx);
-                slave = S2Vobj.topologyMap{slave}(midx).slave;
-            else
-                slave = slave_temp;
-            end
-            sidx = S2Vobj.topologyMap{slave_prev}(midx).sidx;
-
-            slave_i_corner = midx2leftCorner(sidx);
-            neighbours(counter,1) = slave;
-            neighbours(counter,2) = slave_i_corner;
-        end
-        neighbours(counter+1,1) = patch;
-        neighbours(counter+1,2) = i_corner;
-        v_n = v_n./norm2(v_n); % Normalize normal vector
-        
-        % Update the average normal vector for all patches sharing this corner
-        for i = 1:counter+1
-            slave = neighbours(i,1);
-            slave_i_corner = neighbours(i,2);
-            X = S2Vobj.cornerData(slave).X(slave_i_corner,:);
-            for j = 1:4
-                if norm(X-S2Vobj.cornerData(slave).X(j,:)) < Eps
-                    S2Vobj.cornerData(slave).avg_v_n(j,:) = v_n;
-                end
-            end
-        end
-    end
-end
-
 %% Compute normal vector at the edges
 for patch = indices
     knots = nurbs_bdry{patch}.knots;
     degree = nurbs_bdry{patch}.degree;
     number = nurbs_bdry{patch}.number;
     S2Vobj.edgeData(patch).collapsed = zeros(1,4);
+    S2Vobj.edgeData(patch).X = cell(1,4);
+    S2Vobj.edgeData(patch).v_xi = cell(1,4);
+    S2Vobj.edgeData(patch).v_eta = cell(1,4);
+    S2Vobj.edgeData(patch).v_n = cell(1,4);
+    S2Vobj.edgeData(patch).avg_v_n = cell(1,4);
     for midx = 1:4
         switch midx
             case 1
@@ -815,27 +772,109 @@ for patch = indices
         S2Vobj.edgeData(patch).v_xi{midx} = v_xi;
         S2Vobj.edgeData(patch).v_eta{midx} = v_eta;
         S2Vobj.edgeData(patch).v_n{midx} = v_n;
+        S2Vobj.edgeData(patch).avg_v_n{midx} = NaN(size(v_n)); % Allocation for later
     end
 end
 
-%% Compute average normal vector at the edges
+%% Compute average normal vector in all vertices
+noCorners = 2^d_p;
+for patch = indices
+    S2Vobj.cornerData(patch).avg_v_n = zeros(4,d);
+    for i_corner = 1:noCorners
+        avg_v_n = zeros(1,d);
+        slave_i_corner = i_corner;
+        counter = 0;
+        slave = patch;
+        
+        neighbours = zeros(100,3); % Allocate redundant amount of neighbours
+        % track counter clockwise around the given vertice for all patches connected to this vertice
+        while slave ~= patch || counter == 0
+            counter = counter + 1;
+            if counter > 100
+                error('Topology is inconsistent')
+            end
+
+            if ~any(isnan(S2Vobj.cornerData(slave).v_n))
+                cornerAngle = S2Vobj.cornerData(slave).cornerAngle(slave_i_corner);
+                avg_v_n = avg_v_n + cornerAngle*S2Vobj.cornerData(slave).v_n(slave_i_corner,:)/(2*pi); % weight the normal vector with the angle of the respetive corner
+            end
+            slave_prev = slave;
+            midx = corner2midx(slave_i_corner);
+            slave_temp = S2Vobj.topologyMap{slave}(midx).slave;
+            if isempty(slave_temp)
+                idx = mod(find(corner2midx(1:4) == midx)-2,4)+1;
+                midx = corner2midx(idx);
+                slave = S2Vobj.topologyMap{slave}(midx).slave;
+            else
+                slave = slave_temp;
+            end
+            sidx = S2Vobj.topologyMap{slave_prev}(midx).sidx;
+
+            slave_i_corner = midx2leftCorner(sidx);
+            neighbours(counter,1) = slave;
+            neighbours(counter,2) = slave_i_corner;
+            neighbours(counter,3) = sidx;
+        end
+        neighbours(counter+1,1) = patch;
+        neighbours(counter+1,2) = i_corner;
+        neighbours(counter+1,3) = midx;
+        avg_v_n = avg_v_n./norm2(avg_v_n); % Normalize normal vector
+        
+        % Update the average normal vector for all patches sharing this corner
+        for i = 1:counter+1
+            slave = neighbours(i,1);
+            slave_i_corner = neighbours(i,2);
+            sidx = neighbours(i,3);
+            X = S2Vobj.cornerData(slave).X(slave_i_corner,:);
+            for j = 1:4
+                if norm(X-S2Vobj.cornerData(slave).X(j,:)) < Eps
+                    S2Vobj.cornerData(slave).avg_v_n(j,:) = avg_v_n;
+                    if sidx == 1 && sidx == 4
+                        S2Vobj.edgeData(slave).avg_v_n{sidx}(end,:) = avg_v_n;
+                    else
+                        S2Vobj.edgeData(slave).avg_v_n{sidx}(1,:) = avg_v_n;
+                    end
+                    sidx2 = S2Vobj.topologyMap{slave}(sidx).sidx;
+                    slave2 = S2Vobj.topologyMap{slave}(sidx).slave;
+                    if sidx2 == 1 && sidx2 == 4
+                        S2Vobj.edgeData(slave2).avg_v_n{sidx2}(end,:) = avg_v_n;
+                    else
+                        S2Vobj.edgeData(slave2).avg_v_n{sidx2}(1,:) = avg_v_n;
+                    end
+                end
+            end
+        end
+    end
+end
+
+%% Compute remaining average normal vector at the edges (2:end-1) on all edges
 for patch = indices
     for midx = 1:4
         slave = S2Vobj.topologyMap{patch}(midx).slave;
         if isempty(slave)
-            S2Vobj.edgeData(patch).avg_v_n{midx} = repmat(S2Vobj.cornerData(patch).avg_v_n(midx2leftCorner(midx),:),size(S2Vobj.edgeData(patch).v_n{midx},1),1);
+            S2Vobj.edgeData(patch).avg_v_n{midx}(2:end-1,:) = repmat(S2Vobj.cornerData(patch).avg_v_n(midx2leftCorner(midx),:),...
+                                                                        size(S2Vobj.edgeData(patch).v_n{midx},1)-2, 1);
         else
             sidx = S2Vobj.topologyMap{patch}(midx).sidx;
-            v_nm = S2Vobj.edgeData(patch).v_n{midx};
-            v_ns = S2Vobj.edgeData(slave).v_n{sidx};
+            v_nm = S2Vobj.edgeData(patch).v_n{midx}(2:end-1,:);
+            v_ns = S2Vobj.edgeData(slave).v_n{sidx}(2:end-1,:);
             avg_v_n = (v_nm+v_ns)/2;
-            i_corners = midx2corners(midx);
-            avg_v_n(1,:) = S2Vobj.cornerData(patch).avg_v_n(i_corners(1),:);
-            avg_v_n(end,:) = S2Vobj.cornerData(patch).avg_v_n(i_corners(2),:);
-            S2Vobj.edgeData(patch).avg_v_n{midx} = avg_v_n./norm2(avg_v_n);
+%             i_corners = midx2corners(midx);
+%             avg_v_n(1,:) = S2Vobj.cornerData(patch).avg_v_n(i_corners(1),:);
+%             avg_v_n(end,:) = S2Vobj.cornerData(patch).avg_v_n(i_corners(2),:);
+            S2Vobj.edgeData(patch).avg_v_n{midx}(2:end-1,:) = avg_v_n./norm2(avg_v_n);
+            S2Vobj.edgeData(slave).avg_v_n{sidx}(2:end-1,:) = S2Vobj.edgeData(patch).avg_v_n{midx}(2:end-1,:); % Update the slave patch
         end
     end
 end
+for patch = 1:indices(end)
+    for midx = 1:4
+        if any(isnan(S2Vobj.edgeData(patch).avg_v_n{sidx}))
+            error('NaN encountered - Something is not implemented correctly!')
+        end
+    end
+end
+
 
 %% Compute angle between all pairs of connected patches
 for patch = indices
@@ -920,7 +959,7 @@ if 0
 %     end
     figure,axis equal
     plotNURBSvec(nurbs_bdry)
-    for patch = 1:noBdryPatches
+    for patch = 1:numel(nurbs_bdry)
         if ~all(isnan(S2Vobj.angles(patch,:)))
             for midx = 1:4
                 quiver3(S2Vobj.edgeData(patch).X{midx}(:,1), ...
