@@ -2,7 +2,6 @@ function write_g2(nurbs,outputFileName,fmt)
 if nargin < 3
     fmt = '%.16g ';
 %     fmt = '%20.15g ';
-    newlineChar = newline;
 end
 if ~(size(nurbs{1}.coeffs,1) == 1) % this is then not supplementary data
     nurbs = cleanNURBS(nurbs,[]);

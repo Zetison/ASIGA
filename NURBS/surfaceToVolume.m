@@ -786,7 +786,7 @@ for patch = indices
         counter = 0;
         slave = patch;
         
-        neighbours = zeros(100,3); % Allocate redundant amount of neighbours
+        neighbours = zeros(100,2); % Allocate redundant amount of neighbours
         % track counter clockwise around the given vertice for all patches connected to this vertice
         while slave ~= patch || counter == 0
             counter = counter + 1;
@@ -799,11 +799,11 @@ for patch = indices
                 avg_v_n = avg_v_n + cornerAngle*S2Vobj.cornerData(slave).v_n(slave_i_corner,:)/(2*pi); % weight the normal vector with the angle of the respetive corner
             end
             slave_prev = slave;
-            midx = corner2midx(slave_i_corner);
+            midx = corner2leftmidx(slave_i_corner);
             slave_temp = S2Vobj.topologyMap{slave}(midx).slave;
             if isempty(slave_temp)
-                idx = mod(find(corner2midx(1:4) == midx)-2,4)+1;
-                midx = corner2midx(idx);
+                idx = mod(find(corner2leftmidx(1:4) == midx)-2,4)+1;
+                midx = corner2leftmidx(idx);
                 slave = S2Vobj.topologyMap{slave}(midx).slave;
             else
                 slave = slave_temp;
@@ -813,33 +813,45 @@ for patch = indices
             slave_i_corner = midx2leftCorner(sidx);
             neighbours(counter,1) = slave;
             neighbours(counter,2) = slave_i_corner;
-            neighbours(counter,3) = sidx;
         end
         neighbours(counter+1,1) = patch;
         neighbours(counter+1,2) = i_corner;
-        neighbours(counter+1,3) = midx;
         avg_v_n = avg_v_n./norm2(avg_v_n); % Normalize normal vector
         
         % Update the average normal vector for all patches sharing this corner
         for i = 1:counter+1
             slave = neighbours(i,1);
             slave_i_corner = neighbours(i,2);
-            sidx = neighbours(i,3);
             X = S2Vobj.cornerData(slave).X(slave_i_corner,:);
             for j = 1:4
                 if norm(X-S2Vobj.cornerData(slave).X(j,:)) < Eps
                     S2Vobj.cornerData(slave).avg_v_n(j,:) = avg_v_n;
-                    if sidx == 1 && sidx == 4
-                        S2Vobj.edgeData(slave).avg_v_n{sidx}(end,:) = avg_v_n;
-                    else
-                        S2Vobj.edgeData(slave).avg_v_n{sidx}(1,:) = avg_v_n;
-                    end
-                    sidx2 = S2Vobj.topologyMap{slave}(sidx).sidx;
-                    slave2 = S2Vobj.topologyMap{slave}(sidx).slave;
-                    if sidx2 == 1 && sidx2 == 4
-                        S2Vobj.edgeData(slave2).avg_v_n{sidx2}(end,:) = avg_v_n;
-                    else
-                        S2Vobj.edgeData(slave2).avg_v_n{sidx2}(1,:) = avg_v_n;
+%                     sidx = corner2leftmidx(j);
+                    sidx = corners2midxes(j);
+                    for k = 1:numel(sidx)
+                        slave2 = S2Vobj.topologyMap{slave}(sidx(k)).slave;
+                        if isempty(slave2)
+                            S2Vobj.edgeData(slave).avg_v_n{sidx(k)} = repmat(avg_v_n, size(S2Vobj.edgeData(slave).avg_v_n{sidx(k)},1),1);
+                        else
+                            if ((sidx(k) == 2 || sidx(k) == 3) && k == 1) || ((sidx(k) == 1 || sidx(k) == 4) && k == 2)
+                                S2Vobj.edgeData(slave).avg_v_n{sidx(k)}(end,:) = avg_v_n;
+                            else
+                                S2Vobj.edgeData(slave).avg_v_n{sidx(k)}(1,:) = avg_v_n;
+                            end
+%                             if ~isempty(slave2)
+%                                 sidx2 = S2Vobj.topologyMap{slave}(sidx(k)).sidx;
+%                                 if sidx2 == 1 || sidx2 == 4
+%                                     S2Vobj.edgeData(slave2).avg_v_n{sidx2}(end,:) = avg_v_n;
+%                                 else
+%                                     S2Vobj.edgeData(slave2).avg_v_n{sidx2}(1,:) = avg_v_n;
+%                                 end
+%                                 if ((sidx2(k) == 1 || sidx2(k) == 4) && k == 1) || ((sidx2(k) == 2 || sidx2(k) == 3) && k == 2)
+%                                     S2Vobj.edgeData(slave2).avg_v_n{sidx2(k)}(end,:) = avg_v_n;
+%                                 else
+%                                     S2Vobj.edgeData(slave2).avg_v_n{sidx2(k)}(1,:) = avg_v_n;
+%                                 end
+%                             end
+                        end
                     end
                 end
             end
@@ -851,9 +863,9 @@ end
 for patch = indices
     for midx = 1:4
         slave = S2Vobj.topologyMap{patch}(midx).slave;
-        if isempty(slave)
-            S2Vobj.edgeData(patch).avg_v_n{midx}(2:end-1,:) = repmat(S2Vobj.cornerData(patch).avg_v_n(midx2leftCorner(midx),:),...
-                                                                        size(S2Vobj.edgeData(patch).v_n{midx},1)-2, 1);
+        if isempty(slave) % edge midx is collapsed
+            S2Vobj.edgeData(patch).avg_v_n{midx} = repmat(S2Vobj.cornerData(patch).avg_v_n(midx2leftCorner(midx),:),...
+                                                                        size(S2Vobj.edgeData(patch).v_n{midx},1), 1);
         else
             sidx = S2Vobj.topologyMap{patch}(midx).sidx;
             v_nm = S2Vobj.edgeData(patch).v_n{midx}(2:end-1,:);
@@ -869,7 +881,7 @@ for patch = indices
 end
 for patch = 1:indices(end)
     for midx = 1:4
-        if any(isnan(S2Vobj.edgeData(patch).avg_v_n{sidx}))
+        if any(isnan(S2Vobj.edgeData(patch).avg_v_n{midx}))
             error('NaN encountered - Something is not implemented correctly!')
         end
     end
@@ -1064,8 +1076,12 @@ function indices = midx2corners(midx)
 map = [1,4; 2,3; 1,2; 4,3];
 indices = map(midx,:);
 
-function idx = corner2midx(i)
-map =  [1,3,2,4]; % This map gives the midx for the side of the patch sharing a given corner to the left of that side. 
+function midx = corners2midxes(i)
+map = [1,3; 3,2; 2,4; 4,1];
+midx = map(i,:);
+
+function idx = corner2leftmidx(i)
+map =  [1,3,2,4]; % This map gives the midx for the side of the patch sharing a given corner to the left of that corner. 
 idx = map(i);
 
 function idx = idx1To_idx2(idx1,idx2)

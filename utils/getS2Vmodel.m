@@ -48,7 +48,7 @@ switch model
         app.AngledeviationEditField.Value = 45; % Threshold for a "sharp" angle
     otherwise
         app.EpsEditField.Value = 1e-10;
-        if numel(model) >= 6 && model(1:6) == 'BeTSSi'
+        if numel(model) >= 6 && strcmp(model(1:6), 'BeTSSi')
             app.ThicknessEditField.Value = 1.5;
         else
             app.ThicknessEditField.Value = 0.1;
