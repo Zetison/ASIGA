@@ -5,6 +5,8 @@ switch task.misc.method
         %% SOLVE SYSTEM
         useA = isfield(task,'A');
         t_start_sol = tic;
+        
+        tic
         if task.misc.printLog
             fprintf(['\n%-' num2str(task.misc.stringShift) 's'], ['Creating preconditioner (' task.sol.preconditioner ') ... '])
         end
@@ -16,6 +18,7 @@ switch task.misc.method
             fprintf('using %12f seconds.', task.timePreconditioner)
         end
 
+        tic
         if task.misc.printLog && ~task.rom.useROM
             fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Solving system of equations ... ')
         end

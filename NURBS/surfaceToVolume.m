@@ -414,7 +414,7 @@ switch maxNoSharpAngles
 %                     end
 %                     counter = counter + 1;
 %                 end
-                if 1
+                if 0
                     len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
                     len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
                     len = mean(cat(1,len1,len2),1);
@@ -429,12 +429,43 @@ switch maxNoSharpAngles
                     coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
                     nurbs = createNURBSobject(coeffs,knots);
                 else
-                    face_normals1 = faceFromNormals(patch,S2Vobj,options);
-                    face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-                    face_normals2 = faceFromNormals(slave3,S2Vobj,options);
-                    face_normals2 = orientNURBS(face_normals2{1}, idx1To_idx2_orient(sidx3,3)); % Make "sidx = 3"
-                    face_normals3 = faceFromNormals(slave5,S2Vobj,options);
-                    face_normals3 = orientNURBS(face_normals3{1}, idx1To_idx2_orient(sidx5,1)); % Make "sidx = 1"
+                    len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
+                    len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
+                    len = mean(cat(1,len1,len2),1);
+                    face_normals = faceFromNormals(patch,S2Vobj,options);
+                    face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+    
+                    g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
+                    coeffs = zeros([d+1,number]);
+                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
+                    coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
+                    coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
+                    coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
+                    nurbs = createNURBSobject(coeffs,knots);
+
+%                     face_normals1 = faceFromNormals(patch,S2Vobj,options);
+%                     face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+%                     face_normals2 = faceFromNormals(slave3,S2Vobj,options);
+%                     face_normals2 = orientNURBS(face_normals2{1}, idx1To_idx2_orient(sidx3,3)); % Make "sidx = 3"
+%                     face_normals3 = faceFromNormals(slave5,S2Vobj,options);
+%                     face_normals3 = orientNURBS(face_normals3{1}, idx1To_idx2_orient(sidx5,1)); % Make "sidx = 1"
+% 
+%                     g1 = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
+%                     g2 = reshape(aveknt(knots{2}, degree(1)+1),1,1,[]);
+%                     g3 = reshape(aveknt(knots{3}, degree(1)+1),1,1,1,[]);
+%                     coeffs =   (master_coeffs(:,1,:,:) + len1.*face_normals1).*g1/3 ...
+%                              + (slave1_coeffs(:,:,1,:) + len2.*face_normals2).*g2/3 ...
+%                              + (slave2_coeffs(:,:,:,1) + len3.*face_normals3).*g3/3 ...
+%                              + master_coeffs(:,1,1,1).*g1.*g2.*g3;
+% 
+%                     coeffs = zeros([d+1,number]);
+%                     edgeCoeff3
+%                     avg1 = mean(cat(edgeCoeff3,edgeCoeff5));
+%                     ilen = 1./len1 + 1./len2 + 1./len3;
+%                     coeffs(1:3,end,end,end) =   (master_coeffs(:,1,end,end) + len1.*face_normals1).*1./len1./ilen ...
+%                                               + (slave1_coeffs(:,end,1,end) + len2.*face_normals2).*1./len2./ilen ...
+%                                               + (slave2_coeffs(:,end,end,1) + len3.*face_normals3).*1./len3./ilen;
+
                 end
                 if checkOrientation(nurbs, 10)
                     error('Self intersection!')
