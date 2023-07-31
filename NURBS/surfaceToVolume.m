@@ -5,9 +5,10 @@ function S2Vobj = surfaceToVolume(varargin)
 % Set default values
 options = struct('t', 1, ...                                % thickness of patch created from a surface patch having all angles larger than "sharpAngle" w.r.t. neighbouring patches
                  'sharpAngle', 120*pi/180,...               % Threshold for a "sharp" angle
+                 'convexityThresholdAngle', 170*pi/180,...  % Acceptable convexity angle for the outer boundary (exterior meshing) for any two pair of surfaces
                  'Eps', 1e-10, ...                          % Threshold for assuming two physical points in the l2-norm to be identical
                  'explodeNURBSsurface', true, ...           % Explode patches having C0-elements
-                 'S2V_algorithm',{{'A1_1','A13_1'}}, ...    % Specify the desired algorithm to be used. Here 'A1_1' mean ("A"lgorithm for when only side patch 1 is known and the first of the available algorithms)
+                 'S2V_algorithm',{{'A1_21','A13_21','A135_21','A134_11','A1234_11','A1345_11','A13456_11','A123456_11'}}, ...    % Specify the desired algorithm to be used. Here 'A1_1' mean ("A"lgorithm for when only side patch 1 is known and the first of the available algorithms)
                  'avg_v_n_threshholdAngle', 11.25*pi/180);  % Threshold angle deviation between the normal vectors v_n avg_v_n
 
 S2Vobj = varargin{1};
@@ -122,7 +123,7 @@ if ~isempty(nurbs_newBdry)
 %     end
 end
 S2Vobj.angles(nurbs_covered,:) = NaN;
-S2Vobj.S2Vcompleted = ~(counter == 1 || any(S2Vobj.angles(:) < pi) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
+S2Vobj.S2Vcompleted = ~(counter == 1 || any(S2Vobj.angles(:) < options.convexityThresholdAngle) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
 
 if S2Vobj.S2Vcompleted
     S2Vobj.nurbs_vol(counter+1:end) = [];
@@ -151,6 +152,7 @@ t = options.t;
 % original_angles = angles;
 sharpAngle = options.sharpAngle;
 acuteAngleAdjustment = 1.2;
+useProdWeights = true;
 if nargin < 3
     [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle,S2Vobj.noBdryPatches);
     midx = find(angles(patch,:) < sharpAngle);
@@ -160,9 +162,9 @@ switch maxNoSharpAngles
     case 0
         faces(1) = nurbs_bdry(patch);
         switch options.S2V_algorithm{maxNoSharpAngles+1}
-            case 'A1_1'
+            case 'A1_21'
                 faces(2) = faceFromNormals(patch,S2Vobj,options,t);
-            case 'A1_2'
+            case 'A1_31'
                 X = zeros(4,3);
                 for i_corner = 1:4
                     X(i_corner,:) = cornerData(1).X(i_corner,:) + t*cornerData(1).v_n(i_corner,:);
@@ -177,21 +179,23 @@ switch maxNoSharpAngles
         slave = topologyMap{patch}(midx).slave;
         sidx = topologyMap{patch}(midx).sidx;
 
-        % Set the patch with oposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
-        v_n_1 = edgeData(patch).v_n{midx};
-        avg_v_n_i = edgeData(patch).avg_v_n{midx};
-        angle_v_n_diff_i = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
-
-        v_n_1 = edgeData(slave).v_n{midx};
-        avg_v_n_i = edgeData(slave).avg_v_n{midx};
-        angle_v_n_diff_i_s = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
-        if angle_v_n_diff_i_s < angle_v_n_diff_i
-            patch = slave;
-            midx = sidx;
+        if ismember(options.S2V_algorithm{maxNoSharpAngles+1}, {'A13_11','A13_3'})
+            % Set the patch with oposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
+            v_n_1 = edgeData(patch).v_n{midx};
+            avg_v_n_i = edgeData(patch).avg_v_n{midx};
+            angle_v_n_diff_i = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
+    
+            v_n_1 = edgeData(slave).v_n{midx};
+            avg_v_n_i = edgeData(slave).avg_v_n{midx};
+            angle_v_n_diff_i_s = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
+            if angle_v_n_diff_i_s < angle_v_n_diff_i
+                patch = slave;
+                midx = sidx;
+            end
+            slave = topologyMap{patch}(midx).slave;
+            sidx = topologyMap{patch}(midx).sidx;
         end
-        slave = topologyMap{patch}(midx).slave;
-        sidx = topologyMap{patch}(midx).sidx;
-        
+            
         % Fix orientation to the standard setup
         faces(1) = nurbs_bdry(patch);
         faces(3) = nurbs_bdry(slave);
@@ -202,106 +206,108 @@ switch maxNoSharpAngles
         number = [faces{3}.number(end), faces{1}.number];
         master_coeffs = faces{1}.coeffs;
         master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-        slave1_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-        slave1_coeffs = reshape(slave1_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+        slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
+        slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
         
         switch options.S2V_algorithm{maxNoSharpAngles+1}
-            case 'A13_1'
-                try
-%                     len = vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1);
-%                     face_normals = faceFromNormals(patch,S2Vobj,options);
-%                     face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-% 
-%                     g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-%                     coeffs = zeros([d+1,number]);
-%                     coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
-%                     coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
-%                     coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
-%                     nurbs = createNURBSobject(coeffs,knots);
-                    face_normals1 = faceFromNormals(patch,S2Vobj,options);
-                    face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-                    face_normals2 = faceFromNormals(slave,S2Vobj,options);
-                    face_normals2 = orientNURBS(face_normals2{1}, idx1To_idx2_orient(sidx,3)); % Make "sidx = 3"
-                    
-                    P1 = master_coeffs(1:3,1,:,:);
-                    P3 = slave1_coeffs(1:3,:,1,:);
-
-                    Pdiff1 = repmat(P3 - slave1_coeffs(1:3,1,1,:), 1,1,number(2));
-                    Pdiff2 = repmat(P1 - master_coeffs(1:3,1,1,:), 1,number(1));
-                    len1 = vecnorm(Pdiff1,2,1);
-                    len2 = vecnorm(Pdiff2,2,1);
-                    w = len1./(len1+len2);
-                    w(:,1,1,:) = 1;
-
-                    % Construct rotation matrix for the master face
-                    d1 = Pdiff1(:,2,:,:);
-                    d1_hat = d1./vecnorm(d1,2,1);
-                    n_tilde1 = reshape(face_normals1.coeffs(1:3,:,:),[d,1,number(2:3)]);
-                    u = cross(d1_hat, n_tilde1, 1);
-                    theta = abs(acos(dot(d1_hat, n_tilde1,1)));
-                    u1 = u(1,:,:,:);
-                    u2 = u(2,:,:,:);
-                    u3 = u(3,:,:,:);
-                    sinTheta = sin(theta);
-                    cosTheta = cos(theta);
-                    R1row1 = repmat(cat(1, cosTheta + u1.^2.*(1-cosTheta), ...
-                                    u1.*u2.*(1-cosTheta) - u3.*sinTheta, ...
-                                    u1.*u3.*(1-cosTheta) + u2.*sinTheta), 1,number(1));
-                    R1row2 = repmat(cat(1, u2.*u1.*(1-cosTheta) + u3.*sinTheta, ...
-                                    cosTheta + u2.^2.*(1-cosTheta), ...
-                                    u2.*u3.*(1-cosTheta) - u1.*sinTheta), 1,number(1));
-                    R1row3 = repmat(cat(1, u3.*u1.*(1-cosTheta) - u2.*sinTheta, ...
-                                    u3.*u2.*(1-cosTheta) + u1.*sinTheta, ...
-                                    cosTheta + u3.^2.*(1-cosTheta)), 1,number(1));
-
-                    % Construct rotation matrix for the slave face
-                    d2 = Pdiff2(:,:,2,:);
-                    d2_hat = d2./vecnorm(d2,2,1);
-                    n_tilde2 = reshape(face_normals2.coeffs(1:3,:,:),[d,number(1),1,number(3)]);
-                    u = cross(d2_hat, n_tilde2,1);
-                    theta = abs(acos(dot(d2_hat, n_tilde2,1)));
-                    u1 = u(1,:,:,:);
-                    u2 = u(2,:,:,:);
-                    u3 = u(3,:,:,:);
-                    sinTheta = sin(theta);
-                    cosTheta = cos(theta);
-                    R2row1 = repmat(cat(1, cosTheta + u1.^2.*(1-cosTheta), ...
-                                    u1.*u2.*(1-cosTheta) - u3.*sinTheta, ...
-                                    u1.*u3.*(1-cosTheta) + u2.*sinTheta), 1,1,number(2));
-                    R2row2 = repmat(cat(1, u2.*u1.*(1-cosTheta) + u3.*sinTheta, ...
-                                    cosTheta + u2.^2.*(1-cosTheta), ...
-                                    u2.*u3.*(1-cosTheta) - u1.*sinTheta), 1,1,number(2));
-                    R2row3 = repmat(cat(1, u3.*u1.*(1-cosTheta) - u2.*sinTheta, ...
-                                    u3.*u2.*(1-cosTheta) + u1.*sinTheta, ...
-                                    cosTheta + u3.^2.*(1-cosTheta)), 1,1,number(2));
-
-                    coeffs = zeros([d+1,number]);
-                    if any(isnan(d1_hat(:))) && any(isnan(d2_hat(:)))
-                        error('Cannot perform algorithm on patches both having collapsed faces')
-                    elseif any(isnan(d1_hat(:)))
-                        coeffs(1:3,:,:,:) =           P3 + cat(1, dot(R2row1,Pdiff2,1), dot(R2row2,Pdiff2,1), dot(R2row3,Pdiff2,1));
-                    elseif any(isnan(d2_hat(:)))
-                        coeffs(1:3,:,:,:) =           P1 + cat(1, dot(R1row1,Pdiff1,1), dot(R1row2,Pdiff1,1), dot(R1row3,Pdiff1,1));
-                    else
-                        coeffs(1:3,:,:,:) =       w.*(P1 + cat(1, dot(R1row1,Pdiff1,1), dot(R1row2,Pdiff1,1), dot(R1row3,Pdiff1,1))) ...
-                                            + (1-w).*(P3 + cat(1, dot(R2row1,Pdiff2,1), dot(R2row2,Pdiff2,1), dot(R2row3,Pdiff2,1)));
-                    end
-                    coeffs(1:3,1,:,:) = P1;
-                    coeffs(1:3,:,1,:) = P3;
-                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
-
-                    nurbs = createNURBSobject(coeffs,knots);
-%                     
-                    if checkOrientation(nurbs, 10)
-                        error('Self intersection!')
-                    end
-                catch ME
-                    warning(ME.message)
-                    coeffs = master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:);
-                    nurbs = createNURBSobject(coeffs,knots);
+            case 'A13_11'
+                coeffs = master_coeffs + slave3_coeffs - slave3_coeffs(:,1,1,:);
+                if useProdWeights
+                    coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:);
                 end
-            case 'A13_2'
-                coeffs = master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:);
+                nurbs = createNURBSobject(coeffs,knots);
+            case {'A13_21','A13_31','A13_33'}
+                face_normals1 = faceFromNormals(patch,S2Vobj,options);
+                face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+                n_tilde1 = reshape(face_normals1.coeffs(1:3,:,:),[d,1,number(2:3)]);
+                face_normals3 = faceFromNormals(slave,S2Vobj,options);
+                face_normals3 = orientNURBS(face_normals3{1}, idx1To_idx2_orient(sidx,3)); % Make "sidx = 3"
+                n_tilde3 = reshape(face_normals3.coeffs(1:3,:,:),[d,number(1),1,number(3)]);
+                
+                P1 = master_coeffs(1:3,1,:,:);
+                P3 = slave3_coeffs(1:3,:,1,:);
+                W1 = master_coeffs(4,1,:,:);
+                W3 = slave3_coeffs(4,:,1,:);
+
+                if 0
+                    if any(S2Vobj.edgeData(slave).collapsed)
+                        diffs = P3 - slave3_coeffs(1:3,1,1,:);
+                        [~, I] = max(vecnorm(diffs,2,1),[],4);
+                        diffs_max = zeros([3,number(1)]);
+                        for i = 1:numel(I)
+                            diffs_max(:,i) = diffs(:,i,:,I(i));
+                        end
+                        D31 = repmat(diffs_max, [1,1,number(2:3)]);
+                    else
+                        D31 = repmat(P3 - slave3_coeffs(1:3,1,1,:), 1,1,number(2));
+                    end
+                    if any(S2Vobj.edgeData(patch).collapsed)
+                        diffs = P1 - master_coeffs(1:3,1,1,:);
+                        [~, I] = max(vecnorm(diffs,2,1),[],4);
+                        diffs_max = zeros([3,1,number(2)]);
+                        for i = 1:numel(I)
+                            diffs_max(:,:,i) = diffs(:,:,i,I(i));
+                        end
+                        D12 = repmat(diffs_max, [1,number(1),1,number(3)]);
+                    else
+                        D12 = repmat(P1 - master_coeffs(1:3,1,1,:), 1,number(1));
+                    end
+                else
+                    D31 = repmat(P3 - slave3_coeffs(1:3,1,1,:), 1,1,number(2));
+                    D12 = repmat(P1 - master_coeffs(1:3,1,1,:), 1,number(1));
+                end
+                l31 = vecnorm(D31,2,1);
+                l12 = vecnorm(D12,2,1);
+                v13 = l12./(l12+l31);
+                v13(and(l12 == 0,l31 == 0)) = 1;                    
+
+                % Construct rotation matrix for the master face (from slave)
+                D31_2 = D31(:,2,:,:);
+
+                [R31row1,R31row2,R31row3] = getRotationMatrix(D31_2, n_tilde1,[1,number(1)]);
+
+                % Construct rotation matrix for the slave face (from master)
+                D12_2 = D12(:,:,2,:);
+
+                [R12row1,R12row2,R12row3] = getRotationMatrix(D12_2, n_tilde3,[1,1,number(2)]);
+
+                RD31 = cat(1, dot(R31row1,D31,1), dot(R31row2,D31,1), dot(R31row3,D31,1));
+                RD12 = cat(1, dot(R12row1,D12,1), dot(R12row2,D12,1), dot(R12row3,D12,1));
+
+                coeffs = zeros([d+1,number]);
+                switch options.S2V_algorithm{maxNoSharpAngles+1}
+                    case 'A13_31'
+                        v13(:) = 1;
+                        coeffs(4,:,:,:) = repmat(W1,1,number(1));
+                    case 'A13_33'
+                        v13(:) = 0;
+                        coeffs(4,:,:,:) = repmat(W3,1,1,number(2));
+                    otherwise
+                        coeffs(4,:,:,:) = W1.*W3;
+                end
+
+                coeffs(1:3,:,:,:) = v13.*(P1 + RD31) + (1-v13).*(P3 + RD12);
+
+                
+                coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
+                coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+
+                nurbs = createNURBSobject(coeffs,knots);
+%                     
+                if checkOrientation(nurbs, 10)
+                    error('Self intersection!')
+                end
+            case 'A13_41'
+                len = vecnorm(slave3_coeffs(1:3,end,1,:) - slave3_coeffs(1:3,1,1,:),2,1);
+                face_normals = faceFromNormals(patch,S2Vobj,options);
+                face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+
+                g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
+                coeffs = zeros([d+1,number]);
+                coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
+                coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
+                coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+
                 nurbs = createNURBSobject(coeffs,knots);
         end
         nurbs_covered = [patch,slave];
@@ -389,11 +395,11 @@ switch maxNoSharpAngles
             number = [faces{3}.number(end), faces{1}.number];
             master_coeffs = faces{1}.coeffs;
             master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-            slave1_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-            slave1_coeffs = reshape(slave1_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-            slave2_coeffs = faces{5}.coeffs;
+            slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
+            slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+            slave5_coeffs = faces{5}.coeffs;
 
-            try
+%             try
 %                 midx_opposite = midx-(-1).^midx;
 %                 cornerIndices = intermediateCorner(midx);
 %                 oppositeCornerIndices = intermediateCorner(midx_opposite);
@@ -488,85 +494,207 @@ switch maxNoSharpAngles
 %                     end
 %                     counter = counter + 1;
 %                 end
-                if 1
-                    len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
-                    len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
-                    len = mean(cat(1,len1,len2),1);
-                    face_normals = faceFromNormals(patch,S2Vobj,options);
-                    face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-    
-                    g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-                    coeffs = zeros([d+1,number]);
-                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
-                    coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
-                    coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
-                    coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
-                    nurbs = createNURBSobject(coeffs,knots);
-                else
-                    len1 = repmat(vecnorm(slave1_coeffs(1:3,end,1,:) - slave1_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
-                    len2 = repmat(vecnorm(slave2_coeffs(1:3,end,:,1) - slave2_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
-                    len = mean(cat(1,len1,len2),1);
-                    face_normals = faceFromNormals(patch,S2Vobj,options);
-                    face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-    
-                    g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-                    coeffs = zeros([d+1,number]);
-                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
-                    coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
-                    coeffs(:,:,1,:) = slave1_coeffs(:,:,1,:);
-                    coeffs(:,:,:,1) = slave2_coeffs(:,:,:,1);
-                    nurbs = createNURBSobject(coeffs,knots);
-
-%                     face_normals1 = faceFromNormals(patch,S2Vobj,options);
-%                     face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-%                     face_normals2 = faceFromNormals(slave3,S2Vobj,options);
-%                     face_normals2 = orientNURBS(face_normals2{1}, idx1To_idx2_orient(sidx3,3)); % Make "sidx = 3"
-%                     face_normals3 = faceFromNormals(slave5,S2Vobj,options);
-%                     face_normals3 = orientNURBS(face_normals3{1}, idx1To_idx2_orient(sidx5,1)); % Make "sidx = 1"
-% 
-%                     g1 = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-%                     g2 = reshape(aveknt(knots{2}, degree(1)+1),1,1,[]);
-%                     g3 = reshape(aveknt(knots{3}, degree(1)+1),1,1,1,[]);
-%                     coeffs =   (master_coeffs(:,1,:,:) + len1.*face_normals1).*g1/3 ...
-%                              + (slave1_coeffs(:,:,1,:) + len2.*face_normals2).*g2/3 ...
-%                              + (slave2_coeffs(:,:,:,1) + len3.*face_normals3).*g3/3 ...
-%                              + master_coeffs(:,1,1,1).*g1.*g2.*g3;
-% 
-%                     coeffs = zeros([d+1,number]);
-%                     edgeCoeff3
-%                     avg1 = mean(cat(edgeCoeff3,edgeCoeff5));
-%                     ilen = 1./len1 + 1./len2 + 1./len3;
-%                     coeffs(1:3,end,end,end) =   (master_coeffs(:,1,end,end) + len1.*face_normals1).*1./len1./ilen ...
-%                                               + (slave1_coeffs(:,end,1,end) + len2.*face_normals2).*1./len2./ilen ...
-%                                               + (slave2_coeffs(:,end,end,1) + len3.*face_normals3).*1./len3./ilen;
-
-                end
-                if checkOrientation(nurbs, 10)
-                    error('Self intersection!')
-                end
-            catch ME
-                warning(ME.message)
-                noStrategies = 2;
-                nurbs = cell(1,noStrategies);
-                mean_J_r = zeros(1,noStrategies);
-                xi = linspace(0,1,10);
-                [XI,ETA,ZETA] = ndgrid(xi);
-                for type = 1:noStrategies
-                    switch type
-                        case 1
-                            coeffs = master_coeffs + slave1_coeffs + slave2_coeffs - master_coeffs(:,1,1,:) - slave2_coeffs(:,1,:,1) - slave1_coeffs(:,:,1,1) + master_coeffs(:,1,1,1);
-                        case 2
-                            slave3_coeffs = master_coeffs + slave2_coeffs - slave2_coeffs(:,1,:,1);
-                            g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
-                    
-                            coeffs = (master_coeffs + slave1_coeffs + slave2_coeffs - master_coeffs(:,1,1,:) - slave2_coeffs(:,1,:,1) - slave1_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
-                                   + (master_coeffs + slave3_coeffs(:,:,end,:) + slave2_coeffs - master_coeffs(:,1,end,:) - slave2_coeffs(:,1,:,1) - slave3_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
+            switch options.S2V_algorithm{maxNoSharpAngles+1}
+                case 'A135_11'
+                    coeffs = master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1);
+                    if useProdWeights
+                        coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:).*slave5_coeffs(4,:,:,:);
                     end
-                    nurbs(type) = createNURBSobject(coeffs,knots);
-                    mean_J_r(type) = mean(meanRatioJacobian(nurbs{type},[XI(:),ETA(:),ZETA(:)]));                    
-                end
-                [~,I] = max(mean_J_r);
-                nurbs = nurbs(I);
+                    nurbs = createNURBSobject(coeffs,knots);
+                    nurbs = nurbs(I);
+                case {'A135_21','A135_31','A135_33','A135_35'}
+                    face_normals1 = faceFromNormals(patch,S2Vobj,options);
+                    face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+                    n_tilde1 = reshape(face_normals1.coeffs(1:3,:,:),[d,1,number(2:3)]);
+                    face_normals3 = faceFromNormals(slave3,S2Vobj,options);
+                    face_normals3 = orientNURBS(face_normals3{1}, idx1To_idx2_orient(sidx3,3)); % Make "sidx = 3"
+                    n_tilde3 = reshape(face_normals3.coeffs(1:3,:,:),[d,number(1),1,number(3)]);
+                    face_normals5 = faceFromNormals(slave5,S2Vobj,options);
+                    face_normals5 = orientNURBS(face_normals5{1}, idx1To_idx2_orient(sidx5,1)); % Make "sidx = 1"
+                    n_tilde5 = reshape(face_normals5.coeffs(1:3,:,:),[d,number(1:2),1]);
+                    
+                    P1 = master_coeffs(1:3,1,:,:);
+                    P3 = slave3_coeffs(1:3,:,1,:);
+                    P5 = slave5_coeffs(1:3,:,:,1);
+                    W1 = master_coeffs(4,1,:,:);
+                    W3 = slave3_coeffs(4,:,1,:);
+                    W5 = slave5_coeffs(4,:,:,1);
+
+                    D12 = repmat(P1 - master_coeffs(1:3,1,1,:), 1,number(1));
+                    D13 = repmat(P1 - master_coeffs(1:3,1,:,1), 1,number(1));
+                    D31 = repmat(P3 - slave3_coeffs(1:3,1,1,:), 1,1,number(2));
+                    D33 = repmat(P3 - slave3_coeffs(1:3,:,1,1), 1,1,number(2));
+                    D51 = repmat(P5 - slave5_coeffs(1:3,1,:,1), 1,1,1,number(3));
+                    D52 = repmat(P5 - slave5_coeffs(1:3,:,1,1), 1,1,1,number(3));
+
+                    l12 = vecnorm(D12,2,1);
+                    l13 = vecnorm(D13,2,1);
+                    l31 = vecnorm(D31,2,1);
+                    l33 = vecnorm(D33,2,1);
+                    l51 = vecnorm(D51,2,1);
+                    l52 = vecnorm(D52,2,1);
+                    
+                    v13 = l12./(l12+l31);
+                    v13(and(l12 == 0,l31 == 0)) = 1;
+                    v15 = l12./(l12+l51);
+                    v15(and(l12 == 0,l51 == 0)) = 1;
+                    v35 = l31./(l31+l51);
+                    v35(and(l31 == 0,l51 == 0)) = 1;
+
+                    L = l12 + l13 + l31 + l33 + l51 + l52;
+
+                    V13 = (l13+l33)./L;
+                    V13(L == 0) = 1/3;
+                    V15 = (l12+l52)./L;
+                    V15(L == 0) = 1/3;
+                    V35 = (l31+l51)./L;
+                    V35(L == 0) = 1/3;
+
+                    % Construct rotation matrix for the master face (from slave3)
+                    D31_2 = D31(:,2,:,:);
+
+                    [R31row1,R31row2,R31row3] = getRotationMatrix(D31_2, n_tilde1,[1,number(1)]);
+
+                    % Construct rotation matrix for the slave3 face (from master)
+                    D12_2 = D12(:,:,2,:);
+
+                    [R12row1,R12row2,R12row3] = getRotationMatrix(D12_2, n_tilde3,[1,1,number(2)]);
+
+                    % Construct rotation matrix for the master face (from slave5)
+                    D51_2 = D51(:,2,:,:);
+
+                    [R51row1,R51row2,R51row3] = getRotationMatrix(D51_2, n_tilde1,[1,number(1)]);
+
+                    % Construct rotation matrix for the slave5 face (from master)
+                    D13_2 = D13(:,:,:,2);
+
+                    [R13row1,R13row2,R13row3] = getRotationMatrix(D13_2, n_tilde5,[1,1,1,number(3)]);
+
+                    % Construct rotation matrix for the slave3 face (from slave5)
+                    D52_2 = D52(:,:,2,:);
+
+                    [R52row1,R52row2,R52row3] = getRotationMatrix(D52_2, n_tilde3,[1,1,number(2)]);
+
+                    % Construct rotation matrix for the slave5 face (from slave3)
+                    D33_2 = D33(:,:,:,2);
+
+                    [R33row1,R33row2,R33row3] = getRotationMatrix(D33_2, n_tilde5,[1,1,1,number(3)]);
+
+
+                    RD31 = cat(1, dot(R31row1,D31,1), dot(R31row2,D31,1), dot(R31row3,D31,1));
+                    RD12 = cat(1, dot(R12row1,D12,1), dot(R12row2,D12,1), dot(R12row3,D12,1));
+                    RD51 = cat(1, dot(R51row1,D51,1), dot(R51row2,D51,1), dot(R51row3,D51,1));
+                    RD13 = cat(1, dot(R13row1,D13,1), dot(R13row2,D13,1), dot(R13row3,D13,1));
+                    RD52 = cat(1, dot(R52row1,D52,1), dot(R52row2,D52,1), dot(R52row3,D52,1));
+                    RD33 = cat(1, dot(R33row1,D33,1), dot(R33row2,D33,1), dot(R33row3,D33,1));
+
+                    coeffs = zeros([d+1,number]);
+                    switch options.S2V_algorithm{maxNoSharpAngles+1}
+                        case 'A135_31'
+                            v13(:) = 1;
+                            v15(:) = 1;
+                            V13(:) = 1/2;
+                            V15(:) = 1/2;
+                            V35(:) = 0;
+                            coeffs(4,:,:,:) = repmat(W1,1,number(1));
+                        case 'A135_33'
+                            v13(:) = 0;
+                            v35(:) = 1;
+                            V13(:) = 1/2;
+                            V35(:) = 1/2;
+                            V15(:) = 0;
+                            coeffs(4,:,:,:) = repmat(W3,1,1,number(2));
+                        case 'A135_35'
+                            v15(:) = 0;
+                            v35(:) = 0;
+                            V15(:) = 1/2;
+                            V35(:) = 1/2;
+                            V13(:) = 0;
+                            coeffs(4,:,:,:) = repmat(W3,1,1,1,number(3));
+                        otherwise
+                            coeffs(4,:,:,:) = W1.*W3.*W5;
+                    end
+                    coeffs(1:3,:,:,:) =   V13.*(v13.*(P1 + RD31) + (1-v13).*(P3 + RD12)) ...
+                                        + V15.*(v15.*(P1 + RD51) + (1-v15).*(P5 + RD13)) ...
+                                        + V35.*(v35.*(P3 + RD52) + (1-v35).*(P5 + RD33));
+
+                    coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
+                    coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+                    coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
+
+
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+%                     coeffs(1:3,:,:,:) = v13.*(P1 + RD31) + (1-v13).*(P3 + RD12);
+%                     coeffs(4,:,:,:) = W1.*W3;
+% 
+%                     coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
+%                     coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+
+%                     coeffs(1:3,:,:,:) = v15.*(P1 + RD51) + (1-v15).*(P5 + RD13);
+%                     coeffs(4,:,:,:) = W1.*W5;
+%                     coeffs(1:3,:,:,:) = (1-v15).*(P1 + RD51) + v15.*(P5 + RD13);
+%                     coeffs(4,:,:,:) = W1.*W5;
+
+%                     coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
+%                     coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
+% 
+%                     coeffs(1:3,:,:,:) = v35.*(P3 + RD52) + (1-v35).*(P5 + RD33);
+%                     coeffs(4,:,:,:) = W3.*W5;
+% 
+%                     coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+%                     coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
+
+
+%                     coeffs(1:3,:,:,:) = P1 + RD51;
+%                     coeffs(4,:,:,:) = repmat(W1,1,3,1,1);
+%                     coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
+
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                    nurbs = createNURBSobject(coeffs,knots);
+                    if checkOrientation(nurbs, 10)
+                        error('Self intersection!')
+                    end
+                case 'A135_41'
+                    l31 = repmat(vecnorm(slave3_coeffs(1:3,end,1,:) - slave3_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
+                    l12 = repmat(vecnorm(slave5_coeffs(1:3,end,:,1) - slave5_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
+                    len = mean(cat(1,l31,l12),1);
+                    face_normals = faceFromNormals(patch,S2Vobj,options);
+                    face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
+    
+                    g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
+                    coeffs = zeros([d+1,number]);
+                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
+                    coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
+                    coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+                    coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
+                    nurbs = createNURBSobject(coeffs,knots);
+                case 'A135_51'
+                    noStrategies = 2;
+                    nurbs = cell(1,noStrategies);
+                    mean_J_r = zeros(1,noStrategies);
+                    xi = linspace(0,1,10);
+                    [XI,ETA,ZETA] = ndgrid(xi);
+                    for type = 1:noStrategies
+                        switch type
+                            case 1
+                                coeffs = master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1);
+                            case 2
+                                slave4_coeffs = master_coeffs + slave5_coeffs - slave5_coeffs(:,1,:,1);
+                                g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
+                        
+                                coeffs = (master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
+                                       + (master_coeffs + slave4_coeffs(:,:,end,:) + slave5_coeffs - master_coeffs(:,1,end,:) - slave5_coeffs(:,1,:,1) - slave4_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
+                        end
+                        if useProdWeights
+                            coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:).*slave5_coeffs(4,:,:,:);
+                        end
+                        nurbs(type) = createNURBSobject(coeffs,knots);
+                        mean_J_r(type) = mean(meanRatioJacobian(nurbs{type},[XI(:),ETA(:),ZETA(:)]));                    
+                    end
+                    [~,I] = max(mean_J_r);
+                    nurbs = nurbs(I);
             end
             nurbs_covered = [patch,slave3,slave5];
             nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;0,1],'outwardPointingNormals',true);
@@ -589,12 +717,12 @@ switch maxNoSharpAngles
             knots = [faces{3}.knots(end), faces{1}.knots];
             master_coeffs = faces{1}.coeffs;
             master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-            slave1_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-            slave1_coeffs = reshape(slave1_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-            slave2_coeffs = permute(faces{4}.coeffs,[1,3,2]);
-            slave2_coeffs = reshape(slave2_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
+            slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
+            slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+            slave5_coeffs = permute(faces{4}.coeffs,[1,3,2]);
+            slave5_coeffs = reshape(slave5_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
             g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
-            coeffs = (master_coeffs + slave1_coeffs - slave1_coeffs(:,1,1,:)).*(1-g) + (master_coeffs + slave2_coeffs - slave2_coeffs(:,1,1,:)).*g;
+            coeffs = (master_coeffs + slave3_coeffs - slave3_coeffs(:,1,1,:)).*(1-g) + (master_coeffs + slave5_coeffs - slave5_coeffs(:,1,1,:)).*g;
 
             nurbs = createNURBSobject(coeffs,knots);
 
@@ -637,14 +765,14 @@ switch maxNoSharpAngles
         knots = [faces{3}.knots(end), faces{1}.knots];
         master_coeffs = faces{1}.coeffs;
         master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-        slave1_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-        slave1_coeffs = reshape(slave1_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-        slave2_coeffs = faces{5}.coeffs;
-        slave3_coeffs = permute(faces{4}.coeffs,[1,3,2]);
-        slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
+        slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
+        slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+        slave5_coeffs = faces{5}.coeffs;
+        slave4_coeffs = permute(faces{4}.coeffs,[1,3,2]);
+        slave4_coeffs = reshape(slave4_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
         g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
-        coeffs = (master_coeffs + slave1_coeffs + slave2_coeffs - master_coeffs(:,1,1,:) - slave2_coeffs(:,1,:,1) - slave1_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
-               + (master_coeffs + slave3_coeffs + slave2_coeffs - master_coeffs(:,1,end,:) - slave2_coeffs(:,1,:,1) - slave3_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
+        coeffs = (master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
+               + (master_coeffs + slave4_coeffs + slave5_coeffs - master_coeffs(:,1,end,:) - slave5_coeffs(:,1,:,1) - slave4_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
 
         nurbs = createNURBSobject(coeffs,knots);
 
@@ -680,7 +808,8 @@ switch maxNoSharpAngles
         faces{5} = orientNURBS(faces{5}, idx1To_idx2_orient(sidx5,1));          % Make "sidx = 1"
         faces{4} = orientNURBS(faces{4}, idx1To_idx2_orient(sidx4,3,true));     % Make "sidx = 3"
         faces{6} = orientNURBS(faces{6}, idx1To_idx2_orient(sidx6,1,true));     % Make "sidx = 1"
-        if slavesSlave(1) == slavesSlave(2) && slavesSlave(3) == slavesSlave(4)
+
+        if slavesSlave(1) == slavesSlave(2) && slavesSlave(3) == slavesSlave(4) % we have "maxNoSharpAngles=5"
             faces(2) = nurbs_bdry(slavesSlave(1));    
             faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(sidx1,3,true));     % Make "sidx = 3"
 
@@ -1244,6 +1373,24 @@ end
 face = createNURBSobject(coeffs,knots);
 
 
+function [R1row1,R1row2,R1row3] = getRotationMatrix(D_2, n_tilde,repArray)
+D_2_hat = normalize_lp(D_2);
+u = cross(D_2_hat, n_tilde, 1);
+theta = abs(acos(dot(D_2_hat, n_tilde,1)));
+u1 = u(1,:,:,:);
+u2 = u(2,:,:,:);
+u3 = u(3,:,:,:);
+sinTheta = sin(theta);
+cosTheta = cos(theta);
+R1row1 = repmat(cat(1, cosTheta + u1.^2.*(1-cosTheta), ...
+                u1.*u2.*(1-cosTheta) - u3.*sinTheta, ...
+                u1.*u3.*(1-cosTheta) + u2.*sinTheta), repArray);
+R1row2 = repmat(cat(1, u2.*u1.*(1-cosTheta) + u3.*sinTheta, ...
+                cosTheta + u2.^2.*(1-cosTheta), ...
+                u2.*u3.*(1-cosTheta) - u1.*sinTheta), repArray);
+R1row3 = repmat(cat(1, u3.*u1.*(1-cosTheta) - u2.*sinTheta, ...
+                u3.*u2.*(1-cosTheta) + u1.*sinTheta, ...
+                cosTheta + u3.^2.*(1-cosTheta)), repArray);
 
 
 

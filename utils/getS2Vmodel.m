@@ -44,8 +44,16 @@ switch model
         app.nurbsObjects{1,1}.nurbs = getBeTSSiM4Data(options);
 %         app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
         app.ThicknessEditField.Value = 0.1;
-        app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
+        app.AnglethresholdEditField.Value = 150; % Threshold for a "sharp" angle
         app.AngledeviationEditField.Value = 45; % Threshold for a "sharp" angle
+    case 'S1'
+        app.EpsEditField.Value = 1e-10;
+        app.ThicknessEditField.Value = 0.1;
+        app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
+        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+        app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
+        app.AlgorithmForCase13.Value = 'A13_41';
+        app.AlgorithmForCase135.Value = 'A135_41';
     otherwise
         app.EpsEditField.Value = 1e-10;
         if numel(model) >= 6 && strcmp(model(1:6), 'BeTSSi')
