@@ -5,10 +5,17 @@ function S2Vobj = surfaceToVolume(varargin)
 % Set default values
 options = struct('t', 1, ...                                % thickness of patch created from a surface patch having all angles larger than "sharpAngle" w.r.t. neighbouring patches
                  'sharpAngle', 120*pi/180,...               % Threshold for a "sharp" angle
-                 'convexityThresholdAngle', 170*pi/180,...  % Acceptable convexity angle for the outer boundary (exterior meshing) for any two pair of surfaces
+                 'convexityThresholdAngle', 150*pi/180,...  % Acceptable convexity angle for the outer boundary (exterior meshing) for any two pair of surfaces
                  'Eps', 1e-10, ...                          % Threshold for assuming two physical points in the l2-norm to be identical
                  'explodeNURBSsurface', true, ...           % Explode patches having C0-elements
-                 'S2V_algorithm',{{'A1_21','A13_21','A135_21','A134_11','A1234_11','A1345_11','A13456_11','A123456_11'}}, ...    % Specify the desired algorithm to be used. Here 'A1_1' mean ("A"lgorithm for when only side patch 1 is known and the first of the available algorithms)
+                 'S2V_algorithm',struct('A1','A1_21',...
+                                        'A13','A13_21',...
+                                        'A135','A135_21',...
+                                        'A134','A134_11',...
+                                        'A1234','A1234_11',...
+                                        'A1345','A1345_11',...
+                                        'A13456','A13456_11',...
+                                        'A123456','A123456_11'), ...    % Specify the desired algorithm to be used.
                  'avg_v_n_threshholdAngle', 11.25*pi/180);  % Threshold angle deviation between the normal vectors v_n avg_v_n
 
 S2Vobj = varargin{1};
@@ -45,14 +52,14 @@ else
     
     
     S2Vobj.nurbs_vol = cell(1,4*numel(nurbs_surf));
-    counter = 0;
+    S2Vobj.counter = 0;
 end
 
-counter = counter + 1;
+S2Vobj.counter = S2Vobj.counter + 1;
 
 
 % Attach new volumetric patch on nurbs_bdry
-[S2Vobj.nurbs_vol(counter), nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options);
+[S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options);
 
 if ~isempty(nurbs_newBdry)
     % Remove faces with zero measure
@@ -114,32 +121,17 @@ if ~isempty(nurbs_newBdry)
         end
     end
 
-%     try % to update angles
-        S2Vobj = computeCornerData(S2Vobj,options,newBdryPatches);
-%     catch ME
-%         warning(ME.message)
-%         S2Vobj.nurbs_vol(counter) = [];
-%         counter = counter - 1;
-%     end
+    S2Vobj = computeCornerData(S2Vobj,options,newBdryPatches);
 end
 S2Vobj.angles(nurbs_covered,:) = NaN;
-S2Vobj.S2Vcompleted = ~(counter == 1 || any(S2Vobj.angles(:) < options.convexityThresholdAngle) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
+S2Vobj.S2Vcompleted = ~(S2Vobj.counter == 1 || any(S2Vobj.angles(:) < options.convexityThresholdAngle) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
 
 if S2Vobj.S2Vcompleted
-    S2Vobj.nurbs_vol(counter+1:end) = [];
+    S2Vobj.nurbs_vol(S2Vobj.counter+1:end) = [];
 end
 
-% Collect changes into the "Surface to volume" object
-S2Vobj.counter = counter;
 
-
-function [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,midx,maxNoSharpAngles)
-%     [patch,maxNoSharpAngles,minSum] = findNextPatch(original_angles,sharpAngle); % Check for sharp angles in at the initial nurbs_surf first
-%     midx = find(original_angles(patch,:) < sharpAngle);
-%     if isinf(minSum)
-%         [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle);
-%         midx = find(angles(patch,:) < sharpAngle);
-%     end
+function [S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,midx,maxNoSharpAngles)
 nurbs_bdry = S2Vobj.nurbs_bdry;
 topologyMap = S2Vobj.topologyMap;
 cornerData = S2Vobj.cornerData;
@@ -161,7 +153,7 @@ faces = cell(1,6);
 switch maxNoSharpAngles
     case 0
         faces(1) = nurbs_bdry(patch);
-        switch options.S2V_algorithm{maxNoSharpAngles+1}
+        switch options.S2V_algorithm.A1
             case 'A1_21'
                 faces(2) = faceFromNormals(patch,S2Vobj,options,t);
             case 'A1_31'
@@ -171,6 +163,8 @@ switch maxNoSharpAngles
                 end
                 faces(2) = getPrismData('X',X([1,2,4,3],:),'d_p',2);
                 faces(1:2) = homogenizeNURBSparametrization(faces(1:2));
+            otherwise
+                error('Not implemented')
         end
         nurbs = loftNURBS({faces(1),faces(2)},1,1);
         nurbs_covered = patch;
@@ -179,7 +173,7 @@ switch maxNoSharpAngles
         slave = topologyMap{patch}(midx).slave;
         sidx = topologyMap{patch}(midx).sidx;
 
-        if ismember(options.S2V_algorithm{maxNoSharpAngles+1}, {'A13_11','A13_3'})
+        if ~ismember(options.S2V_algorithm.A13, {'A13_21'})
             % Set the patch with oposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
             v_n_1 = edgeData(patch).v_n{midx};
             avg_v_n_i = edgeData(patch).avg_v_n{midx};
@@ -209,12 +203,14 @@ switch maxNoSharpAngles
         slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
         slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
         
-        switch options.S2V_algorithm{maxNoSharpAngles+1}
+        switch options.S2V_algorithm.A13
             case 'A13_11'
                 coeffs = master_coeffs + slave3_coeffs - slave3_coeffs(:,1,1,:);
                 if useProdWeights
                     coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:);
                 end
+                coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
+                coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
                 nurbs = createNURBSobject(coeffs,knots);
             case {'A13_21','A13_31','A13_33'}
                 face_normals1 = faceFromNormals(patch,S2Vobj,options);
@@ -275,7 +271,7 @@ switch maxNoSharpAngles
                 RD12 = cat(1, dot(R12row1,D12,1), dot(R12row2,D12,1), dot(R12row3,D12,1));
 
                 coeffs = zeros([d+1,number]);
-                switch options.S2V_algorithm{maxNoSharpAngles+1}
+                switch options.S2V_algorithm.A13
                     case 'A13_31'
                         v13(:) = 1;
                         coeffs(4,:,:,:) = repmat(W1,1,number(1));
@@ -293,10 +289,6 @@ switch maxNoSharpAngles
                 coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
 
                 nurbs = createNURBSobject(coeffs,knots);
-%                     
-                if checkOrientation(nurbs, 10)
-                    error('Self intersection!')
-                end
             case 'A13_41'
                 len = vecnorm(slave3_coeffs(1:3,end,1,:) - slave3_coeffs(1:3,1,1,:),2,1);
                 face_normals = faceFromNormals(patch,S2Vobj,options);
@@ -309,15 +301,18 @@ switch maxNoSharpAngles
                 coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
 
                 nurbs = createNURBSobject(coeffs,knots);
+            otherwise
+                error('Not implemented')
         end
         nurbs_covered = [patch,slave];
         nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;1,1],'outwardPointingNormals',true);
     case 2
         midx_regular = singularFromRegular(topologyMap,patch,setdiff(1:4,midx));
         if ~isempty(midx_regular)
-            [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
+            [S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
             return
         end
+
         if all(ceil(midx/2) == [1,2]) % Fill a patch in a corner
             % Set the patch with oposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
             angle_v_n_diff = zeros(1,3);
@@ -399,7 +394,6 @@ switch maxNoSharpAngles
             slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
             slave5_coeffs = faces{5}.coeffs;
 
-%             try
 %                 midx_opposite = midx-(-1).^midx;
 %                 cornerIndices = intermediateCorner(midx);
 %                 oppositeCornerIndices = intermediateCorner(midx_opposite);
@@ -494,14 +488,16 @@ switch maxNoSharpAngles
 %                     end
 %                     counter = counter + 1;
 %                 end
-            switch options.S2V_algorithm{maxNoSharpAngles+1}
+            switch options.S2V_algorithm.A135
                 case 'A135_11'
                     coeffs = master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1);
                     if useProdWeights
                         coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:).*slave5_coeffs(4,:,:,:);
                     end
+                    coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
+                    coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+                    coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
                     nurbs = createNURBSobject(coeffs,knots);
-                    nurbs = nurbs(I);
                 case {'A135_21','A135_31','A135_33','A135_35'}
                     face_normals1 = faceFromNormals(patch,S2Vobj,options);
                     face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
@@ -589,7 +585,7 @@ switch maxNoSharpAngles
                     RD33 = cat(1, dot(R33row1,D33,1), dot(R33row2,D33,1), dot(R33row3,D33,1));
 
                     coeffs = zeros([d+1,number]);
-                    switch options.S2V_algorithm{maxNoSharpAngles+1}
+                    switch options.S2V_algorithm.A135
                         case 'A135_31'
                             v13(:) = 1;
                             v15(:) = 1;
@@ -610,7 +606,7 @@ switch maxNoSharpAngles
                             V15(:) = 1/2;
                             V35(:) = 1/2;
                             V13(:) = 0;
-                            coeffs(4,:,:,:) = repmat(W3,1,1,1,number(3));
+                            coeffs(4,:,:,:) = repmat(W5,1,1,1,number(3));
                         otherwise
                             coeffs(4,:,:,:) = W1.*W3.*W5;
                     end
@@ -622,40 +618,7 @@ switch maxNoSharpAngles
                     coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
                     coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
 
-
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
-%                     coeffs(1:3,:,:,:) = v13.*(P1 + RD31) + (1-v13).*(P3 + RD12);
-%                     coeffs(4,:,:,:) = W1.*W3;
-% 
-%                     coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
-%                     coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
-
-%                     coeffs(1:3,:,:,:) = v15.*(P1 + RD51) + (1-v15).*(P5 + RD13);
-%                     coeffs(4,:,:,:) = W1.*W5;
-%                     coeffs(1:3,:,:,:) = (1-v15).*(P1 + RD51) + v15.*(P5 + RD13);
-%                     coeffs(4,:,:,:) = W1.*W5;
-
-%                     coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
-%                     coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
-% 
-%                     coeffs(1:3,:,:,:) = v35.*(P3 + RD52) + (1-v35).*(P5 + RD33);
-%                     coeffs(4,:,:,:) = W3.*W5;
-% 
-%                     coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
-%                     coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
-
-
-%                     coeffs(1:3,:,:,:) = P1 + RD51;
-%                     coeffs(4,:,:,:) = repmat(W1,1,3,1,1);
-%                     coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
-
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
                     nurbs = createNURBSobject(coeffs,knots);
-                    if checkOrientation(nurbs, 10)
-                        error('Self intersection!')
-                    end
                 case 'A135_41'
                     l31 = repmat(vecnorm(slave3_coeffs(1:3,end,1,:) - slave3_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
                     l12 = repmat(vecnorm(slave5_coeffs(1:3,end,:,1) - slave5_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
@@ -695,10 +658,13 @@ switch maxNoSharpAngles
                     end
                     [~,I] = max(mean_J_r);
                     nurbs = nurbs(I);
+                otherwise
+                    error('Not implemented')
             end
             nurbs_covered = [patch,slave3,slave5];
             nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;0,1],'outwardPointingNormals',true);
         else
+
             slave3 = topologyMap{patch}(midx(1)).slave;
             sidx3 = topologyMap{patch}(midx(1)).sidx;
             slave4 = topologyMap{patch}(midx(2)).slave;
@@ -713,68 +679,109 @@ switch maxNoSharpAngles
             faces{3} = orientNURBS(faces{3}, idx1To_idx2_orient(sidx3,3));   % Make "sidx = 3"
             faces{4} = orientNURBS(faces{4}, idx1To_idx2_orient(sidx4,3,true));   % Make "sidx = 1"
 
+            sidx3_opposite = sidx3-(-1)^sidx3;
+            sidx4_opposite = sidx4-(-1)^sidx4;
+            slave3Slave = topologyMap{slave3}(sidx3_opposite).slave;
+            sidx3Slave = topologyMap{slave3}(sidx3_opposite).sidx;
+            slave4Slave = topologyMap{slave4}(sidx4_opposite).slave;
 
-            knots = [faces{3}.knots(end), faces{1}.knots];
-            master_coeffs = faces{1}.coeffs;
-            master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-            slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-            slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-            slave5_coeffs = permute(faces{4}.coeffs,[1,3,2]);
-            slave5_coeffs = reshape(slave5_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
-            g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
-            coeffs = (master_coeffs + slave3_coeffs - slave3_coeffs(:,1,1,:)).*(1-g) + (master_coeffs + slave5_coeffs - slave5_coeffs(:,1,1,:)).*g;
+            if slave3Slave == slave4Slave % Four patches are consecutive
+                switch options.S2V_algorithm.A1234
+                    case 'A1234_11'
+                        faces(2) = nurbs_bdry(slave3Slave);
+                        faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(sidx3Slave,1,true));   % Make "sidx = 1"
 
-            nurbs = createNURBSobject(coeffs,knots);
+                        edges = cell(1,4);
+                        edges(1) = subNURBS(faces{1},'at',[0,0;0,1]);
+                        edges(2) = subNURBS(faces{2},'at',[0,0;0,1]);
+                        edges(3) = subNURBS(faces{3},'at',[0,1;0,0]);
+                        edges(4) = subNURBS(faces{4},'at',[0,1;0,0]);
+                        faces(6) = GordonHall(edges);
+                        edges(1) = subNURBS(faces{1},'at',[0,0;1,0]);
+                        edges(2) = subNURBS(faces{2},'at',[0,0;1,0]);
+                        edges(3) = subNURBS(faces{3},'at',[1,0;0,0]);
+                        edges(4) = subNURBS(faces{4},'at',[1,0;0,0]);
+                        faces(5) = GordonHall(edges);
+        
+                        nurbs = GordonHall(faces);
+                end
 
-            nurbs_covered = [patch,slave3,slave4];
-            nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;1,1],'outwardPointingNormals',true);
+                nurbs_covered = [patch,slave3,slave4,slave3Slave];
+                nurbs_newBdry = subNURBS(nurbs,'at',[0,0;0,0;1,1],'outwardPointingNormals',true);
+            else
+                switch options.S2V_algorithm.A134
+                    case 'A134_11'
+                        knots = [faces{3}.knots(end), faces{1}.knots];
+
+                        master_coeffs = faces{1}.coeffs;
+                        master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
+                        slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
+                        slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+                        slave5_coeffs = permute(faces{4}.coeffs,[1,3,2]);
+                        slave5_coeffs = reshape(slave5_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
+                        g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
+                        coeffs = (master_coeffs + slave3_coeffs - slave3_coeffs(:,1,1,:)).*(1-g) + (master_coeffs + slave5_coeffs - slave5_coeffs(:,1,1,:)).*g;
+            
+                        nurbs = createNURBSobject(coeffs,knots);
+                    otherwise
+                        error('Not implemented')
+            
+                end
+                nurbs_covered = [patch,slave3,slave4];
+                nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;1,1],'outwardPointingNormals',true);
+            end
         end
     case 3
         midx_regular = singularFromRegular(topologyMap,patch,setdiff(1:4,midx));
         if ~isempty(midx_regular)
-            [nurbs, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
+            [S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
             return
         end
-        midx = correct_midx_order(midx);
-        slave3 = topologyMap{patch}(midx(1)).slave;
-        sidx3 = topologyMap{patch}(midx(1)).sidx;
-        slave5 = topologyMap{patch}(midx(2)).slave;
-        sidx2 = topologyMap{patch}(midx(2)).sidx;
-        if isempty(slave5)
-            slave_temp = topologyMap{patch}(midxToLeftmidx(midx(2))).slave;
-            sidx_temp = topologyMap{patch}(midxToLeftmidx(midx(2))).sidx;
-            slave5 = topologyMap{slave_temp}(midxToLeftmidx(sidx_temp)).slave;
-            sidx2 = midxToLeftmidx(topologyMap{slave_temp}(midxToLeftmidx(sidx_temp)).sidx);
+        switch options.S2V_algorithm.A1345
+            case 'A1345_11'
+                midx = correct_midx_order(midx);
+                slave3 = topologyMap{patch}(midx(1)).slave;
+                sidx3 = topologyMap{patch}(midx(1)).sidx;
+                slave5 = topologyMap{patch}(midx(2)).slave;
+                sidx2 = topologyMap{patch}(midx(2)).sidx;
+                if isempty(slave5)
+                    slave_temp = topologyMap{patch}(midxToLeftmidx(midx(2))).slave;
+                    sidx_temp = topologyMap{patch}(midxToLeftmidx(midx(2))).sidx;
+                    slave5 = topologyMap{slave_temp}(midxToLeftmidx(sidx_temp)).slave;
+                    sidx2 = midxToLeftmidx(topologyMap{slave_temp}(midxToLeftmidx(sidx_temp)).sidx);
+                end
+        
+                slave4 = topologyMap{patch}(midx(3)).slave;
+                sidx4 = topologyMap{patch}(midx(3)).sidx;
+        
+                faces(1) = nurbs_bdry(patch);
+                faces(3) = nurbs_bdry(slave3);
+                faces(5) = nurbs_bdry(slave5);
+                faces(4) = nurbs_bdry(slave4);
+        
+                % Fix orientation to the standard setup
+                faces{1} = orientNURBS(faces{1}, idx1To_idx2_orient(midx(1),1)); % Make "midx = 1"
+                faces{3} = orientNURBS(faces{3}, idx1To_idx2_orient(sidx3,3));   % Make "sidx = 3"
+                faces{5} = orientNURBS(faces{5}, idx1To_idx2_orient(sidx2,1));   % Make "sidx = 1"
+                faces{4} = orientNURBS(faces{4}, idx1To_idx2_orient(sidx4,3,true));   % Make "sidx = 1"
+        
+        
+                knots = [faces{3}.knots(end), faces{1}.knots];
+                master_coeffs = faces{1}.coeffs;
+                master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
+                slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
+                slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+                slave5_coeffs = faces{5}.coeffs;
+                slave4_coeffs = permute(faces{4}.coeffs,[1,3,2]);
+                slave4_coeffs = reshape(slave4_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
+                g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
+                coeffs = (master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
+                       + (master_coeffs + slave4_coeffs + slave5_coeffs - master_coeffs(:,1,end,:) - slave5_coeffs(:,1,:,1) - slave4_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
+        
+                nurbs = createNURBSobject(coeffs,knots);
+            otherwise
+                error('Not implemented')
         end
-
-        slave4 = topologyMap{patch}(midx(3)).slave;
-        sidx4 = topologyMap{patch}(midx(3)).sidx;
-
-        faces(1) = nurbs_bdry(patch);
-        faces(3) = nurbs_bdry(slave3);
-        faces(5) = nurbs_bdry(slave5);
-        faces(4) = nurbs_bdry(slave4);
-
-        % Fix orientation to the standard setup
-        faces{1} = orientNURBS(faces{1}, idx1To_idx2_orient(midx(1),1)); % Make "midx = 1"
-        faces{3} = orientNURBS(faces{3}, idx1To_idx2_orient(sidx3,3));   % Make "sidx = 3"
-        faces{5} = orientNURBS(faces{5}, idx1To_idx2_orient(sidx2,1));   % Make "sidx = 1"
-        faces{4} = orientNURBS(faces{4}, idx1To_idx2_orient(sidx4,3,true));   % Make "sidx = 1"
-
-
-        knots = [faces{3}.knots(end), faces{1}.knots];
-        master_coeffs = faces{1}.coeffs;
-        master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-        slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-        slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-        slave5_coeffs = faces{5}.coeffs;
-        slave4_coeffs = permute(faces{4}.coeffs,[1,3,2]);
-        slave4_coeffs = reshape(slave4_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
-        g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
-        coeffs = (master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
-               + (master_coeffs + slave4_coeffs + slave5_coeffs - master_coeffs(:,1,end,:) - slave5_coeffs(:,1,:,1) - slave4_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
-
-        nurbs = createNURBSobject(coeffs,knots);
 
         nurbs_covered = [patch,slave3,slave5,slave4];
         nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;0,1],'outwardPointingNormals',true);
@@ -810,23 +817,40 @@ switch maxNoSharpAngles
         faces{6} = orientNURBS(faces{6}, idx1To_idx2_orient(sidx6,1,true));     % Make "sidx = 1"
 
         if slavesSlave(1) == slavesSlave(2) && slavesSlave(3) == slavesSlave(4) % we have "maxNoSharpAngles=5"
-            faces(2) = nurbs_bdry(slavesSlave(1));    
-            faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(sidx1,3,true));     % Make "sidx = 3"
-
-            nurbs_covered = [patch,slave3,slave5,slave4,slave6,slavesSlave(1)];
-            nurbs_newBdry = [];
+            switch options.S2V_algorithm.A123456
+                case 'A123456_11'
+                    faces(2) = nurbs_bdry(slavesSlave(1));    
+                    faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(sidx1,3,true));     % Make "sidx = 3"
+        
+                    nurbs_covered = [patch,slave3,slave5,slave4,slave6,slavesSlave(1)];
+                    nurbs_newBdry = [];
+                    maxNoSharpAngles = 5;
+                otherwise
+                    error('Not implemented')
+            end
         else
-            edges = cell(1,4);
-            edges(1) = subNURBS(faces{3},'at',[0,0;0,1]);
-            edges(2) = subNURBS(faces{4},'at',[0,0;0,1]);
-            edges(3) = subNURBS(faces{5},'at',[0,1;0,0]);
-            edges(4) = subNURBS(faces{6},'at',[0,1;0,0]);
-            faces(2) = GordonHall(edges);
-            nurbs_covered = [patch,slave3,slave5,slave4,slave6];
-            nurbs_newBdry = faces(2);
+            switch options.S2V_algorithm.A13456
+                case 'A13456_11'
+                    edges = cell(1,4);
+                    edges(1) = subNURBS(faces{3},'at',[0,0;0,1]);
+                    edges(2) = subNURBS(faces{4},'at',[0,0;0,1]);
+                    edges(3) = subNURBS(faces{5},'at',[0,1;0,0]);
+                    edges(4) = subNURBS(faces{6},'at',[0,1;0,0]);
+                    faces(2) = GordonHall(edges);
+                    nurbs_covered = [patch,slave3,slave5,slave4,slave6];
+                    nurbs_newBdry = faces(2);
+                otherwise
+                    error('Not implemented')
+            end
         end
         nurbs = GordonHall(faces);
 
+end
+S2Vobj.maxNoSharpAngles = maxNoSharpAngles;
+S2Vobj.nurbs_vol(S2Vobj.counter) = nurbs;
+S2Vobj.selfIntersection = checkOrientation(nurbs, 10);
+if S2Vobj.selfIntersection
+    warning('Self intersection encountered!')
 end
 
 function [patch,maxNoSharpAngles,minSum] = findNextPatch(angles,sharpAngle,noBdryPatches)

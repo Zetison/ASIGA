@@ -9,47 +9,65 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Plot all shapes
-R = 1;
-models = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
-           'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
-models = {'BeTSSiM4'};
-for model = models
-    for parm = 2
-%         close all
-        options.parm = parm;
-%         options.theta = 2*pi;r
-%         options.theta_eta = 0.9*2*pi;
-%         options.R = 2;
-%         options.t = 0.1;
-        nurbs = eval(['get' model{1} 'Data(options)']);
-        resolution = 32*[1,1,1];
-        M = 2;
-        refLength = 1;
-        geometry = getTopology(nurbs);
-%         nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1));
-%         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
-        figure
-        plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,...
-            'plotNormalVectors',0,'plotParmDir',0,'plotWeights',1,'coarseLinearSampling',false);
-        axis equal
-        grid off
-        axis off
-        colorbar
-        view(getView(0))
-%         view(getView(1))
-%         camlight
-        material dull
-        ax = gca;               % get the current axis
-        ax.Clipping = 'off';    % turn clipping off
+% R = 1;
+% models = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
+%            'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
+% models = {'BeTSSiM4'};
+% for model = models
+%     for parm = 2
+% %         close all
+%         options.parm = parm;
+% %         options.theta = 2*pi;r
+% %         options.theta_eta = 0.9*2*pi;
+% %         options.R = 2;
+% %         options.t = 0.1;
+%         nurbs = eval(['get' model{1} 'Data(options)']);
+%         resolution = 32*[1,1,1];
+%         M = 2;
+%         refLength = 1;
+%         geometry = getTopology(nurbs);
+% %         nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1));
+% %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
+%         figure
+%         plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,...
+%             'plotNormalVectors',0,'plotParmDir',0,'plotWeights',1,'coarseLinearSampling',false);
+%         axis equal
+%         grid off
+%         axis off
+%         colorbar
+%         view(getView(0))
+% %         view(getView(1))
+% %         camlight
+%         material dull
+%         ax = gca;               % get the current axis
+%         ax.Clipping = 'off';    % turn clipping off
+% 
+% %         write_g2(nurbs,['NURBSgeometries/g2files/' model{1} '_parm' num2str(parm)])
+% %         axis on
+% %         figureFullScreen(gcf)
+% %         export_fig(['../../graphics/ASIGAmodels/' model{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
+%     end
+% end
+% % nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 
-%         write_g2(nurbs,['NURBSgeometries/g2files/' model{1} '_parm' num2str(parm)])
-%         axis on
-%         figureFullScreen(gcf)
-%         export_fig(['../../graphics/ASIGAmodels/' model{1} '_' num2str(parm)], '-png', '-transparent', '-r200')
-    end
-end
-% nurbs = translateNURBS(nurbs,[-L/2,0,0]);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Create random cubic hole
+% nurbs_vol = read_g2('../IGA-geometries/Chess/Capablanca.g2');
+clear all
+close all
+nurbs = getPrismData('L',[2,4,1],'x_0',[0,0,0]);
+nurbs = elevateNURBSdegree(nurbs,2);
+nurbs{1}.coeffs(1,:,:,:) = nurbs{1}.coeffs(1,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(2,:,:,:));
+nurbs{1}.coeffs(2,:,:,:) = nurbs{1}.coeffs(2,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(3,:,:,:));
+nurbs{1}.coeffs(3,:,:,:) = nurbs{1}.coeffs(3,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(2,:,:,:));
+nurbs{1}.coeffs = nurbs{1}.coeffs + rand(size(nurbs{1}.coeffs(:,:,:,:)))*0.05;
+nurbs = insertKnotsInNURBS(nurbs,{{[ones(1,3)/3, 2*ones(1,3)/3],[ones(1,3)/3, 2*ones(1,3)/3], []}});
+nurbs = explodeNURBS(nurbs);
+nurbs = nurbs([1:4,6:9]);
+figure, plotNURBSvec(nurbs)
+axis equal
+view(getView())
+write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test Capablanca
