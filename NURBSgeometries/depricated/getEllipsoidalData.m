@@ -42,3 +42,4 @@ error('Depricated: use getEllipsoidData() instead')
 %     nurbs = scaleNURBS(nurbs,R);
 % end
 % nurbs = translateNURBS(nurbs,options.x_0);
+% makeUniformNURBSDegree

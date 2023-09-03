@@ -51,17 +51,6 @@ switch model
         app.nurbsObjects{1,1}.nurbs = flipNURBSparametrization(app.nurbsObjects{1,1}.nurbs,1);
         app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
-    case 'BeTSSiM4_parm2'
-        options.parm = 2;
-%         options.theta = 2*pi;r
-%         options.theta_eta = 0.9*2*pi;
-%         options.R = 2;
-        options.t = 0.5;
-        app.nurbsObjects{1,1}.nurbs = getBeTSSiM4Data(options);
-%         app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
-        app.ThicknessEditField.Value = 0.1;
-        app.AnglethresholdEditField.Value = 150; % Threshold for a "sharp" angle
-        app.AngledeviationEditField.Value = 45; % Threshold for a "sharp" angle
     case 'S1'
         app.EpsEditField.Value = 1e-10;
         app.ThicknessEditField.Value = 0.1;
@@ -70,9 +59,49 @@ switch model
         app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
         app.AlgorithmForCase13.Value = 'A13_41';
         app.AlgorithmForCase135.Value = 'A135_41';
+    case 'BeTSSiM1'
+        app.EpsEditField.Value = 1e-10;
+        app.ThicknessEditField.Value = 1.5;
+        app.AlgorithmForCase13.Value = 'A13_31';
+        app.AlgorithmForCase135.Value = 'A135_31';
+        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+    case 'BeTSSiM2'
+        app.EpsEditField.Value = 1e-10;
+        app.ThicknessEditField.Value = 0.1;
+%         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
+%         app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
+%         app.AlgorithmForCase13.Value = 'A13_41';
+%         app.AlgorithmForCase135.Value = 'A135_41';
+        options.t = 2;
+        app.nurbsObjects{1,1}.nurbs = getBeTSSiM2Data(options);
+    case {'BeTSSiM4','BeTSSiM4_parm2'}
+        if model(end) == '2'
+            options.parm = 2;
+        else
+            options.parm = 1;
+            app.AlgorithmForCase135.Value = 'A135_31';
+            app.AlgorithmForCase13.Value = 'A13_31';
+        end
+%         options.theta = 2*pi;r
+%         options.theta_eta = 0.9*2*pi;
+%         options.R = 2;
+        options.t = 0.5;
+        app.nurbsObjects{1,1}.nurbs = getBeTSSiM4Data(options);
+%         app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+
+        view(app.UIAxes,[135,25]);
+        app.ThicknessEditField.Value = 1;
+        app.AnglethresholdEditField.Value = 150; % Threshold for a "sharp" angle
+        app.AngledeviationEditField.Value = 45; % Threshold for a "sharp" angle
+        app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3)-[1,1,1]*0.5/2)-3))';
     case 'randomCubicHole'
         app.EpsEditField.Value = 1e-10;
         app.ThicknessEditField.Value = 1;
+        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+    case 'Barrel'
+        app.EpsEditField.Value = 1e-10;
+        app.ThicknessEditField.Value = 0.4;
+        app.AlgorithmForCase135.Value = 'A135_31';
         app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
     otherwise
         app.EpsEditField.Value = 1e-10;

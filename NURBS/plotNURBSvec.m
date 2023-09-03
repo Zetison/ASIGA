@@ -35,6 +35,7 @@ options = struct('resolution',[32,32,32], ...
                  'colorControlPolygon', 'red', ...
                  'markerEdgeColor', 'black', ...
                  'markerColor', 'black', ...
+                 'app', [], ...
                  'colorParmDirs', {{getColor(12),getColor(13),getColor(7)}}, ...
                  'colorNormals', getColor(6));
 if nargin > 1+extraArg
@@ -62,6 +63,9 @@ if ~isa(quiverAutoScale,'char')
     else
         quiverAutoScale = 'off';
     end
+end
+if isempty(options.app)
+    options.app.S2Vmouse_click = @(src,event) NaN;
 end
 if strcmp(quiverAutoScale,'off')
     quiverScaleAuto = 0.9;
@@ -119,6 +123,8 @@ parmDirHandle = gobjects(3,noPatches);
 for patch = 1:noPatches
     if isempty(options.displayName)
         displayName = sprintf('Patch %d ', patch);
+    elseif isa(options.displayName, 'function_handle')
+        displayName = options.displayName(patch);
     else
         displayName = [options.displayName ', patch ' num2str(patch)];
     end
@@ -288,11 +294,11 @@ for patch = 1:noPatches
             minC = min(min(C));
             if plotColorFun || plotJacobian || plotWeights
                 objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
-                        'LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName);
+                        'LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             else
                 objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,...
                         'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-                        'FaceLighting', faceLighting, 'DisplayName',displayName);
+                        'FaceLighting', faceLighting, 'DisplayName',displayName,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             end
         end
         if plotElementEdges
@@ -364,13 +370,13 @@ for patch = 1:noPatches
             if plotColorFun || plotWeights
                 objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
                             'LineStyle','none','FaceAlpha',alphaValue, ...
-                            'FaceLighting', faceLighting, 'DisplayName',displayName);
+                            'FaceLighting', faceLighting, 'DisplayName',displayName,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
                 maxC = max(max(C));
                 minC = min(min(C));
             else
                 objectHandle(patch) = surf(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,...
                             'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
-                            'FaceLighting', faceLighting, 'DisplayName',displayName);
+                            'FaceLighting', faceLighting, 'DisplayName',displayName,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             end
         end
         if plotElementEdges

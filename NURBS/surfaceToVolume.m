@@ -7,7 +7,7 @@ options = struct('t', 1, ...                                % thickness of patch
                  'sharpAngle', 120*pi/180,...               % Threshold for a "sharp" angle
                  'convexityThresholdAngle', 150*pi/180,...  % Acceptable convexity angle for the outer boundary (exterior meshing) for any two pair of surfaces
                  'Eps', 1e-10, ...                          % Threshold for assuming two physical points in the l2-norm to be identical
-                 'explodeNURBSsurface', true, ...           % Explode patches having C0-elements
+                 'maintainCollapsedness', true, ...         % For any volumetric patch created from a surface patch having a collapsed edge, the volumetric patch has a corresponding collapsed face
                  'S2V_algorithm',struct('A1','A1_21',...
                                         'A13','A13_21',...
                                         'A135','A135_21',...
@@ -27,31 +27,21 @@ if nargin > 1
     end
     options = updateOptions(options,newOptions);
 end
-if isfield(S2Vobj,'nurbs_bdry')
-    counter = S2Vobj.counter;
-else
-    nurbs_surf = cleanNURBS(S2Vobj.nurbs_surf,[],1e-6);
+if ~isfield(S2Vobj,'topologyMap')    
+    d_p = S2Vobj.nurbs_bdry{1}.d_p;
     
-    if options.explodeNURBSsurface
-        nurbs_surf = explodeNURBS(nurbs_surf);
-    end
-    d_p = nurbs_surf{1}.d_p;
-    
-    S2Vobj.noBdryPatches = numel(nurbs_surf);
+    S2Vobj.noBdryPatches = numel(S2Vobj.nurbs_bdry);
     if isfield(options,'connection')
         connection = options.connection;
     else
-        geometry = getTopology(nurbs_surf);
+        geometry = getTopology(S2Vobj.nurbs_bdry);
         connection = geometry.topology.connection;
     end
     S2Vobj.topologyMap = createTopologyMap(connection,S2Vobj.noBdryPatches,d_p);
     
-    
-    S2Vobj.nurbs_bdry = nurbs_surf;
     S2Vobj = computeCornerData(S2Vobj,options);
     
-    
-    S2Vobj.nurbs_vol = cell(1,4*numel(nurbs_surf));
+    S2Vobj.nurbs_vol = cell(1,4*numel(S2Vobj.nurbs_bdry));
     S2Vobj.counter = 0;
 end
 
@@ -67,7 +57,9 @@ if ~isempty(nurbs_newBdry)
     nurbs_newBdry(zeroMeasure) = [];
 end
 
-if ~isempty(nurbs_newBdry)
+if isempty(nurbs_newBdry)
+    newBdryPatches = [];
+else
     noNewBdryPatches = numel(nurbs_newBdry);
     newBdryPatches = (numel(S2Vobj.nurbs_bdry)+1):(numel(S2Vobj.nurbs_bdry)+noNewBdryPatches);
 
@@ -123,6 +115,7 @@ if ~isempty(nurbs_newBdry)
 
     S2Vobj = computeCornerData(S2Vobj,options,newBdryPatches);
 end
+S2Vobj.newBdryPatches = newBdryPatches;
 S2Vobj.angles(nurbs_covered,:) = NaN;
 S2Vobj.S2Vcompleted = ~(S2Vobj.counter == 1 || any(S2Vobj.angles(:) < options.convexityThresholdAngle) || any(~isnan(S2Vobj.angles(1:S2Vobj.noBdryPatches,:)),'all'));
 
@@ -144,12 +137,46 @@ t = options.t;
 % original_angles = angles;
 sharpAngle = options.sharpAngle;
 acuteAngleAdjustment = 1.2;
-useProdWeights = true;
-if nargin < 3
-    [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle,S2Vobj.noBdryPatches);
-    midx = find(angles(patch,:) < sharpAngle);
+useProdWeights = 1;
+if isempty(S2Vobj.selectedObjects)
+    if nargin < 3
+        [patch,maxNoSharpAngles] = findNextPatch(angles,sharpAngle,S2Vobj.noBdryPatches);
+        midx = find(angles(patch,:) < sharpAngle);
+    end
+else
+    maxNoSharpAngles = numel(S2Vobj.selectedObjects)-1;
+    masterPatchAvailable = false;
+    midx = zeros(1,maxNoSharpAngles);
+    for patch = S2Vobj.selectedObjects
+        counter = 1;
+        slaveFoundInNeighborhood = false;
+        for slave = setdiff(S2Vobj.selectedObjects,patch)
+            slaveFoundInNeighborhood = false;
+            for midx_i = 1:4
+                if S2Vobj.topologyMap{patch}(midx_i).slave == slave
+                    slaveFoundInNeighborhood = true;
+                    break
+                end
+            end
+            if slaveFoundInNeighborhood
+                midx(counter) = midx_i;
+                counter = counter + 1;
+            else
+                break
+            end
+        end
+        if slaveFoundInNeighborhood
+            masterPatchAvailable = true;
+            break
+        end
+    end
+    if ~masterPatchAvailable && maxNoSharpAngles > 0
+        error('A single master patch from the selected patches were not found.')
+    end
+    midx = sort(midx);
 end
 faces = cell(1,6);
+volCoeffs = cell(1,6);
 switch maxNoSharpAngles
     case 0
         faces(1) = nurbs_bdry(patch);
@@ -167,6 +194,9 @@ switch maxNoSharpAngles
                 error('Not implemented')
         end
         nurbs = loftNURBS({faces(1),faces(2)},1,1);
+        if options.maintainCollapsedness
+            nurbs = adjustForCollapsedness(nurbs,1,options);
+        end
         nurbs_covered = patch;
         nurbs_newBdry = subNURBS(nurbs,'at',[0,1;1,1;1,1],'outwardPointingNormals',true); 
     case 1 % Loft path along slave
@@ -198,20 +228,20 @@ switch maxNoSharpAngles
         knots = [faces{3}.knots(end), faces{1}.knots];
         degree = [faces{3}.degree(end), faces{1}.degree];
         number = [faces{3}.number(end), faces{1}.number];
-        master_coeffs = faces{1}.coeffs;
-        master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-        slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-        slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+        volCoeffs{1} = faces{1}.coeffs;
+        volCoeffs{1} = reshape(volCoeffs{1},[d+1,1,faces{1}.number]);
+        volCoeffs{3} = permute(faces{3}.coeffs,[1,3,2]);
+        volCoeffs{3} = reshape(volCoeffs{3},[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
         
         switch options.S2V_algorithm.A13
             case 'A13_11'
-                coeffs = master_coeffs + slave3_coeffs - slave3_coeffs(:,1,1,:);
+                coeffs = volCoeffs{1} + volCoeffs{3} - volCoeffs{3}(:,1,1,:);
                 if useProdWeights
-                    coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:);
+%                     coeffs(4,:,:,:) = volCoeffs{1}(4,:,:,:).*volCoeffs{3}(4,:,:,:);
+                    coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*volCoeffs{3}(4,:,1,1)./volCoeffs{3}(4,1,1,1);
                 end
-                coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
-                coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
-                nurbs = createNURBSobject(coeffs,knots);
+                coeffs(:,1,:,:) = volCoeffs{1}(:,1,:,:);
+                coeffs(:,:,1,:) = volCoeffs{3}(:,:,1,:);
             case {'A13_21','A13_31','A13_33'}
                 face_normals1 = faceFromNormals(patch,S2Vobj,options);
                 face_normals1 = orientNURBS(face_normals1{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
@@ -220,14 +250,14 @@ switch maxNoSharpAngles
                 face_normals3 = orientNURBS(face_normals3{1}, idx1To_idx2_orient(sidx,3)); % Make "sidx = 3"
                 n_tilde3 = reshape(face_normals3.coeffs(1:3,:,:),[d,number(1),1,number(3)]);
                 
-                P1 = master_coeffs(1:3,1,:,:);
-                P3 = slave3_coeffs(1:3,:,1,:);
-                W1 = master_coeffs(4,1,:,:);
-                W3 = slave3_coeffs(4,:,1,:);
+                P1 = volCoeffs{1}(1:3,1,:,:);
+                P3 = volCoeffs{3}(1:3,:,1,:);
+                W1 = volCoeffs{1}(4,1,:,:);
+                W3 = volCoeffs{3}(4,:,1,:);
 
                 if 0
                     if any(S2Vobj.edgeData(slave).collapsed)
-                        diffs = P3 - slave3_coeffs(1:3,1,1,:);
+                        diffs = P3 - volCoeffs{3}(1:3,1,1,:);
                         [~, I] = max(vecnorm(diffs,2,1),[],4);
                         diffs_max = zeros([3,number(1)]);
                         for i = 1:numel(I)
@@ -235,10 +265,10 @@ switch maxNoSharpAngles
                         end
                         D31 = repmat(diffs_max, [1,1,number(2:3)]);
                     else
-                        D31 = repmat(P3 - slave3_coeffs(1:3,1,1,:), 1,1,number(2));
+                        D31 = repmat(P3 - volCoeffs{3}(1:3,1,1,:), 1,1,number(2));
                     end
                     if any(S2Vobj.edgeData(patch).collapsed)
-                        diffs = P1 - master_coeffs(1:3,1,1,:);
+                        diffs = P1 - volCoeffs{1}(1:3,1,1,:);
                         [~, I] = max(vecnorm(diffs,2,1),[],4);
                         diffs_max = zeros([3,1,number(2)]);
                         for i = 1:numel(I)
@@ -246,11 +276,11 @@ switch maxNoSharpAngles
                         end
                         D12 = repmat(diffs_max, [1,number(1),1,number(3)]);
                     else
-                        D12 = repmat(P1 - master_coeffs(1:3,1,1,:), 1,number(1));
+                        D12 = repmat(P1 - volCoeffs{1}(1:3,1,1,:), 1,number(1));
                     end
                 else
-                    D31 = repmat(P3 - slave3_coeffs(1:3,1,1,:), 1,1,number(2));
-                    D12 = repmat(P1 - master_coeffs(1:3,1,1,:), 1,number(1));
+                    D31 = repmat(P3 - volCoeffs{3}(1:3,1,1,:), 1,1,number(2));
+                    D12 = repmat(P1 - volCoeffs{1}(1:3,1,1,:), 1,number(1));
                 end
                 l31 = vecnorm(D31,2,1);
                 l12 = vecnorm(D12,2,1);
@@ -279,30 +309,32 @@ switch maxNoSharpAngles
                         v13(:) = 0;
                         coeffs(4,:,:,:) = repmat(W3,1,1,number(2));
                     otherwise
-                        coeffs(4,:,:,:) = W1.*W3;
+                        if useProdWeights
+%                             coeffs(4,:,:,:) = W1.*W3;
+                            coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*volCoeffs{3}(4,:,1,1)./volCoeffs{3}(4,1,1,1);
+                        else
+                            coeffs(4,:,:,:) = repmat(W1,1,number(1));
+                        end
                 end
 
                 coeffs(1:3,:,:,:) = v13.*(P1 + RD31) + (1-v13).*(P3 + RD12);
-
-                
-                coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
-                coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
-
-                nurbs = createNURBSobject(coeffs,knots);
             case 'A13_41'
-                len = vecnorm(slave3_coeffs(1:3,end,1,:) - slave3_coeffs(1:3,1,1,:),2,1);
+                len = vecnorm(volCoeffs{3}(1:3,end,1,:) - volCoeffs{3}(1:3,1,1,:),2,1);
                 face_normals = faceFromNormals(patch,S2Vobj,options);
                 face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
 
                 g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
                 coeffs = zeros([d+1,number]);
-                coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
-                coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
-                coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
+                coeffs(4,:,:,:) = repmat(volCoeffs{1}(4,1,:,:),1,number(1));
+                coeffs(1:3,:,:,:) = volCoeffs{1}(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
 
-                nurbs = createNURBSobject(coeffs,knots);
             otherwise
                 error('Not implemented')
+        end
+        nurbs = createNURBSobject(coeffs,knots);
+        nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,[1,3]);
+        if options.maintainCollapsedness
+            nurbs = adjustForCollapsedness(nurbs,[1,3],options);
         end
         nurbs_covered = [patch,slave];
         nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;1,1],'outwardPointingNormals',true);
@@ -388,11 +420,11 @@ switch maxNoSharpAngles
             knots = [faces{3}.knots(end), faces{1}.knots];
             degree = [faces{3}.degree(end), faces{1}.degree];
             number = [faces{3}.number(end), faces{1}.number];
-            master_coeffs = faces{1}.coeffs;
-            master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-            slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-            slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-            slave5_coeffs = faces{5}.coeffs;
+            volCoeffs{1} = faces{1}.coeffs;
+            volCoeffs{1} = reshape(volCoeffs{1},[d+1,1,faces{1}.number]);
+            volCoeffs{3} = permute(faces{3}.coeffs,[1,3,2]);
+            volCoeffs{3} = reshape(volCoeffs{3},[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+            volCoeffs{5} = faces{5}.coeffs;
 
 %                 midx_opposite = midx-(-1).^midx;
 %                 cornerIndices = intermediateCorner(midx);
@@ -432,11 +464,11 @@ switch maxNoSharpAngles
 %                     end
 %                 end
 % 
-%                 len2 = norm(slave1_coeffs(1:3,end,1,end) - slave1_coeffs(1:3,1,1,end));
+%                 len2 = norm(volCoeffs{3}(1:3,end,1,end) - volCoeffs{3}(1:3,1,1,end));
 %                 g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
 %                 coeffs2 = zeros(d+1,number(1));
-%                 coeffs2(1:3,:) = master_coeffs(1:3,1,end,end) + len2*normals.*g;
-%                 coeffs2(4,:) = [master_coeffs(4,1,end,end), slave1_coeffs(4,2:end,1,end)]; % Use the weights based on the weights on opposite side
+%                 coeffs2(1:3,:) = volCoeffs{1}(1:3,1,end,end) + len2*normals.*g;
+%                 coeffs2(4,:) = [volCoeffs{1}(4,1,end,end), volCoeffs{3}(4,2:end,1,end)]; % Use the weights based on the weights on opposite side
 % 
 %                 edges = cell(1,4);
 %                 edges(1) = subNURBS(faces(5),'at',[0,0;0,1]);
@@ -490,13 +522,14 @@ switch maxNoSharpAngles
 %                 end
             switch options.S2V_algorithm.A135
                 case 'A135_11'
-                    coeffs = master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1);
+                    coeffs = volCoeffs{1} + volCoeffs{3} + volCoeffs{5} - volCoeffs{1}(:,1,1,:) - volCoeffs{5}(:,1,:,1) - volCoeffs{3}(:,:,1,1) + volCoeffs{1}(:,1,1,1);
                     if useProdWeights
-                        coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:).*slave5_coeffs(4,:,:,:);
+%                         coeffs(4,:,:,:) = volCoeffs{1}(4,:,:,:).*volCoeffs{3}(4,:,:,:).*volCoeffs{5}(4,:,:,:);
+                        coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*volCoeffs{3}(4,:,1,1)./volCoeffs{3}(4,1,1,1);
                     end
-                    coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
-                    coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
-                    coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
+                    coeffs(:,1,:,:) = volCoeffs{1}(:,1,:,:);
+                    coeffs(:,:,1,:) = volCoeffs{3}(:,:,1,:);
+                    coeffs(:,:,:,1) = volCoeffs{5}(:,:,:,1);
                     nurbs = createNURBSobject(coeffs,knots);
                 case {'A135_21','A135_31','A135_33','A135_35'}
                     face_normals1 = faceFromNormals(patch,S2Vobj,options);
@@ -509,19 +542,19 @@ switch maxNoSharpAngles
                     face_normals5 = orientNURBS(face_normals5{1}, idx1To_idx2_orient(sidx5,1)); % Make "sidx = 1"
                     n_tilde5 = reshape(face_normals5.coeffs(1:3,:,:),[d,number(1:2),1]);
                     
-                    P1 = master_coeffs(1:3,1,:,:);
-                    P3 = slave3_coeffs(1:3,:,1,:);
-                    P5 = slave5_coeffs(1:3,:,:,1);
-                    W1 = master_coeffs(4,1,:,:);
-                    W3 = slave3_coeffs(4,:,1,:);
-                    W5 = slave5_coeffs(4,:,:,1);
+                    P1 = volCoeffs{1}(1:3,1,:,:);
+                    P3 = volCoeffs{3}(1:3,:,1,:);
+                    P5 = volCoeffs{5}(1:3,:,:,1);
+                    W1 = volCoeffs{1}(4,1,:,:);
+                    W3 = volCoeffs{3}(4,:,1,:);
+                    W5 = volCoeffs{5}(4,:,:,1);
 
-                    D12 = repmat(P1 - master_coeffs(1:3,1,1,:), 1,number(1));
-                    D13 = repmat(P1 - master_coeffs(1:3,1,:,1), 1,number(1));
-                    D31 = repmat(P3 - slave3_coeffs(1:3,1,1,:), 1,1,number(2));
-                    D33 = repmat(P3 - slave3_coeffs(1:3,:,1,1), 1,1,number(2));
-                    D51 = repmat(P5 - slave5_coeffs(1:3,1,:,1), 1,1,1,number(3));
-                    D52 = repmat(P5 - slave5_coeffs(1:3,:,1,1), 1,1,1,number(3));
+                    D12 = repmat(P1 - volCoeffs{1}(1:3,1,1,:), 1,number(1));
+                    D13 = repmat(P1 - volCoeffs{1}(1:3,1,:,1), 1,number(1));
+                    D31 = repmat(P3 - volCoeffs{3}(1:3,1,1,:), 1,1,number(2));
+                    D33 = repmat(P3 - volCoeffs{3}(1:3,:,1,1), 1,1,number(2));
+                    D51 = repmat(P5 - volCoeffs{5}(1:3,1,:,1), 1,1,1,number(3));
+                    D52 = repmat(P5 - volCoeffs{5}(1:3,:,1,1), 1,1,1,number(3));
 
                     l12 = vecnorm(D12,2,1);
                     l13 = vecnorm(D13,2,1);
@@ -608,30 +641,35 @@ switch maxNoSharpAngles
                             V13(:) = 0;
                             coeffs(4,:,:,:) = repmat(W5,1,1,1,number(3));
                         otherwise
-                            coeffs(4,:,:,:) = W1.*W3.*W5;
+                            if useProdWeights
+%                                 coeffs(4,:,:,:) = W1.*W3.*W5;
+                                coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*volCoeffs{3}(4,:,1,1)./volCoeffs{3}(4,1,1,1);
+                            end
                     end
                     coeffs(1:3,:,:,:) =   V13.*(v13.*(P1 + RD31) + (1-v13).*(P3 + RD12)) ...
                                         + V15.*(v15.*(P1 + RD51) + (1-v15).*(P5 + RD13)) ...
                                         + V35.*(v35.*(P3 + RD52) + (1-v35).*(P5 + RD33));
 
-                    coeffs(:,1,:,:) = master_coeffs(:,1,:,:);
-                    coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
-                    coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
+                    coeffs(:,1,:,:) = volCoeffs{1}(:,1,:,:);
+                    coeffs(:,:,1,:) = volCoeffs{3}(:,:,1,:);
+                    coeffs(:,:,:,1) = volCoeffs{5}(:,:,:,1);
 
                     nurbs = createNURBSobject(coeffs,knots);
                 case 'A135_41'
-                    l31 = repmat(vecnorm(slave3_coeffs(1:3,end,1,:) - slave3_coeffs(1:3,1,1,:),2,1), [1,1,number(2)]);
-                    l12 = repmat(vecnorm(slave5_coeffs(1:3,end,:,1) - slave5_coeffs(1:3,1,:,1),2,1), [1,1,1,number(3)]);
+                    l31 = repmat(vecnorm(volCoeffs{3}(1:3,end,1,:) - volCoeffs{3}(1:3,1,1,:),2,1), [1,1,number(2)]);
+                    l12 = repmat(vecnorm(volCoeffs{5}(1:3,end,:,1) - volCoeffs{5}(1:3,1,:,1),2,1), [1,1,1,number(3)]);
                     len = mean(cat(1,l31,l12),1);
                     face_normals = faceFromNormals(patch,S2Vobj,options);
                     face_normals = orientNURBS(face_normals{1}, idx1To_idx2_orient(midx,1)); % Make "midx = 1"
     
                     g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
                     coeffs = zeros([d+1,number]);
-                    coeffs(4,:,:,:) = repmat(master_coeffs(4,1,:,:),1,number(1));
-                    coeffs(1:3,:,:,:) = master_coeffs(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
-                    coeffs(:,:,1,:) = slave3_coeffs(:,:,1,:);
-                    coeffs(:,:,:,1) = slave5_coeffs(:,:,:,1);
+                    if useProdWeights
+                        coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*volCoeffs{3}(4,:,1,1)./volCoeffs{3}(4,1,1,1);
+                    else
+                        coeffs(4,:,:,:) = repmat(volCoeffs{1}(4,1,:,:),1,number(1));
+                    end
+                    coeffs(1:3,:,:,:) = volCoeffs{1}(1:3,:,:,:) + len.*reshape(face_normals.coeffs(1:3,:,:),[d,1,number(2:3)]).*g;
                     nurbs = createNURBSobject(coeffs,knots);
                 case 'A135_51'
                     noStrategies = 2;
@@ -642,16 +680,17 @@ switch maxNoSharpAngles
                     for type = 1:noStrategies
                         switch type
                             case 1
-                                coeffs = master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1);
+                                coeffs = volCoeffs{1} + volCoeffs{3} + volCoeffs{5} - volCoeffs{1}(:,1,1,:) - volCoeffs{5}(:,1,:,1) - volCoeffs{3}(:,:,1,1) + volCoeffs{1}(:,1,1,1);
                             case 2
-                                slave4_coeffs = master_coeffs + slave5_coeffs - slave5_coeffs(:,1,:,1);
+                                volCoeffs{4} = volCoeffs{1} + volCoeffs{5} - volCoeffs{5}(:,1,:,1);
                                 g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
                         
-                                coeffs = (master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
-                                       + (master_coeffs + slave4_coeffs(:,:,end,:) + slave5_coeffs - master_coeffs(:,1,end,:) - slave5_coeffs(:,1,:,1) - slave4_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
+                                coeffs = (volCoeffs{1} + volCoeffs{3} + volCoeffs{5} - volCoeffs{1}(:,1,1,:) - volCoeffs{5}(:,1,:,1) - volCoeffs{3}(:,:,1,1) + volCoeffs{1}(:,1,1,1)).*(1-g) ...
+                                       + (volCoeffs{1} + volCoeffs{4}(:,:,end,:) + volCoeffs{5} - volCoeffs{1}(:,1,end,:) - volCoeffs{5}(:,1,:,1) - volCoeffs{4}(:,:,end,1) + volCoeffs{1}(:,1,end,1)).*g;
                         end
                         if useProdWeights
-                            coeffs(4,:,:,:) = master_coeffs(4,:,:,:).*slave3_coeffs(4,:,:,:).*slave5_coeffs(4,:,:,:);
+%                             coeffs(4,:,:,:) = volCoeffs{1}(4,:,:,:).*volCoeffs{3}(4,:,:,:).*volCoeffs{5}(4,:,:,:);
+                            coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*volCoeffs{3}(4,:,1,1)./volCoeffs{3}(4,1,1,1);
                         end
                         nurbs(type) = createNURBSobject(coeffs,knots);
                         mean_J_r(type) = mean(meanRatioJacobian(nurbs{type},[XI(:),ETA(:),ZETA(:)]));                    
@@ -661,6 +700,12 @@ switch maxNoSharpAngles
                 otherwise
                     error('Not implemented')
             end
+            % Adjust for collapsed cases
+            nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,[1,3,5]);
+            if options.maintainCollapsedness
+                nurbs = adjustForCollapsedness(nurbs,[1,3,5],options);
+            end
+
             nurbs_covered = [patch,slave3,slave5];
             nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;0,1],'outwardPointingNormals',true);
         else
@@ -685,11 +730,19 @@ switch maxNoSharpAngles
             sidx3Slave = topologyMap{slave3}(sidx3_opposite).sidx;
             slave4Slave = topologyMap{slave4}(sidx4_opposite).slave;
 
+            volCoeffs{1} = faces{1}.coeffs;
+            volCoeffs{1} = reshape(volCoeffs{1},[d+1,1,faces{1}.number]);
+            volCoeffs{3} = permute(faces{3}.coeffs,[1,3,2]);
+            volCoeffs{3} = reshape(volCoeffs{3},[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+            volCoeffs{4} = permute(faces{4}.coeffs,[1,3,2]);
+            volCoeffs{4} = reshape(volCoeffs{4},[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
+
             if slave3Slave == slave4Slave % Four patches are consecutive
                 switch options.S2V_algorithm.A1234
                     case 'A1234_11'
                         faces(2) = nurbs_bdry(slave3Slave);
                         faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(sidx3Slave,1,true));   % Make "sidx = 1"
+                        volCoeffs{2} = reshape(faces{2}.coeffs,[d+1,1,faces{2}.number]);
 
                         edges = cell(1,4);
                         edges(1) = subNURBS(faces{1},'at',[0,0;0,1]);
@@ -706,26 +759,35 @@ switch maxNoSharpAngles
                         nurbs = GordonHall(faces);
                 end
 
+                nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,[1,2,3,4]);
                 nurbs_covered = [patch,slave3,slave4,slave3Slave];
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,0;0,0;1,1],'outwardPointingNormals',true);
             else
                 switch options.S2V_algorithm.A134
                     case 'A134_11'
                         knots = [faces{3}.knots(end), faces{1}.knots];
+                        number = [faces{3}.number(end), faces{1}.number];
+                        degree = [faces{3}.degree(end), faces{1}.degree];
 
-                        master_coeffs = faces{1}.coeffs;
-                        master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-                        slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-                        slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-                        slave5_coeffs = permute(faces{4}.coeffs,[1,3,2]);
-                        slave5_coeffs = reshape(slave5_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
-                        g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
-                        coeffs = (master_coeffs + slave3_coeffs - slave3_coeffs(:,1,1,:)).*(1-g) + (master_coeffs + slave5_coeffs - slave5_coeffs(:,1,1,:)).*g;
+                        g = reshape(aveknt(knots{2},degree(2)+1),1,1,[]);
+                        coeffs = (volCoeffs{1} + volCoeffs{3} - volCoeffs{3}(:,1,1,:)).*(1-g) + (volCoeffs{1} + volCoeffs{4} - volCoeffs{4}(:,1,1,:)).*g;
+                        if useProdWeights
+%                             coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*(volCoeffs{3}(4,:,1,:).*(1-g) + volCoeffs{3}(4,:,end,:).*g);
+                            coeffs(4,:,:,:) = volCoeffs{1}(4,1,:,:).*volCoeffs{3}(4,:,1,1)./volCoeffs{3}(4,1,1,1);
+                        end
+
+                        if all(vecnorm(volCoeffs{3}(:,end,:,:) - volCoeffs{4}(:,end,:,:), 2,1) < options.Eps) % "Cats Eye"-like problem
+                            coeffs(:,end,:,:) = repmat(volCoeffs{3}(:,end,:,:),1,1,number(2));
+                        end
             
                         nurbs = createNURBSobject(coeffs,knots);
                     otherwise
                         error('Not implemented')
             
+                end
+                nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,[1,3,4]);
+                if options.maintainCollapsedness
+                    nurbs = adjustForCollapsedness(nurbs,[1,3,4],options);
                 end
                 nurbs_covered = [patch,slave3,slave4];
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;1,1],'outwardPointingNormals',true);
@@ -767,18 +829,23 @@ switch maxNoSharpAngles
         
         
                 knots = [faces{3}.knots(end), faces{1}.knots];
-                master_coeffs = faces{1}.coeffs;
-                master_coeffs = reshape(master_coeffs,[d+1,1,faces{1}.number]);
-                slave3_coeffs = permute(faces{3}.coeffs,[1,3,2]);
-                slave3_coeffs = reshape(slave3_coeffs,[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
-                slave5_coeffs = faces{5}.coeffs;
-                slave4_coeffs = permute(faces{4}.coeffs,[1,3,2]);
-                slave4_coeffs = reshape(slave4_coeffs,[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
-                g = reshape(aveknt(faces{1}.knots{1},faces{1}.degree(1)+1),1,1,[]);
-                coeffs = (master_coeffs + slave3_coeffs + slave5_coeffs - master_coeffs(:,1,1,:) - slave5_coeffs(:,1,:,1) - slave3_coeffs(:,:,1,1) + master_coeffs(:,1,1,1)).*(1-g) ...
-                       + (master_coeffs + slave4_coeffs + slave5_coeffs - master_coeffs(:,1,end,:) - slave5_coeffs(:,1,:,1) - slave4_coeffs(:,:,end,1) + master_coeffs(:,1,end,1)).*g;
+                degree = [faces{3}.degree(end), faces{1}.degree];
+                volCoeffs{1} = faces{1}.coeffs;
+                volCoeffs{1} = reshape(volCoeffs{1},[d+1,1,faces{1}.number]);
+                volCoeffs{3} = permute(faces{3}.coeffs,[1,3,2]);
+                volCoeffs{3} = reshape(volCoeffs{3},[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+                volCoeffs{5} = faces{5}.coeffs;
+                volCoeffs{4} = permute(faces{4}.coeffs,[1,3,2]);
+                volCoeffs{4} = reshape(volCoeffs{4},[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
+                g = reshape(aveknt(knots{2},degree(2)+1),1,1,[]);
+                coeffs = (volCoeffs{1} + volCoeffs{3} + volCoeffs{5} - volCoeffs{1}(:,1,1,:)   - volCoeffs{5}(:,1,:,1) - volCoeffs{3}(:,:,1,1)   + volCoeffs{1}(:,1,1,1)).*(1-g) ...
+                       + (volCoeffs{1} + volCoeffs{4} + volCoeffs{5} - volCoeffs{1}(:,1,end,:) - volCoeffs{5}(:,1,:,1) - volCoeffs{4}(:,:,end,1) + volCoeffs{1}(:,1,end,1)).*g;
         
                 nurbs = createNURBSobject(coeffs,knots);
+                nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,[1,3,4,5]);
+                if options.maintainCollapsedness
+                    nurbs = adjustForCollapsedness(nurbs,[1,3,4,5],options);
+                end
             otherwise
                 error('Not implemented')
         end
@@ -816,15 +883,26 @@ switch maxNoSharpAngles
         faces{4} = orientNURBS(faces{4}, idx1To_idx2_orient(sidx4,3,true));     % Make "sidx = 3"
         faces{6} = orientNURBS(faces{6}, idx1To_idx2_orient(sidx6,1,true));     % Make "sidx = 1"
 
+        volCoeffs{1} = reshape(faces{1}.coeffs,[d+1,1,faces{1}.number]);
+        volCoeffs{3} = permute(faces{3}.coeffs,[1,3,2]);
+        volCoeffs{3} = reshape(volCoeffs{3},[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
+        volCoeffs{5} = faces{5}.coeffs;
+        volCoeffs{4} = permute(faces{4}.coeffs,[1,3,2]);
+        volCoeffs{4} = reshape(volCoeffs{4},[d+1,faces{4}.number(2),1,faces{4}.number(1)]);
+        volCoeffs{6} = faces{6}.coeffs;
+
         if slavesSlave(1) == slavesSlave(2) && slavesSlave(3) == slavesSlave(4) % we have "maxNoSharpAngles=5"
             switch options.S2V_algorithm.A123456
                 case 'A123456_11'
                     faces(2) = nurbs_bdry(slavesSlave(1));    
                     faces{2} = orientNURBS(faces{2}, idx1To_idx2_orient(sidx1,3,true));     % Make "sidx = 3"
+                    volCoeffs{2} = reshape(faces{2}.coeffs,[d+1,1,faces{2}.number]);
         
                     nurbs_covered = [patch,slave3,slave5,slave4,slave6,slavesSlave(1)];
                     nurbs_newBdry = [];
                     maxNoSharpAngles = 5;
+                    nurbs = GordonHall(faces);
+                    nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,[1,2,3,4,5,6]);
                 otherwise
                     error('Not implemented')
             end
@@ -839,11 +917,12 @@ switch maxNoSharpAngles
                     faces(2) = GordonHall(edges);
                     nurbs_covered = [patch,slave3,slave5,slave4,slave6];
                     nurbs_newBdry = faces(2);
+                    nurbs = GordonHall(faces);
+                    nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,[1,3,4,5,6]);
                 otherwise
                     error('Not implemented')
             end
         end
-        nurbs = GordonHall(faces);
 
 end
 S2Vobj.maxNoSharpAngles = maxNoSharpAngles;
@@ -956,12 +1035,12 @@ for patch = indices
 
     % Approximate the normal vectors by shifting the evaluation point slightly away from singularity
     % This part could probably be improved
-    Eps2 = 1e-5;
+    Eps2 = 1e-4;
     v_n = cross(v_t1, v_t2, 2);
     singularCorners_v_n = find(or(norm2(v_n) < Eps,any(isnan(v_n),2)));
     singularCorners = find(or(norm2(v_n) < Eps, or(norm2(dXdxi) < Eps,norm2(dXdeta) < Eps)));
     if ~isempty(singularCorners)
-        xi_eps = [Eps2,Eps2;
+        xi_eps= [Eps2,Eps2;
                   1-Eps2,Eps2;
                   1-Eps2,1-Eps2;
                   Eps2,1-Eps2]; 
@@ -1052,7 +1131,7 @@ for patch = indices
                 error('Topology is inconsistent')
             end
 
-            if ~any(isnan(S2Vobj.cornerData(slave).v_n))
+            if ~any(isnan(S2Vobj.cornerData(slave).v_n(slave_i_corner,:)))
                 cornerAngle = S2Vobj.cornerData(slave).cornerAngle(slave_i_corner);
                 avg_v_n = avg_v_n + cornerAngle*S2Vobj.cornerData(slave).v_n(slave_i_corner,:)/(2*pi); % weight the normal vector with the angle of the respetive corner
             end
@@ -1140,7 +1219,7 @@ end
 for patch = 1:indices(end)
     for midx = 1:4
         if any(isnan(S2Vobj.edgeData(patch).avg_v_n{midx}))
-            error('NaN encountered - Something is not implemented correctly!')
+            error('Normal vectors could not be properly computed at the edges.')
         end
     end
 end
@@ -1416,8 +1495,60 @@ R1row3 = repmat(cat(1, u3.*u1.*(1-cosTheta) - u2.*sinTheta, ...
                 u3.*u2.*(1-cosTheta) + u1.*sinTheta, ...
                 cosTheta + u3.^2.*(1-cosTheta)), repArray);
 
+function nurbs = adjustForCollapsedness(nurbs,m_arr,options)
 
+number = nurbs{1}.number;
+for m = m_arr 
+    switch m
+        case 1
+            if all(vecnorm(nurbs{1}.coeffs(1:3,1,end,:) - nurbs{1}.coeffs(1:3,1,end,1),2,1) < options.Eps) % midx = 2 is collapsed
+                nurbs{1}.coeffs(:,:,end,:) = repmat(nurbs{1}.coeffs(:,:,end,1),[1,1,1,number(3)]);
+            end
+            if all(vecnorm(nurbs{1}.coeffs(1:3,1,:,1) - nurbs{1}.coeffs(1:3,1,1,1),2,1) < options.Eps) % midx = 3 is collapsed
+                nurbs{1}.coeffs(:,:,:,1) = repmat(nurbs{1}.coeffs(:,:,1,1),[1,1,number(2),1]);
+            end
+            if ~(all(ismember([3,4], m_arr)) && any(vecnorm(nurbs{1}.coeffs(:,:,1,end) - nurbs{1}.coeffs(:,:,end,end),2,1) > options.Eps))
+                if all(vecnorm(nurbs{1}.coeffs(1:3,1,:,end) - nurbs{1}.coeffs(1:3,1,1,end),2,1) < options.Eps) % midx = 4 is collapsed
+                    nurbs{1}.coeffs(:,:,:,end) = repmat(nurbs{1}.coeffs(:,:,1,end),[1,1,number(2),1]);
+                end
+            end
+        case 3
+            if all(vecnorm(nurbs{1}.coeffs(1:3,end,1,:) - nurbs{1}.coeffs(1:3,end,1,1),2,1) < options.Eps)
+                nurbs{1}.coeffs(:,end,:,:) = repmat(nurbs{1}.coeffs(:,end,:,1),[1,1,1,number(3)]);
+            end
+            if all(vecnorm(nurbs{1}.coeffs(1:3,:,1,end) - nurbs{1}.coeffs(1:3,1,1,end),2,1) < options.Eps)
+                nurbs{1}.coeffs(:,:,:,end) = repmat(nurbs{1}.coeffs(:,1,:,end),[1,number(1),1,1]);
+            end
+        case 5
+            if ~(all(ismember([3,4], m_arr)) && any(vecnorm(nurbs{1}.coeffs(:,end,1,:) - nurbs{1}.coeffs(:,end,end,:),2,1) > options.Eps))
+                if all(vecnorm(nurbs{1}.coeffs(1:3,end,:,1) - nurbs{1}.coeffs(1:3,end,1,1),2,1) < options.Eps)
+                    nurbs{1}.coeffs(:,end,:,:) = repmat(nurbs{1}.coeffs(:,end,1,:),[1,1,number(2),1]);
+                end
+            end
+            if all(vecnorm(nurbs{1}.coeffs(1:3,:,end,1) - nurbs{1}.coeffs(1:3,1,end,1),2,1) < options.Eps)
+                nurbs{1}.coeffs(:,:,end,:) = repmat(nurbs{1}.coeffs(:,1,end,:),[1,number(1),1,1]);
+            end
+    end
+end
 
+function nurbs = ensureIdenticalCoeffs(nurbs,volCoeffs,m_arr)
+
+for m = m_arr
+    switch m
+        case 1
+            nurbs{1}.coeffs(:,1,:,:) = volCoeffs{m}(:,1,:,:);
+        case 2
+            nurbs{1}.coeffs(:,end,:,:) = volCoeffs{m}(:,end,:,:);
+        case 3
+            nurbs{1}.coeffs(:,:,1,:) = volCoeffs{m}(:,:,1,:);
+        case 4
+            nurbs{1}.coeffs(:,:,end,:) = volCoeffs{m}(:,:,end,:);
+        case 5
+            nurbs{1}.coeffs(:,:,:,1) = volCoeffs{m}(:,:,:,1);
+        case 6
+            nurbs{1}.coeffs(:,:,:,end) = volCoeffs{m}(:,:,:,end);
+    end
+end
 
 
 
