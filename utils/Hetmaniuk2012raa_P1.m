@@ -48,10 +48,12 @@ while ~isempty(omega_T_new)
     residual = reshape(residual,n_c,[]);
     for p = 1:size(residual,2)
         indices = find(residual(:,p) >= task.rom.upper_threshold);
-        residual(indices,p) = task.rom.upper_threshold;
-        [~,j_max] = max(residual(:,p));
-        indices = union(indices,j_max);
-        j_max = indices(round(numel(indices)/2));
+        if isempty(indices)
+            [~,j_max] = max(residual(:,p));
+        else
+            residual(indices,p) = task.rom.upper_threshold;
+            j_max = indices(floor(numel(indices)/2));
+        end
         if residual(j_max,p) > task.rom.tolerance
             omega_T_new = union(omega_T_new,omega_cj(j_max,p));
         end

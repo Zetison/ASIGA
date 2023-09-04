@@ -144,6 +144,8 @@ if isempty(S2Vobj.selectedObjects)
         midx = find(angles(patch,:) < sharpAngle);
     end
 else
+    % Control if it is possibleto select a single master patch from the
+    % selected patches
     maxNoSharpAngles = numel(S2Vobj.selectedObjects)-1;
     masterPatchAvailable = false;
     midx = zeros(1,maxNoSharpAngles);
