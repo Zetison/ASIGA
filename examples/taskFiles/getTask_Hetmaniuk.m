@@ -81,7 +81,7 @@ misc.calculateFarFieldPattern = 1;
 misc.checkNURBSweightsCompatibility = false;
 misc.preProcessOnly = 0;
 
-prePlot.useCamlight    = 0;        % Toggle camlight on (in plotNURBSvec)
+prePlot.useCamlight    = 0;        % Toggle camlight on (in plotNURBS)
 prePlot.plot3Dgeometry = 0;
 if msh.parm == 1
     prePlot.view                = [43.314595761442661,30.547666224651493];     % Set view angle [azimuth,elevation]

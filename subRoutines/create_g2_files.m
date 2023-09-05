@@ -48,7 +48,7 @@ for i = 1:numel(model)
             end
     end
     close all
-    plotNURBSvec(nurbs,'plotNormalVectors', true,'coarseLinearSampling',false,'quiverScale', 0.4);
+    plotNURBS(nurbs,'plotNormalVectors', true,'coarseLinearSampling',false,'quiverScale', 0.4);
     axis equal
     view(getView())
     camlight

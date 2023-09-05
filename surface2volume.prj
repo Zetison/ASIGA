@@ -64,7 +64,7 @@
       <file>${PROJECT_ROOT}/NURBS/meanRatioJacobian.m</file>
       <file>${PROJECT_ROOT}/NURBS/orientNURBS.m</file>
       <file>${PROJECT_ROOT}/NURBS/permuteNURBS.m</file>
-      <file>${PROJECT_ROOT}/NURBS/plotNURBSvec.m</file>
+      <file>${PROJECT_ROOT}/NURBS/plotNURBS.m</file>
       <file>${PROJECT_ROOT}/NURBS/read_g2.m</file>
       <file>${PROJECT_ROOT}/NURBS/revolveNURBS.m</file>
       <file>${PROJECT_ROOT}/NURBS/rotateNURBS.m</file>

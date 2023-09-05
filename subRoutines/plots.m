@@ -29,7 +29,7 @@ no2Dpoints = 1000;
 % %         nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1));
 % %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
 %         figure
-%         plotNURBSvec(nurbs,'resolution',resolution,'plotControlPolygon',0,...
+%         plotNURBS(nurbs,'resolution',resolution,'plotControlPolygon',0,...
 %             'plotNormalVectors',0,'plotParmDir',0,'plotWeights',1,'coarseLinearSampling',false);
 %         axis equal
 %         grid off
@@ -64,7 +64,7 @@ nurbs{1}.coeffs = nurbs{1}.coeffs + rand(size(nurbs{1}.coeffs(:,:,:,:)))*0.05;
 nurbs = insertKnotsInNURBS(nurbs,{{[ones(1,3)/3, 2*ones(1,3)/3],[ones(1,3)/3, 2*ones(1,3)/3], []}});
 nurbs = explodeNURBS(nurbs);
 nurbs = nurbs([1:4,6:9]);
-figure, plotNURBSvec(nurbs)
+figure, plotNURBS(nurbs)
 axis equal
 view(getView())
 write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
@@ -92,7 +92,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 %     
 %     close all
 %     axis equal
-%     plotNURBSvec([nurbs_circ1,nurbs_circ2],'plotControlPolygon',1,'plotParmDir',0,'resolution',[100,100,100]);
+%     plotNURBS([nurbs_circ1,nurbs_circ2],'plotControlPolygon',1,'plotParmDir',0,'resolution',[100,100,100]);
 % end
 % nurbs_vol = cleanNURBS(nurbs_vol,[],1e-6);
 % % nurbs_vol = nurbs_vol([109:128,273:298]);
@@ -111,8 +111,8 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 %     close all
 %     axis equal
 %     color = getColor();
-%     plotNURBSvec(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
-% %     plotNURBSvec(nurbs_vol,'plotControlPolygon',1,'plotParmDir',0);
+%     plotNURBS(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+% %     plotNURBS(nurbs_vol,'plotControlPolygon',1,'plotParmDir',0);
 %     drawnow
 %     view(getView());
 % end
@@ -170,7 +170,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 %     close all
 %     axis equal
 %     color = getColor();
-%     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+%     plotNURBS(nurbs,'plotControlPolygon',0,'plotParmDir',0,'color',color);
 %     drawnow
 %     view(getView());
 % end
@@ -178,8 +178,8 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 %     close all
 %     axis equal
 %     color = getColor();
-%     plotNURBSvec(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
-% %     plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(x) log10(abs(norm2(x(:,[1,3]))-6)));
+%     plotNURBS(nurbs_vol,'plotControlPolygon',0,'plotParmDir',0,'color',color);
+% %     plotNURBS(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(x) log10(abs(norm2(x(:,[1,3]))-6)));
 %     drawnow
 %     view(getView());
 % end
@@ -220,7 +220,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % nurbs{1}.coeffs = double(nurbs{1}.coeffs);
 % nurbs{1}.knots{1} = double(nurbs{1}.knots{1});
 % xi = linspace(0,1,1000).';
-% plotNURBSvec(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
+% plotNURBS(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
 % axis equal
 % 
 % C = evaluateNURBSvec(nurbs{1},xi);
@@ -235,7 +235,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % end
 % [coeffs,knots] = getNURBScoeffAndKnots(w);
 % nurbs = createNURBSobject(coeffs,knots);
-% plotNURBSvec(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
+% plotNURBS(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
 % axis equal
 % 
 % C = evaluateNURBSvec(nurbs{1},xi);
@@ -273,7 +273,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % nurbs = elevateNURBSdegree(nurbs,1);
 % nurbs = insertKnotsInNURBS(nurbs,6);
 % figure(1)
-% plotNURBSvec(nurbs,'resolution',1000,'plotControlPolygon',true);
+% plotNURBS(nurbs,'resolution',1000,'plotControlPolygon',true);
 % axis equal
 % nurbs{1}.knots{1}
 % 
@@ -286,16 +286,16 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % % nurbs{1}.coeffs(:,6) = [-13/15,6/10,0.5];
 % % nurbs{1}.coeffs(:,7) = [-79/75,-4/100,0.5];
 % figure(1)
-% plotNURBSvec(nurbs,'resolution',1000,'plotControlPolygon',true);
+% plotNURBS(nurbs,'resolution',1000,'plotControlPolygon',true);
 % 
 % figure(2)
 % C = abs(norm2(evaluateNURBSvec(nurbs{1},xi))-1);
 % semilogy(xi,C);
 % nurbs = getArcData('theta',120*pi/180,'Xi',[0,0,0,1,1,1]);
-% plotNURBSvec(nurbs,'resolution',10000,'plotControlPolygon',true);
+% plotNURBS(nurbs,'resolution',10000,'plotControlPolygon',true);
 % axis equal
 % nurbs{1}.coeffs(3,2) = -nurbs{1}.coeffs(3,2);
-% plotNURBSvec(nurbs,'resolution',10000,'plotControlPolygon',true);
+% plotNURBS(nurbs,'resolution',10000,'plotControlPolygon',true);
 % figure(2)
 % xi = linspace(0,1,1000).';
 % C = abs(norm2(evaluateNURBSvec(nurbs{1},xi))-1);
@@ -312,7 +312,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % % nurbs = ensure3DNURBS(nurbs);
 % % nurbs = makeUniformNURBSDegree(nurbs);
 % figure
-% [~,maxC_patch,minC_patch] = plotNURBSvec(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi),'resolution',[100,100],'coarseLinearSampling',false);
+% [~,maxC_patch,minC_patch] = plotNURBS(nurbs,'plotControlPolygon',0,'plotParmDir',0,'colorFun',@(xi,nurbs,b,c) meanRatioJacobian(nurbs,xi),'resolution',[100,100],'coarseLinearSampling',false);
 % colorbar
 % axis equal
 % 
@@ -396,7 +396,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 %     nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,refLength/2^(M-1));
 % end
 % close all
-% plotNURBSvec(nurbs,'plotParmDir',0,'plotControlPolygon',0);
+% plotNURBS(nurbs,'plotParmDir',0,'plotControlPolygon',0);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test surfaceToVolume
@@ -406,8 +406,8 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % t = 1;
 % nurbs_vol = surfaceToVolume(nurbs_surf,geometry.topology.connection,t);
 % close all
-% plotNURBSvec(nurbs_surf,'plotParmDir',0,'plotControlPolygon',0);
-% % plotNURBSvec(nurbs_vol,'plotParmDir',0,'plotControlPolygon',0);
+% plotNURBS(nurbs_surf,'plotParmDir',0,'plotControlPolygon',0);
+% % plotNURBS(nurbs_vol,'plotParmDir',0,'plotControlPolygon',0);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test Gordon Hall
@@ -422,11 +422,11 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % subnurbs = subNURBS(nurbs);
 % nurbsGH = GordonHall(subnurbs);
 % close all
-% plotNURBSvec(explodeNURBS(nurbs),'plotParmDir',0,'plotControlPolygon',0,'plotObject',0);
+% plotNURBS(explodeNURBS(nurbs),'plotParmDir',0,'plotControlPolygon',0,'plotObject',0);
 % axis equal
-% % plotNURBSvec(subnurbs,'plotParmDir',1,'plotControlPolygon',0);
-% plotNURBSvec(explodeNURBS(nurbsGH),'plotParmDir',0,'plotControlPolygon',0,'plotObject',0);
-% % plotNURBSvec(nurbs_vol,'plotParmDir',0,'plotControlPolygon',0);
+% % plotNURBS(subnurbs,'plotParmDir',1,'plotControlPolygon',0);
+% plotNURBS(explodeNURBS(nurbsGH),'plotParmDir',0,'plotControlPolygon',0,'plotObject',0);
+% % plotNURBS(nurbs_vol,'plotParmDir',0,'plotControlPolygon',0);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find NURBS representation of part of sphere

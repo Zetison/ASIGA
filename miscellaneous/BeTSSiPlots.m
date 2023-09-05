@@ -221,7 +221,7 @@ eta_arr = copyVector(eta,npts_xi,2).';
 % Xi = [zeros(1,p+1),xi_t*ones(1,p),sqrt(0.3)*ones(1,p),linspace2(sqrt(0.3),1,3),ones(1,p+1)];
 % nurbs = leastSquares1D(Xi,p,r,3);
 % sqrt(integral(@(xi) norm(evaluateNURBS(nurbs,xi).'-r(xi)).^2,0,1,'ArrayValued',true)/integral(@(xi)norm(r(xi)).^2,0,1,'ArrayValued',true))
-% plotNURBSvec(nurbs,100,1,[0,0,0])
+% plotNURBS(nurbs,100,1,[0,0,0])
 % maxE = -inf;
 % for i = 1:numel(xi)
 %     newE = max(norm(evaluateNURBS(nurbs,xi(i)).'-r(xi(i))));
@@ -284,37 +284,37 @@ if 1
 %             resolution = [200 200];
             for i = 1:numel(nurbsCol2)
                 if i == 24
-                    plotNURBSvec(nurbsCol2{i},{'resolution',resolution,'color','blue','LineWidth',lineWidth});
+                    plotNURBS(nurbsCol2{i},{'resolution',resolution,'color','blue','LineWidth',lineWidth});
                 elseif i == 9 || i == 12 || i == 26
-                    plotNURBSvec(nurbsCol2{i},{'resolution',resolution,'color','red','LineWidth',lineWidth});
+                    plotNURBS(nurbsCol2{i},{'resolution',resolution,'color','red','LineWidth',lineWidth});
                 else
-                    plotNURBSvec(nurbsCol2{i},{'resolution',resolution,'LineWidth',lineWidth});
+                    plotNURBS(nurbsCol2{i},{'resolution',resolution,'LineWidth',lineWidth});
                 end
             end
             view(122,17) % standard
             camlight(150-122,70-17)
         case 'nurbsCol2'
             for i = 1:numel(nurbsCol2)
-                plotNURBSvec(nurbsCol2{i},{'resolution',[200 200]});
+                plotNURBS(nurbsCol2{i},{'resolution',[200 200]});
             end
             view(18,10) % standard
         case 'nurbsCol3'
             steelColor = [67, 70, 75]/255;
-            plotNURBSvec(nurbsCol2,{'resolution',[20 20], 'alphaValue',0.5, 'color',steelColor});
-            plotNURBSvec(nurbsCol3(10:17),{'resolution',[10 10], 'alphaValue',0.5,  'color',steelColor});
-            plotNURBSvec(nurbsCol3(setdiff(1:numel(nurbsCol3),10:17)),{'resolution',[10 10]});
+            plotNURBS(nurbsCol2,{'resolution',[20 20], 'alphaValue',0.5, 'color',steelColor});
+            plotNURBS(nurbsCol3(10:17),{'resolution',[10 10], 'alphaValue',0.5,  'color',steelColor});
+            plotNURBS(nurbsCol3(setdiff(1:numel(nurbsCol3),10:17)),{'resolution',[10 10]});
             view(18,10) % standard
         case 'nurbsCol4'
             for i = 1:numel(nurbsCol4)
-                plotNURBSvec(nurbsCol4{i},{'resolution',[10 10]});
+                plotNURBS(nurbsCol4{i},{'resolution',[10 10]});
             end
             view(18,10) % standard
         case 'CAD_transition'
             for i = 1:7
                 if i == 6
-                    plotNURBSvec(nurbsCol2{i},{'resolution',[200 200],'color','red'});
+                    plotNURBS(nurbsCol2{i},{'resolution',[200 200],'color','red'});
                 else
-                    plotNURBSvec(nurbsCol2{i},{'resolution',[200 200]});
+                    plotNURBS(nurbsCol2{i},{'resolution',[200 200]});
                 end
             end
             view(-60,20) % CAD_transition
@@ -322,15 +322,15 @@ if 1
         case 'CAD_bow'
             for i = 1:7
                 if i == 6
-                    plotNURBSvec(nurbsCol2{i},{'resolution',[200 200],'color','red'});
+                    plotNURBS(nurbsCol2{i},{'resolution',[200 200],'color','red'});
                 else
-                    plotNURBSvec(nurbsCol2{i},{'resolution',[200 200]});
+                    plotNURBS(nurbsCol2{i},{'resolution',[200 200]});
                 end
             end
             view(120,20) % CAD_bow
         case 'tailSection'
             view(-140,30) % BeTSSi_BC_tailSection
-            plotNURBSvec(nurbsCol2{7},{'resolution',[200 200]});
+            plotNURBS(nurbsCol2{7},{'resolution',[200 200]});
     %         export_fig('../graphics/BCA/BeTSSi_BC_tailSection', '-png', '-transparent', '-r300')
             plotControlPts(nurbsCol2{7}, [1 0 0], [1 0 0])
     %         export_fig('../graphics/BCA/BeTSSi_BC_tailSection_cp', '-png', '-transparent', '-r300')
@@ -554,7 +554,7 @@ for ip = 1:numel(pArr)
         end
         f = @(v) uTest_BC(v,a,b,c,L,g2,g3,alpha,beta,s,indices(i),nurbsCol2{temp_i});
 %         colorFun = @(v) log10(f(v));
-%         [~,maxC(i)] = plotNURBSvec(nurbsColApprox{i},{'resolution',resolution, 'colorFun',colorFun,'elementBasedSamples',true, ...
+%         [~,maxC(i)] = plotNURBS(nurbsColApprox{i},{'resolution',resolution, 'colorFun',colorFun,'elementBasedSamples',true, ...
 %                                                     'samplingDistance',0.01,'LineWidth',3});
         [Itemp,Atemp] = computeGeometricL2(nurbsColApprox{i},{'f',f,'extraGP',10});
         I = I + Itemp;
@@ -633,7 +633,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%
 figure(42)
 for i = 1:numel(nurbsCol2)
-    plotNURBSvec(nurbsCol2{i},[10 10], 1, getColor(1));
+    plotNURBS(nurbsCol2{i},[10 10], 1, getColor(1));
 end
 for i = 1:numel(nurbsCol2)
     degree = nurbsCol2{i}.degree;
@@ -652,11 +652,11 @@ axis equal
 
 %%%%%%%%%%%%%%%%%%%%%%%
 
-% plotNURBSvec(nurbsCol2{1},[100 100], 1, getColor(1));
+% plotNURBS(nurbsCol2{1},[100 100], 1, getColor(1));
 % hold on
 % for i = 1:numel(nurbsCol2E)
 %     varCol.colorFun = @(x) norm(x);
-%     plotNURBSvec(nurbsCol2E{i},[10 10], 1, getColor(1));
+%     plotNURBS(nurbsCol2E{i},[10 10], 1, getColor(1));
 % end
 % axis equal
 % view(122,16)
@@ -672,10 +672,10 @@ axis equal
 % h = g2*tan(alpha/2); % = g2/tan((pi-alpha)/2)
 % x2 = g3*tan(alpha);
 % 
-% plotNURBSvec(fluid,[100 100], 1, getColor(1), 1);
+% plotNURBS(fluid,[100 100], 1, getColor(1), 1);
 % 
 % % varCol.colorFun = @(v,xi,eta) uTest_BC(v,xi,eta,fluid.knots{1},fluid.knots{2},a,b,l,g2,g3,alpha);
-% % plotNURBSvec(fluid,[100 100], 1, getColor(1), 1, NaN, varCol);
+% % plotNURBS(fluid,[100 100], 1, getColor(1), 1, NaN, varCol);
 % 
 % axis equal
 % axis off
@@ -701,9 +701,9 @@ axis equal
 % 
 % % [nurbs, nurbs2, nurbs3, nurbs4, nurbs5] = getBCDataParts(a, b, L, g2, g3, alpha, beta, s, c);
 % % varCol.colorFun = @(v) norm(v(2:3));
-% % plotNURBSvec(nurbs,[100 100], 1, getColor(1), 1);
+% % plotNURBS(nurbs,[100 100], 1, getColor(1), 1);
 % % hold on
-% % plotNURBSvec(nurbs2,[100 100], 1, [1 0 0], 1);
+% % plotNURBS(nurbs2,[100 100], 1, [1 0 0], 1);
 % % axis equal
 % % axis off
 % % set(gca, 'Color', 'none');
@@ -715,12 +715,12 @@ axis equal
 % % hold on
 % % plotControlPts(nurbs)
 % % figure(43)
-% % plotNURBSvec(nurbs,[100 100], 1, getColor(1), 1);
+% % plotNURBS(nurbs,[100 100], 1, getColor(1), 1);
 % % hold on
-% % plotNURBSvec(nurbs2,[100 100], 1, getColor(1), 1);
-% % plotNURBSvec(nurbs3,[0 0], 1, [1 0 0], 1);
-% % plotNURBSvec(nurbs4,[0 0], 1, [1 0 0], 1);
-% % plotNURBSvec(nurbs5,[0 0], 1, [0 0 1], 1);
+% % plotNURBS(nurbs2,[100 100], 1, getColor(1), 1);
+% % plotNURBS(nurbs3,[0 0], 1, [1 0 0], 1);
+% % plotNURBS(nurbs4,[0 0], 1, [1 0 0], 1);
+% % plotNURBS(nurbs5,[0 0], 1, [0 0 1], 1);
 % % axis equal
 % % axis off
 % % set(gca, 'Color', 'none');
@@ -742,36 +742,36 @@ axis equal
 % % figure(44)
 % % [nurbs6, nurbs7,  nurbs8,  nurbs9,  nurbs10] = getBCDataParts2(a, b, L, g2, g3, alpha, beta, s, c);
 % % if 1
-% %     plotNURBSvec(nurbs,[200 400], 1, getColor(1), 1);
-% %     plotNURBSvec(nurbs3,[0 0], 1, getColor(1), 1);
-% %     plotNURBSvec(nurbs4,[0 0], 1, getColor(1), 1);
-% %     plotNURBSvec(nurbs5,[0 0], 1, getColor(1), 1);
-% %     plotNURBSvec(nurbs2,[100 100], 1, getColor(1), 1);
-% %     % plotNURBSvec(nurbs8,[100 100], 1, getColor(1), 1);
-% %     % plotNURBSvec(nurbs9,[100 100], 1, getColor(1), 1);
-% %     % plotNURBSvec(nurbs10,[100 100], 1, getColor(1), 1);
+% %     plotNURBS(nurbs,[200 400], 1, getColor(1), 1);
+% %     plotNURBS(nurbs3,[0 0], 1, getColor(1), 1);
+% %     plotNURBS(nurbs4,[0 0], 1, getColor(1), 1);
+% %     plotNURBS(nurbs5,[0 0], 1, getColor(1), 1);
+% %     plotNURBS(nurbs2,[100 100], 1, getColor(1), 1);
+% %     % plotNURBS(nurbs8,[100 100], 1, getColor(1), 1);
+% %     % plotNURBS(nurbs9,[100 100], 1, getColor(1), 1);
+% %     % plotNURBS(nurbs10,[100 100], 1, getColor(1), 1);
 % % 
 % % 
 % %     if 0
-% %         plotNURBSvec(nurbs6,[100 100], 1, getColor(1), 1);
-% %         plotNURBSvec(nurbs7,[100 100], 1, [1 0 0], 1);
+% %         plotNURBS(nurbs6,[100 100], 1, getColor(1), 1);
+% %         plotNURBS(nurbs7,[100 100], 1, [1 0 0], 1);
 % % 
 % %         view(120,20)
 % %     %     export_fig('../graphics/BeTSSi_BCpart4', '-png', '-transparent', '-r300')
 % %     elseif 0
 % %         view(300,20)
-% %         plotNURBSvec(nurbs6,[100 100], 1, [1 0 0], 1);
-% %         plotNURBSvec(nurbs7,[100 100], 1, getColor(1), 1);
+% %         plotNURBS(nurbs6,[100 100], 1, [1 0 0], 1);
+% %         plotNURBS(nurbs7,[100 100], 1, getColor(1), 1);
 % %     %     export_fig('../graphics/BeTSSi_BCpart3', '-png', '-transparent', '-r300')
 % %     else
 % %         view(18,10)
-% %         plotNURBSvec(nurbs6,[200 400], 1, getColor(1), 1);
-% %         plotNURBSvec(nurbs7,[200 400], 1, getColor(1), 1);
+% %         plotNURBS(nurbs6,[200 400], 1, getColor(1), 1);
+% %         plotNURBS(nurbs7,[200 400], 1, getColor(1), 1);
 % %     %     export_fig('../graphics/BC/BeTSSi_BC_stripped', '-png', '-transparent', '-r600')
 % % 
 % %     end
 % % else
-% %     plotNURBSvec(nurbs6,[200 200], 1, getColor(1), 1);
+% %     plotNURBS(nurbs6,[200 200], 1, getColor(1), 1);
 % % %     view(30,30)
 % %     view(-140,30)
 % %     %     export_fig('../graphics/BeTSSi_BC_tailSection', '-png', '-transparent', '-r300')
@@ -789,7 +789,7 @@ axis equal
 %  
 % % figure(45)
 % % [nurbs6, nurbs7,  nurbs8,  nurbs9,  nurbs10] = getBCDataParts2(a, b, l, g2, g3, alpha, beta, s, c);
-% % plotNURBSvec(nurbs,[200 400], 1, getColor(1), 1);
+% % plotNURBS(nurbs,[200 400], 1, getColor(1), 1);
 % % axis equal
 % % axis off
 % % set(gca, 'Color', 'none');
@@ -798,12 +798,12 @@ axis equal
 % % drawnow
 % % camproj('perspective')
 % % hold on
-% % plotNURBSvec(nurbs3,[0 0], 1, getColor(1), 1);
-% % plotNURBSvec(nurbs4,[0 0], 1, getColor(1), 1);
-% % plotNURBSvec(nurbs5,[0 0], 1, getColor(1), 1);
-% % plotNURBSvec(nurbs2,[100 100], 1, getColor(1), 1);
-% % plotNURBSvec(nurbs6,[100 100], 1, getColor(1), 1);
-% % plotNURBSvec(nurbs7,[100 100], 1, getColor(1), 1);
+% % plotNURBS(nurbs3,[0 0], 1, getColor(1), 1);
+% % plotNURBS(nurbs4,[0 0], 1, getColor(1), 1);
+% % plotNURBS(nurbs5,[0 0], 1, getColor(1), 1);
+% % plotNURBS(nurbs2,[100 100], 1, getColor(1), 1);
+% % plotNURBS(nurbs6,[100 100], 1, getColor(1), 1);
+% % plotNURBS(nurbs7,[100 100], 1, getColor(1), 1);
 % % 
 % % view(18,10)
 % % camlight

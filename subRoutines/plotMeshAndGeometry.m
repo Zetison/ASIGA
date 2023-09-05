@@ -13,7 +13,7 @@ if prePlot.plot3Dgeometry
             prePlot.alphaValue = 0.8;
         end
         if prePlot.plotFullDomain
-            plotNURBSvec(ellipsoid,'resolution',[100 100],'alphaValue',0.6,'color','blue');
+            plotNURBS(ellipsoid,'resolution',[100 100],'alphaValue',0.6,'color','blue');
         end
         noTopsets = numel(prePlot.plotSubsets);
         for i = 1:noTopsets
@@ -52,7 +52,7 @@ if prePlot.plot3Dgeometry
         prePlot.displayName = ['Domain ' num2str(j)];
         prePlot.color = colorsCell{j};
         if prePlot.plotFullDomain
-            plotNURBSvec(nurbs, prePlot);
+            plotNURBS(nurbs, prePlot);
         end
         if isfield(task.varCol{j},'geometry') && ~isempty(prePlot.plotSubsets)
             topset = task.varCol{j}.geometry.topologysets.set;
@@ -83,7 +83,7 @@ if prePlot.plot3Dgeometry
                 else
                     prePlot.color = colors(i,:);
                 end
-                plotNURBSvec(nurbs, prePlot);
+                plotNURBS(nurbs, prePlot);
             end
         end
     end
