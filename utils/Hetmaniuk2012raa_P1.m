@@ -52,7 +52,7 @@ while ~isempty(omega_T_new)
             [~,j_max] = max(residual(:,p));
         else
             residual(indices,p) = task.rom.upper_threshold;
-            j_max = indices(floor(numel(indices)/2));
+            j_max = indices(max(floor(numel(indices)/2),1));
         end
         if residual(j_max,p) > task.rom.tolerance
             omega_T_new = union(omega_T_new,omega_cj(j_max,p));
