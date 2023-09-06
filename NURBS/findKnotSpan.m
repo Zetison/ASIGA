@@ -1,4 +1,4 @@
-function i = findKnotSpan(n, p, xi, Xi)
+function mid = findKnotSpan(n, p, xi, Xi)
 % This routine finds the knot span corresponding to a given value xi.
 % The method uses a sequencial search algorithm
 
@@ -16,21 +16,29 @@ function i = findKnotSpan(n, p, xi, Xi)
 %     keyboard
 % end
 xi = real(xi);
-if xi == Xi(end)
-    i = n;
-    return;
-end
+npts = numel(xi);
+Xi = Xi.'; % Make Xi a column vector
 
-low = p;
-high = n + 1;
+low = p*ones(npts,1);
+high = (n + 1)*ones(npts,1);
+endIndices = xi == Xi(end);
 mid = floor((low + high) / 2);
-while xi < Xi(mid) || xi >= Xi(mid+1)
-    if xi < Xi(mid)
-        high = mid;
-    else
-        low = mid;
-    end
-    mid = floor((low + high) / 2);
+mid(endIndices) = n;
+if all(endIndices)
+    return
 end
+indices = and(or(xi < Xi(mid), xi >= Xi(mid+1)),~endIndices);
+indices_high = false(npts,1);
+indices_low = false(npts,1);
+while any(indices)
+    indices_high(~indices) = false;
+    indices_high(indices) = xi(indices) < Xi(mid(indices));
+    high(indices_high) = mid(indices_high);
 
-i = mid;
+    indices_low(~indices) = false;
+    indices_low(indices) = ~indices_high(indices);
+    low(indices_low) = mid(indices_low);
+
+    mid(indices) = floor((low(indices) + high(indices)) / 2);
+    indices = and(or(xi < Xi(mid), xi >= Xi(mid+1)),~endIndices);
+end

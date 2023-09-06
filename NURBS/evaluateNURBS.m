@@ -12,7 +12,7 @@ degree = nurbs.degree;
 number = nurbs.number;
 I = zeros(size(xi,1),d_p);
 for i = 1:d_p
-    I(:,i) = findKnotSpanVec(number(i), degree(i), xi(:,i), knots{i});
+    I(:,i) = findKnotSpan(number(i), degree(i), xi(:,i), knots{i});
 end
 weights = reshape(nurbs.coeffs(d+1,:),1,[]);
 

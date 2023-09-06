@@ -52,7 +52,7 @@
       <file>${PROJECT_ROOT}/NURBS/evaluateNURBS.m</file>
       <file>${PROJECT_ROOT}/NURBS/extractFreeSurface.m</file>
       <file>${PROJECT_ROOT}/NURBS/findKnotSpan.m</file>
-      <file>${PROJECT_ROOT}/NURBS/findKnotSpanVec.m</file>
+      <file>${PROJECT_ROOT}/NURBS/findKnotSpan.m</file>
       <file>${PROJECT_ROOT}/NURBS/flipNURBSparametrization.m</file>
       <file>${PROJECT_ROOT}/NURBS/getTopology.m</file>
       <file>${PROJECT_ROOT}/NURBS/homogenizeNURBSparametrization.m</file>
