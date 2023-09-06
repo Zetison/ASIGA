@@ -236,7 +236,7 @@ for patch = 1:noPatches
                         C(1:nuk1,counter+1:counter+nuk2) = J_1;
                     end
                     if plotWeights
-                        C_temp = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1, nurbs.coeffs(4,:).');
+                        C_temp = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0, nurbs.coeffs(4,:).');
                         C_temp = reshape(C_temp,nuk1,nuk2);
                         C(1:nuk1,counter+1:counter+nuk2) = C_temp;
                     end
@@ -276,7 +276,7 @@ for patch = 1:noPatches
                     noKnots3 = numel(uniqueKnots3);
                     [XI,ETA,ZETA] = ndgrid(p_values{indices(1)},uniqueKnots2,uniqueKnots3);
                     XIETAZETA = [XI(:), ETA(:), ZETA(:)];
-                    X_temp2 = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1);
+                    X_temp2 = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0);
                     X_temp2 = reshape(X_temp2,nuk3,noKnots2,noKnots3,d);
                     X_temp2(end+1,:,:,:) = NaN;
                     noAddedPoints = (nuk3+1)*noKnots2*noKnots3;
