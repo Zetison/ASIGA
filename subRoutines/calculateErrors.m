@@ -23,7 +23,7 @@ for i_o = 1:numel(omega)
                 s = sprintf('Calculating surface error (%d/%d) ... ', i_o, numel(omega));
                 fprintf(['\n%-' num2str(stringShift) 's'], s)
             end
-            surfaceError_i = calcSurfErrorBndryMethodVec(task,i_o);
+            surfaceError_i = calcSurfErrorBndryMethod(task,i_o);
             if printLog
                 fprintf('using %12f seconds.', toc)   
                 fprintf('\nSurface error = %.16g%%', surfaceError_i)
@@ -53,7 +53,7 @@ for i_o = 1:numel(omega)
             if strcmp(task.misc.coreMethod,'SEM')
                 surfaceError(i_o) = calcSurfErrorSEM(task,1);
             else
-                surfaceError(i_o) = calcSurfErrorVec(task,1,i_o);
+                surfaceError(i_o) = calcSurfError(task,1,i_o);
             end
             if printLog
                 fprintf('using %12f seconds.', toc) 
@@ -69,7 +69,7 @@ for i_o = 1:numel(omega)
             if strcmp(task.misc.coreMethod,'SEM')
                 [L2Error_i, H1Error_i, H1sError_i, energyError_i] = calcErrorSEM(task);
             else
-                [L2Error_i, H1Error_i, H1sError_i, energyError_i] = calcErrorVec(task,i_o);
+                [L2Error_i, H1Error_i, H1sError_i, energyError_i] = calcError(task,i_o);
             end
             if printLog
                 fprintf('using %12f seconds.', toc)

@@ -1,4 +1,4 @@
-function relError = calcSurfErrorBndryMethodVec(task,i_o)
+function relError = calcSurfErrorBndryMethod(task,i_o)
 
 i = 1;
 LpOrder = task.err.LpOrder;

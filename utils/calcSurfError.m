@@ -1,4 +1,4 @@
-function relError = calcSurfErrorVec(task, i_domain, i_o)
+function relError = calcSurfError(task, i_domain, i_o)
 
 LpOrder = task.err.LpOrder;
 degree = task.varCol{i_domain}.degree(1:2);

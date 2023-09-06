@@ -1,4 +1,4 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorVec(task,i_o)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcError(task,i_o)
 
 noDomains = length(task.varCol);
 nodes = cell(noDomains,1);
