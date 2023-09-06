@@ -97,7 +97,7 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         B_arr = cell(1,d_p);
                         for i = 1:d_p
                             i_arr{i} = findKnotSpan(number(i), degree(i), xi_t{i}.', t{i});   
-                            B_arr{i} = BsplineBasisVec(i_arr{i}, xi_t{i}.', degree(i), t{i});
+                            B_arr{i} = BsplineBasis(i_arr{i}, xi_t{i}.', degree(i), t{i});
                         end
 
                         [arr1,arr2,arr3] = ndgrid(1:number(1),1:number(2),1:number(3));
@@ -239,7 +239,7 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
                         B_arr = cell(1,d_p);
                         for i = 1:d_p
                             i_arr{i} = findKnotSpan(number(i), degree(i), xi_t{i}.', t{i});   
-                            B_arr{i} = BsplineBasisVec(i_arr{i}, xi_t{i}.', degree(i), t{i});
+                            B_arr{i} = BsplineBasis(i_arr{i}, xi_t{i}.', degree(i), t{i});
                         end
 
                         [arr1,arr2] = ndgrid(1:number(1),1:number(2));

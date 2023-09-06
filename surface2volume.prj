@@ -33,7 +33,7 @@
     <fileset.depfun>
       <file>${PROJECT_ROOT}/IGAfunctions/getJacobian.m</file>
       <file>${PROJECT_ROOT}/NURBS/BsplineBasis.m</file>
-      <file>${PROJECT_ROOT}/NURBS/BsplineBasisVec.m</file>
+      <file>${PROJECT_ROOT}/NURBS/BsplineBasis.m</file>
       <file>${PROJECT_ROOT}/NURBS/GordonHall.m</file>
       <file>${PROJECT_ROOT}/NURBS/NURBSbasis.m</file>
       <file>${PROJECT_ROOT}/NURBS/NURBSbasis.m</file>

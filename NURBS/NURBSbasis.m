@@ -28,7 +28,7 @@ if n > 0
     dR = cell(1,d_p);
 end
 for i = 1:d_p
-    B{i} = BsplineBasisVec(I(:,i), xi(:,i), degree(i), knots{i}, n);
+    B{i} = BsplineBasis(I(:,i), xi(:,i), degree(i), knots{i}, n);
     if n > 0
         dW{i} = zeros(noxi,1,n,prec);
         dR{i} = zeros(noxi,n_en,n,prec);

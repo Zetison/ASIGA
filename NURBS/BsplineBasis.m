@@ -17,6 +17,7 @@ function ders = BsplineBasis(i, xi, p, Xi, n)
 if nargin < 5
     n = 0;
 end
+Xi = Xi.'; % Make Xi a column vector
 noxi = numel(xi);
 left = zeros(noxi,p+1);
 right = zeros(noxi,p+1);
