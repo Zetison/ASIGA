@@ -25,14 +25,14 @@ for patch = 1:numel(nurbs)
 
     switch d_p
         case 1
-            v = evaluateNURBSvec(nurbs{patch},uniqueKnots{1}.');
+            v = evaluateNURBS(nurbs{patch},uniqueKnots{1}.');
             d_1 = vecnorm(v(2:end,:) - v(1:end-1,:), 2, d_p+1);
             diaMax = d_1;
             diaMin = d_1;
         case 2
             [XI,ETA] = ndgrid(uniqueKnots{1},uniqueKnots{2});
 
-            v = evaluateNURBSvec(nurbs{patch},[XI(:),ETA(:)]);
+            v = evaluateNURBS(nurbs{patch},[XI(:),ETA(:)]);
             v = reshape(v,[noKnots,d]);
             d_1 = vecnorm(v(2:end,2:end,:) - v(1:end-1,1:end-1,:), 2, d_p+1);
             d_2 = vecnorm(v(1:end-1,2:end,:) - v(2:end,1:end-1,:), 2, d_p+1);
@@ -41,7 +41,7 @@ for patch = 1:numel(nurbs)
         case 3
             [XI,ETA,ZETA] = ndgrid(uniqueKnots{1},uniqueKnots{2},uniqueKnots{3});
 
-            v = evaluateNURBSvec(nurbs{patch},[XI(:),ETA(:),ZETA(:)]);
+            v = evaluateNURBS(nurbs{patch},[XI(:),ETA(:),ZETA(:)]);
             v = reshape(v,[noKnots,d]);
             d_1 = vecnorm(v(2:end,2:end,2:end,:) - v(1:end-1,1:end-1,1:end-1,:), 2, d_p+1);
             d_2 = vecnorm(v(1:end-1,2:end,2:end,:) - v(2:end,1:end-1,1:end-1,:), 2, d_p+1);

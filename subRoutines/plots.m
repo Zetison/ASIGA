@@ -81,12 +81,12 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 %     nurbs_circ2 = createNURBSobject(coeffs2,knots);
 %     
 %     xi = linspace(0,1,1000).';
-%     C = evaluateNURBSvec(nurbs_circ1{1},xi);
+%     C = evaluateNURBS(nurbs_circ1{1},xi);
 %     NURBS_error = abs(norm2(C(:,1:2)+[3,3])-0.7528);
 %     figure
 %     semilogy(xi,NURBS_error)
 %     hold on
-%     C = evaluateNURBSvec(nurbs_circ2{1},xi);
+%     C = evaluateNURBS(nurbs_circ2{1},xi);
 %     NURBS_error = abs(norm2(C(:,1:2)+[3,3])-0.7528);
 %     semilogy(xi,NURBS_error)
 %     
@@ -223,7 +223,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % plotNURBS(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
 % axis equal
 % 
-% C = evaluateNURBSvec(nurbs{1},xi);
+% C = evaluateNURBS(nurbs{1},xi);
 % NURBS_error = abs(norm2(C)-1);
 % figure
 % semilogy(xi,NURBS_error)
@@ -238,7 +238,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % plotNURBS(nurbs,'plotControlPolygon',true,'resolution',numel(xi))
 % axis equal
 % 
-% C = evaluateNURBSvec(nurbs{1},xi);
+% C = evaluateNURBS(nurbs{1},xi);
 % NURBS_error = abs(norm2(C)-1);
 % figure
 % semilogy(xi,NURBS_error)
@@ -259,7 +259,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % function NURBS_error = f_obj(w,xi)
 % [coeffs,knots] = getNURBScoeffAndKnots(w);
 % nurbs = createNURBSobject(coeffs,knots);
-% C = evaluateNURBSvec(nurbs{1},xi);
+% C = evaluateNURBS(nurbs{1},xi);
 % NURBS_error = norm(abs(norm2(C)-1));
 % end
 %% NURBS parametrization of circle
@@ -289,7 +289,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % plotNURBS(nurbs,'resolution',1000,'plotControlPolygon',true);
 % 
 % figure(2)
-% C = abs(norm2(evaluateNURBSvec(nurbs{1},xi))-1);
+% C = abs(norm2(evaluateNURBS(nurbs{1},xi))-1);
 % semilogy(xi,C);
 % nurbs = getArcData('theta',120*pi/180,'Xi',[0,0,0,1,1,1]);
 % plotNURBS(nurbs,'resolution',10000,'plotControlPolygon',true);
@@ -298,7 +298,7 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % plotNURBS(nurbs,'resolution',10000,'plotControlPolygon',true);
 % figure(2)
 % xi = linspace(0,1,1000).';
-% C = abs(norm2(evaluateNURBSvec(nurbs{1},xi))-1);
+% C = abs(norm2(evaluateNURBS(nurbs{1},xi))-1);
 % semilogy(xi,C);
 % hold on 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

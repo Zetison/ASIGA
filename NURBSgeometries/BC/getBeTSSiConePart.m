@@ -30,7 +30,7 @@ switch part
                 controlPts(1:3,:) = R_x*controlPts(1:3,:);
                 nurbs = createNURBSobject(controlPts, Xi);
 
-                r2 = @(s) evaluateNURBSvec(nurbs{1},abs((s1-s)/s1));
+                r2 = @(s) evaluateNURBS(nurbs{1},abs((s1-s)/s1));
             else
                 Theta = @(s) theta*s/s1;
                 r2 = @(s) [x_f*ones(1,numel(s)), ...

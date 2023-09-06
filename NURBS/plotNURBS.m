@@ -210,7 +210,7 @@ for patch = 1:noPatches
                     XI = (jj-1)*ones(nuk1,nuk2);
                     [ETA,ZETA] = ndgrid(p_values{indices(2)},p_values{indices(3)});
                     XIETAZETA = [XI(:), ETA(:), ZETA(:)];
-                    [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1);
+                    [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1);
                     dX_temp = zeros(nuk1*nuk2, d, d_p);
                     dX_temp(:,:,1) = dvdxi./norm2(dvdxi);
                     dX_temp(:,:,2) = dvdeta./norm2(dvdeta);
@@ -236,7 +236,7 @@ for patch = 1:noPatches
                         C(1:nuk1,counter+1:counter+nuk2) = J_1;
                     end
                     if plotWeights
-                        C_temp = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0, nurbs.coeffs(4,:).');
+                        C_temp = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0, nurbs.coeffs(4,:).');
                         C_temp = reshape(C_temp,nuk1,nuk2);
                         C(1:nuk1,counter+1:counter+nuk2) = C_temp;
                     end
@@ -276,7 +276,7 @@ for patch = 1:noPatches
                     noKnots3 = numel(uniqueKnots3);
                     [XI,ETA,ZETA] = ndgrid(p_values{indices(1)},uniqueKnots2,uniqueKnots3);
                     XIETAZETA = [XI(:), ETA(:), ZETA(:)];
-                    X_temp2 = evaluateNURBSvec(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0);
+                    X_temp2 = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0);
                     X_temp2 = reshape(X_temp2,nuk3,noKnots2,noKnots3,d);
                     X_temp2(end+1,:,:,:) = NaN;
                     noAddedPoints = (nuk3+1)*noKnots2*noKnots3;
@@ -339,7 +339,7 @@ for patch = 1:noPatches
         normals = zeros(length(p_values{1}), length(p_values{2}), d);
         C = zeros(length(p_values{1}), length(p_values{2}));
         [XI,ETA] = ndgrid(p_values{1},p_values{2});
-        [X,dvdxi,dvdeta] = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1);
+        [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1);
         L_gamma = norm(X(end,:)-X(1,:));
         dX = zeros(nuk1*nuk2, d, d_p);
         dX(:,:,1) = dvdxi./norm2(dvdxi);
@@ -350,7 +350,7 @@ for patch = 1:noPatches
             normals = normal./norm2(normal);
         end
         if plotWeights
-            C = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
+            C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
             C = reshape(C,nuk1,nuk2);
         end
         if plotColorFun
@@ -427,7 +427,7 @@ for patch = 1:noPatches
             nuk2 = length(p_values{2});
             C = zeros(length(p_values{1}), length(p_values{2}));
             [XI,ETA] = ndgrid(p_values{1},p_values{2});
-            [X,dvdxi,dvdeta] = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1);
+            [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1);
             L_gamma = norm(X(end,:)-X(1,:));
             if isnan(quiverScale)
                 quiverScale = L_gamma/20;
@@ -437,7 +437,7 @@ for patch = 1:noPatches
             dX(:,:,2) = dvdeta./norm2(dvdeta);
             dX = reshape(dX,nuk1,nuk2, d, d_p);
             if plotWeights
-                C = evaluateNURBSvec(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
+                C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
                 C = reshape(C,nuk1,nuk2);
             end
             if plotColorFun
@@ -497,7 +497,7 @@ for patch = 1:noPatches
             XI(counter:counter+npts-1,:) = [zeros(npts,1), eta];
     
             % evaluate NURBS
-            v = evaluateNURBSvec(nurbs, XI);
+            v = evaluateNURBS(nurbs, XI);
     
             if options.plotObject
                 objectHandle(patch) = fill(ax,v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName);
@@ -517,14 +517,14 @@ for patch = 1:noPatches
             indices_NaN = [(nok1+1):(nok1+1):(nuk2*(nok1+1)), ...
                           ((nok2+1):(nok2+1):(nuk1*(nok2+1))-1)+(nuk2*(nok1+1))];
             indices(indices_NaN) = true;
-            v(~indices,:) = evaluateNURBSvec(nurbs, XI);
+            v(~indices,:) = evaluateNURBS(nurbs, XI);
 
             if plotElementEdges
                 elementEdgesHandle(patch) = plotGridLines(v,displayName);
             end
         end
     elseif d_p == 1 && options.plotObject
-        C = evaluateNURBSvec(nurbs, p_values{1});
+        C = evaluateNURBS(nurbs, p_values{1});
         switch d
             case 1
                 objectHandle(patch) = plot(ax,C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName);  
@@ -533,7 +533,7 @@ for patch = 1:noPatches
             case 3
                 objectHandle(patch) = plot3(ax,C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName); 
         end  
-        C = evaluateNURBSvec(nurbs, uniqueKnots{1}.');
+        C = evaluateNURBS(nurbs, uniqueKnots{1}.');
         if plotElementEdges
             elementEdgesHandle(patch) = plot(ax,C(:,1), C(:,2), 'x', 'color',lineColor, 'DisplayName',[displayName, ' - elements']);
         end

@@ -49,7 +49,7 @@
       <file>${PROJECT_ROOT}/NURBS/ensure3DNURBS.m</file>
       <file>${PROJECT_ROOT}/NURBS/evalNURBSloc.m</file>
       <file>${PROJECT_ROOT}/NURBS/evaluateNURBS.m</file>
-      <file>${PROJECT_ROOT}/NURBS/evaluateNURBSvec.m</file>
+      <file>${PROJECT_ROOT}/NURBS/evaluateNURBS.m</file>
       <file>${PROJECT_ROOT}/NURBS/extractFreeSurface.m</file>
       <file>${PROJECT_ROOT}/NURBS/findKnotSpan.m</file>
       <file>${PROJECT_ROOT}/NURBS/findKnotSpanVec.m</file>

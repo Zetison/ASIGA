@@ -91,7 +91,7 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
 
                         % Evaluate original nurbs at Greville abscissa for interpolation
                         [xi,eta,zeta] = ndgrid(xi_t{1},xi_t{2},xi_t{3});                        
-                        Q = reshape(evaluateNURBSvec(nurbs,[xi(:),eta(:),zeta(:)]).',[nurbs.d,number]);
+                        Q = reshape(evaluateNURBS(nurbs,[xi(:),eta(:),zeta(:)]).',[nurbs.d,number]);
 
                         i_arr = cell(1,d_p);
                         B_arr = cell(1,d_p);
@@ -233,7 +233,7 @@ for i_varCol = 1:numel(task.varCol) % assume coreMethod to be the same in all do
 
                         % Evaluate original nurbs at Greville abscissa for interpolation
                         [xi,eta] = ndgrid(xi_t{1},xi_t{2});                        
-                        Q = reshape(evaluateNURBSvec(nurbs,[xi(:),eta(:)]).',[nurbs.d,number]);
+                        Q = reshape(evaluateNURBS(nurbs,[xi(:),eta(:)]).',[nurbs.d,number]);
 
                         i_arr = cell(1,d_p);
                         B_arr = cell(1,d_p);

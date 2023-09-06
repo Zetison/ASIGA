@@ -1011,7 +1011,7 @@ xi = [0,0;
 
 %% Compute normal vector at the vertices
 for patch = indices
-    [X,dXdxi,dXdeta] = evaluateNURBSvec(nurbs_bdry{patch},xi,1);
+    [X,dXdxi,dXdeta] = evaluateNURBS(nurbs_bdry{patch},xi,1);
     v_xi = dXdxi./norm2(dXdxi);
     v_eta = dXdeta./norm2(dXdeta);
     v_t1 = [v_xi(1,:); v_eta(2,:); -v_xi(3,:); -v_eta(4,:)];
@@ -1046,7 +1046,7 @@ for patch = indices
                   1-Eps2,Eps2;
                   1-Eps2,1-Eps2;
                   Eps2,1-Eps2]; 
-        [~,dXdxi_m2,dXdeta_m2] = evaluateNURBSvec(nurbs_bdry{patch},xi_eps(singularCorners,:),1);
+        [~,dXdxi_m2,dXdeta_m2] = evaluateNURBS(nurbs_bdry{patch},xi_eps(singularCorners,:),1);
         v_xi(singularCorners,:) = dXdxi_m2./norm2(dXdxi_m2);
         v_eta(singularCorners,:) = dXdeta_m2./norm2(dXdeta_m2);
         if ~isempty(singularCorners_v_n)
@@ -1090,7 +1090,7 @@ for patch = indices
             case 4
                 xi = [aveknt(knots{1},degree(1)+1).', ones(number(1),1)];
         end
-        [X,dXdxi,dXdeta] = evaluateNURBSvec(nurbs_bdry{patch},xi,1);
+        [X,dXdxi,dXdeta] = evaluateNURBS(nurbs_bdry{patch},xi,1);
         v_xi = dXdxi./norm2(dXdxi);
         v_eta = dXdeta./norm2(dXdeta);
         v_n = cross(v_xi, v_eta, 2);
@@ -1438,7 +1438,7 @@ degree = nurbs.degree;
 gxi = aveknt(knots{1}, degree(1)+1);
 geta = aveknt(knots{2}, degree(2)+1);
 [XI,ETA] = ndgrid(gxi,geta);
-[~,dXdxi,dXdeta] = evaluateNURBSvec(nurbs,[XI(:),ETA(:)],1);
+[~,dXdxi,dXdeta] = evaluateNURBS(nurbs,[XI(:),ETA(:)],1);
 v_xi = dXdxi./norm2(dXdxi);
 v_eta = dXdeta./norm2(dXdeta);
 v_n = cross(v_xi, v_eta, 2);

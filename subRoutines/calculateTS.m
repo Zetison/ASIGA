@@ -22,8 +22,8 @@ switch task.misc.method
                     Uindices = (sum(noCtrlPtsPatch(1:patch-1))+1):sum(noCtrlPtsPatch(1:patch));
     
                     xi = paramPts{patch};
-                    p_h = [p_h; evaluateNURBSvec(task.varCol{1}.nurbs{patch},xi,0,U(Uindices,:))];
-                    v = [v; evaluateNURBSvec(task.varCol{1}.nurbs{patch},xi)];
+                    p_h = [p_h; evaluateNURBS(task.varCol{1}.nurbs{patch},xi,0,U(Uindices,:))];
+                    v = [v; evaluateNURBS(task.varCol{1}.nurbs{patch},xi)];
                 end
                 [v,I] = unique(v,'rows');
                 p_h = p_h(I,:);

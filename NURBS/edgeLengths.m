@@ -42,7 +42,7 @@ for patch = 1:noPatches
         end
         X = cell(1,d_p+1);
         XI = reshape(XI,noQP*noEtaEvalPts*noElems,d_p);
-        [X{:}] = evaluateNURBSvec(nurbs{patch}, XI, 1);
+        [X{:}] = evaluateNURBS(nurbs{patch}, XI, 1);
         X{dir+1} = reshape(X{dir+1},noQP,noEtaEvalPts*noElems,d);
         J_2 = repmat(kron(J_2,ones(1,noEtaEvalPts)),noQP,1);
         edgeLen{patch}{dir} = max(reshape(sum(vecnorm(X{dir+1},2,3) .* J_2 .* W, 1), noEtaEvalPts, noElems),[], 1);
