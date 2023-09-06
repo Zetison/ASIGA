@@ -31,7 +31,7 @@ for i = 1:d_p
 end
 w = weights(w_i);
 
-RdR = NURBSbasisVec(I,xi,degree,knots,w,n);
+RdR = NURBSbasis(I,xi,degree,knots,w,n);
 if nargin < 4
     coeffs = nurbs.coeffs(1:d,:).';
     U = reshape(coeffs(w_i,:),npts,n_en,d);

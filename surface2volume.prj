@@ -36,7 +36,7 @@
       <file>${PROJECT_ROOT}/NURBS/BsplineBasisVec.m</file>
       <file>${PROJECT_ROOT}/NURBS/GordonHall.m</file>
       <file>${PROJECT_ROOT}/NURBS/NURBSbasis.m</file>
-      <file>${PROJECT_ROOT}/NURBS/NURBSbasisVec.m</file>
+      <file>${PROJECT_ROOT}/NURBS/NURBSbasis.m</file>
       <file>${PROJECT_ROOT}/NURBS/NURBShasZeroMeasure.m</file>
       <file>${PROJECT_ROOT}/NURBS/NURBSisEqual.m</file>
       <file>${PROJECT_ROOT}/NURBS/NURBSprojection.m</file>
