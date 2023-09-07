@@ -29,8 +29,8 @@ p_h = complex(zeros(size(W,1),noElems,size(U,2)));
 fact = zeros(size(W,1),noElems);
 points = zeros(size(W,1), noElems,3);
 
-for e = 1:noElems
-% parfor e = 1:noElems
+% for e = 1:noElems
+parfor e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch}(1:2);
     Xi_e = zeros(2,2);

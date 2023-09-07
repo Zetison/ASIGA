@@ -1,5 +1,3 @@
-
-%-------------------------------------------------------------------------------
 function [x_hat,iter]=golden_ratio(f,x_min,x_max,tol)
 r1 = (sqrt(5)-1)/2;
 r2 = r1^2;
@@ -14,9 +12,9 @@ x(3) = x(1) + (x(4)-x(1))*r1;
 F = arrayfun(f,x);
 
 iter = 0;
-while x(4)-x(1) > tol,
+while x(4)-x(1) > tol
     iter = iter+1;
-    if F(2) > F(3),
+    if F(2) > F(3)
         x=[x(1),x(1)+(x(3)-x(1))*r2,x(2),x(3)];
         F=[F(1),f(x(2)),F(2),F(3)];
     else

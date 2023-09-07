@@ -1,4 +1,4 @@
-clear all
+function findBesselZeros()
 
 
 noFuncs = 100;

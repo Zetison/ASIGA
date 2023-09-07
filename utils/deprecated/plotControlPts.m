@@ -1,4 +1,5 @@
 function plotControlPts(nurbsPatches,colorXi,colorEta,colorZeta,markerColor)
+error('Deprecated. Use plotNURBS() instead')
 if nargin < 2
     colorXi = 'red';
     colorEta = 'red';

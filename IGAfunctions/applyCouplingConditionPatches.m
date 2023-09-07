@@ -1,5 +1,5 @@
 function task = applyCouplingConditionPatches(task,i_domain)
-% Future work: Vectorize over Gauss points
+
 d_p = task.varCol{i_domain}.patches{1}.nurbs.d_p;
 
 degree = task.varCol{i_domain}.degree(1:2);

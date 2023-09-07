@@ -1,4 +1,5 @@
 function nurbs = uniteNURBS(nurbsPatches)
+% Unites a set of sets of NURBS patches
 noDomains = numel(nurbsPatches);
 noSubPatches = zeros(noDomains,1);
 
