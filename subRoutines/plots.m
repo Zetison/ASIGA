@@ -53,21 +53,21 @@ no2Dpoints = 1000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Create random cubic hole
 % nurbs_vol = read_g2('../IGA-geometries/Chess/Capablanca.g2');
-clear all
-close all
-nurbs = getPrismData('L',[2,4,1],'x_0',[0,0,0]);
-nurbs = elevateNURBSdegree(nurbs,2);
-nurbs{1}.coeffs(1,:,:,:) = nurbs{1}.coeffs(1,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(2,:,:,:));
-nurbs{1}.coeffs(2,:,:,:) = nurbs{1}.coeffs(2,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(3,:,:,:));
-nurbs{1}.coeffs(3,:,:,:) = nurbs{1}.coeffs(3,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(2,:,:,:));
-nurbs{1}.coeffs = nurbs{1}.coeffs + rand(size(nurbs{1}.coeffs(:,:,:,:)))*0.05;
-nurbs = insertKnotsInNURBS(nurbs,{{[ones(1,3)/3, 2*ones(1,3)/3],[ones(1,3)/3, 2*ones(1,3)/3], []}});
-nurbs = explodeNURBS(nurbs);
-nurbs = nurbs([1:4,6:9]);
-figure, plotNURBS(nurbs)
-axis equal
-view(getView())
-write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
+% clear all
+% close all
+% nurbs = getPrismData('L',[2,4,1],'x_0',[0,0,0]);
+% nurbs = elevateNURBSdegree(nurbs,2);
+% nurbs{1}.coeffs(1,:,:,:) = nurbs{1}.coeffs(1,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(2,:,:,:));
+% nurbs{1}.coeffs(2,:,:,:) = nurbs{1}.coeffs(2,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(3,:,:,:));
+% nurbs{1}.coeffs(3,:,:,:) = nurbs{1}.coeffs(3,:,:,:).*abs(1+0.1*nurbs{1}.coeffs(2,:,:,:));
+% nurbs{1}.coeffs = nurbs{1}.coeffs + rand(size(nurbs{1}.coeffs(:,:,:,:)))*0.05;
+% nurbs = insertKnotsInNURBS(nurbs,{{[ones(1,3)/3, 2*ones(1,3)/3],[ones(1,3)/3, 2*ones(1,3)/3], []}});
+% nurbs = explodeNURBS(nurbs);
+% nurbs = nurbs([1:4,6:9]);
+% figure, plotNURBS(nurbs)
+% axis equal
+% view(getView())
+% write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test Capablanca
@@ -122,8 +122,8 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 % close all
 % % model = 'Capablanca_woRooks';
 % % model = 'Capablanca';
-% % model = 'BCA';
-% model = 'S1_interior';
+% model = 'BCA';
+% % model = 'S1_interior';
 % % model = 'S1';
 % % model = 'Mutter';
 % switch model
@@ -188,6 +188,12 @@ write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
 %     nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
 % end
 
+close all
+load('BeTSSi_BCA_p2_unRefined.mat')
+% set(0, 'DefaultFigureRenderer', 'opengl');
+tic
+plotNURBS(nurbs,'plotControlPolygon', true);
+toc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test C1 NURBS curve
 % close all
