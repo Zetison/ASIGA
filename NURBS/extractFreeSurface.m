@@ -1,4 +1,4 @@
-function nurbs = extractFreeSurface(varargin)
+function [nurbs,surf2volMap] = extractFreeSurface(varargin)
 options = struct();
 
 nurbs_vol = varargin{1};
@@ -22,6 +22,7 @@ else
     end
     
     nurbs = cell(1,6*numel(nurbs_vol));
+    surf2volMap = zeros(numel(nurbs),2);
     counter = 1;
     for i = 1:numel(topologysets.set{1}.item)
         patch = topologysets.set{1}.item{i}.Attributes.patch;
@@ -30,6 +31,8 @@ else
         at(midx) = 1;
         nurbs(counter) = subNURBS(nurbs_vol(patch),'at',at.','outwardPointingNormals',true);
         counter = counter + 1;
+        surf2volMap(counter,:) = [patch,midx];
     end
     nurbs(counter:end) = [];
+    surf2volMap(counter:end,:) = [];
 end
