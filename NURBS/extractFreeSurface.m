@@ -1,4 +1,6 @@
 function [nurbs,surf2volMap] = extractFreeSurface(varargin)
+% Return the NURBS for the first free surface of the volumetric patches
+% (nurbs_vol) found in geometry.topologysets.set contructed from nurbs_vol
 options = struct();
 
 nurbs_vol = varargin{1};

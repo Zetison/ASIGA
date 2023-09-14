@@ -92,7 +92,7 @@ switch model
         view(app.UIAxes,[135,25]);
         app.ThicknessEditField.Value = 1;
         app.AnglethresholdEditField.Value = 150; % Threshold for a "sharp" angle
-        app.AngledeviationEditField.Value = 45; % Threshold for a "sharp" angle
+        app.AngledeviationEditField.Value = 40; % Threshold for a "sharp" angle
         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3)-[1,1,1]*0.5/2)-3))';
     case 'randomCubicHole'
         app.EpsEditField.Value = 1e-10;

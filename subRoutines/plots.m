@@ -188,12 +188,58 @@ no2Dpoints = 1000;
 %     nurbs_vol = surfaceToVolume(nurbs,'t',t,'sharpAngle',sharpAngle);
 % end
 
+% close all
+% load('BeTSSi_BCA_p2_unRefined.mat')
+% % set(0, 'DefaultFigureRenderer', 'opengl');
+% tic
+% plotNURBS(nurbs,'plotControlPolygon', true);
+% toc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test convexifyNURBS
+% close all
+% % nurbs = getBeTSSiM4Data('t',1);
+% % nurbs = extractFreeSurface(nurbs);
+% nurbs = getEllipsoidData();
+% axis equal
+% plotNURBS(nurbs,'plotControlPolygon',true,'coarseLinearSampling',false)
+% camlight
+% view(120,40)
+% nurbs2 = convexifyNURBS(nurbs);
+% hold on
+% plotNURBS(nurbs2,'plotControlPolygon',true,'plotObject',1,'coarseLinearSampling',false)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test collapseToEdge
 close all
-load('BeTSSi_BCA_p2_unRefined.mat')
-% set(0, 'DefaultFigureRenderer', 'opengl');
-tic
-plotNURBS(nurbs,'plotControlPolygon', true);
-toc
+camlight
+nurbs = getPrismData();
+% nurbs = getHexEllipsoidData();
+for midx = 1:6
+    for midx_midx = 1:4
+        nurbs2 = collapseToEdge(nurbs{1},midx,midx_midx);
+
+        nurbsSurf = subNURBS(nurbs);
+        h1 = plotNURBS(nurbsSurf,'plotControlPolygon',true);
+        h1.objectHandle(midx).FaceColor = 'red';
+        view(getView())
+        axis equal
+        pause(1)
+        hold off
+        h2 = plotNURBS(nurbs2,'plotControlPolygon',true);
+        delete(h1.objectHandle)
+        delete(h1.elementEdgesHandle)
+        delete(h1.controlPolygonHandle)
+        view(getView())
+        axis equal
+        pause(1)
+        hold off
+        delete(h2.objectHandle)
+        delete(h2.elementEdgesHandle)
+        delete(h2.controlPolygonHandle)
+    end
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test C1 NURBS curve
 % close all

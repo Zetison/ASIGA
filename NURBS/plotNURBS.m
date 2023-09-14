@@ -2,6 +2,10 @@ function [handles,maxC,minC] = plotNURBS(varargin)
 
 %% Interpret input arguments
 nurbsPatches = varargin{1};
+if isempty(nurbsPatches)
+    warning('No NURBS patches to be plotted')
+    return
+end
 if isgraphics(nurbsPatches)
     ax = nurbsPatches;
     nurbsPatches = varargin{2};
@@ -537,7 +541,7 @@ for patch = 1:noPatches
         end  
         C = evaluateNURBS(nurbs, uniqueKnots{1}.');
         if plotElementEdges
-            elementEdgesHandle(patch) = line(ax,C(:,1), C(:,2), 'x', 'color',lineColor, 'DisplayName',[displayName, ' - elements'],'Visible',visible);
+            elementEdgesHandle(patch) = line(ax,C(:,1), C(:,2), 'Marker', 'x', 'color',lineColor, 'DisplayName',[displayName, ' - elements'],'Visible',visible);
         end
     end
     if plotControlPolygon
