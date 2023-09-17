@@ -16,6 +16,9 @@ properties (Access = public)
     options
     selectedObjects
     maxNoSharpAngles
+    vol2surfMap
+    surf2volMap
+    mindices
 end
 
 
@@ -47,6 +50,8 @@ methods (Access = public)
         S2Vobj = computeCornerData(S2Vobj);  
         
         S2Vobj.nurbs_vol = cell(1,4*S2Vobj.noOriginalBdryPatches); % Allocate a redundant amount of cells for volumetric patches
+        S2Vobj.vol2surfMap = NaN(numel(S2Vobj.nurbs_vol),6);
+        S2Vobj.surf2volMap = NaN(6*numel(S2Vobj.nurbs_vol),2);
         S2Vobj.S2Vcounter = 0;
         S2Vobj.selfIntersection = false;
         S2Vobj.selectedObjects = [];
@@ -69,6 +74,7 @@ methods (Access = public)
             % Remove faces with zero measure
             zeroMeasure = NURBShasZeroMeasure(nurbs_newBdry);
             nurbs_newBdry(zeroMeasure) = [];
+            S2Vobj.mindices(zeroMeasure) = [];
         end
         
         if isempty(nurbs_newBdry)
@@ -76,7 +82,11 @@ methods (Access = public)
         else
             noNewBdryPatches = numel(nurbs_newBdry);
             S2Vobj.newBdryPatches = (numel(S2Vobj.nurbs_bdry)+1):(numel(S2Vobj.nurbs_bdry)+noNewBdryPatches);
-        
+    
+            S2Vobj.vol2surfMap(S2Vobj.S2Vcounter,S2Vobj.mindices) = S2Vobj.newBdryPatches;
+            S2Vobj.surf2volMap(S2Vobj.newBdryPatches,1) = S2Vobj.S2Vcounter;
+            S2Vobj.surf2volMap(S2Vobj.newBdryPatches,2) = S2Vobj.mindices;
+
             % Add new patches to the global set of surface patches, nurbs_bdry
             S2Vobj.nurbs_bdry = [S2Vobj.nurbs_bdry, nurbs_newBdry];
         
@@ -98,7 +108,6 @@ methods (Access = public)
         
             % Update topologyMap
             S2Vobj.alteredPatches = [surroundingPatches,S2Vobj.newBdryPatches];
-            S2Vobj.alteredPatches = S2Vobj.alteredPatches;
             geometry = getTopology(S2Vobj.nurbs_bdry(S2Vobj.alteredPatches));
             connectionSub = geometry.topology.connection;
         
@@ -208,6 +217,7 @@ methods (Access = public)
                 end
                 nurbs_covered = patch;
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;1,1;1,1],'outwardPointingNormals',true); 
+                S2Vobj.mindices = [2,3,4,5,6];
             case 1 % Loft path along slave
                 slave = S2Vobj.topologyMap{patch}(midx).slave;
                 sidx = S2Vobj.topologyMap{patch}(midx).sidx;
@@ -347,6 +357,7 @@ methods (Access = public)
                 end
                 nurbs_covered = [patch,slave];
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;1,1],'outwardPointingNormals',true);
+                S2Vobj.mindices = [2,4,5,6];
             case 2
                 midx_regular = S2Vobj.singularFromRegular(S2Vobj.topologyMap,patch,setdiff(1:4,midx));
                 if ~isempty(midx_regular)
@@ -717,6 +728,7 @@ methods (Access = public)
         
                     nurbs_covered = [patch,slave3,slave5];
                     nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;0,1],'outwardPointingNormals',true);
+                    S2Vobj.mindices = [2,4,6];
                 else
         
                     slave3 = S2Vobj.topologyMap{patch}(midx(1)).slave;
@@ -771,6 +783,7 @@ methods (Access = public)
                         nurbs = S2Vobj.ensureIdenticalCoeffs(nurbs,volCoeffs,[1,2,3,4]);
                         nurbs_covered = [patch,slave3,slave4,slave3Slave];
                         nurbs_newBdry = subNURBS(nurbs,'at',[0,0;0,0;1,1],'outwardPointingNormals',true);
+                        S2Vobj.mindices = [5,6];
                     else
                         switch S2Vobj.options.S2V_algorithm.A134
                             case 'A134_11'
@@ -800,6 +813,7 @@ methods (Access = public)
                         end
                         nurbs_covered = [patch,slave3,slave4];
                         nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;1,1],'outwardPointingNormals',true);
+                        S2Vobj.mindices = [2,5,6];
                     end
                 end
             case 3
@@ -861,6 +875,7 @@ methods (Access = public)
         
                 nurbs_covered = [patch,slave3,slave5,slave4];
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;0,1],'outwardPointingNormals',true);
+                S2Vobj.mindices = [2,6];
             case 4
                 % First check if "maxNoSharpAngles=5" (i.e. all faces are known)
                 slavesSlave = zeros(1,4);
@@ -909,6 +924,7 @@ methods (Access = public)
                 
                             nurbs_covered = [patch,slave3,slave5,slave4,slave6,slavesSlave(1)];
                             nurbs_newBdry = [];
+                            S2Vobj.mindices = [];
                             maxNoSharpAngles = 5;
                             nurbs = GordonHall(faces);
                             nurbs = S2Vobj.ensureIdenticalCoeffs(nurbs,volCoeffs,[1,2,3,4,5,6]);
@@ -926,6 +942,7 @@ methods (Access = public)
                             faces(2) = GordonHall(edges);
                             nurbs_covered = [patch,slave3,slave5,slave4,slave6];
                             nurbs_newBdry = faces(2);
+                            S2Vobj.mindices = 2;
                             nurbs = GordonHall(faces);
                             nurbs = S2Vobj.ensureIdenticalCoeffs(nurbs,volCoeffs,[1,3,4,5,6]);
                         otherwise
