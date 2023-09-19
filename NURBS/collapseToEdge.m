@@ -1,5 +1,5 @@
 function nurbs = collapseToEdge(nurbs,midx,midx_midx)
-
+% Collapses face midx of nurbs onto edge the masteridx midx_midx of face midx
 
 coeffs = nurbs.coeffs;
 knots = nurbs.knots;
@@ -12,13 +12,13 @@ switch midx
         end
         switch midx_midx
             case 1 % Collapse to eta == 0
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,1,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,1,:));
+                coeffs = coeffs(:,:,1,:) + g.*(coeffs - coeffs(:,:,1,:));
             case 2 % Collapse to eta == 1
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,end,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,end,:));
+                coeffs = coeffs(:,:,end,:) + g.*(coeffs - coeffs(:,:,end,:));
             case 3 % Collapse to zeta == 0
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,:,1) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,:,1));
+                coeffs = coeffs(:,:,:,1) + g.*(coeffs - coeffs(:,:,:,1));
             case 4 % Collapse to zeta == 1
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,:,end) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,:,end));
+                coeffs = coeffs(:,:,:,end) + g.*(coeffs - coeffs(:,:,:,end));
         end
     case {3,4} % eta == 0 || eta == 1
         g = reshape(aveknt(knots{2},degree(2)+1),1,1,[]);
@@ -27,13 +27,13 @@ switch midx
         end
         switch midx_midx
             case 1 % Collapse to zeta == 0
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,:,1) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,:,1));
+                coeffs = coeffs(:,:,:,1) + g.*(coeffs - coeffs(:,:,:,1));
             case 2 % Collapse to zeta == 1
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,:,end) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,:,end));
+                coeffs = coeffs(:,:,:,end) + g.*(coeffs - coeffs(:,:,:,end));
             case 3 % Collapse to xi == 0
-                coeffs(1:3,:,:,:) = coeffs(1:3,1,:,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,1,:,:));
+                coeffs = coeffs(:,1,:,:) + g.*(coeffs - coeffs(:,1,:,:));
             case 4 % Collapse to xi == 1
-                coeffs(1:3,:,:,:) = coeffs(1:3,end,:,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,end,:,:));
+                coeffs = coeffs(:,end,:,:) + g.*(coeffs - coeffs(:,end,:,:));
         end
     case {5,6} % zeta == 0 || zeta == 1
         g = reshape(aveknt(knots{3},degree(3)+1),1,1,1,[]);
@@ -42,13 +42,13 @@ switch midx
         end
         switch midx_midx
             case 1 % Collapse to xi == 0
-                coeffs(1:3,:,:,:) = coeffs(1:3,1,:,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,1,:,:));
+                coeffs = coeffs(:,1,:,:) + g.*(coeffs - coeffs(:,1,:,:));
             case 2 % Collapse to xi == 1
-                coeffs(1:3,:,:,:) = coeffs(1:3,end,:,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,end,:,:));
+                coeffs = coeffs(:,end,:,:) + g.*(coeffs - coeffs(:,end,:,:));
             case 3 % Collapse to eta == 0
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,1,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,1,:));
+                coeffs = coeffs(:,:,1,:) + g.*(coeffs - coeffs(:,:,1,:));
             case 4 % Collapse to eta == 1
-                coeffs(1:3,:,:,:) = coeffs(1:3,:,end,:) + g.*(coeffs(1:3,:,:,:) - coeffs(1:3,:,end,:));
+                coeffs = coeffs(:,:,end,:) + g.*(coeffs - coeffs(:,:,end,:));
         end
 end
 nurbs.coeffs = coeffs;

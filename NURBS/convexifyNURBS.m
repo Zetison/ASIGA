@@ -47,8 +47,9 @@ for patch = 1:numel(S2Vobj.nurbs_bdry)
         p_temp = p(hit,:);
         if isempty(p_temp)
             warning('Could not find a proper intersection point')
+        else
+            S2Vobj.nurbs_bdry{patch}.coeffs(1:3,i) = p_temp(min_d_I,:);
         end
-        S2Vobj.nurbs_bdry{patch}.coeffs(1:3,i) = p_temp(min_d_I,:);
     end
 end
 nurbs = S2Vobj.nurbs_bdry;

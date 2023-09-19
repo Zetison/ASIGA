@@ -7,7 +7,7 @@ switch model
         app.Eps = 1e-4;
         app.EpsEditField.Value = app.Eps;
 
-        app.ThicknessEditField.Value = 1.1;
+        app.ThicknessEditField.Value = 2;
         app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,[1,3]))-6))';
     case 'Bridge'
@@ -38,7 +38,8 @@ switch model
     case 'BCA'
         load('BeTSSi_BCA_p2_unRefined.mat','nurbs')
         app.nurbsObjects{1,1}.nurbs = nurbs;
-        app.ThicknessEditField.Value = 1.1;
+        app.ThicknessEditField.Value = 2;
+        app.MaintaincollapsednessCheckBox.Value = false; % Threshold for a "sharp" angle
         % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
         app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
         % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
@@ -67,7 +68,8 @@ switch model
         app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
     case 'BeTSSiM2'
         app.EpsEditField.Value = 1e-10;
-        app.ThicknessEditField.Value = 0.1;
+        app.ThicknessEditField.Value = 1;
+        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
 %         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
 %         app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
 %         app.AlgorithmForCase13.Value = 'A13_41';

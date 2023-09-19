@@ -39,6 +39,7 @@ methods (Access = public)
                                                 'A1345','A1345_11',...
                                                 'A13456','A13456_11',...
                                                 'A123456','A123456_11'), ...    % Specify the desired algorithm to be used.
+                         'default_degree', 2, ... % polynomial degree used for the extraction direction in algorithm A1
                          'avg_v_n_threshholdAngle', 11.25*pi/180);  % Threshold angle deviation between the normal vectors v_n avg_v_n
 
         if nargin > 1
@@ -212,9 +213,11 @@ methods (Access = public)
                         error('Not implemented')
                 end
                 nurbs = loftNURBS({faces(1),faces(2)},1,1);
+                nurbs = elevateNURBSdegree(nurbs,[S2Vobj.options.default_degree-1,0,0]);
                 if S2Vobj.options.maintainCollapsedness
                     nurbs = S2Vobj.adjustForCollapsedness(nurbs,1,S2Vobj.options);
                 end
+                
                 nurbs_covered = patch;
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;1,1;1,1],'outwardPointingNormals',true); 
                 S2Vobj.mindices = [2,3,4,5,6];
@@ -223,14 +226,16 @@ methods (Access = public)
                 sidx = S2Vobj.topologyMap{patch}(midx).sidx;
         
                 if ~ismember(S2Vobj.options.S2V_algorithm.A13, {'A13_21'})
-                    % Set the patch with oposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
-                    v_n_1 = S2Vobj.edgeData(patch).v_n{midx};
-                    avg_v_n_i = S2Vobj.edgeData(patch).avg_v_n{midx};
+                    % Set the patch with opposite side having the least amount of deviation between the vectors v_n and avg_v_n as master patch
+                    midx_opposite = S2Vobj.get_opposite_midx(midx);
+                    v_n_1 = S2Vobj.edgeData(patch).v_n{midx_opposite};
+                    avg_v_n_i = S2Vobj.edgeData(patch).avg_v_n{midx_opposite};
                     angle_v_n_diff_i = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
             
-                    v_n_1 = S2Vobj.edgeData(slave).v_n{midx};
-                    avg_v_n_i = S2Vobj.edgeData(slave).avg_v_n{midx};
-                    angle_v_n_diff_i_s = mean(acos(abs(dot(v_n_1,avg_v_n_i,2))));
+                    sidx_opposite = S2Vobj.get_opposite_midx(sidx);
+                    v_n_1_s = S2Vobj.edgeData(slave).v_n{sidx_opposite};
+                    avg_v_n_i_s = S2Vobj.edgeData(slave).avg_v_n{sidx_opposite};
+                    angle_v_n_diff_i_s = mean(acos(abs(dot(v_n_1_s,avg_v_n_i_s,2))));
                     if angle_v_n_diff_i_s < angle_v_n_diff_i
                         patch = slave;
                         midx = sidx;
@@ -243,8 +248,8 @@ methods (Access = public)
                 faces(1) = S2Vobj.nurbs_bdry(patch);
                 faces(3) = S2Vobj.nurbs_bdry(slave);
                 faces{1} = orientNURBS(faces{1}, S2Vobj.idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-                faces{3}  = orientNURBS(faces{3},  S2Vobj.idx1To_idx2_orient(sidx,3));   % Make "sidx = 3"
-                knots = [faces{3}.knots(end), faces{1}.knots];
+                faces{3} = orientNURBS(faces{3}, S2Vobj.idx1To_idx2_orient(sidx,3));   % Make "sidx = 3"
+                knots  = [faces{3}.knots(end),  faces{1}.knots];
                 degree = [faces{3}.degree(end), faces{1}.degree];
                 number = [faces{3}.number(end), faces{1}.number];
                 volCoeffs{1} = faces{1}.coeffs;
@@ -366,13 +371,13 @@ methods (Access = public)
                 end
         
                 if all(ceil(midx/2) == [1,2]) % Fill a patch in a corner
-                    % Set the patch with oposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
+                    % Set the patch with opposite corner having the least amount of deviation between the vectors v_n and avg_v_n as master patch
                     angle_v_n_diff = zeros(1,3);
                     midx = S2Vobj.correct_midx_order(midx);
-                    idx_oposite = S2Vobj.get_oposite_corner_index(S2Vobj.intermediateCorner(midx));
+                    idx_opposite = S2Vobj.get_opposite_corner_index(S2Vobj.intermediateCorner(midx));
                     
-                    v_n_1 = S2Vobj.cornerData(patch).v_n(idx_oposite,:);
-                    avg_v_n_i = S2Vobj.cornerData(patch).avg_v_n(idx_oposite,:);
+                    v_n_1 = S2Vobj.cornerData(patch).v_n(idx_opposite,:);
+                    avg_v_n_i = S2Vobj.cornerData(patch).avg_v_n(idx_opposite,:);
                     angle_v_n_diff(1) = acos(abs(dot(v_n_1,avg_v_n_i)));
         
                     slave3 = S2Vobj.topologyMap{patch}(midx(1)).slave;
@@ -382,9 +387,9 @@ methods (Access = public)
                     if any(isnan(S2Vobj.angles(slave3,sidx3_m))) % slave1 and slave2 are "connected" through a singularity and patch should remain the master patch
                         angle_v_n_diff(2) = Inf;
                     else
-                        idx_oposite = S2Vobj.get_oposite_corner_index(S2Vobj.intermediateCorner(sidx3_m));
-                        v_n_1 = S2Vobj.cornerData(slave3).v_n(idx_oposite,:);
-                        avg_v_n_i = S2Vobj.cornerData(slave3).avg_v_n(idx_oposite,:);
+                        idx_opposite = S2Vobj.get_opposite_corner_index(S2Vobj.intermediateCorner(sidx3_m));
+                        v_n_1 = S2Vobj.cornerData(slave3).v_n(idx_opposite,:);
+                        avg_v_n_i = S2Vobj.cornerData(slave3).avg_v_n(idx_opposite,:);
                         angle_v_n_diff(2) = acos(abs(dot(v_n_1,avg_v_n_i)));
                     end
         
@@ -395,9 +400,9 @@ methods (Access = public)
                     if any(isnan(S2Vobj.angles(slave5,sidx5_m))) % slave1 and slave2 are "connected" through a singularity and patch should remain the master patch
                         angle_v_n_diff(3) = Inf;
                     else
-                        idx_oposite = S2Vobj.get_oposite_corner_index(S2Vobj.intermediateCorner(sidx5_m));
-                        v_n_1 = S2Vobj.cornerData(slave5).v_n(idx_oposite,:);
-                        avg_v_n_i = S2Vobj.cornerData(slave5).avg_v_n(idx_oposite,:);
+                        idx_opposite = S2Vobj.get_opposite_corner_index(S2Vobj.intermediateCorner(sidx5_m));
+                        v_n_1 = S2Vobj.cornerData(slave5).v_n(idx_opposite,:);
+                        avg_v_n_i = S2Vobj.cornerData(slave5).avg_v_n(idx_opposite,:);
                         angle_v_n_diff(3) = acos(abs(dot(v_n_1,avg_v_n_i)));
                     end
         
@@ -446,7 +451,7 @@ methods (Access = public)
                     volCoeffs{3} = reshape(volCoeffs{3},[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
                     volCoeffs{5} = faces{5}.coeffs;
         
-        %                 midx_opposite = midx-(-1).^midx;
+        %                 midx_opposite = S2Vobj.get_opposite_midx(midx);
         %                 cornerIndices = S2Vobj.intermediateCorner(midx);
         %                 oppositeCornerIndices = S2Vobj.intermediateCorner(midx_opposite);
         % 
@@ -745,8 +750,8 @@ methods (Access = public)
                     faces{3} = orientNURBS(faces{3}, S2Vobj.idx1To_idx2_orient(sidx3,3));   % Make "sidx = 3"
                     faces{4} = orientNURBS(faces{4}, S2Vobj.idx1To_idx2_orient(sidx4,3,true));   % Make "sidx = 1"
         
-                    sidx3_opposite = sidx3-(-1)^sidx3;
-                    sidx4_opposite = sidx4-(-1)^sidx4;
+                    sidx3_opposite = S2Vobj.get_opposite_midx(sidx3);
+                    sidx4_opposite = S2Vobj.get_opposite_midx(sidx4);
                     slave3Slave = S2Vobj.topologyMap{slave3}(sidx3_opposite).slave;
                     sidx3Slave = S2Vobj.topologyMap{slave3}(sidx3_opposite).sidx;
                     slave4Slave = S2Vobj.topologyMap{slave4}(sidx4_opposite).slave;
@@ -882,7 +887,7 @@ methods (Access = public)
                 for midx2 = 1:4
                     slave = S2Vobj.topologyMap{patch}(midx2).slave;
                     sidx1 = S2Vobj.topologyMap{patch}(midx2).sidx;
-                    sidx1_opposite = sidx1-(-1)^sidx1;
+                    sidx1_opposite = S2Vobj.get_opposite_midx(sidx1);
                     slavesSlave(midx2) = S2Vobj.topologyMap{slave}(sidx1_opposite).slave;
                 end
                 slave3 = S2Vobj.topologyMap{patch}(midx(1)).slave;
@@ -1366,8 +1371,12 @@ end
 
 methods (Static)
 
-    function idx_oposite = get_oposite_corner_index(idx)
-        idx_oposite = mod(idx+2-1,4)+1;
+    function idx_opposite = get_opposite_corner_index(idx)
+        idx_opposite = mod(idx+2-1,4)+1;
+    end
+
+    function midx_opposite = get_opposite_midx(midx)
+        midx_opposite = midx-(-1).^midx;
     end
     
     function i = midx2leftCorner(midx)
@@ -1485,7 +1494,7 @@ methods (Static)
         indices_nan = and(any(isnan(angles),2),~indices_covered);
         
         noSharpAngles = sum(sharpAngles,2);
-        noSharpAngles(indices_op) = noSharpAngles(indices_op) + 0.1; % Prioritize cases where oposite faces are known
+        noSharpAngles(indices_op) = noSharpAngles(indices_op) + 0.1; % Prioritize cases where opposite faces are known
         noSharpAngles(indices_nan) = noSharpAngles(indices_nan) + 0.2; % Prioritize cases containing singularities
         noSharpAngles(1:noOriginalBdryPatches) = noSharpAngles(1:noOriginalBdryPatches) + 0.21; % Prioritize input surface
         maxNoSharpAngles = max(noSharpAngles);
@@ -1555,40 +1564,40 @@ methods (Static)
         R1row3 = repmat(cat(1, u3.*u1.*(1-cosTheta) - u2.*sinTheta, ...
                         u3.*u2.*(1-cosTheta) + u1.*sinTheta, ...
                         cosTheta + u3.^2.*(1-cosTheta)), repArray);
-        end
+    end
         
-        function nurbs = adjustForCollapsedness(nurbs,m_arr,options)
+    function nurbs = adjustForCollapsedness(nurbs,m_arr,options)
         
         number = nurbs{1}.number;
         for m = m_arr 
             switch m
                 case 1
                     if all(vecnorm(nurbs{1}.coeffs(1:3,1,end,:) - nurbs{1}.coeffs(1:3,1,end,1),2,1) < options.Eps) % midx = 2 is collapsed
-                        nurbs{1}.coeffs(:,:,end,:) = repmat(nurbs{1}.coeffs(:,:,end,1),[1,1,1,number(3)]);
+                        nurbs{1}.coeffs(1:3,:,end,:) = repmat(nurbs{1}.coeffs(1:3,:,end,1),[1,1,1,number(3)]);
                     end
                     if all(vecnorm(nurbs{1}.coeffs(1:3,1,:,1) - nurbs{1}.coeffs(1:3,1,1,1),2,1) < options.Eps) % midx = 3 is collapsed
-                        nurbs{1}.coeffs(:,:,:,1) = repmat(nurbs{1}.coeffs(:,:,1,1),[1,1,number(2),1]);
+                        nurbs{1}.coeffs(1:3,:,:,1) = repmat(nurbs{1}.coeffs(1:3,:,1,1),[1,1,number(2),1]);
                     end
                     if ~(all(ismember([3,4], m_arr)) && any(vecnorm(nurbs{1}.coeffs(:,:,1,end) - nurbs{1}.coeffs(:,:,end,end),2,1) > options.Eps))
                         if all(vecnorm(nurbs{1}.coeffs(1:3,1,:,end) - nurbs{1}.coeffs(1:3,1,1,end),2,1) < options.Eps) % midx = 4 is collapsed
-                            nurbs{1}.coeffs(:,:,:,end) = repmat(nurbs{1}.coeffs(:,:,1,end),[1,1,number(2),1]);
+                            nurbs{1}.coeffs(1:3,:,:,end) = repmat(nurbs{1}.coeffs(1:3,:,1,end),[1,1,number(2),1]);
                         end
                     end
                 case 3
                     if all(vecnorm(nurbs{1}.coeffs(1:3,end,1,:) - nurbs{1}.coeffs(1:3,end,1,1),2,1) < options.Eps)
-                        nurbs{1}.coeffs(:,end,:,:) = repmat(nurbs{1}.coeffs(:,end,:,1),[1,1,1,number(3)]);
+                        nurbs{1}.coeffs(1:3,end,:,:) = repmat(nurbs{1}.coeffs(1:3,end,:,1),[1,1,1,number(3)]);
                     end
                     if all(vecnorm(nurbs{1}.coeffs(1:3,:,1,end) - nurbs{1}.coeffs(1:3,1,1,end),2,1) < options.Eps)
-                        nurbs{1}.coeffs(:,:,:,end) = repmat(nurbs{1}.coeffs(:,1,:,end),[1,number(1),1,1]);
+                        nurbs{1}.coeffs(1:3,:,:,end) = repmat(nurbs{1}.coeffs(1:3,1,:,end),[1,number(1),1,1]);
                     end
                 case 5
                     if ~(all(ismember([3,4], m_arr)) && any(vecnorm(nurbs{1}.coeffs(:,end,1,:) - nurbs{1}.coeffs(:,end,end,:),2,1) > options.Eps))
                         if all(vecnorm(nurbs{1}.coeffs(1:3,end,:,1) - nurbs{1}.coeffs(1:3,end,1,1),2,1) < options.Eps)
-                            nurbs{1}.coeffs(:,end,:,:) = repmat(nurbs{1}.coeffs(:,end,1,:),[1,1,number(2),1]);
+                            nurbs{1}.coeffs(1:3,end,:,:) = repmat(nurbs{1}.coeffs(1:3,end,1,:),[1,1,number(2),1]);
                         end
                     end
                     if all(vecnorm(nurbs{1}.coeffs(1:3,:,end,1) - nurbs{1}.coeffs(1:3,1,end,1),2,1) < options.Eps)
-                        nurbs{1}.coeffs(:,:,end,:) = repmat(nurbs{1}.coeffs(:,1,end,:),[1,number(1),1,1]);
+                        nurbs{1}.coeffs(1:3,:,end,:) = repmat(nurbs{1}.coeffs(1:3,1,end,:),[1,number(1),1,1]);
                     end
             end
         end
