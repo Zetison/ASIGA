@@ -541,7 +541,7 @@ for patch = 1:noPatches
         end  
         C = evaluateNURBS(nurbs, uniqueKnots{1}.');
         if plotElementEdges
-            elementEdgesHandle(patch) = line(ax,C(:,1), C(:,2), 'Marker', 'x', 'color',lineColor, 'DisplayName',[displayName, ' - elements'],'Visible',visible);
+            elementEdgesHandle(patch) = line(ax,C(:,1), C(:,2), 'Marker', 'x', 'LineStyle', 'none', 'DisplayName',[displayName, ' - elements'],'Visible',visible);
         end
     end
     if plotControlPolygon

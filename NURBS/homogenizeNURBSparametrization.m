@@ -1,25 +1,21 @@
 function nurbs = homogenizeNURBSparametrization(nurbs)
+% Ensure that the basis is the same for all patches by order elevation and knot insertion
 
+p_max = findMaxDegree(nurbs);
+nurbs = makeUniformNURBSDegree(nurbs,p_max);
 
-% Find maximal polynomial order and the union of all knot vectors
-noPatches = numel(nurbs);
-d_p = nurbs{1}.d_p; % Assume all patches to have the same parametric dimension
-p_max = zeros(1,d_p);
-unionKnots = cell(1,d_p);
-for patch = 1:noPatches
-    p_max = max(nurbs{patch}.degree,p_max);
-    % Find the union of all knots
-    for i = 1:d_p
-        unionKnots{i} = [unionKnots{i}, setdiffUnique(unionKnots{i},nurbs{patch}.knots{i})];
+% Find the union of all knots
+knots = nurbs{1}.knots;
+for i = 2:numel(nurbs)
+    for j = 1:nurbs{i}.d_p
+        knots{j} = sort([knots{j}, setdiffUnique(nurbs{i}.knots{j},knots{j})]);
     end
 end
 % Homogenize all nurbs
-for patch = 1:noPatches
-    newKnots = cell(1,d_p);
-    for i = 1:d_p
-        newKnots{i} = setdiffUnique(unionKnots{i},nurbs{patch}.knots{i});
+for i = 1:numel(nurbs)
+    newKnots = cell(1,nurbs{i}.d_p);
+    for j = 1:nurbs{i}.d_p
+        newKnots{j} = setdiffUnique(knots{j},nurbs{i}.knots{j});
     end
-    nurbs(patch) = elevateNURBSdegree(nurbs(patch),p_max-nurbs{patch}.degree);
-    nurbs(patch) = insertKnotsInNURBS(nurbs(patch),newKnots);
+    nurbs(i) = insertKnotsInNURBS(nurbs(i),newKnots);
 end
-

@@ -12,7 +12,7 @@ no2Dpoints = 1000;
 % R = 1;
 % models = {'Disk','Cone','WineGlass','Ellipsoid','Torus','Quadrilateral','Prism','Cube','Cylinder','CE','HalfSphere',...
 %            'BeTSSiM1','BeTSSiM2','BeTSSiM3','BeTSSiSmoothM3','BeTSSiM4','BeTSSiM5','BeTSSiPH','MockShell','QuarterDisk','Barrel','BeTSSiM5','ScordelisLoRoof','Cube'};
-% models = {'BeTSSiM4'};
+% models = {'Mutter'};
 % for model = models
 %     for parm = 2
 % %         close all
@@ -30,7 +30,7 @@ no2Dpoints = 1000;
 % %         nurbs = elevateNURBSdegree(nurbs,ones(1,nurbs{1}.d_p));
 %         figure
 %         plotNURBS(nurbs,'resolution',resolution,'plotControlPolygon',0,...
-%             'plotNormalVectors',0,'plotParmDir',0,'plotWeights',1,'coarseLinearSampling',false);
+%             'plotNormalVectors',0,'plotParmDir',0,'plotWeights',0,'coarseLinearSampling',false);
 %         axis equal
 %         grid off
 %         axis off
@@ -51,6 +51,24 @@ no2Dpoints = 1000;
 % % nurbs = translateNURBS(nurbs,[-L/2,0,0]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test mutter
+% close all
+% figure
+% nurbs = read_g2('../IGA-geometries/Mutter/Mutter.g2');
+% axis equal
+% view(1,40)
+% camlight
+% % plotNURBS(nurbs([6,15,13]),'plotControlPolygon',true)
+% % plotNURBS(nurbs,'plotControlPolygon',true,'plotParmDir',1)
+% 
+% figure
+% nurbs = getMutterData();
+% axis equal
+% view(1,40)
+% camlight
+% plotNURBS(nurbs,'plotControlPolygon',true,'plotParmDir',1)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Create random cubic hole
 % nurbs_vol = read_g2('../IGA-geometries/Chess/Capablanca.g2');
 % clear all
@@ -68,6 +86,36 @@ no2Dpoints = 1000;
 % axis equal
 % view(getView())
 % write_g2(nurbs,'NURBSgeometries/g2files/randomCubicHole.g2')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Test loftNURBS
+% close all
+% nurbs = getRectangleData();
+% nurbs = ensure3DNURBS(nurbs);
+% nurbs = insertKnotsInNURBS(nurbs,{0.5, [0.3, 0.7]});
+% nurbs = explodeNURBS(nurbs);
+% nurbs = elevateNURBSdegree(nurbs,1);
+% nurbs2 = translateNURBS(nurbs,[0,-0.5,1]);
+% nurbs3 = translateNURBS(nurbs,[0,0.5,2]);
+% nurbs4 = translateNURBS(nurbs,[0.5,0,3]);
+% nurbsCol = {nurbs,nurbs2,nurbs3,nurbs4};
+% for i = 1:numel(nurbsCol)
+%     for j = 1:numel(nurbsCol{i})
+%         n = round(rand(1)*4);
+%         m = round(rand(1)*4);
+%         nurbsCol{i}(j) = insertKnotsInNURBS(nurbsCol{i}(j),{rand(1,n), rand(1,m)});
+%         nurbsCol{i}{j}.coeffs = nurbsCol{i}{j}.coeffs + rand(size(nurbsCol{i}{j}.coeffs))*0.05;
+%     end
+%     plotNURBS(nurbsCol{i})
+% end
+% axis equal
+% view(1,40)
+% camlight
+% nurbsVol = loftNURBS(nurbsCol,3,1);
+% 
+% plotNURBS(nurbsVol)
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test Capablanca
@@ -212,34 +260,34 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test collapseToEdge
-close all
-camlight
-nurbs = getPrismData();
-% nurbs = getHexEllipsoidData();
-for midx = 1:6
-    for midx_midx = 1:4
-        nurbs2 = collapseToEdge(nurbs{1},midx,midx_midx);
-
-        nurbsSurf = subNURBS(nurbs);
-        h1 = plotNURBS(nurbsSurf,'plotControlPolygon',true);
-        h1.objectHandle(midx).FaceColor = 'red';
-        view(getView())
-        axis equal
-        pause(1)
-        hold off
-        h2 = plotNURBS(nurbs2,'plotControlPolygon',true);
-        delete(h1.objectHandle)
-        delete(h1.elementEdgesHandle)
-        delete(h1.controlPolygonHandle)
-        view(getView())
-        axis equal
-        pause(1)
-        hold off
-        delete(h2.objectHandle)
-        delete(h2.elementEdgesHandle)
-        delete(h2.controlPolygonHandle)
-    end
-end
+% close all
+% camlight
+% nurbs = getPrismData();
+% % nurbs = getHexEllipsoidData();
+% for midx = 1:6
+%     for midx_midx = 1:4
+%         nurbs2 = collapseToEdge(nurbs{1},midx,midx_midx);
+% 
+%         nurbsSurf = subNURBS(nurbs);
+%         h1 = plotNURBS(nurbsSurf,'plotControlPolygon',true);
+%         h1.objectHandle(midx).FaceColor = 'red';
+%         view(getView())
+%         axis equal
+%         pause(1)
+%         hold off
+%         h2 = plotNURBS(nurbs2,'plotControlPolygon',true);
+%         delete(h1.objectHandle)
+%         delete(h1.elementEdgesHandle)
+%         delete(h1.controlPolygonHandle)
+%         view(getView())
+%         axis equal
+%         pause(1)
+%         hold off
+%         delete(h2.objectHandle)
+%         delete(h2.elementEdgesHandle)
+%         delete(h2.controlPolygonHandle)
+%     end
+% end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Test C1 NURBS curve
 % close all

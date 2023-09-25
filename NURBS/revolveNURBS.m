@@ -34,6 +34,8 @@ controlPts = nurbsArc{1}.coeffs(1:3,:);
 wArc = nurbsArc{1}.coeffs(end,:);
 [~, A] = orthogonalTransform(NaN(1,3), n);
 controlPts = (A*controlPts).';
+primAxis = controlPts(1,:);
+
 n_xi = numel(Xi)-(2+1);
 for i = 1:numel(nurbs)
     sizes = size(nurbs{i}.coeffs);
@@ -46,8 +48,13 @@ for i = 1:numel(nurbs)
     r = x_1 + t*n; % parametrization of rotation axis
     R = norm2(r-x); % distance from parametrization of rotation axis to control point
     coeffs = zeros([sizes,n_xi]);
+    xTilde = (A\(x-r).').';
+    rotAngles = atan2(xTilde(:,2),xTilde(:,1));
+    Rn = rotationMatrix(rotAngles, n);
     for j = 1:n_xi
-        x = r + R*controlPts(j,:);
+        for k = 1:size(x,1)
+            x(k,:) = r(k,:) + R(k)*(Rn(:,:,k)*controlPts(j,:).').';
+        end
         
         subs = {[{1:d},repmat({':'},1,ndims(coeffs)-2),{j}]};
         coeffs = subasgnArr(coeffs,reshape(x.',[d,number]),subs);
