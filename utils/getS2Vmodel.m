@@ -77,9 +77,9 @@ switch model
         app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
         app.AlgorithmForCase13.Value = 'A13_41';
         app.AlgorithmForCase135.Value = 'A135_41';
-        app.EnforcesymmetryaboutthexyplaneCheckBox.Value = true;
-        app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
-        app.EnforcesymmetryabouttheyzplaneCheckBox.Value = true;
+%         app.EnforcesymmetryaboutthexyplaneCheckBox.Value = true;
+%         app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
+%         app.EnforcesymmetryabouttheyzplaneCheckBox.Value = true;
     case 'BeTSSiM1'
         app.EpsEditField.Value = 1e-10;
         app.ThicknessEditField.Value = 1.5;
