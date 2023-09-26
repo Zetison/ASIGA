@@ -1,4 +1,4 @@
-function [nurbs, maxLengths,patchRefined] = autoRefineNURBS(nurbs,connection,h_max,dirs,start_patch,newKnots)
+function [nurbs, maxLengths,patchTrulyRefined] = autoRefineNURBS(nurbs,connection,h_max,dirs,start_patch,newKnots)
 % Assuming all patches are compatible, this algorithm automatically refines
 % all patches in nurbs such that maximal element side length is roughly
 % h_max
@@ -22,6 +22,7 @@ edgeLen = edgeLengths(nurbs,1:d_p);
 
 %% Search through the topology map to find path constrained to the same refinements and do refinement
 patchRefined = false(noPatches,d_p);
+patchTrulyRefined = false(noPatches,d_p);
 [~,~,orientMap] = getOrientPerms(d_p-1);
 for patch = [start_patch,setdiff(1:noPatches,start_patch)]
     if all(patchRefined(patch,:))
@@ -34,18 +35,18 @@ for patch = [start_patch,setdiff(1:noPatches,start_patch)]
         else
             newKnotsStart = [];
         end
-        [nurbs, patchRefined,maxLengths] = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,false,h_max,patch,newKnotsStart);
+        [nurbs, patchRefined, ~, maxLengths, patchTrulyRefined] = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,false,h_max,patch,newKnotsStart,patchTrulyRefined);
     end
 end
 
-function [nurbs, patchRefined, patchChecked,maxLengths] = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,...
-                                                                        refine,h_max,rootPatch,newKnotsStart,master,patchChecked,maxLengths)
+function [nurbs, patchRefined, patchChecked, maxLengths, patchTrulyRefined] = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,...
+                                                                        refine,h_max,rootPatch,newKnotsStart,patchTrulyRefined,master,patchChecked,maxLengths)
 % This function goes through all patches that must be refined if master is
 % refined in direction refDir: The maximum element edges are first computed
 % and then the patches are refined based on this such that the element
 % edges in refDir has roughly length h_max
 
-if nargin < 11
+if nargin < 12
     master = rootPatch;
     patchChecked = patchRefined;
     noElems = numel(unique(nurbs{master}.knots{refDir}))-1;
@@ -67,6 +68,7 @@ if refine
     else
         newKnots{refDir} = newKnotsStart;
     end
+    patchTrulyRefined(master,refDir) = numel(newKnots{refDir}) > 0;
     patchRefined(master,refDir) = true;
     nurbs(master) = insertKnotsInNURBS(nurbs(master),newKnots);
 else
@@ -106,8 +108,8 @@ for midx = mIndices % Loop through all branches in the tree from the node "patch
     end
 
     % Continue search/refinement in the slave patch
-    [nurbs, patchRefined, patchChecked,maxLengths] ...
-        = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDirSlave,refine,h_max,rootPatch,newKnotsStart,...
+    [nurbs, patchRefined, patchChecked,maxLengths, patchTrulyRefined] ...
+        = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDirSlave,refine,h_max,rootPatch,newKnotsStart,patchTrulyRefined,...
                         slave,patchChecked,maxLengths);
 
     % Flip back the refinement direction
@@ -118,7 +120,7 @@ end
 if master == rootPatch && ~refine % Max lengths have been computed and we are now ready to refine the patches in the tree
     refine = true;
     patchChecked = patchRefined; % reset patchChecked to go through the tree the same way again
-    [nurbs, patchRefined, patchChecked,maxLengths] ...
-        = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,refine,h_max,rootPatch,newKnotsStart,...
+    [nurbs, patchRefined, patchChecked,maxLengths, patchTrulyRefined] ...
+        = searchNURBS(nurbs,topologyMap,orientMap,edgeLen,patchRefined,refDir,refine,h_max,rootPatch,newKnotsStart,patchTrulyRefined,...
                         master,patchChecked,maxLengths);
 end

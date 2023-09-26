@@ -109,12 +109,18 @@ switch model
         app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
         view(app.UIAxes,[162,10]);
     case 'Bridge'
-        app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive - SINTEF/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
+%         app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive - SINTEF/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
+        app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
+        app.AlgorithmForCase135.Value = 'A135_31';
+        app.AlgorithmForCase13.Value = 'A13_31';
 %         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([93,94,120,121,127,128,141,142,146,147]);
 %         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([1,2,28,29,35,36,50,55,49,54,114]);
-        app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([1:3,26:65]);
+%         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([1:3,26:65]);
 %         app.Eps = 1e-4;
 %         app.EpsEditField.Value = app.Eps;
+        app.UseaveragenormalvectorsCheckBox.Value = false;
+        app.AlgorithmForCase13.Value = 'A13_11';
+        app.AlgorithmForCase135.Value = 'A135_11';
 
         app.ThicknessEditField.Value = 1.1;
         app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle

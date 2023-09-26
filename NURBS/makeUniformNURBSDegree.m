@@ -7,5 +7,5 @@ end
 degreeElevations = zeros(numel(nurbs),numel(p_max));
 for i = 1:numel(nurbs)
     degreeElevations(i,:) = max(p_max-nurbs{i}.degree,0);
-    nurbs(i) = elevateNURBSdegree(nurbs(i),degreeElevations);
+    nurbs(i) = elevateNURBSdegree(nurbs(i),degreeElevations(i,:));
 end

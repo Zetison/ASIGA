@@ -1,7 +1,10 @@
-function Z = setdiffUnique(X,Y)
+function Z = setdiffUnique(X,Y,Eps)
 
+if nargin < 3
+    Eps = 1e-10;
+end
 Z = zeros(size(X));
-Yunique = unique(X);
+Yunique = uniquetol(X,Eps);
 counter = 1;
 for i = 1:numel(Yunique)
     xi = Yunique(i);

@@ -1,9 +1,12 @@
-function edgeLen = edgeLengths(nurbs,dirs,noExtraEvalPts)
+function edgeLen = edgeLengths(nurbs,dirs,noExtraEvalPts,Eps)
 % This routine computes the maximum distance between two knots for all
 % knots and for all directions in dirs for all patches in nurbs
 
 if nargin < 3
     noExtraEvalPts = 2*max(nurbs{1}.degree)-1;
+end
+if nargin < 4
+    Eps = 1e-10;
 end
 [Q, W] = gaussTensorQuad(12);
 noQP = numel(W);
@@ -14,7 +17,7 @@ for patch = 1:noPatches
     d = nurbs{patch}.d;
     edgeLen{patch} = cell(1,d_p);
     for dir = dirs
-        uniqueXi = unique(nurbs{patch}.knots{dir});
+        uniqueXi = uniquetol(nurbs{patch}.knots{dir},Eps);
         dir2 = setdiff(1:d_p,dir);
         
         knots = nurbs{patch}.knots(dir2);
