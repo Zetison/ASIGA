@@ -30,7 +30,7 @@ for patch = [start_patch,setdiff(1:noPatches,start_patch)]
     end
     for i = 1:numel(dirs)
         refDir = dirs(i);
-        if patch == start_patch
+        if patch == start_patch && ~isempty(newKnots)
             newKnotsStart = newKnots{i};
         else
             newKnotsStart = [];
