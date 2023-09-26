@@ -8,6 +8,7 @@ properties (Access = public)
     S2Vcounter
     alteredPatches
     newBdryPatches
+    nurbs_covered
     angles
     S2Vcompleted
     cornerData
@@ -19,6 +20,10 @@ properties (Access = public)
     vol2surfMap
     surf2volMap
     mindices        % Master indices of the new volumetric patch for the newly added surface patches
+    layerNumber
+    patchMustBeCovered
+    freeNURBS
+    patchesRefined
 end
 
 
@@ -41,6 +46,7 @@ methods (Access = public)
                          'maintainCollapsedness', true, ...         % For any volumetric patch created from a surface patch having a collapsed edge, the volumetric patch has a corresponding collapsed face
                          'useAvgNormals', true, ... % Use average normals for C0-edges
                          'default_degree', 2, ... % polynomial degree used for the extraction direction in algorithm A1
+                         'noExtraLayers', 0, ... % Number of extra layer of patches after covering the input surface sufficiently with patches
                          'enforceSymmetryAboutTheXYplane',false, ... % Assume symmetry about the xy-plane
                          'enforceSymmetryAboutTheXZplane',false, ... % Assume symmetry about the xz-plane
                          'enforceSymmetryAboutTheYZplane',false, ... % Assume symmetry about the yz-plane
@@ -65,6 +71,9 @@ methods (Access = public)
         S2Vobj.selfIntersection = false;
         S2Vobj.selectedObjects = [];
         S2Vobj.S2Vcompleted = false;
+        S2Vobj.layerNumber = 0;
+        S2Vobj.patchMustBeCovered = S2Vobj.noOriginalBdryPatches;
+        S2Vobj.freeNURBS = true(S2Vobj.noOriginalBdryPatches,1);
     end
 
     function S2Vobj = iterate(S2Vobj,newOptions)
@@ -77,7 +86,7 @@ methods (Access = public)
         
         
         % Attach new volumetric patch on nurbs_bdry
-        [S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj);
+        [S2Vobj,nurbs_newBdry] = addPatch(S2Vobj);
         
         if ~isempty(nurbs_newBdry)
             % Remove faces with zero measure
@@ -100,10 +109,10 @@ methods (Access = public)
             S2Vobj.nurbs_bdry = [S2Vobj.nurbs_bdry, nurbs_newBdry];
         
             % Find the surrounding patches to the patches that has been covered
-            surroundingPatches = 4*numel(nurbs_covered);
+            surroundingPatches = 4*numel(S2Vobj.nurbs_covered);
             counter2 = 1;
-            for i = 1:numel(nurbs_covered)
-                patch_i = nurbs_covered(i);
+            for i = 1:numel(S2Vobj.nurbs_covered)
+                patch_i = S2Vobj.nurbs_covered(i);
                 for midx_i = 1:numel(S2Vobj.topologyMap{patch_i})
                     if ~isempty(S2Vobj.topologyMap{patch_i}(midx_i).slave)
                         surroundingPatches(counter2) = S2Vobj.topologyMap{patch_i}(midx_i).slave;
@@ -112,7 +121,7 @@ methods (Access = public)
                 end
             end
             surroundingPatches(counter2:end) = [];
-            surroundingPatches = setdiff(surroundingPatches,nurbs_covered); % Remove the patches that is replaced
+            surroundingPatches = setdiff(surroundingPatches,S2Vobj.nurbs_covered); % Remove the patches that is replaced
         
         
             % Update topologyMap
@@ -137,7 +146,7 @@ methods (Access = public)
                 S2Vobj.topologyMap{patch_i}(midx_i).sidx = sidx_i;
                 S2Vobj.topologyMap{patch_i}(midx_i).orient = orient;
             end
-            for i = nurbs_covered
+            for i = S2Vobj.nurbs_covered
                 for j = 1:4
                     S2Vobj.topologyMap{i}(j).slave = [];
                     S2Vobj.topologyMap{i}(j).sidx = [];
@@ -147,9 +156,18 @@ methods (Access = public)
         
             S2Vobj = computeCornerData(S2Vobj,S2Vobj.newBdryPatches);
         end
-        S2Vobj.angles(nurbs_covered,:) = NaN;
-        S2Vobj.S2Vcompleted = ~(any(S2Vobj.angles(:) < S2Vobj.options.convexityThresholdAngle) || ...
-                                any(~isnan(S2Vobj.angles(1:S2Vobj.noOriginalBdryPatches,:)),'all'));
+        S2Vobj.angles(S2Vobj.nurbs_covered,:) = NaN;
+        S2Vobj.freeNURBS(S2Vobj.nurbs_covered) = false;
+
+        layerCompleted = ~(any(S2Vobj.angles(:) < S2Vobj.options.convexityThresholdAngle) || ...
+                                any(~isnan(S2Vobj.angles(1:S2Vobj.patchMustBeCovered,:)),'all'));
+
+        S2Vobj.S2Vcompleted = layerCompleted && S2Vobj.layerNumber == S2Vobj.options.noExtraLayers;
+
+        if layerCompleted
+            S2Vobj.layerNumber = S2Vobj.layerNumber + 1;
+            S2Vobj.patchMustBeCovered = S2Vobj.noBdryPatches;
+        end
         
         if S2Vobj.S2Vcompleted
             S2Vobj.nurbs_vol(S2Vobj.S2Vcounter+1:end) = [];
@@ -183,16 +201,15 @@ methods (Access = public)
         end
     end
         
-    function [S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,patch,midx,maxNoSharpAngles)
+    function [S2Vobj,nurbs_newBdry] = addPatch(S2Vobj,patch,midx,maxNoSharpAngles)
         d = 3; % dimension
         t = S2Vobj.options.t;
         % original_angles = angles;
-        sharpAngle = S2Vobj.options.sharpAngle;
         useProdWeights = 1;
         if isempty(S2Vobj.selectedObjects)
             if nargin < 2
-                [patch,maxNoSharpAngles] = S2Vobj.findNextPatch(S2Vobj.angles,sharpAngle,S2Vobj.noOriginalBdryPatches);
-                midx = find(S2Vobj.angles(patch,:) < sharpAngle);
+                [patch,maxNoSharpAngles] = S2Vobj.findNextPatch();
+                midx = find(S2Vobj.angles(patch,:) < S2Vobj.options.sharpAngle);
             end
         else
             % Control if it is possibleto select a single master patch from the
@@ -254,7 +271,7 @@ methods (Access = public)
                 nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                 nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
                 
-                nurbs_covered = patch;
+                S2Vobj.nurbs_covered = patch;
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;1,1;1,1],'outwardPointingNormals',true); 
                 S2Vobj.mindices = [2,3,4,5,6];
             case 1 % Loft path along slave
@@ -398,13 +415,13 @@ methods (Access = public)
                 end
                 nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                 nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
-                nurbs_covered = [patch,slave];
+                S2Vobj.nurbs_covered = [patch,slave];
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;1,1],'outwardPointingNormals',true);
                 S2Vobj.mindices = [2,4,5,6];
             case 2
                 midx_regular = S2Vobj.singularFromRegular(S2Vobj.topologyMap,patch,setdiff(1:4,midx));
                 if ~isempty(midx_regular)
-                    [S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,S2Vobj.options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
+                    [S2Vobj,nurbs_newBdry] = addPatch(S2Vobj,S2Vobj.options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
                     return
                 end
         
@@ -490,101 +507,7 @@ methods (Access = public)
                     volCoeffs{3} = permute(faces{3}.coeffs,[1,3,2]);
                     volCoeffs{3} = reshape(volCoeffs{3},[d+1,faces{3}.number(2),1,faces{3}.number(1)]);
                     volCoeffs{5} = faces{5}.coeffs;
-        
-        %                 midx_opposite = S2Vobj.get_opposite_midx(midx);
-        %                 cornerIndices = S2Vobj.intermediateCorner(midx);
-        %                 oppositeCornerIndices = S2Vobj.intermediateCorner(midx_opposite);
-        % 
-        %                 normals = cornerData(patch).avg_v_n(oppositeCornerIndices,:).';
-        %                 v_n = cornerData(patch).v_n(oppositeCornerIndices,:).';
-        %                 indices = acos(abs(dot(normals,v_n,1))) > avg_v_n_threshholdAngle;
-        %                 normals(:, indices) = v_n(:,indices);
-        %                 acuteConnection = (angles(patch,midx) + angles(patch,midx_opposite)/2) < pi;
-        %                 if true
-        %                     if any(acuteConnection)
-        %                         error('acute angles found')
-        %                     end
-        %                 else
-        %                     if all(acuteConnection) % Make opposite sides "parallel"
-        %                         normals = cornerData(patch).v_t2(cornerIndices,:).';
-        %                     else
-        %                         for i = 1:2
-        %                             sgn = (-1)^midx(i);
-        %                             if acuteConnection(i)
-        %                                 switch midx(i)
-        %                                     case {1,2}
-        %                                         v_t = cornerData(patch).v_xi(oppositeCornerIndices,:);
-        %                                     case {3,4}
-        %                                         v_t = cornerData(patch).v_eta(oppositeCornerIndices,:);
-        %                                 end
-        %                                 v_n = cornerData(patch).v_n(oppositeCornerIndices,:);
-        % %                                 phi = acos(dot(v_t,v_n));
-        %                                 theta = angles(patch,midx(i))*acuteAngleAdjustment;
-        % %                                 cornerNormal = ([v_t; v_n]\[cos(theta); cos(theta-phi)]);
-        % %                                 cornerNormal = cornerNormal./vecnorm(cornerNormal,1);
-        %         
-        %                                 normals = (-sgn*v_t*cos(theta) + v_n*sin(theta)).';
-        %                             end
-        %                         end
-        %                     end
-        %                 end
-        % 
-        %                 len2 = norm(volCoeffs{3}(1:3,end,1,end) - volCoeffs{3}(1:3,1,1,end));
-        %                 g = reshape(aveknt(knots{1}, degree(1)+1),1,[]);
-        %                 coeffs2 = zeros(d+1,number(1));
-        %                 coeffs2(1:3,:) = volCoeffs{1}(1:3,1,end,end) + len2*normals.*g;
-        %                 coeffs2(4,:) = [volCoeffs{1}(4,1,end,end), volCoeffs{3}(4,2:end,1,end)]; % Use the weights based on the weights on opposite side
-        % 
-        %                 edges = cell(1,4);
-        %                 edges(1) = subNURBS(faces(5),'at',[0,0;0,1]);
-        %                 edges(2) = createNURBSobject(coeffs2,knots{1});
-        %                 edges(3) = subNURBS(faces(1),'at',[0,1;0,0]);
-        %                 g = reshape(aveknt(knots{3}, degree(3)+1),1,[]);
-        %                 coeffs4 = edges{1}.coeffs(:,end).*(1-g) + coeffs2(:,end).*g;
-        %                 edges(4) = createNURBSobject(coeffs4,knots{3});
-        %                 faces(4) = GordonHall(edges);
-        % 
-        %                 edges(1) = subNURBS(faces(3),'at',[0,0;0,1]);
-        %                 edges(2) = subNURBS(faces(4),'at',[0,0;0,1]);
-        %                 edges(3) = subNURBS(faces(5),'at',[0,1;0,0]);
-        %                 g = reshape(aveknt(knots{2}, degree(2)+1),1,[]);
-        %                 coeffs4 = edges{1}.coeffs(:,end).*(1-g) + edges{2}.coeffs(:,end).*g;
-        %                 edges(4) = createNURBSobject(coeffs4,knots{2});
-        %                 faces(2) = GordonHall(edges);
-        % 
-        %                 edges(1) = subNURBS(faces(1),'at',[0,0;0,1]);
-        %                 edges(2) = subNURBS(faces(2),'at',[0,0;0,1]);
-        %                 edges(3) = subNURBS(faces(3),'at',[0,1;0,0]);
-        %                 edges(4) = subNURBS(faces(4),'at',[0,1;0,0]);
-        %                 faces(6) = GordonHall(edges);
-        %                 
-        %                 nurbs = GordonHall(faces);
-        %                 faces_old = faces;
-        %                 opposite_patchID = [patch,slave3,slave5];
-        %                 counter = 1;
-        %                 for i_face = [1,3,5]
-        %                     if checkOrientation(nurbs, 10)
-        %                         faces = faces_old;
-        %                         face = S2Vobj.faceFromNormals(opposite_patchID(counter),S2Vobj,options,len2);
-        %                         face = orientNURBS(face{1}, S2Vobj.idx1To_idx2_orient(midx,1)); % Make "midx = 1"
-        %                         faces{i_face+1}.coeffs(:,2:end,2:end) = face{1}.coeffs(:,2:end,2:end);
-        %                         switch i_face
-        %                             case 1
-        %                                 faces{4}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
-        %                                 faces{6}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
-        %                             case 3
-        %                                 faces{6}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
-        %                                 faces{2}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
-        %                             case 5
-        %                                 faces{2}.coeffs(:,2:end,end) = face{1}.coeffs(:,end,2:end);
-        %                                 faces{4}.coeffs(:,end,2:end) = face{1}.coeffs(:,2:end,end);
-        %                         end
-        %                         nurbs = GordonHall(faces);
-        %                     else
-        %                         break
-        %                     end
-        %                     counter = counter + 1;
-        %                 end
+                    
                     switch S2Vobj.options.S2V_algorithm.A135
                         case 'A135_11'
                             coeffs = volCoeffs{1} + volCoeffs{3} + volCoeffs{5} - volCoeffs{1}(:,1,1,:) - volCoeffs{5}(:,1,:,1) - volCoeffs{3}(:,:,1,1) + volCoeffs{1}(:,1,1,1);
@@ -773,10 +696,10 @@ methods (Access = public)
         
                     nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                     nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
-                    nurbs_covered = [patch,slave3,slave5];
+                    S2Vobj.nurbs_covered = [patch,slave3,slave5];
                     nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,1;0,1],'outwardPointingNormals',true);
                     S2Vobj.mindices = [2,4,6];
-                else
+                else % Three patches are consecutive
         
                     slave3 = S2Vobj.topologyMap{patch}(midx(1)).slave;
                     sidx3 = S2Vobj.topologyMap{patch}(midx(1)).sidx;
@@ -786,6 +709,41 @@ methods (Access = public)
                     faces(1) = S2Vobj.nurbs_bdry(patch);
                     faces(3) = S2Vobj.nurbs_bdry(slave3);
                     faces(4) = S2Vobj.nurbs_bdry(slave4);
+
+                    [faces(3:4),newKnots] = homogenizeNURBSparametrization(faces(3:4));
+                    patchesCompatible = true;
+                    % If knots must be inserted, make sure to maintain compatibleness
+                    for i = 1:numel(newKnots)
+                        for j = 1:numel(newKnots{i})
+                            if ~isempty(newKnots{i}{j})
+                                geometry = getTopology(S2Vobj.nurbs_bdry(S2Vobj.freeNURBS));
+                                patchesCompatible = false;
+                                warning('Knots inserted for compatability. Note that this routine should be optimized by simply updating geometry for each newly added patch')
+                                break
+                            end
+                        end
+                        if ~patchesCompatible 
+                            break
+                        end
+                    end
+                    if ~patchesCompatible
+                        patchRefinedGlobal = false(S2Vobj.noBdryPatches,1);
+                        for i = 1:numel(newKnots)
+                            if i == 1
+                                patch_i = slave3;
+                            else
+                                patch_i = slave4;
+                            end
+                            for j = 1:numel(newKnots{i})
+                                if ~isempty(newKnots{i}{j})
+                                    [S2Vobj.nurbs_bdry(S2Vobj.freeNURBS),~,patchRefined] = autoRefineNURBS(S2Vobj.nurbs_bdry(S2Vobj.freeNURBS), geometry.topology.connection, Inf,j,patch_i,newKnots{i}(j));
+                                    patchRefinedGlobal(S2Vobj.freeNURBS) = or(patchRefinedGlobal(S2Vobj.freeNURBS), any(patchRefined,2));
+                                end
+                            end
+                        end
+                        S2Vobj.patchesRefined = find(patchRefinedGlobal).';
+                        S2Vobj = computeCornerData(S2Vobj,S2Vobj.patchesRefined);
+                    end
         
                     % Fix orientation to the standard setup
                     faces{1} = orientNURBS(faces{1}, S2Vobj.idx1To_idx2_orient(midx(1),1)); % Make "midx = 1"
@@ -828,12 +786,14 @@ methods (Access = public)
                         end
         
                         nurbs = S2Vobj.ensureIdenticalCoeffs(nurbs,volCoeffs,[1,2,3,4]);
-                        nurbs_covered = [patch,slave3,slave4,slave3Slave];
+                        S2Vobj.nurbs_covered = [patch,slave3,slave4,slave3Slave];
                         nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                         nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
                         nurbs_newBdry = subNURBS(nurbs,'at',[0,0;0,0;1,1],'outwardPointingNormals',true);
                         S2Vobj.mindices = [5,6];
                     else
+
+
                         switch S2Vobj.options.S2V_algorithm.A134
                             case 'A134_11'
                                 knots = [faces{3}.knots(end), faces{1}.knots];
@@ -860,7 +820,7 @@ methods (Access = public)
                         if S2Vobj.options.maintainCollapsedness
                             nurbs = S2Vobj.adjustForCollapsedness(nurbs,[1,3,4],S2Vobj.options);
                         end
-                        nurbs_covered = [patch,slave3,slave4];
+                        S2Vobj.nurbs_covered = [patch,slave3,slave4];
                         nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                         nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
                         nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;1,1],'outwardPointingNormals',true);
@@ -870,7 +830,7 @@ methods (Access = public)
             case 3
                 midx_regular = S2Vobj.singularFromRegular(S2Vobj.topologyMap,patch,setdiff(1:4,midx));
                 if ~isempty(midx_regular)
-                    [S2Vobj, nurbs_covered,nurbs_newBdry] = addPatch(S2Vobj,S2Vobj.options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
+                    [S2Vobj,nurbs_newBdry] = addPatch(S2Vobj,S2Vobj.options,patch,sort([midx,midx_regular]),maxNoSharpAngles+1);
                     return
                 end
                 switch S2Vobj.options.S2V_algorithm.A1345
@@ -924,7 +884,7 @@ methods (Access = public)
                         error('Not implemented')
                 end
         
-                nurbs_covered = [patch,slave3,slave5,slave4];
+                S2Vobj.nurbs_covered = [patch,slave3,slave5,slave4];
                 nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                 nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
                 nurbs_newBdry = subNURBS(nurbs,'at',[0,1;0,0;0,1],'outwardPointingNormals',true);
@@ -979,7 +939,7 @@ methods (Access = public)
                             S2Vobj.mindices = [];
                             maxNoSharpAngles = 5;
                             nurbs = GordonHall(faces);
-                            nurbs_covered = [patch,slave3,slave5,slave4,slave6,slavesSlave(1)];
+                            S2Vobj.nurbs_covered = [patch,slave3,slave5,slave4,slave6,slavesSlave(1)];
                             nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                             nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
                             nurbs = S2Vobj.ensureIdenticalCoeffs(nurbs,volCoeffs,[1,2,3,4,5,6]);
@@ -998,7 +958,7 @@ methods (Access = public)
                             nurbs_newBdry = faces(2);
                             S2Vobj.mindices = 2;
                             nurbs = GordonHall(faces);
-                            nurbs_covered = [patch,slave3,slave5,slave4,slave6];
+                            S2Vobj.nurbs_covered = [patch,slave3,slave5,slave4,slave6];
                             nurbs = S2Vobj.enforceCollapsedness(nurbs,S2Vobj.options);
                             nurbs = S2Vobj.obeyForcedSymmetry(nurbs);
                             nurbs = S2Vobj.ensureIdenticalCoeffs(nurbs,volCoeffs,[1,3,4,5,6]);
@@ -1066,6 +1026,7 @@ methods (Access = public)
                                              'avg_v_n', cell(1, noNewFields), ...
                                              'collapsed', cell(1, noNewFields))];
             S2Vobj.angles = [S2Vobj.angles; NaN(noNewFields,2*d_p)];
+            S2Vobj.freeNURBS = [S2Vobj.freeNURBS; true(noNewFields,1)];
         end
         Eps = S2Vobj.options.Eps;
         
@@ -1481,23 +1442,25 @@ methods (Access = public)
     end
     
 
-    function [patch,maxNoSharpAngles,minSum] = findNextPatch(S2Vobj,angles,sharpAngle,noOriginalBdryPatches)
-    
-        sharpAngles = angles < sharpAngle;
-        indices_op = or(and(sharpAngles(:,1),sharpAngles(:,2)),and(sharpAngles(:,3),sharpAngles(:,4)));
-        indices_covered = all(isnan(angles),2);
-        indices_nan = and(any(isnan(angles),2),~indices_covered);
+    function [patch,maxNoSharpAngles,minSum] = findNextPatch(S2Vobj)
+        sharpAngles = S2Vobj.angles < S2Vobj.options.sharpAngle;
+        indices_covered = all(isnan(S2Vobj.angles),2);
+        indices_op = and(or(and(sharpAngles(:,1),sharpAngles(:,2)),and(sharpAngles(:,3),sharpAngles(:,4))),~indices_covered);
+        indices_nan = and(any(isnan(S2Vobj.angles),2),~indices_covered);
+        indices_input = ~indices_covered;
+        indices_input(S2Vobj.noOriginalBdryPatches+1:end) = false;
         
         noSharpAngles = sum(sharpAngles,2);
+        noSharpAngles(~indices_covered) = noSharpAngles(~indices_covered) + 0.001; % In case another layer is needed after a layer is complete
         noSharpAngles(indices_op) = noSharpAngles(indices_op) + S2Vobj.options.prioritizeCasesOfOppositeFacesWeight; % Prioritize cases where opposite faces are known
         noSharpAngles(indices_nan) = noSharpAngles(indices_nan) + S2Vobj.options.prioritizeCasesSingularitiesWeight; % Prioritize cases containing singularities
-        noSharpAngles(1:noOriginalBdryPatches) = noSharpAngles(1:noOriginalBdryPatches) + S2Vobj.options.prioritizeInputFacesWeight; % Prioritize input surface
+        noSharpAngles(indices_input) = noSharpAngles(indices_input) + S2Vobj.options.prioritizeInputFacesWeight; % Prioritize input surface
         maxNoSharpAngles = max(noSharpAngles);
         candidates = and(noSharpAngles == maxNoSharpAngles,~indices_covered);
         avgAngles = Inf(size(sharpAngles,1),1);
         for i = 1:size(sharpAngles,1)
             if candidates(i)
-                angles_i = angles(i,:);
+                angles_i = S2Vobj.angles(i,:);
                 angles_i(isnan(angles_i)) = [];
                 avgAngles(i) = min(angles_i);
             end

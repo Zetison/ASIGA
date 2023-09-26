@@ -72,3 +72,4 @@ controlPts(axisFlipIdx,:,4:6) = 2*zFlip-controlPts(axisFlipIdx,:,4:6);
 Eta = [0,0,1,2,3,4,5,5]/5;
 
 nurbs = createNURBSobject(controlPts,{Xi,Eta});
+nurbs = insertKnotsInNURBS(nurbs,{[],0.5});

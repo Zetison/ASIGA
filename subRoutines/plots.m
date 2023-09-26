@@ -420,12 +420,45 @@ no2Dpoints = 1000;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Generate and save BeTSSi BCA meshes
+% % close all
+% % nurbs = getBCAData(2,false);
+% % plotNURBS(nurbs)
+% % axis equal
+% % view(getView())
+% % camlight
+% % return
 % for p = 2:15
 %     nurbs = getBCAData(p,false);
 %     save(['NURBSgeometries\BCAdata\BeTSSi_BCA_p' num2str(p) '_unRefined.mat'],'nurbs')
 %     fprintf('Completed p = %d\n',p)
 % end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Make Jacobian example
+close all
+nurbs = getPrismData();
+nurbs = elevateNURBSdegree(nurbs,1);
+nurbs2 = nurbs;
+nurbs2{1}.coeffs([1,3],end,end-1,end) = [0.6,0.6];
+nurbs2{1}.coeffs([2,3],end-1,end,end) = [0.6,0.6];
+nurbs2{1}.coeffs([1,2],end,end,end-1) = [0.6,0.6];
+
+nurbs = insertKnotsInNURBS(nurbs,[1,2,3]);
+nurbs2 = insertKnotsInNURBS(nurbs2,[1,2,3]);
+plotNURBS(nurbs,'plotControlPolygon',true,'plotParmDir',0,'plotJacobian',true,'resolution',[100,100,100])
+view([77,17])
+axis equal
+camlight
+colorbar
+clim([0,1])
+
+figure
+plotNURBS(nurbs2,'plotControlPolygon',true,'plotParmDir',0,'plotJacobian',true,'resolution',[100,100,100])
+view([77,17])
+axis equal
+camlight
+colorbar
+clim([0,1])
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

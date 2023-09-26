@@ -123,15 +123,15 @@ for rudder_i = 1:2
     nurbsMir = flipNURBSparametrization(nurbsMir,2);
 
     topRudder{1}.coeffs = topRudder{1}.coeffs(:,:,2:end-1);
-    topRudder{1}.knots{2} = [0,0,1,2,3,3]/3;
-    topRudder{1}.number(2) = 4;
+    topRudder{1}.knots{2} = [0,0,1,2,3,4,4]/4;
+    topRudder{1}.number(2) = 5;
     topRudder{1}.coeffs(:,:,end) = nurbsMir{1}.coeffs(:,:,1);
     topRudder{1}.coeffs(:,:,1) = nurbs{1}.coeffs(:,:,end);
 
 
     topRudder = elevateNURBSdegree(topRudder,[0,p-1]);
     if useRefinements
-	    topRudder = insertKnotsInNURBS(topRudder,{{[] [linspace2(0,1,4), 1.5, linspace2(2,3,4)]/3}});
+	    topRudder = insertKnotsInNURBS(topRudder,{{[] [linspace2(0,1,4), linspace2(2,3,4)]/3}});
     end
     
     rudders(rudder_i) = glueNURBS([nurbs,topRudder,nurbsMir],2);
@@ -285,9 +285,6 @@ r_o = @(xi) getBeTSSiSail(xi,ones(size(xi)),a,c,l_ls,l_us,b_ls,b_us,h_s,delta_s,
 r_u = @(xi) getBeTSSiSail(xi,zeros(size(xi)),a,c,l_ls,l_us,b_ls,b_us,h_s,delta_s, s2_s);
 sail = addBeTSSiFoil3(l_ls, b_ls, l_us, b_us, x_s, c, h_s, dx_sail, [0,0], Xisail, idx, NaN, s2_s, r_o, r_u);
 sail = elevateNURBSdegree(sail,[0,p-1]);
-if useRefinements
-    sail = insertKnotsInNURBS(sail,{[] 0.5});
-end
 nurbsCol(8) = sail;
 
 %% add depthrudders
@@ -354,9 +351,6 @@ nurbsCol(4) = glueNURBS(sidePanel(1:5),2);
 nurbsCol(6) = sidePanel(9);
 leftDepthRudder = elevateNURBSdegree(leftDepthRudder,[0,p-1]);
 leftDepthRudder = flipNURBSparametrization(leftDepthRudder,2);
-if useRefinements
-    leftDepthRudder = insertKnotsInNURBS(leftDepthRudder,{[] 0.5});
-end
 nurbsCol(5) = leftDepthRudder;
 
 nurbsCol(10) = flipNURBSparametrization(mirrorNURBS(nurbsCol(4),'y'),1);

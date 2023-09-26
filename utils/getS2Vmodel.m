@@ -5,6 +5,29 @@ app.EnforcesymmetryaboutthexyplaneCheckBox.Value = false;
 app.EnforcesymmetryaboutthexzplaneCheckBox.Value = false;
 app.EnforcesymmetryabouttheyzplaneCheckBox.Value = false;
 switch model
+    case 'S1'
+        app.EpsEditField.Value = 1e-10;
+        app.ThicknessEditField.Value = 0.1;
+        app.noExtraLayersEditField.Value = 1;
+        app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
+        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+        app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
+        app.AlgorithmForCase13.Value = 'A13_41';
+        app.AlgorithmForCase135.Value = 'A135_41';
+%         app.EnforcesymmetryaboutthexyplaneCheckBox.Value = true;
+%         app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
+%         app.EnforcesymmetryabouttheyzplaneCheckBox.Value = true;
+    case 'Barrel'
+        app.EpsEditField.Value = 1e-10;
+        app.ThicknessEditField.Value = 0.4;
+        app.AlgorithmForCase13.Value = 'A13_31';
+        app.AlgorithmForCase135.Value = 'A135_31';
+        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+    case 'randomCubicHole'
+        app.EpsEditField.Value = 1e-10;
+        app.ThicknessEditField.Value = 1;
+        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+        app.UseaveragenormalvectorsCheckBox.Value = false;
     case 'Mutter'
 %         app.nurbsObjects{1,1}.nurbs = read_g2('../IGA-geometries/Mutter/Mutter.g2');
         app.nurbsObjects{1,1}.nurbs = getMutterData();
@@ -19,67 +42,6 @@ switch model
         app.AlgorithmForCase135.Value = 'A135_41';
         app.CaseswithsingularitiesEditField.Value = 0;
         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,[1,3]))-6))';
-    case 'Bridge'
-        app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
-%         app.Eps = 1e-4;
-%         app.EpsEditField.Value = app.Eps;
-
-        app.ThicknessEditField.Value = 1.1;
-        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
-    case 'Capablanca'
-        load('../../results/ASIGA/Capablanca/nurbs.mat','nurbs')
-        app.nurbsObjects{1,1}.nurbs = nurbs;
-
-        app.ThicknessEditField.Value = 1.1;
-        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
-    case 'Capablanca_woRooks'
-        load('../../results/ASIGA/Capablanca/nurbs_woRook.mat','nurbs')
-        app.nurbsObjects{1,1}.nurbs = nurbs;
-        app.ThicknessEditField.Value = 1.1;
-        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
-    case 'Pawn'
-        app.nurbsObjects{1,1}.nurbs = read_g2('../IGA-geometries/Chess/Pawn.g2');
-        app.Eps = 1e-4;
-        app.EpsEditField.Value = app.Eps;
-
-        app.ThicknessEditField.Value = 1.1;
-        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
-    case 'BCA'
-        load('BeTSSi_BCA_p2_unRefined.mat','nurbs')
-        app.nurbsObjects{1,1}.nurbs = nurbs;
-        app.ThicknessEditField.Value = 2;
-        app.MaintaincollapsednessCheckBox.Value = false; % Threshold for a "sharp" angle
-        % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
-        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
-        % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
-        % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
-        % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
-        app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
-        view(app.UIAxes,[162,10]);
-    case 'S1_interior'
-        app.nurbsObjects{1,1}.nurbs = getEllipsoidData('parm',2);
-        app.AlgorithmForCase1.Value = 'A1_31';
-        app.AlgorithmForCase13.Value = 'A13_41';
-        app.AlgorithmForCase135.Value = 'A135_41';
-        app.AlgorithmForCase135.Value = 'A135_41';
-        app.nurbsObjects{1,1}.nurbs = flipNURBSparametrization(app.nurbsObjects{1,1}.nurbs,1);
-        app.ThicknessEditField.Value = 0.5;
-        app.AlphavalueSlider.Value = 0.5;
-        app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
-        app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
-    case 'S1'
-        app.EpsEditField.Value = 1e-10;
-        app.ThicknessEditField.Value = 0.1;
-        app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
-        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
-        app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
-        app.AlgorithmForCase13.Value = 'A13_41';
-        app.AlgorithmForCase135.Value = 'A135_41';
-%         app.EnforcesymmetryaboutthexyplaneCheckBox.Value = true;
-%         app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
-%         app.EnforcesymmetryabouttheyzplaneCheckBox.Value = true;
     case 'BeTSSiM1'
         app.EpsEditField.Value = 1e-10;
         app.ThicknessEditField.Value = 1.5;
@@ -132,16 +94,59 @@ switch model
         app.ThicknessEditField.Value = 1;
         app.AngledeviationEditField.Value = 40; % Threshold for a "sharp" angle
         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3)-[1,1,1]*0.5/2)-3))';
-    case 'randomCubicHole'
-        app.EpsEditField.Value = 1e-10;
-        app.ThicknessEditField.Value = 1;
-        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
-        app.UseaveragenormalvectorsCheckBox.Value = false;
-    case 'Barrel'
-        app.EpsEditField.Value = 1e-10;
-        app.ThicknessEditField.Value = 0.4;
-        app.AlgorithmForCase135.Value = 'A135_31';
-        app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
+    case 'BCA'
+        load('BeTSSi_BCA_p2_unRefined.mat','nurbs')
+        app.nurbsObjects{1,1}.nurbs = nurbs;
+        app.ThicknessEditField.Value = 2;
+        app.MaintaincollapsednessCheckBox.Value = false; % Threshold for a "sharp" angle
+        % sharpAngle = 100*pi/180; % Threshold for a "sharp" angle
+        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
+        % sharpAngle = 125*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 135*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 160*pi/180; % Threshold for a "sharp" angle
+        % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
+        % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
+        app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
+        view(app.UIAxes,[162,10]);
+    case 'Bridge'
+        app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive - SINTEF/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
+%         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([93,94,120,121,127,128,141,142,146,147]);
+%         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([1,2,28,29,35,36,50,55,49,54,114]);
+        app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([1:3,26:65]);
+%         app.Eps = 1e-4;
+%         app.EpsEditField.Value = app.Eps;
+
+        app.ThicknessEditField.Value = 1.1;
+        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
+    case 'Capablanca'
+        load('../../results/ASIGA/Capablanca/nurbs.mat','nurbs')
+        app.nurbsObjects{1,1}.nurbs = nurbs;
+
+        app.ThicknessEditField.Value = 1.1;
+        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
+    case 'Capablanca_woRooks'
+        load('../../results/ASIGA/Capablanca/nurbs_woRook.mat','nurbs')
+        app.nurbsObjects{1,1}.nurbs = nurbs;
+        app.ThicknessEditField.Value = 1.1;
+        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
+    case 'Pawn'
+        app.nurbsObjects{1,1}.nurbs = read_g2('../IGA-geometries/Chess/Pawn.g2');
+        app.Eps = 1e-4;
+        app.EpsEditField.Value = app.Eps;
+
+        app.ThicknessEditField.Value = 1.1;
+        app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
+    case 'S1_interior'
+        app.nurbsObjects{1,1}.nurbs = getEllipsoidData('parm',2);
+        app.AlgorithmForCase1.Value = 'A1_31';
+        app.AlgorithmForCase13.Value = 'A13_41';
+        app.AlgorithmForCase135.Value = 'A135_41';
+        app.AlgorithmForCase135.Value = 'A135_41';
+        app.nurbsObjects{1,1}.nurbs = flipNURBSparametrization(app.nurbsObjects{1,1}.nurbs,1);
+        app.ThicknessEditField.Value = 0.5;
+        app.AlphavalueSlider.Value = 0.5;
+        app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
+        app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
         
     otherwise
         app.EpsEditField.Value = 1e-10;

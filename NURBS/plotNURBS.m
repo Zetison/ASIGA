@@ -112,6 +112,8 @@ plotWeights = options.plotWeights;
 if plotColorFun + plotJacobian + plotWeights > 1
     warning('Only one of the options plotColorFun, plotJacobian and plotWeights will be used')
 end
+% evaluateDerivatives = double(plotParmDir || plotNormalVectors || plotJacobian || (plotColorFun && nargin(colorFun) == 2));
+evaluateDerivatives = 1;
 
 visible = 'on'; % render only in the end, but it seems faster to render on the go, so this is here set to 'on'
 maxC = NaN;
@@ -212,30 +214,32 @@ for patch = 1:noPatches
                     XI = (jj-1)*ones(nuk1,nuk2);
                     [ETA,ZETA] = ndgrid(p_values{indices(2)},p_values{indices(3)});
                     XIETAZETA = [XI(:), ETA(:), ZETA(:)];
-                    [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 1);
-                    dX_temp = zeros(nuk1*nuk2, d, d_p);
-                    dX_temp(:,:,1) = dvdxi./norm2(dvdxi);
-                    dX_temp(:,:,2) = dvdeta./norm2(dvdeta);
-                    dX_temp(:,:,3) = dvdzeta./norm2(dvdzeta);
-                    if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
-                        normal = cross(dX_temp(:,:,indices(2)),dX_temp(:,:,indices(3)),2);
-                        normals_temp = (-1)^jj*normal./norm2(normal);
-                    end
-                    dX_temp = reshape(dX_temp,nuk1,nuk2, d, d_p);
-                    if plotParmDir
-                        for i_c = 1:d_p
-                            for j_c = 1:d_p
-                                Up{i_c,j_c}(1:nuk1,counter+1:counter+nuk2) = dX_temp(:,:,i_c,j_c);
+                    [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), evaluateDerivatives);
+                    if evaluateDerivatives
+                        dX_temp = zeros(nuk1*nuk2, d, d_p);
+                        dX_temp(:,:,1) = dvdxi./norm2(dvdxi);
+                        dX_temp(:,:,2) = dvdeta./norm2(dvdeta);
+                        dX_temp(:,:,3) = dvdzeta./norm2(dvdzeta);
+                        if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
+                            normal = cross(dX_temp(:,:,indices(2)),dX_temp(:,:,indices(3)),2);
+                            normals_temp = (-1)^jj*normal./norm2(normal);
+                        end
+                        dX_temp = reshape(dX_temp,nuk1,nuk2, d, d_p);
+                        if plotParmDir
+                            for i_c = 1:d_p
+                                for j_c = 1:d_p
+                                    Up{i_c,j_c}(1:nuk1,counter+1:counter+nuk2) = dX_temp(:,:,i_c,j_c);
+                                end
                             end
                         end
-                    end
-                    if plotJacobian
-                        J_1 = dot(dX_temp(:,:,:,1),cross(dX_temp(:,:,:,2),dX_temp(:,:,:,3),3),3);
-                        J_1(J_1 < eps) = eps;
-                        if any(J_1(:) < -10*eps)
-                            warning('Negative Jacobian encountered')
+                        if plotJacobian
+                            J_1 = dot(dX_temp(:,:,:,1),cross(dX_temp(:,:,:,2),dX_temp(:,:,:,3),3),3);
+                            J_1(J_1 < eps) = eps;
+                            if any(J_1(:) < -10*eps)
+                                warning('Negative Jacobian encountered')
+                            end
+                            C(1:nuk1,counter+1:counter+nuk2) = J_1;
                         end
-                        C(1:nuk1,counter+1:counter+nuk2) = J_1;
                     end
                     if plotWeights
                         C_temp = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0, nurbs.coeffs(4,:).');
@@ -278,7 +282,7 @@ for patch = 1:noPatches
                     noKnots3 = numel(uniqueKnots3);
                     [XI,ETA,ZETA] = ndgrid(p_values{indices(1)},uniqueKnots2,uniqueKnots3);
                     XIETAZETA = [XI(:), ETA(:), ZETA(:)];
-                    X_temp2 = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), 0);
+                    X_temp2 = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)));
                     X_temp2 = reshape(X_temp2,nuk3,noKnots2,noKnots3,d);
                     X_temp2(end+1,:,:,:) = NaN;
                     noAddedPoints = (nuk3+1)*noKnots2*noKnots3;
@@ -343,15 +347,17 @@ for patch = 1:noPatches
         normals = zeros(length(p_values{1}), length(p_values{2}), d);
         C = zeros(length(p_values{1}), length(p_values{2}));
         [XI,ETA] = ndgrid(p_values{1},p_values{2});
-        [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1);
+        [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
         L_gamma = norm(X(end,:)-X(1,:));
-        dX = zeros(nuk1*nuk2, d, d_p);
-        dX(:,:,1) = dvdxi./norm2(dvdxi);
-        dX(:,:,2) = dvdeta./norm2(dvdeta);
-        dX = reshape(dX,nuk1,nuk2, d, d_p);
-        if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
-            normal = cross(dvdxi,dvdeta,2);
-            normals = normal./norm2(normal);
+        if evaluateDerivatives
+            dX = zeros(nuk1*nuk2, d, d_p);
+            dX(:,:,1) = dvdxi./norm2(dvdxi);
+            dX(:,:,2) = dvdeta./norm2(dvdeta);
+            dX = reshape(dX,nuk1,nuk2, d, d_p);
+            if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
+                normal = cross(dvdxi,dvdeta,2);
+                normals = normal./norm2(normal);
+            end
         end
         if plotWeights
             C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
@@ -433,17 +439,19 @@ for patch = 1:noPatches
             nuk2 = length(p_values{2});
             C = zeros(length(p_values{1}), length(p_values{2}));
             [XI,ETA] = ndgrid(p_values{1},p_values{2});
-            [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1);
+            [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
             L_gamma = norm(X(end,:)-X(1,:));
             if isnan(quiverScale)
                 quiverScale = L_gamma/20;
             end
-            dX = zeros(nuk1*nuk2, d, d_p);
-            dX(:,:,1) = dvdxi./norm2(dvdxi);
-            dX(:,:,2) = dvdeta./norm2(dvdeta);
-            dX = reshape(dX,nuk1,nuk2, d, d_p);
+            if evaluateDerivatives
+                dX = zeros(nuk1*nuk2, d, d_p);
+                dX(:,:,1) = dvdxi./norm2(dvdxi);
+                dX(:,:,2) = dvdeta./norm2(dvdeta);
+                dX = reshape(dX,nuk1,nuk2, d, d_p);
+            end
             if plotWeights
-                C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
+                C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 0, nurbs.coeffs(4,:).');
                 C = reshape(C,nuk1,nuk2);
             end
             if plotColorFun
