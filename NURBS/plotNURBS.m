@@ -592,20 +592,20 @@ for patch = 1:noPatches
                                             'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
         end
     end
-    if plotObject
+    if plotObject && ~isempty(options.UserData)
         options.UserData.patch = options.UserData.indices(patch);
         objectHandle(patch).UserData = options.UserData;
     end
-    if plotElementEdges
+    if plotElementEdges && ~isempty(options.UserData)
         elementEdgesHandle(patch).UserData = options.UserData;
     end
-    if plotControlPolygon
+    if plotControlPolygon && ~isempty(options.UserData)
         controlPolygonHandle(patch).UserData = options.UserData;
     end
-    if plotParmDir
+    if plotParmDir && ~isempty(options.UserData)
         parmDirHandle(patch).UserData = options.UserData;
     end
-    if plotNormalVectors
+    if plotNormalVectors && ~isempty(options.UserData)
         normalVectorsHandle(patch).UserData = options.UserData;
     end
 end
