@@ -6,47 +6,53 @@ no2Dpoints = 1000;
 startMatlabPool
 para.plotResultsInParaview = 1;
 clear varCol
-model = 'bridge-quadratic';
-% model = 'ScordelisLoRoof';
-prePlot.plot3Dgeometry = 0;
+model = 'cube';
+prePlot.plot3Dgeometry = 1;
 homeDir = expanduser('~');
 
 
-for M = 2
+
+for M = 1
     switch model
-        case 'bridge-quadratic'
-%             nurbs = read_g2([homeDir '/OneDrive/SINTEF/DT/bridge-quadratic/' model '.g2']);
-            nurbs = read_g2([homeDir '/OneDrive - SINTEF/SINTEF/DT/bridge-quadratic/' model '.g2']);
+        case 'cube'
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% Make Jacobian example
+            close all
+            nurbs = getPrismData();
+            nurbs = elevateNURBSdegree(nurbs,1);
+            nurbs2 = nurbs;
+            s = 0.7;
+            nurbs2{1}.coeffs([1,3],end,end-1,end) = [s,s];
+            nurbs2{1}.coeffs([2,3],end-1,end,end) = [s,s];
+            nurbs2{1}.coeffs([1,2],end,end,end-1) = [s,s];
+            
+            %% We want to make an mesh optimizer that recreates nurbs from nurbs2
+%             nurbs = insertKnotsInNURBS(nurbs,[1,2,3]);
+%             nurbs2 = insertKnotsInNURBS(nurbs2,[1,2,3]);
+            if 0
+                plotNURBS(nurbs,'plotControlPolygon',true,'plotParmDir',0,'plotJacobian',true,'resolution',[100,100,100])
+                view([77,17])
+                axis equal
+                camlight
+                colorbar
+                clim([0,1])
+                
+                figure
+                plotNURBS(nurbs2,'plotControlPolygon',true,'plotParmDir',0,'plotJacobian',true,'resolution',[100,100,100])
+                view([77,17])
+                axis equal
+                camlight
+                colorbar
+                clim([0,1])
+            end
+            nurbs = nurbs2;
+
             E = 3.0e10;
             nu = 0.2;
             rho = 2500;
-            % data from https://van.physics.illinois.edu/qa/listing.php?id=64061&t=how-gravitational-force-varies-at-different-locations-on-earth
-%             g_45 = 9.806;
-%             g_poles = 9.832;
-%             g_equator = 9.780;
-%             latitude = 59.145905; % at Kjøkøysund bridge
-%             latitude = 63.423967; % at Elgseter bridge
-%             latitude = 58.16; % at Elgseter bridge
-%             g = g_45-1/2*(g_poles-g_equator)*cos(2*latitude*pi/180); ???
-            g = 9.81;
-%             noInsPts = 0;
-%             noInsPts = 1;
             noInsPts = 3;
             newKnots = (2^(M-1)-1)*[1,1,1];
-        case 'ScordelisLoRoof' % M = 6 in Cottrell2006iat_Isogeometric_analysis  
-            options.degree = 5*ones(1,3);
-%             options.degree = [4,5,4];
-%             options.degree = [7,7,7];
-            options.degree = [2,2,2];
-            nurbs = eval(['get' model 'Data(options)']);
-            E = 4.32e8;
-            nu = 0.0;
-            rho = 1;
-            t = 0.25;
-%             g = 90;
-            g = 90/t;
-            noInsPts = 100;
-            newKnots = (2^(M-1)-1)*[0,1,1]+[3,0,0];
+            paraExtraScale = 20;
     end
     varCol.BC = 'None';    % not needed
     varCol.media = 'solid';
@@ -54,10 +60,9 @@ for M = 2
     varCol.applyLoad = 'None'; % no inhomogeneous Neumann condition
     varCol.boundaryMethod = false;
     nurbs = insertKnotsInNURBS(nurbs,newKnots);
-    force = @(v) rho*repmat([0,0,-g],size(v,1),1);
 
     varCol.extraGP = 0;
-    varCol.force = force;
+    varCol.force = @(v,stopForDebug,J) -maxCompression(v,J,stopForDebug);
     varCol.C = elasticityMatrix(E,nu);
     varCol.dimension = 3;
     varCol.nurbs = nurbs;
@@ -65,8 +70,8 @@ for M = 2
     varCol.fieldDimension = 3;
     varCol.applyBodyLoading = true;
     varCol.buildMassMatrix = false;
-    varCol.buildStiffnessMatrix = true;
     varCol.progressBars = 0;
+    varCol.buildStiffnessMatrix = true;
     
     varCol = convertNURBS(varCol);
     varCol = generateIGAmesh(varCol);
@@ -77,41 +82,28 @@ for M = 2
     controlPts = varCol.controlPts;
     Eps = 1e-7;
     if prePlot.plot3Dgeometry
-        plotNURBS(nurbs,'color',getColor(1),'resolution',10*ones(1,3),'plotControlPolygon',0)
+        plotNURBS(nurbs,'color',getColor(1),'resolution',30*ones(1,3),'plotControlPolygon',1,'plotJacobian',true)
         axis equal
         view(getView())
         camlight
+        colorbar
+        clim([0,1])
     end
     switch model
-        case 'bridge-quadratic'
-            fixedXdofs = find(abs(controlPts(:,3)) < Eps).';        
-            fixedYdofs = [find(and(abs(controlPts(:,3)-28) < Eps, controlPts(:,1) < -55+Eps)).', ...
-                          find(and(abs(controlPts(:,3)-28) < Eps, controlPts(:,1) > 165-Eps)).', ...
-                          fixedXdofs];        
-            fixedZdofs = fixedYdofs;
+        case 'cube'
+            fixedXdofs = find(abs(controlPts(:,1)) < Eps).';        
+            fixedYdofs = find(abs(controlPts(:,2)) < Eps).';        
+            fixedZdofs = find(abs(controlPts(:,3)) < Eps).';    
+            rigiddofs = unique([fixedXdofs,fixedYdofs,fixedZdofs]);
             if prePlot.plot3Dgeometry
-                plotControlPts2(varCol,{fixedXdofs,  fixedYdofs,  fixedZdofs},...
+                plotControlPts2(varCol,{rigiddofs,  rigiddofs,  rigiddofs},...
                                        {'fixedXdofs','fixedYdofs','fixedZdofs'})
             end
-            paraExtraScale = 1;
-        case 'ScordelisLoRoof'
-            L = 50;
-            R = 25;
-            phi = 40*pi/180;
-            fixedZdofs = find(abs(controlPts(:,2) - L/2) < Eps)';
-            fixedYdofs = find(abs(controlPts(:,2)) < Eps)';
-            fixedXdofs = union(fixedZdofs, find(abs(controlPts(:,1)) < Eps)');
-            midSpanNode = find((abs(controlPts(:,3)-(R+t/2)) < Eps).*(abs(controlPts(:,2)) < Eps).*(abs(controlPts(:,1)) < Eps))';
-            if prePlot.plot3Dgeometry
-                plotControlPts2(varCol,{fixedXdofs,  fixedYdofs,  fixedZdofs, midSpanNode},...
-                                       {'fixedXdofs','fixedYdofs','fixedZdofs','midSpanNode'})
-            end
-            paraExtraScale = 20;
     end
 
     varCol.progressBars = true;
     d = varCol.dimension;
-    fixeddofs = union(union(fixedXdofs*d-2,fixedYdofs*d-1),fixedZdofs*d); 
+    fixeddofs = union(union(rigiddofs*d-2,rigiddofs*d-1),rigiddofs*d); 
     dofsToRemove = varCol.dofsToRemove;
     dofsToRemove = union(fixeddofs,dofsToRemove);
 
@@ -142,11 +134,6 @@ for M = 2
     task.varCol = addSolutionToRemovedNodes(task.varCol);
     para.U = task.varCol{1}.U;
     para.name = [homeDir '/results/ASIGA/' model '/' model '_M' num2str(M)];
-    if strcmp(model,'ScordelisLoRoof')
-        Uz = U(3:d:noDofs);
-        abs(min(Uz))
-        0.3024
-    end
     if para.plotResultsInParaview
 
         task.varCol{1}.isOuterDomain = false;

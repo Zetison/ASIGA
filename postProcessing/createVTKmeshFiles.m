@@ -11,7 +11,7 @@ if nargin > 1
 end
 for i_v = 1:numel(task.varCol)
     para = options.para_options;
-    U = task.varCol{i_v}.U(:,task.para.i_MS);
+    U = task.varCol{i_v}.U(:,para.i_MS);
     isOuterDomain = i_v == 1;
 
     extraXiPts = para.extraXiPts;

@@ -58,7 +58,7 @@ for i_v = 1:noDomains
     para{i_v}.plotStressXZ = options.para_options.plotStressXZ && isSolid && d_p == 3;
     para{i_v}.plotStressXY = options.para_options.plotStressXY && isSolid && d_p == 3;
 
-    U = task.varCol{i_v}.U(:,task.para.i_MS);
+    U = task.varCol{i_v}.U(:,para{i_v}.i_MS);
     rho = options.rho;
     if isnan(options.rho)
         rho = zeros(size(U,1),1);

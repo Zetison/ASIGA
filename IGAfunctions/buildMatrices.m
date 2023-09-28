@@ -4,6 +4,9 @@ function task = buildMatrices(task,i_varCol)
 % possibility of computing the mass matrix and loading vector from body
 % force. Thus, the function handles elasticity, laplace- and poisson equation, 
 % and dynamic versions of these.
+if nargin < 2
+    i_varCol = 1;
+end
 
 %% Extract all needed data from options and varCol
 degree = task.varCol{i_varCol}.degree;
@@ -111,8 +114,8 @@ else
 end
 
 %% Build global matrices
-% for e = 1:noElems
-parfor e = 1:noElems
+for e = 1:noElems
+% parfor e = 1:noElems
 	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
@@ -282,6 +285,8 @@ parfor e = 1:noElems
             [~,crossProd] = getJacobian(R,pts,d_p);
             n = crossProd./norm2(crossProd);
             f_gp = force(v,n);
+        elseif nargin(force) == 3
+            f_gp = force(v,e == noElems,J);
         else
             f_gp = force(v);
         end
