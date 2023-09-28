@@ -165,10 +165,11 @@ for i = 1:numel(applyLoads)
         else
             misc.formulation = {'BGC'};
         end
-        msh.degree = 3:4;
-%         msh.degree = 4; % 4
+%         msh.degree = 3:4;
+        msh.degree = 4; % 4
         msh.M = 7:8; % 7
-        msh.M = 2; % 7
+        msh.M = 7; % 7
+%         msh.M = 7; % 7
         msh.autoRefine = true;
         misc.symmetric = 0;
         msh.extraSolidKnots = 3;
@@ -236,7 +237,7 @@ for i = 1:numel(applyLoads)
         end
         iem.IElocSup = 0;        % Toggle usage of radial shape functions in IE with local support
         iem.N = 5;
-        collectIntoTasks
+%         collectIntoTasks
     end
 end
 
