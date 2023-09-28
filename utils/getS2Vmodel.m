@@ -4,11 +4,19 @@ app.AlgorithmForCase135.Value = 'A135_21';
 app.EnforcesymmetryaboutthexyplaneCheckBox.Value = false;
 app.EnforcesymmetryaboutthexzplaneCheckBox.Value = false;
 app.EnforcesymmetryabouttheyzplaneCheckBox.Value = false;
+app.xminEditField.Value = -Inf;
+app.xmaxEditField.Value = Inf;
+app.yminEditField.Value = -Inf;
+app.ymaxEditField.Value = Inf;
+app.zminEditField.Value = -Inf;
+app.zmaxEditField.Value = Inf;
+app.zmaxEditField.Value = Inf;
+app.Seth_maxEditField.Value = 0.3;
 switch model
     case 'S1'
         app.EpsEditField.Value = 1e-10;
         app.ThicknessEditField.Value = 0.1;
-        app.noExtraLayersEditField.Value = 1;
+        app.noExtraLayersEditField.Value = 0;
         app.ColorfunctionEditField.Value = '@(x) log10(abs(norm2(x(:,1:3))-1))';
         app.nurbsObjects{1,1}.nurbs = read_g2(['NURBSgeometries/g2files/' model '.g2']);
         app.AnglethresholdEditField.Value = 140; % Threshold for a "sharp" angle
@@ -107,22 +115,32 @@ switch model
         % sharpAngle = 161*pi/180; % Threshold for a "sharp" angle % In order to include connections over depth rudders
         % sharpAngle = 173*pi/180; % Threshold for a "sharp" angle
         app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
+        app.UseaveragenormalvectorsCheckBox.Value = false;
         view(app.UIAxes,[162,10]);
     case 'Bridge'
-%         app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive - SINTEF/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
-        app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
-        app.AlgorithmForCase135.Value = 'A135_31';
-        app.AlgorithmForCase13.Value = 'A13_31';
+        nurbs = read_g2('../../OneDrive - SINTEF/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
+        nurbs = translateNURBS(nurbs,[-55,0,0]);
+        app.nurbsObjects{1,1}.nurbs = nurbs;
+        app.EnforcesymmetryabouttheyzplaneCheckBox.Value = true;
+%         app.nurbsObjects{1,1}.nurbs = read_g2('../../OneDrive/SINTEF/DT/bridge-quadratic/bridge-quadratic.g2');
+        app.AlgorithmForCase135.Value = 'A135_11';
+        app.AlgorithmForCase13.Value = 'A13_11';
+        app.xminEditField.Value = -150;
+        app.xmaxEditField.Value = 150;
+        app.yminEditField.Value = -100;
+        app.ymaxEditField.Value = 200;
+        app.zminEditField.Value = 0;
+        app.zmaxEditField.Value = 100;
+        app.Seth_maxEditField.Value = 1;
 %         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([93,94,120,121,127,128,141,142,146,147]);
 %         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([1,2,28,29,35,36,50,55,49,54,114]);
 %         app.nurbsObjects{1,1}.nurbs = app.nurbsObjects{1,1}.nurbs([1:3,26:65]);
 %         app.Eps = 1e-4;
 %         app.EpsEditField.Value = app.Eps;
         app.UseaveragenormalvectorsCheckBox.Value = false;
-        app.AlgorithmForCase13.Value = 'A13_11';
-        app.AlgorithmForCase135.Value = 'A135_11';
+        app.MaintaincollapsednessCheckBox.Value = false; % Threshold for a "sharp" angle
 
-        app.ThicknessEditField.Value = 1.1;
+        app.ThicknessEditField.Value = 54.25;
         app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
     case 'Capablanca'
         load('../../results/ASIGA/Capablanca/nurbs.mat','nurbs')

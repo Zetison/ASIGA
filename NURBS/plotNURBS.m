@@ -42,6 +42,7 @@ options = struct('resolution',[32,32,32], ...
                  'colorControlPolygon', 'red', ...
                  'markerEdgeColor', 'black', ...
                  'markerColor', 'black', ...
+                 'UserData', [], ...
                  'app', [], ...
                  'colorParmDirs', {{getColor(12),getColor(13),getColor(7)}}, ...
                  'colorNormals', getColor(6));
@@ -57,6 +58,7 @@ if ~iscell(nurbsPatches)
     nurbsPatches = {nurbsPatches};
 end
 resolution = options.resolution;
+plotObject = options.plotObject;
 plotElementEdges = options.plotElementEdges;
 plotControlPolygon = options.plotControlPolygon;
 plotNormalVectors = options.plotNormalVectors;
@@ -295,7 +297,7 @@ for patch = 1:noPatches
         end
         vElementEdges(elCounter:end,:) = [];
 
-        if options.plotObject
+        if plotObject
             maxC = max(max(C));
             minC = min(min(C));
             if plotColorFun || plotJacobian || plotWeights
@@ -329,7 +331,7 @@ for patch = 1:noPatches
                         quiverScale*Up{2,i}(1:qstep:end,1:qstep:end), ...
                         quiverScale*Up{3,i}(1:qstep:end,1:qstep:end),'color',colorParm,...
                         'LineWidth',quiverLineWidth,'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScaleAuto,...
-                        'DisplayName',[displayName, ' - parm dir ' num2str(i)],'Visible',visible);
+                        'DisplayName',[displayName, ' - parm dir ' num2str(i)],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             end
         end
         if plotNormalVectors
@@ -339,7 +341,7 @@ for patch = 1:noPatches
                     quiverScale*normals(1:qstep:end,1:qstep:end,1), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,2), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScaleAuto,...
-                    'DisplayName',[displayName, ' - normal vectors'],'color',colorNormals,'Visible',visible);
+                    'DisplayName',[displayName, ' - normal vectors'],'color',colorNormals,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
         end
     elseif d_p == 2 && d == 3
         nuk1 = length(p_values{1});
@@ -376,7 +378,7 @@ for patch = 1:noPatches
         end
         X = reshape(X,nuk1,nuk2,d);
     
-        if options.plotObject
+        if plotObject
             if plotColorFun || plotWeights
                 objectHandle(patch) = surface(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
                             'LineStyle','none','FaceAlpha',alphaValue, ...
@@ -420,7 +422,7 @@ for patch = 1:noPatches
                         quiverScale*dX(1:qstep:end,1:qstep:end,2,i), ...
                         quiverScale*dX(1:qstep:end,1:qstep:end,3,i),'LineWidth',quiverLineWidth,...
                         'color',colorParmDirs{i},'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScaleAuto,...
-                        'DisplayName',[displayName, ' - parm dir ' num2str(i)],'Visible',visible);
+                        'DisplayName',[displayName, ' - parm dir ' num2str(i)],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             end
         end
         if plotNormalVectors
@@ -431,7 +433,7 @@ for patch = 1:noPatches
                     quiverScale*normals(1:qstep:end,1:qstep:end,1), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,2), ...
                     quiverScale*normals(1:qstep:end,1:qstep:end,3),'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScaleAuto,...
-                    'DisplayName',[displayName, ' - normal vectors'],'color',colorNormals,'Visible',visible);
+                    'DisplayName',[displayName, ' - normal vectors'],'color',colorNormals,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
         end
     elseif d_p == 2 && d == 2
         if plotColorFun || plotParmDir
@@ -467,10 +469,10 @@ for patch = 1:noPatches
 
             maxC = max(max(C));
             minC = min(min(C));
-            if options.plotObject
+            if plotObject
                 objectHandle(patch) = surface(ax,X(:,:,1),X(:,:,2),C-maxC,C,'EdgeColor','none',...
                             'LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', faceLighting, ...
-                            'DisplayName',displayName,'Visible',visible);
+                            'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             end
             if plotParmDir
                 for i = 1:d_p
@@ -479,7 +481,7 @@ for patch = 1:noPatches
                             quiverScale*dX(1:qstep:end,1:qstep:end,1,i), ...
                             quiverScale*dX(1:qstep:end,1:qstep:end,2,i),'LineWidth',quiverLineWidth,...
                             'color',colorParmDirs{i},'AutoScale',quiverAutoScale,'AutoScaleFactor',quiverScaleAuto,...
-                            'DisplayName',[displayName, ' - parm dir ' num2str(i)],'Visible',visible);
+                            'DisplayName',[displayName, ' - parm dir ' num2str(i)],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
                 end
             end
         else
@@ -513,8 +515,8 @@ for patch = 1:noPatches
             % evaluate NURBS
             v = evaluateNURBS(nurbs, XI);
     
-            if options.plotObject
-                objectHandle(patch) = fill(ax,v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName,'Visible',visible);
+            if plotObject
+                objectHandle(patch) = fill(ax,v(:,1),v(:,2), colorPatch,'EdgeColor','none','LineStyle','none', 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             end
         end
 
@@ -537,19 +539,19 @@ for patch = 1:noPatches
                 elementEdgesHandle(patch) = plotGridLines(v,displayName);
             end
         end
-    elseif d_p == 1 && options.plotObject
+    elseif d_p == 1 && plotObject
         C = evaluateNURBS(nurbs, p_values{1});
         switch d
             case 1
-                objectHandle(patch) = line(ax,C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible);  
+                objectHandle(patch) = line(ax,C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));  
             case 2
-                objectHandle(patch) = line(ax,C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible);  
+                objectHandle(patch) = line(ax,C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));  
             case 3
-                objectHandle(patch) = line(ax,C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible); 
+                objectHandle(patch) = line(ax,C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event)); 
         end  
         C = evaluateNURBS(nurbs, uniqueKnots{1}.');
         if plotElementEdges
-            elementEdgesHandle(patch) = line(ax,C(:,1), C(:,2), 'Marker', 'x', 'LineStyle', 'none', 'DisplayName',[displayName, ' - elements'],'Visible',visible);
+            elementEdgesHandle(patch) = line(ax,C(:,1), C(:,2), 'Marker', 'x', 'LineStyle', 'none', 'DisplayName',[displayName, ' - elements'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
         end
     end
     if plotControlPolygon
@@ -581,14 +583,30 @@ for patch = 1:noPatches
         switch d
             case 1 % Need to use plot instead of line here in order to get LineStyle 'o-'
                 controlPolygonHandle(patch) = line(ax,v,zeros(size(v)),'color',colorControlPolygon,'Marker','o','MarkerFaceColor', markerColor, ...
-                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'],'Visible',visible);
+                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             case 2
                 controlPolygonHandle(patch) = line(ax,v(1,:),v(2,:),'color',colorControlPolygon,'Marker','o','MarkerFaceColor', markerColor, ...
-                                    'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'],'Visible',visible);
+                                    'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             case 3
                 controlPolygonHandle(patch) = line(ax,v(1,:),v(2,:),v(3,:),'color',colorControlPolygon,'Marker','o','MarkerFaceColor', markerColor, ...
-                                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'],'Visible',visible);
+                                            'MarkerEdgeColor', markerEdgeColor,'DisplayName',[displayName, ' - control polygon'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
         end
+    end
+    if plotObject
+        options.UserData.patch = options.UserData.indices(patch);
+        objectHandle(patch).UserData = options.UserData;
+    end
+    if plotElementEdges
+        elementEdgesHandle(patch).UserData = options.UserData;
+    end
+    if plotControlPolygon
+        controlPolygonHandle(patch).UserData = options.UserData;
+    end
+    if plotParmDir
+        parmDirHandle(patch).UserData = options.UserData;
+    end
+    if plotNormalVectors
+        normalVectorsHandle(patch).UserData = options.UserData;
     end
 end
 if strcmp(visible,'off')
@@ -655,9 +673,9 @@ handles.normalVectorsHandle = normalVectorsHandle;
 
 function h = plotGridLines(v,displayName)
 if size(v,2) > 2
-    h = line(ax,v(:,1),v(:,2),v(:,3),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'],'Visible',visible);
+    h = line(ax,v(:,1),v(:,2),v(:,3),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
 else
-    h = line(ax,v(:,1),v(:,2),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'],'Visible',visible);
+    h = line(ax,v(:,1),v(:,2),'color',lineColor,'LineWidth',lineWidth,'DisplayName',[displayName, ' - element edges'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
 end
 end
 end

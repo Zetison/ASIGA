@@ -20,7 +20,7 @@ if noDomains > 1 && varCol{1}.nurbs{1}.d_p < d_p_max && noDomains < 4
 end
 
 geometry = getTopology(nurbs);
-nurbs = autoRefineNURBS(nurbs,geometry.topology.connection,h_max,dirs(dirs <= d_p_max));
+nurbs = autoRefineNURBS(nurbs,'connection',geometry.topology.connection,'h_max',h_max,'dirs',dirs(dirs <= d_p_max));
 if handleBoundaryMethodCase
     if noDomains == 3
         varCol{3}.nurbs = subNURBS(nurbs,'at',[0,0;0,0;1,0]);

@@ -1,21 +1,52 @@
-function [nurbs, maxLengths,patchTrulyRefined] = autoRefineNURBS(nurbs,connection,h_max,dirs,start_patch,newKnots)
+function [nurbs, maxLengths,patchTrulyRefined] = autoRefineNURBS(varargin)
 % Assuming all patches are compatible, this algorithm automatically refines
 % all patches in nurbs such that maximal element side length is roughly
 % h_max
-d_p = nurbs{1}.d_p; % Assume all patches have the same number of parametric directions
-if nargin < 4
-    dirs = 1:d_p;
+
+nurbs = varargin{1};
+% set default values
+options = struct('connection',NaN, ...
+                 'topologyMap',NaN, ...
+                 'h_max',1,...
+                 'dirs', NaN, ...
+                 'start_patch', 1, ...
+                 'indices', NaN, ...
+                 'newKnots', {{}});
+if nargin > 1
+    if numel(varargin) > 2
+        newOptions = varargin(2:end);
+    else
+        newOptions = varargin{2};
+    end
+    options = updateOptions(options,newOptions);
 end
 
 %% Create an easily searchable topology map to find connected patches needing the same knot insertions to ensure continuity
 noPatches = numel(nurbs);
-if nargin < 5
-    start_patch = 1;
+d_p = nurbs{1}.d_p; % Assume all patches have the same number of parametric directions
+if iscell(options.topologyMap)
+    topologyMap = options.topologyMap;
+else
+    if iscell(options.connection)
+        topologyMap = createTopologyMap(options.connection,noPatches,d_p);
+    else
+        geometry = getTopology(nurbs);
+        topologyMap = createTopologyMap(geometry.topology.connection,noPatches,d_p);
+    end
 end
-if nargin < 6
-    newKnots = {};
+h_max = options.h_max;
+if all(isnan(options.dirs))
+    dirs = 1:d_p;
+else
+    dirs = options.dirs;
 end
-topologyMap = createTopologyMap(connection,noPatches,d_p);
+start_patch = options.start_patch;
+if isnan(options.indices)
+    indices = [start_patch,setdiff(1:noPatches,start_patch)];
+else
+    indices = options.indices;
+end
+newKnots = options.newKnots;
 
 %% Find all edge lengths in nurbs in the directions dirs
 edgeLen = edgeLengths(nurbs,1:d_p);
@@ -24,13 +55,13 @@ edgeLen = edgeLengths(nurbs,1:d_p);
 patchRefined = false(noPatches,d_p);
 patchTrulyRefined = false(noPatches,d_p);
 [~,~,orientMap] = getOrientPerms(d_p-1);
-for patch = [start_patch,setdiff(1:noPatches,start_patch)]
+for patch = indices
     if all(patchRefined(patch,:))
         continue
     end
     for i = 1:numel(dirs)
         refDir = dirs(i);
-        if patch == start_patch && ~isempty(newKnots)
+        if ~isempty(newKnots)
             newKnotsStart = newKnots{i};
         else
             newKnotsStart = [];

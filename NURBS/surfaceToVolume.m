@@ -23,6 +23,7 @@ properties (Access = public)
     layerNumber
     patchMustBeCovered
     freeNURBS
+    outerNURBS
     patchesRefined
 end
 
@@ -47,6 +48,7 @@ methods (Access = public)
                          'useAvgNormals', true, ... % Use average normals for C0-edges
                          'default_degree', 2, ... % polynomial degree used for the extraction direction in algorithm A1
                          'noExtraLayers', 0, ... % Number of extra layer of patches after covering the input surface sufficiently with patches
+                         'domainLimits', [-Inf,Inf;-Inf,Inf;-Inf,Inf], ... % Set Cartesian limits for the meshing domain
                          'enforceSymmetryAboutTheXYplane',false, ... % Assume symmetry about the xy-plane
                          'enforceSymmetryAboutTheXZplane',false, ... % Assume symmetry about the xz-plane
                          'enforceSymmetryAboutTheYZplane',false, ... % Assume symmetry about the yz-plane
@@ -74,6 +76,7 @@ methods (Access = public)
         S2Vobj.layerNumber = 0;
         S2Vobj.patchMustBeCovered = S2Vobj.noOriginalBdryPatches;
         S2Vobj.freeNURBS = true(S2Vobj.noOriginalBdryPatches,1);
+        S2Vobj.outerNURBS = S2Vobj.freeNURBS;
     end
 
     function S2Vobj = iterate(S2Vobj,newOptions)
@@ -86,6 +89,7 @@ methods (Access = public)
         
         
         % Attach new volumetric patch on nurbs_bdry
+        S2Vobj.patchesRefined = [];
         [S2Vobj,nurbs_newBdry] = addPatch(S2Vobj);
         
         if ~isempty(nurbs_newBdry)
@@ -158,6 +162,7 @@ methods (Access = public)
         end
         S2Vobj.angles(S2Vobj.nurbs_covered,:) = NaN;
         S2Vobj.freeNURBS(S2Vobj.nurbs_covered) = false;
+        S2Vobj.outerNURBS(S2Vobj.nurbs_covered) = false;
 
         layerCompleted = ~(any(S2Vobj.angles(:) < S2Vobj.options.convexityThresholdAngle) || ...
                                 any(~isnan(S2Vobj.angles(1:S2Vobj.patchMustBeCovered,:)),'all'));
@@ -263,6 +268,7 @@ methods (Access = public)
                     otherwise
                         error('Not implemented')
                 end
+                faces(2) = obeyForcedSymmetry(S2Vobj,faces(2));
                 nurbs = loftNURBS({faces(1),faces(2)},1,1);
                 nurbs = elevateNURBSdegree(nurbs,[S2Vobj.options.default_degree-1,0,0]);
                 if S2Vobj.options.maintainCollapsedness
@@ -709,6 +715,14 @@ methods (Access = public)
                     faces(1) = S2Vobj.nurbs_bdry(patch);
                     faces(3) = S2Vobj.nurbs_bdry(slave3);
                     faces(4) = S2Vobj.nurbs_bdry(slave4);
+        
+                    % Fix orientation to the standard setup
+                    orient_face3 = S2Vobj.idx1To_idx2_orient(sidx3,3);
+                    orient_face4 = S2Vobj.idx1To_idx2_orient(sidx4,3,true);
+
+                    faces{1} = orientNURBS(faces{1}, S2Vobj.idx1To_idx2_orient(midx(1),1)); % Make "midx = 1"
+                    faces{3} = orientNURBS(faces{3}, orient_face3);   % Make "sidx = 3"
+                    faces{4} = orientNURBS(faces{4}, orient_face4);   % Make "sidx = 1"
 
                     [faces(3:4),newKnots] = homogenizeNURBSparametrization(faces(3:4));
                     patchesCompatible = true;
@@ -716,9 +730,8 @@ methods (Access = public)
                     for i = 1:numel(newKnots)
                         for j = 1:numel(newKnots{i})
                             if ~isempty(newKnots{i}{j})
-                                geometry = getTopology(S2Vobj.nurbs_bdry(S2Vobj.freeNURBS));
                                 patchesCompatible = false;
-%                                 warning('Knots inserted for compatability. Note that this routine should be optimized by simply updating geometry for each newly added patch')
+                                warning('Knots inserted for compatability. A routine should be added to make corresponding changes to input surface/volume')
                                 break
                             end
                         end
@@ -728,18 +741,43 @@ methods (Access = public)
                     end
                     if ~patchesCompatible
                         patchRefinedGlobal = false(S2Vobj.noBdryPatches,1);
-                        for i = 1:numel(newKnots)
-                            globToFree = nan(S2Vobj.noBdryPatches,1);
-                            globToFree(S2Vobj.freeNURBS) = (1:sum(S2Vobj.freeNURBS)).';
-                            if i == 1
-                                patch_i = globToFree(slave3);
-                            else
-                                patch_i = globToFree(slave4);
+                        topologyMapLoc = S2Vobj.topologyMap(S2Vobj.outerNURBS);
+                        globToFree = nan(S2Vobj.noBdryPatches,1);
+                        globToFree(S2Vobj.outerNURBS) = (1:sum(S2Vobj.outerNURBS)).';
+                        for i = 1:numel(topologyMapLoc)
+                            for j = 1:numel(topologyMapLoc{i})
+                                topologyMapLoc{i}(j).slave = globToFree(topologyMapLoc{i}(j).slave);
                             end
+                        end
+                        for i = 1:numel(newKnots)
+                            if i == 1 % faces{3}
+                                patch_i = globToFree(slave3);
+                                orient = orient_face3;
+                            else % faces{4}
+                                patch_i = globToFree(slave4);
+                                orient = orient_face4;
+                            end
+                            newKnots{i} = orientNURBS(newKnots{i}, orient, true);
+
                             for j = 1:numel(newKnots{i})
                                 if ~isempty(newKnots{i}{j})
-                                    [S2Vobj.nurbs_bdry(S2Vobj.freeNURBS),~,patchRefined] = autoRefineNURBS(S2Vobj.nurbs_bdry(S2Vobj.freeNURBS), geometry.topology.connection, Inf,j,patch_i,newKnots{i}(j));
-                                    patchRefinedGlobal(S2Vobj.freeNURBS) = or(patchRefinedGlobal(S2Vobj.freeNURBS), any(patchRefined,2));
+                                    [S2Vobj.nurbs_bdry(S2Vobj.outerNURBS),~,patchRefined] = autoRefineNURBS(S2Vobj.nurbs_bdry(S2Vobj.outerNURBS), ...
+                                                                                            'topologyMap', topologyMapLoc, ...
+                                                                                            'h_max', Inf, ...
+                                                                                            'dirs', j, ...
+                                                                                            'indices', patch_i, ...
+                                                                                            'newKnots', newKnots{i}(j));
+                                    patchRefinedGlobalTemp = false(S2Vobj.noBdryPatches,1);
+                                    patchRefinedGlobalTemp(S2Vobj.outerNURBS) = any(patchRefined,2);
+                                    patchesRefinedTemp = find(patchRefinedGlobalTemp).';
+                                    patchRefinedGlobal(S2Vobj.outerNURBS) = or(patchRefinedGlobal(S2Vobj.outerNURBS), patchRefinedGlobalTemp(S2Vobj.outerNURBS));
+                                    volIndices = S2Vobj.surf2volMap(patchesRefinedTemp,1);
+                                    if any(~isnan(volIndices(:,1))) % This routine should be tested and implemented more rigorously
+                                        
+
+                                        S2Vobj.nurbs_vol(volIndices(1)) = insertKnotsInNURBS(S2Vobj.nurbs_vol(volIndices(1)),{newKnots{i}{j}, [], []});
+                                        warning('This case is not properly implemented')
+                                    end
                                 end
                             end
                         end
@@ -747,15 +785,18 @@ methods (Access = public)
                         S2Vobj = computeCornerData(S2Vobj,S2Vobj.patchesRefined);
 
                         % update faces
-                        faces(1) = S2Vobj.nurbs_bdry(patch);
                         faces(3) = S2Vobj.nurbs_bdry(slave3);
                         faces(4) = S2Vobj.nurbs_bdry(slave4);
+            
+                        % Fix orientation to the standard setup
+                        faces{3} = orientNURBS(faces{3}, S2Vobj.idx1To_idx2_orient(sidx3,3));           % Make "sidx = 3"
+                        faces{4} = orientNURBS(faces{4}, S2Vobj.idx1To_idx2_orient(sidx4,3,true));      % Make "sidx = 1"
+
+%                         if any(~isnan(S2Vobj.surf2volMap(S2Vobj.patchesRefined,1)))
+%                             error('This case is not accountet for: The volumetric patches must be refined as well.')
+%                         end
+
                     end
-        
-                    % Fix orientation to the standard setup
-                    faces{1} = orientNURBS(faces{1}, S2Vobj.idx1To_idx2_orient(midx(1),1)); % Make "midx = 1"
-                    faces{3} = orientNURBS(faces{3}, S2Vobj.idx1To_idx2_orient(sidx3,3));   % Make "sidx = 3"
-                    faces{4} = orientNURBS(faces{4}, S2Vobj.idx1To_idx2_orient(sidx4,3,true));   % Make "sidx = 1"
         
                     sidx3_opposite = S2Vobj.get_opposite_midx(sidx3);
                     sidx4_opposite = S2Vobj.get_opposite_midx(sidx4);
@@ -979,7 +1020,7 @@ methods (Access = public)
         S2Vobj.nurbs_vol(S2Vobj.S2Vcounter) = nurbs;
         S2Vobj.selfIntersection = checkOrientation(nurbs, 10);
         if S2Vobj.selfIntersection
-            warning('Self intersection encountered!')
+            error('Self intersection encountered!')
         end
     end
     
@@ -1036,6 +1077,7 @@ methods (Access = public)
                                                  'collapsed', cell(1, noFields));
                 S2Vobj.angles(indices,:) = NaN(noFields,2*d_p);
                 S2Vobj.freeNURBS(indices) = true(noFields,1);
+                S2Vobj.outerNURBS(indices) = true(noFields,1);
             else
                 S2Vobj.cornerData = [S2Vobj.cornerData, struct('X', cell(1, noNewFields), ...
                                                  'v_t1', cell(1, noNewFields), ...
@@ -1053,6 +1095,7 @@ methods (Access = public)
                                                  'collapsed', cell(1, noNewFields))];
                 S2Vobj.angles = [S2Vobj.angles; NaN(noNewFields,2*d_p)];
                 S2Vobj.freeNURBS = [S2Vobj.freeNURBS; true(noNewFields,1)];
+                S2Vobj.outerNURBS = [S2Vobj.outerNURBS; true(noNewFields,1)];
             end
         end
         Eps = S2Vobj.options.Eps;
@@ -1383,6 +1426,7 @@ methods (Access = public)
             for patch = indices
                 if all(S2Vobj.nurbs_bdry{patch}.coeffs(3,:) < S2Vobj.options.Eps)
                     S2Vobj.angles(patch,:) = NaN;
+                    S2Vobj.freeNURBS(patch) = false;
                 end
             end
         end
@@ -1390,6 +1434,7 @@ methods (Access = public)
             for patch = indices
                 if all(S2Vobj.nurbs_bdry{patch}.coeffs(2,:) < S2Vobj.options.Eps)
                     S2Vobj.angles(patch,:) = NaN;
+                    S2Vobj.freeNURBS(patch) = false;
                 end
             end
         end
@@ -1397,6 +1442,16 @@ methods (Access = public)
             for patch = indices
                 if all(S2Vobj.nurbs_bdry{patch}.coeffs(1,:) < S2Vobj.options.Eps)
                     S2Vobj.angles(patch,:) = NaN;
+                    S2Vobj.freeNURBS(patch) = false;
+                end
+            end
+        end
+        for patch = indices
+            for i = 1:3 % x,y,z
+                if all(S2Vobj.nurbs_bdry{patch}.coeffs(i,:) < S2Vobj.options.domainLimits(i,1) + S2Vobj.options.Eps) || ...
+                   all(S2Vobj.nurbs_bdry{patch}.coeffs(i,:) > S2Vobj.options.domainLimits(i,2) - S2Vobj.options.Eps)
+                    S2Vobj.angles(patch,:) = NaN;
+                    S2Vobj.freeNURBS(patch) = false;
                 end
             end
         end
@@ -1414,6 +1469,12 @@ methods (Access = public)
         if S2Vobj.options.enforceSymmetryAboutTheYZplane
             indices = nurbs{1}.coeffs(1,:) < S2Vobj.options.Eps;
             nurbs{1}.coeffs(1,indices) = 0;
+        end
+        for i = 1:3 % x,y,z
+            indices = nurbs{1}.coeffs(i,:) < S2Vobj.options.domainLimits(i,1) - S2Vobj.options.Eps;
+            nurbs{1}.coeffs(i,indices) = S2Vobj.options.domainLimits(i,1);
+            indices = nurbs{1}.coeffs(i,:) > S2Vobj.options.domainLimits(i,2) + S2Vobj.options.Eps;
+            nurbs{1}.coeffs(i,indices) = S2Vobj.options.domainLimits(i,2);
         end
     end
     
