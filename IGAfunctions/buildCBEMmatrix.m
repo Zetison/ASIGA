@@ -1,36 +1,35 @@
-function varCol = buildCBEMmatrix(varCol)
+function task = buildCBEMmatrix(task)
 
-degree = varCol.degree; % assume degree is equal in all patches
+degree = task.varCol{1}.degree; % assume degree is equal in all patches
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
-noElemsPatch = varCol.noElemsPatch;
-noPatches = varCol.noPatches;
-dofsToRemove = varCol.dofsToRemove;
-noDofs = varCol.noDofs;
+index = task.varCol{1}.index;
+noElems = task.varCol{1}.noElems;
+elRange = task.varCol{1}.elRange;
+element = task.varCol{1}.element;
+element2 = task.varCol{1}.element2;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
+knotVecs = task.varCol{1}.knotVecs;
+pIndex = task.varCol{1}.pIndex;
+noElemsPatch = task.varCol{1}.noElemsPatch;
+dofsToRemove = task.varCol{1}.dofsToRemove;
+noDofs = task.varCol{1}.noDofs;
 
-extraGP = varCol.extraGP;
-extraGPBEM = varCol.extraGPBEM;
-agpBEM = varCol.agpBEM;
-exteriorProblem = varCol.exteriorProblem;
-model = varCol.model;
-colMethod = varCol.colMethod;
+extraGP = task.misc.extraGP;
+extraGPBEM = task.bem.extraGPBEM;
+agpBEM = task.bem.agpBEM;
+exteriorProblem = task.misc.exteriorProblem;
+model = task.misc.model;
+colMethod = task.bem.colMethod;
 
-quadMethodBEM = varCol.quadMethodBEM;
+quadMethodBEM = task.bem.quadMethodBEM;
 
 Eps = 1e4*eps;
 
-k = varCol.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 alpha = 1i/k;
 
-formulation = varCol.formulation;
+formulation = task.misc.formulation;
 if strcmp(formulation(end),'C')
     formulation = formulation(1:end-1);
 end
@@ -54,32 +53,32 @@ switch formulation(2:end)
 end
 useRegul = ~isnan(psiType);
 
-if strcmp(varCol.coreMethod, 'XI')
+if strcmp(task.misc.coreMethod, 'XI')
     useEnrichedBfuns = true;
-    d_vec = varCol.d_vec;
+    d_vec = task.varCol{1}.d_vec;
 else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
 
-SHBC = strcmp(varCol.BC, 'SHBC');
+SHBC = strcmp(task.misc.BC, 'SHBC');
 if SHBC
-    no_angles = length(varCol.alpha_s);
+    no_angles = length(task.ffp.alpha_s);
 else
     no_angles = 1;
 end
-solveForPtot = varCol.solveForPtot;
+solveForPtot = task.misc.solveForPtot;
 if solveForPtot
-    p_inc = varCol.p_inc;
-    dp_inc = varCol.dp_inc;
+    p_inc = task.p_inc_;
+    dp_inc = task.dp_incdn_;
     dpdn = @(x,n) 0;
 else
     p_inc = NaN;
-    dp_inc = varCol.dp_inc;
+    dp_inc = task.dp_incdn_;
     if SHBC
-        dpdn = @(x,n) -dp_inc(x,n);
+        dpdn = @(x,n) -dp_incdn_(x,n);
     else
-        dpdn = varCol.dpdn;
+        dpdn = task.dpdn_;
     end
 end
 
@@ -90,110 +89,34 @@ else
 end
 
 %% Create collocation points
-colBEM_C0 = varCol.colBEM_C0;
-if all(degree == 1)
-    eps_greville = colBEM_C0./(2*degree);
-else
-    eps_greville = colBEM_C0./degree;
-end
-n_cp = noDofs - length(dofsToRemove);
-counter2 = 1;
-counter = 1;
-cp_p = zeros(n_cp,2);
-patchIdx = zeros(n_cp,1);
-patches = varCol.patches;
+colBEM_C0 = task.bem.colBEM_C0;
+patches = task.varCol{1}.patches;
 
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(task.varCol{1}.nurbs);
 centerPts = findCenterPoints(patches);
 
-for patch = 1:noPatches
-    nurbs = patches{patch}.nurbs;
-    n_xi = nurbs.number(1);
-    n_eta = nurbs.number(2);
-    Xi_y = nurbs.knots{1};
-    Eta_y = nurbs.knots{2};
-    
-    switch colMethod
-        case 'Grev'
-            for j = 1:n_eta
-                eta_bar = sum(Eta_y(j+1:j+degree(2)))/degree(2);
-                if Eta_y(j+1) == Eta_y(j+degree(2))
-                    if Eta_y(j+1) == Eta_y(j+degree(2)+1)
-                        eta_bar = eta_bar - eps_greville(2)*(Eta_y(j+degree(2)+1)-Eta_y(j));
-                    else
-                        eta_bar = eta_bar + eps_greville(2)*(Eta_y(j+degree(2)+1)-Eta_y(j+1));
-                    end
-                end
-                for i = 1:n_xi
-                    if ~any(dofsToRemove == counter)
-                        xi_bar = sum(Xi_y(i+1:i+degree(1)))/degree(1);
-                        if Xi_y(i+1) == Xi_y(i+degree(1))
-                            if Xi_y(i+1) == Xi_y(i+degree(1)+1)
-                                xi_bar = xi_bar - eps_greville(1)*(Xi_y(i+degree(1)+1)-Xi_y(i));
-                            else
-                                xi_bar = xi_bar + eps_greville(1)*(Xi_y(i+degree(1)+1)-Xi_y(i+1));
-                            end
-                        end
 
-                        cp_p(counter2,:) = [xi_bar, eta_bar];
-                        patchIdx(counter2) = patch;
-                        counter2 = counter2 + 1;
-                    end
-                    counter = counter + 1;
-                end
-            end
-        case 'CG'
-            cg_xi = CauchyGalerkin(degree(1), n_xi, Xi_y);
-            cg_eta = CauchyGalerkin(degree(2), n_eta, Eta_y);
-            for j = 1:n_eta
-                eta_bar = cg_eta(j);
-                for i = 1:n_xi
-                    if ~any(dofsToRemove == counter)
-                        xi_bar = cg_xi(i);
-                        cp_p(counter2,:) = [xi_bar, eta_bar];
-                        patchIdx(counter2) = patch;
-                        counter2 = counter2 + 1;
-                    end
-                    counter = counter + 1;
-                end
-            end
-        case 'GL'
-            cg_xi = splinesGL(Xi_y,degree(1));
-            cg_eta = splinesGL(Eta_y,degree(2));
-            for j = 1:n_eta
-                eta_bar = cg_eta(j);
-                for i = 1:n_xi
-                    if ~any(dofsToRemove == counter)
-                        xi_bar = cg_xi(i);
-                        cp_p(counter2,:) = [xi_bar, eta_bar];
-                        patchIdx(counter2) = patch;
-                        counter2 = counter2 + 1;
-                    end
-                    counter = counter + 1;
-                end
-            end
-    end
-end
-useNeumanProj = varCol.useNeumanProj;
+[cp_p, patchIdx, n_cp] = getCollocationPts(patches,noDofs,dofsToRemove,colBEM_C0,colMethod);
+
+useNeumanProj = task.bem.useNeumanProj;
 if useNeumanProj
-    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+    [U,dU] = projectBC(task.varCol{1},SHBC,useCBIE,useHBIE);
 else
     U = NaN;
     dU = NaN;
 end
-eNeighbour = NaN; % to avoid transparency "bug"
-createElementTopology
+eNeighbour = createElementTopology(task);
 
 n_en = prod(degree+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP,extraGPBEM,quadMethodBEM);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:2),extraGPBEM,quadMethodBEM);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_GP = 0;
-% nurbs = varCol.nurbs;
+% nurbs = task.varCol{1}.nurbs;
 % pD = plotBEMGeometry(nurbs,plot_GP,100,1);
-% pD = plotBEMGeometry(varCol.nurbs,plot_GP,10,0);
+% pD = plotBEMGeometry(task.varCol{1}.nurbs,plot_GP,10,0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % A = complex(zeros(1000, noDofs));
@@ -205,9 +128,14 @@ totNoQP = 0;
 totNoQPprev = 0;
 
 nProgressStepSize = ceil(n_cp/1000);
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 if progressBars
-    ppm = ParforProgMon('Building BEM matrix: ', n_cp, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building BEM matrix: ', n_cp, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end
@@ -253,8 +181,8 @@ parfor i = 1:n_cp
                 xi_x = parent2ParametricSpace(Xi_e_x, Q(1,1));
                 eta_x = parent2ParametricSpace(Eta_e_x, Q(1,1));
             else
-                xi_x = parent2ParametricSpace(Xi_e_x, Q{degree(1)+1+extraGP}(1,1));
-                eta_x = parent2ParametricSpace(Eta_e_x, Q{degree(1)+1+extraGP}(1,1));
+                xi_x = parent2ParametricSpace(Xi_e_x, Q{degree(1)+1+extraGP(1)}(1,1));
+                eta_x = parent2ParametricSpace(Eta_e_x, Q{degree(1)+1+extraGP(1)}(1,1));
             end
         end
     end
@@ -361,8 +289,8 @@ parfor i = 1:n_cp
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,R_x,sctr_x,x,nx,...
                 U,dU,p_inc,dp_inc,dpdn,alpha,integrals,k,constants,sgn);
 end
-varCol.A = A;
-varCol.FF = FF;
+task.varCol{1}.A_K = A;
+task.varCol{1}.FF = FF;
 % totNoQP
-varCol.totNoQPnonPolar = totNoQPnonPolar;
-varCol.totNoQP = totNoQP;
+task.varCol{1}.totNoQPnonPolar = totNoQPnonPolar;
+task.varCol{1}.totNoQP = totNoQP;

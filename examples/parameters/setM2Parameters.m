@@ -1,4 +1,7 @@
 function layer = setM2Parameters(noDomains)
+if nargin < 1
+    noDomains = 1;
+end
 
 layer{1} = struct('media', 'fluid', ...
                   'theta1', 60*pi/180, ...

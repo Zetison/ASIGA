@@ -1,17 +1,10 @@
-function container = setShirronParameters()
+function varCol = setShirronParameters()
 
-P_inc = 1; % Amplitude of incident wave
-rho_s = 7850; % Density of solid
-rho_f = [1000, 1000]; % Density of fluids
-c_f = [1500, 1500];  % Speed of sound in fluid domains
-E = 210e9; % Youngs modulus of elastic material
-nu = 0.3; % Poisson ratio of elastic material
-
+varCol{1}.rho_f = 1000; % Density of fluids
+varCol{1}.c_f = 1500;  % Speed of sound in fluid domains
 R_o = 1;
-% t = 0.0406; % Thickness of the Mock shell of Ihlenburg
-t = 0.008; % BeTSSi thickness
+L = 10*R_o;
 % L = 4*R_o; % Shirron example 1
-L = 10*R_o; % Shirron example 2
-mult = round(L/(R_o*pi/2));
-
-putVariablesIntoContainer
+varCol{1}.R_o = R_o;
+varCol{1}.L = L; % Shirron example 2
+varCol{1}.mult = round(L/(R_o*pi/2));

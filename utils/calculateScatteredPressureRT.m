@@ -1,22 +1,22 @@
-function p_h = calculateScatteredPressureRT(varCol, P_far, plotFarField)
+function p_h = calculateScatteredPressureRT(task, P_far)
 
-if ~strcmp(varCol.BC, 'SHBC')
+if ~strcmp(task.misc.BC, 'SHBC')
     error('This is not implemented')
 end
-k = varCol.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 Eps = 1e6*eps;
-
-beamEnergy = varCol.beamEnergy;
+plotFarField = task.ffp.plotFarField;
+beamEnergy = task.varCol{1}.beamEnergy;
 
 p_h = zeros(size(P_far,1),numel(k));
-beams = varCol.beams;
+beams = task.varCol{1}.beams;
 beami = beams(:,1);
-O = varCol.O;
-P_inc = varCol.P_inc;
-d_vec = varCol.d_vec;
+O = task.varCol{1}.O;
+P_inc = task.misc.P_inc;
+d_vec = task.d_vec;
 p_inc = @(v) P_inc*exp(1i*dot3(v,d_vec)*k);
-% A = varCol.A;
-d = varCol.d;
+% A = task.varCol{1}.A;
+d = task.varCol{1}.d;
 d_n = d(beami,:);
 x_n = O(beami,:,end-1);
 
@@ -135,9 +135,9 @@ if ~plotFarField
     %                     Z = [x3m(3), P3m(3)];
     %                     plot3(X,Y,Z,'black')
     % 
-    % %                     X = [varCol.o(I1m,1); reshape(O(I1m,1,2:end-1),size(O,3)-2,1)];
-    % %                     Y = [varCol.o(I1m,2); reshape(O(I1m,2,2:end-1),size(O,3)-2,1)];
-    % %                     Z = [varCol.o(I1m,3); reshape(O(I1m,3,2:end-1),size(O,3)-2,1)];
+    % %                     X = [task.varCol{1}.o(I1m,1); reshape(O(I1m,1,2:end-1),size(O,3)-2,1)];
+    % %                     Y = [task.varCol{1}.o(I1m,2); reshape(O(I1m,2,2:end-1),size(O,3)-2,1)];
+    % %                     Z = [task.varCol{1}.o(I1m,3); reshape(O(I1m,3,2:end-1),size(O,3)-2,1)];
     % %                     plot3(X(:),Y(:),Z(:),'red')
     %                     axis off
     %                     axis equal

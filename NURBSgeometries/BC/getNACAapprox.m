@@ -22,7 +22,7 @@ F = zeros(n,2);
 for i = 1:n
     xi = xi_arr(i);
     i1 = findKnotSpan(n, p, xi, Xi);
-    A(i,i1-p:i1) = Bspline_basis(i1, xi, p, Xi, 0);
+    A(i,i1-p:i1) = BsplineBasis(i1, xi, p, Xi, 0);
     F(i,:) = [xi^2, f(xi)];
 end
 

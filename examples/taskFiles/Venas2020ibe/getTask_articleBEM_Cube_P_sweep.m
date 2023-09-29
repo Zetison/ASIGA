@@ -1,10 +1,10 @@
-scatteringCase = 'MS';
+misc.scatteringCase = 'MS';
 
-model = 'Cube_P';  % Spherical shell
+misc.model = 'Cube_P';  % Spherical shell
 BC = 'NBC';
-coreMethod = 'IGA';
-% coreMethod = {'IGA'};
-method = {'BEM'};
+misc.coreMethod = 'IGA';
+% misc.coreMethod = {'IGA'};
+misc.method = {'BEM'};
 formulation = {'CCBIE', 'CBM', 'CHBIE', 'CCBIEC'};
 % formulation = {'CCBIEC'};
 
@@ -15,38 +15,34 @@ eigenValues = [eigenValues, 3,6,9];
 % eigenValues = [eigenValues, 9];
 eigenValues = unique(sort(eigenValues));
 eigenValues = pi*sqrt(eigenValues);%  Analytical eigenvalues of the interior Dirichlet/Neumann cube problem.
-if 0 
-    k = eigenValues;
-else
-    noPts = 1000;
+noPts = 1000;
 %     noPts = 100;
-    delta = 10/noPts*3;
-    k = linspace(0.01,10,noPts);
-    k = [k, linspace(0.01,delta/2,round(noPts/10))];
-    for i = 1:numel(eigenValues)
-        k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
-    end
+delta = 10/noPts*3;
+k = linspace(0.01,10,noPts);
+k = [k, linspace(0.01,delta/2,round(noPts/10))];
+for i = 1:numel(eigenValues)
+    k = [k, eigenValues(i)+linspace(-delta/2,delta/2,round(noPts/10))];
 end
 k = sort(unique(k));
 % k = pi*sqrt(3);
 % k = pi*sqrt(6);
-f = k*1500/(2*pi);
+misc.omega = k*1500;
 
-alpha = 240*pi/180;
-beta = 30*pi/180;   
+ffp.alpha = 240*pi/180;
+ffp.beta = 30*pi/180;   
 
-applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
-degree = 4;
-M = 4;
+misc.applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
+msh.degree = 4;
+msh.M = 4;
 prePlot.plot3Dgeometry = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 
 runTasksInParallel = 1;
-solveForPtot = false;
-loopParameters = {'f','method','formulation'};
+misc.solveForPtot = false;
+loopParameters = {'f','misc.method','formulation'};
 
 collectIntoTasks
 
-method = {'BA'};
-formulation = {'SL2E'};
+misc.method = {'BA'};
+misc.formulation = {'SL2E'};
 collectIntoTasks

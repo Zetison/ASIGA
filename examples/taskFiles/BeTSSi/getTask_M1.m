@@ -6,29 +6,30 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'M1';
+misc.model = 'M1';
 
-method = {'BEM'};
-formulation = {'CBM','CCBIE'};
-formulation = {'CCBIE'};
-formulation = {'CCBIE','GBM'};
+misc.method = {'BEM'};
+misc.formulation = {'CBM','CCBIE'};
+misc.formulation = {'CCBIE'};
+% misc.formulation = {'CCBIE','GBM'};
 
 varCol = setM1Parameters(1);
 varCol{1}.meshFile = 'createNURBSmesh_M1';
 f = [1e2,1e3];             % Frequency
-% f = 1e2;             % Frequency
+f = 1e2;             % Frequency
+misc.omega = 2*pi*f;
 
-M = 4:5;
-% M = 1;
-degree = 2;
-beta = 0;
-alpha = (0:0.5:360)*pi/180;
-solveForPtot = true;
+msh.M = 4:5;
+msh.M = 3;
+msh.degree = 2;
+ffp.beta = 0;
+ffp.alpha = (0:0.5:360)*pi/180;
+misc.solveForPtot = true;
 
-loopParameters = {'M','parm','f','method','formulation','alpha_s'};
-prePlot.plot3Dgeometry = 1;
+loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation'};
+prePlot.plot3Dgeometry = 0;
 % prePlot.resolution = [20,20,0];
 prePlot.elementBasedSamples = 0;
 prePlot.axis = 'off';
@@ -36,45 +37,44 @@ prePlot.view = [198,10];
 prePlot.plotParmDir = 0;
 prePlot.plotNormalVectors = 0;
 prePlot.plotControlPolygon = 0;
-prePlot.abortAfterPlotting = 0;                % Abort simulation after pre plotting
+prePlot.abortAfterPlotting = 1;                % Abort simulation after pre plotting
 
 para.plotResultsInParaview = false;
 
-postPlot(1).xname       	= 'alpha';
+postPlot(1).xname       	= 'ffp.alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
 postPlot(1).printResults 	= true;
 postPlot(1).axisType        = 'polar';
 postPlot(1).lineStyle   	= '-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','parm','f','formulation','M','alpha_s'};
+postPlot(1).legendEntries 	= {'misc.method','msh.parm','misc.omega','misc.formulation','msh.M'};
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 postPlot(1).xScale          = 180/pi;
 postPlot(1).addCommands   	= @(study,i_study,studies) addCommands_(i_study);
 
-collectIntoTasks
+% collectIntoTasks
 
-solveForPtot = false;
-method = {'IENSG'};
-formulation = {'BGU'};
-N = 3;
-collectIntoTasks
+misc.solveForPtot = false;
+misc.method = {'IENSG'};
+misc.formulation = {'BGU'};
+iem.N = [3,5];
+loopParameters = {'msh.M','msh.parm','misc.omega','misc.method','misc.formulation','iem.N'};
+% collectIntoTasks
 
-method = {'KDT'};
-formulation = {'MS1'};
+misc.method = {'KDT'};
+misc.formulation = {'MS1'};
 
 collectIntoTasks
 
 function addCommands_(i_study)
-if i_study == 1
-    for f = 1e2 %[1e2, 1e3]
-        T = readtable(['miscellaneous/refSolutions/M1_BEM_IGA_GBM_M6_NNaN_f' num2str(f) '_TSVSalpha.txt'], ...
-                        'FileType','text', 'HeaderLines',1,'CommentStyle','%');
-        x = T.Var1;
-        y = T.Var2;
-        polarplot(x*pi/180,y,'DisplayName',['Reference solution f = ' num2str(f) 'Hz'])
-        legend('off');
-        legend('show','Interpreter','latex');
-    end
+for f = 1e2 %[1e2, 1e3]
+    T = readtable(['miscellaneous/refSolutions/M1_BEM_IGA_GBM_M6_NNaN_f' num2str(f) '_TSVSalpha.txt'], ...
+                    'FileType','text','CommentStyle','%');
+    x = T.alpha;
+    y = T.TS;
+    polarplot(x*pi/180,y,'DisplayName',['Reference solution f = ' num2str(f) 'Hz'])
+    legend('off');
+    legend('show','Interpreter','latex');
 end

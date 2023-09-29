@@ -4,6 +4,8 @@ options = struct('Xi', [0,0,0,1,1,2,2,3,3,3]/3, ...   % knot vector of revolutio
                  'R', [1,0],...
                  'd_p', 3, ...
                  'parm', 1, ...
+                 'x_0', [0,0,0], ...
+                 'alignWithAxis', 'Zaxis', ...
                  'uniformDegree', true);     % angle of revolution in degrees
 if nargin > 0
     if numel(varargin) > 1
@@ -31,3 +33,10 @@ nurbs = loftNURBS({nurbs1,nurbs2});
 if options.uniformDegree
     nurbs = makeUniformNURBSDegree(nurbs);
 end
+switch options.alignWithAxis
+    case 'Xaxis'
+        nurbs = rotateNURBS(nurbs,'rotAxis','Yaxis','theta',pi/2);
+    case 'Yaxis'
+        nurbs = rotateNURBS(nurbs,'rotAxis','Xaxis','theta',pi/2);
+end
+nurbs = translateNURBS(nurbs,options.x_0);

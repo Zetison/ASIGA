@@ -1,8 +1,8 @@
-scatteringCase = 'BI';
+misc.scatteringCase = 'BI';
 
-model = 'Shirron';  % Spherical shell
+misc.model = 'Shirron';  % Spherical shell
 
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 
 
 c_f = 1500;  % Speed of sound in fluid domains
@@ -20,17 +20,17 @@ parm = 1;
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 1;
 degree = 3;
-calculateSurfaceError = 0;
+err.err.calculateSurfaceError = 0;
 computeCondNumber = false;
 calculateFarFieldPattern = 1;
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 
-loopParameters = {'M','N','formulation','method','f','alpha_s'};
+loopParameters = {'M','N','formulation','misc.method','f','alpha_s'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
 M = 1;
-method = {'IE'};
+misc.method = {'IE'};
 formulation = {'BGU'};
 N = [3,5,7];
 N = 3;
@@ -40,13 +40,13 @@ N = 3;
 %% IENSG simulation
 % M = 5;
 % N = 3;
-method = {'IENSG'};
+misc.method = {'IENSG'};
 N = 3;
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-method = {'BEM'};
+misc.method = {'BEM'};
 % M = 1;
 % M = 5;
 N = NaN;

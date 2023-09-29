@@ -1,4 +1,4 @@
-function [M, F] = bestApproximation(varCol)
+function [M, F, varCol] = bestApproximation(varCol)
 % Create IGA global matrices
 % Implemented for linear elasticity operator and the laplace operator, with
 % possibility of computing the mass matrix and loading vector from body
@@ -7,22 +7,26 @@ function [M, F] = bestApproximation(varCol)
 
 
 %% Extract all needed data from options and varCol
-
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
+degree = varCol.degree; % assume degree is equal in all patches
 
 index = varCol.index;
 noElems = varCol.noElems;
-elRangeXi = varCol.elRange{1};
-elRangeEta = varCol.elRange{2};
+elRange = varCol.elRange;
 element = varCol.element;
 element2 = varCol.element2;
 weights = varCol.weights;
 controlPts = varCol.controlPts;
 knotVecs = varCol.knotVecs;
 pIndex = varCol.pIndex;
-noDofs = varCol.noDofs;
+noDofs = varCol.noCtrlPts;
 extraGP = varCol.extraGP;
+d_p = varCol.patches{1}.nurbs.d_p;
+
+if varCol.solveForPtot && varCol.exteriorProblem
+    analytic = @(x) varCol.p(x) + varCol.p_inc(x);
+else
+    analytic = varCol.p;
+end
 
 if strcmp(varCol.coreMethod, 'XI')
     useEnrichedBfuns = true;
@@ -32,229 +36,103 @@ else
     d_vec = NaN;
 end
 k = varCol.k;
+totNoQP = 0;
+[Q, W] = gaussTensorQuad(degree+1+extraGP);
+n_en = prod(degree+1);
 
-switch varCol.formulation
-    case 'SL2E'
-        %% Preallocation and initiallizations
-        n_en = (p_xi+1)*(p_eta+1);
-        [W2D,Q2D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP); 
-        v_values   = zeros(size(W2D,1),noElems,3); 
-
-
-        %% Find nodes at which to evaluate the exact solution
-%         for e = 1:noElems
-        parfor e = 1:noElems
-            patch = pIndex(e); % New
-            Xi = knotVecs{patch}{1}; % New
-            Eta = knotVecs{patch}{2}; % New
-
-            idXi = index(e,1);
-            idEta = index(e,2);
-
-            Xi_e = elRangeXi(idXi,:);
-            Eta_e = elRangeEta(idEta,:);
-
-            sctr = element(e,:);
-            pts = controlPts(sctr,:);
-            wgts = weights(element2(e,:),:); % New
-
-            v_e = zeros(size(W2D,1),3);
-
-            for gp = 1:size(W2D,1)
-                pt = Q2D(gp,:);
-
-                xi   = parent2ParametricSpace(Xi_e,  pt(1));
-                eta  = parent2ParametricSpace(Eta_e, pt(2));
-
-                R = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-
-                v_e(gp,:) = R*pts;
-            end
-            v_values(:,e,:) = v_e;
-        end
-        v_values = reshape(v_values, size(W2D,1)*noElems, 3);
-        analytic_values = varCol.analytic(v_values);
-        analytic_values = reshape(analytic_values, size(W2D,1), noElems);
+%% Preallocation and initiallizations
+v_values   = zeros(size(W,1),noElems,3); 
+n_values   = zeros(size(W,1),noElems,3); 
+J_1_values   = zeros(size(W,1),noElems,1); 
 
 
-        %% Build global matrices
-        sizeMe = n_en^2;
-        spIdxRow = zeros(sizeMe,noElems);
-        spIdxCol = zeros(sizeMe,noElems);
+%% Find nodes at which to evaluate the exact solution
+% for e = 1:noElems
+parfor e = 1:noElems
+    patch = pIndex(e);
+    knots = knotVecs{patch};
+    Xi_e = zeros(d_p,2);
+    for i = 1:d_p
+        Xi_e(i,:) = elRange{i}(index(e,i),:);
+    end
 
-        Mvalues = zeros(sizeMe,noElems); 
-        F_values   = zeros(n_en,noElems); 
-        F_indices = zeros(n_en,noElems); 
+    sctr = element(e,:);
+    pts = controlPts(sctr,:);
+    wgts = weights(element2(e,:),:);
 
-        parfor e = 1:noElems
-            patch = pIndex(e); % New
-            Xi = knotVecs{patch}{1}; % New
-            Eta = knotVecs{patch}{2}; % New
+    xi = parent2ParametricSpace(Xi_e, Q);
+    I = findKnotSpans(degree, xi(1,:), knots);
+    R = NURBSbasis(I, xi, degree, knots, wgts);
+    [J_1,crossProd] = getJacobian(R,pts,d_p);
+    n_values(:,e,:) = crossProd./J_1;
+    v_values(:,e,:) = R{1}*pts;
+    J_1_values(:,e) = J_1;
+end
+v_values = reshape(v_values, size(W,1)*noElems, 3);
+n_values = reshape(n_values, size(W,1)*noElems, 3);
+if nargin(analytic) == 2
+    analytic_values = analytic(v_values,n_values);
+else
+    analytic_values = analytic(v_values);
+end
 
-            idXi = index(e,1);
-            idEta = index(e,2);
-
-            Xi_e = elRangeXi(idXi,:);
-            Eta_e = elRangeEta(idEta,:);
-            
-            J_2 = 0.25*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1));
-
-            sctr = element(e,:);
-            pts = controlPts(sctr,:);
-            wgts = weights(element2(e,:),:); % New
-            
-            F_e = zeros(n_en,1);
-            m_e = zeros(n_en);
-
-            for gp = 1:size(W2D,1)
-                pt = Q2D(gp,:);
-                wt = W2D(gp);
-
-                xi   = parent2ParametricSpace(Xi_e,  pt(1));
-                eta  = parent2ParametricSpace(Eta_e, pt(2));
-
-                [R, dRdxi, dRdeta] = NURBS2DBasis(xi, eta, p_xi, p_eta, Xi, Eta, wgts);
-
-                J = pts'*[dRdxi' dRdeta'];
-                crossProd = cross(J(:,1),J(:,2));
-                J_1 = norm(crossProd);
-
-                y = R*pts;
-                if useEnrichedBfuns
-                    R = R*exp(1i*k*(y*d_vec));
-                end
-                m_e = m_e + R'*R * abs(J_1) * J_2 * wt;  
-
-                p_analytic = analytic_values(gp,e);
-                F_e = F_e + p_analytic*R' * abs(J_1) * J_2 * wt; 
-            end
-            spIdxRow(:,e) = reshape(repmat(sctr',1,n_en),n_en^2,1);
-            spIdxCol(:,e) = reshape(repmat(sctr,n_en,1),n_en^2,1);
-            Mvalues(:,e) = reshape(m_e, sizeMe, 1);
-
-            F_indices(:,e) = sctr';
-            F_values(:,e) = F_e;
-        end
-    case 'VL2E'
-        elRangeZeta = varCol.elRange{3};
-        p_zeta = varCol.degree(3); % assume p_eta is equal in all patches
-        
-        %% Preallocation and initiallizations
-        n_en = (p_xi+1)*(p_eta+1)*(p_zeta+1);
-        v_values = zeros(n_en,noElems,3); 
-
-        [W3D,Q3D] = gaussianQuadNURBS(p_xi+1+extraGP,p_eta+1+extraGP,p_zeta+1+extraGP); 
-
-        %% Find nodes at which to evaluate the exact solution
-%         for e = 1:noElems
-        parfor e = 1:noElems
-            patch = pIndex(e); % New
-            Xi = knotVecs{patch}{1}; % New
-            Eta = knotVecs{patch}{2}; % New
-            Zeta = knotVecs{patch}{3}; % New
-
-            idXi = index(e,1);
-            idEta = index(e,2);
-            idZeta = index(e,3);
-
-            Xi_e = elRangeXi(idXi,:);
-            Eta_e = elRangeEta(idEta,:);
-            Zeta_e = elRangeZeta(idZeta,:);
-
-            sctr = element(e,:);
-            pts = controlPts(sctr,:);
-            wgts = weights(element2(e,:),:); % New
-
-            v_e = zeros(size(W3D,1),3);
-
-            for gp = 1:size(W3D,1)
-                pt = Q3D(gp,:);
-
-                xi   = parent2ParametricSpace(Xi_e,  pt(1));
-                eta  = parent2ParametricSpace(Eta_e, pt(2));
-                zeta  = parent2ParametricSpace(Zeta_e, pt(3));
-
-                R = NURBS3DBasis(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
-
-                v_e(gp,:) = R*pts;
-            end
-            v_values(:,e,:) = v_e;
-        end
-        v_values = reshape(v_values, size(W3D,1)*noElems, 3);
-        analytic_values = varCol.analytic(v_values);
-        analytic_values = reshape(analytic_values, size(W3D,1), noElems);
+no_funcs = size(analytic_values,2);
+analytic_values = permute(reshape(analytic_values, size(W,1), noElems, no_funcs),[1,3,2]);
 
 
-        %% Build global matrices
-        sizeMe = n_en^2;
-        spIdxRow = zeros(sizeMe,noElems);
-        spIdxCol = zeros(sizeMe,noElems);
+%% Build global matrices
+sizeMe = n_en^2;
+spIdxRow = zeros(sizeMe,noElems);
+spIdxCol = zeros(sizeMe,noElems);
 
-        Mvalues = zeros(sizeMe,noElems); 
-        F_values   = zeros(n_en,noElems); 
-        F_indices = zeros(n_en,noElems); 
+Mvalues = zeros(sizeMe,noElems); 
+Fvalues   = zeros(n_en,noElems,no_funcs); 
+F_indices = zeros(n_en,noElems); 
 
-        parfor e = 1:noElems
-            patch = pIndex(e); % New
-            Xi = knotVecs{patch}{1}; % New
-            Eta = knotVecs{patch}{2}; % New
-            Zeta = knotVecs{patch}{3}; % New
+% for e = 1:noElems
+parfor e = 1:noElems
+    patch = pIndex(e);
+    knots = knotVecs{patch};
+    Xi_e = zeros(d_p,2);
+    for i = 1:d_p
+        Xi_e(i,:) = elRange{i}(index(e,i),:);
+    end
+    J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^d_p;
 
-            idXi = index(e,1);
-            idEta = index(e,2);
-            idZeta = index(e,3);
+    sctr = element(e,:);
+    pts = controlPts(sctr,:);
+    wgts = weights(element2(e,:),:);
 
-            Xi_e = elRangeXi(idXi,:);
-            Eta_e = elRangeEta(idEta,:);
-            Zeta_e = elRangeZeta(idZeta,:);
+    xi = parent2ParametricSpace(Xi_e, Q);
+    I = findKnotSpans(degree, xi(1,:), knots);
+    R = NURBSbasis(I, xi, degree, knots, wgts);
+    
+    J_1 = J_1_values(:,e);
 
-            J_2 = 0.125*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1))*(Zeta_e(2)-Zeta_e(1));
+    y = R{1}*pts;
+    if useEnrichedBfuns
+        temp = exp(1i*k*(y*d_vec));
+        R{1} = R{1}.*temp(:,ones(1,noGp));
+    end
+    m_e = zeros(n_en);
+    for i = 1:numel(W)
+        m_e = m_e + R{1}(i,:)'*R{1}(i,:) * abs(J_1(i)) * J_2 * W(i);  
+    end
 
-            sctr = element(e,:);
-            pts = controlPts(sctr,:);
-            wgts = weights(element2(e,:),:); % New
-            
-            J_2 = 0.125*(Xi_e(2)-Xi_e(1))*(Eta_e(2)-Eta_e(1))*(Zeta_e(2)-Zeta_e(1));
+    spIdxRow(:,e) = reshape(repmat(sctr',1,n_en),n_en^2,1);
+    spIdxCol(:,e) = reshape(repmat(sctr,n_en,1),n_en^2,1);
+    Mvalues(:,e) = reshape(m_e, sizeMe, 1);
 
-            F_e = zeros(n_en,1);
-            m_e = zeros(n_en);
-
-            for gp = 1:size(W3D,1)
-                pt = Q3D(gp,:);
-                wt = W3D(gp);
-
-                xi   = parent2ParametricSpace(Xi_e,  pt(1));
-                eta  = parent2ParametricSpace(Eta_e, pt(2));
-                zeta  = parent2ParametricSpace(Zeta_e, pt(3));
-
-                [R, dRdxi, dRdeta, dRdzeta] = NURBS3DBasis(xi, eta, zeta, p_xi, p_eta, p_zeta, Xi, Eta, Zeta, wgts);
-
-                J = pts'*[dRdxi' dRdeta' dRdzeta'];
-                J_1 = det(J);
-
-                y = R*pts;
-                if useEnrichedBfuns
-                    R = R*exp(1i*k*dot(d_vec, y));
-                end
-                m_e = m_e + R.'*R * abs(J_1) * J_2 * wt;  
-
-                p_analytic = analytic_values(gp,e);
-                F_e = F_e + p_analytic*R.' * abs(J_1) * J_2 * wt; 
-            end
-            spIdxRow(:,e) = reshape(repmat(sctr',1,n_en),n_en^2,1);
-            spIdxCol(:,e) = reshape(repmat(sctr,n_en,1),n_en^2,1);
-            Mvalues(:,e) = reshape(m_e, sizeMe, 1);
-
-            F_indices(:,e) = sctr';
-            F_values(:,e) = F_e;
-        end
+    F_indices(:,e) = sctr';
+    Fvalues(:,e,:) = R{1}.'*(analytic_values(:,:,e).*repmat(abs(J_1)*J_2.*W,1,no_funcs));
+    totNoQP = totNoQP + size(Q,1);
 end
         
 
 %% Collect data into global matrices (and load vector)
-F = vectorAssembly(F_values,F_indices,noDofs);
+F = vectorAssembly(Fvalues,F_indices,noDofs);
 
 M = sparse(spIdxRow,spIdxCol,Mvalues,noDofs,noDofs);
 
-
+varCol.totNoQP = totNoQP;
 

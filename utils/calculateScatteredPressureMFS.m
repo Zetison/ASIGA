@@ -1,16 +1,17 @@
-function p_h = calculateScatteredPressureMFS(varCol, U, P_far, plotFarField)
+function p_h = calculateScatteredPressureMFS(task, P_far)
 
-k = varCol.k;
+k = task.misc.omega/task.varCol{1}.c_f;
+U = task.varCol{1}.U;
 
-switch varCol.formulation
+switch task.misc.formulation
     case 'SS'
-        if plotFarField
-            y = varCol.x_0;
+        if task.ffp.plotFarField
+            y = task.varCol{1}.x_0;
             R = norm2(P_far-y);
             theta = acos((P_far(:,3)-y(3))./R);
             phi = atan2(P_far(:,2)-y(2),P_far(:,1)-y(1));
             eta = cos(theta);
-            N = varCol.N;
+            N = task.mfs.N;
             exp_phi = exp(1i*phi*(-N:N));
             p_h = zeros(size(P_far,1),1);
             for n = 0:N
@@ -22,10 +23,10 @@ switch varCol.formulation
             end
         end
     case 'PS'
-        y_s = varCol.y_s;
-        if plotFarField
-            x_hat = elementProd(1./norm2(P_far),P_far);
-            switch varCol.scatteringCase
+        y_s = task.varCol{1}.y_s;
+        if task.ffp.plotFarField
+            x_hat = 1./norm2(P_far).*P_far;
+            switch task.misc.scatteringCase
                 case {'BI','Sweep'}
                     p_h = 1/(4*pi)*exp(-1i*k*x_hat*y_s.')*U;
                 case 'MS'
@@ -33,13 +34,13 @@ switch varCol.formulation
             end
         else
             n_cp = numel(U);
-            y_s = varCol.y_s;
+            y_s = task.varCol{1}.y_s;
             rs = zeros(size(P_far,1),n_cp);
             parfor j = 1:n_cp
-                xmys = elementAddition(-y_s(j,:), P_far);
+                xmys = P_far-y_s(j,:);
                 rs(:,j) = norm2(xmys);
             end
-            switch varCol.scatteringCase
+            switch task.misc.scatteringCase
                 case {'BI','Sweep'}
                     p_h = Phi_k(rs,k)*U;
                 case 'MS'
@@ -47,5 +48,8 @@ switch varCol.formulation
             end
         end
 
+end
+if numel(k) > 1
+    p_h = p_h.';
 end
 

@@ -1,13 +1,13 @@
-scatteringCase = 'Sweep';
+misc.scatteringCase = 'Sweep';
 
-model = 'S1';  % Spherical shell
+misc.model = 'S1';  % Spherical shell
 
-% coreMethod = {'IGA', 'XI'};
-coreMethod = {'IGA'};
+% misc.coreMethod = {'IGA', 'XI'};
+misc.coreMethod = {'IGA'};
 varCol = setS1Parameters('double',1);
 varCol{1}.meshFile = 'createNURBSmesh_EL';
-method = {'BEM'};
-if strcmp(method, 'BEM')
+misc.method = {'BEM'};
+if strcmp(misc.method, 'BEM')
     formulation = {'CCBIE', 'CBM', 'CHBIE'};
 end
 
@@ -36,23 +36,23 @@ alpha = 0;
 beta = pi;   
 
 M = 1:3;
-calculateSurfaceError = 1;
+err.err.calculateSurfaceError = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
-coreMethod = {'IGA'};
-method = {'RT'};
+misc.coreMethod = {'IGA'};
+misc.method = {'RT'};
 formulation = '';
 M = 3;
 prePlot.plot3Dgeometry = 0;
 degree = 2;
-calculateSurfaceError = 0;
+err.err.calculateSurfaceError = 0;
 computeCondNumber = false;
 plotFarField = 1;
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 N = 3:6;
 r = 1;
 parm = 1;
 
-loopParameters = {'method','M','parm','N','coreMethod'};
+loopParameters = {'misc.method','M','parm','N','misc.coreMethod'};
 collectIntoTasks

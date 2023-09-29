@@ -7,6 +7,7 @@ if verLessThan('matlab', '8.3 (R2014a)')
         warning('Change the above number to match the number of workers available!')
     end
 else
+    noCoresToUse = 4;
     if ~exist('noCoresToUse','var')
         noCoresToUse = feature('numCores');
     end

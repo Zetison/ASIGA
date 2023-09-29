@@ -1,35 +1,56 @@
-function varCol = infElementsNonSepGeom(varCol)
+function task = infElementsNonSepGeom(task)
 
-degree = varCol.degree; % assume degree is equal in all patches
+degree = task.varCol{1}.degree(1:2); % assume degree is equal in all patches
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
+elRange = task.varCol{1}.elRange;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
+knotVecs = task.varCol{1}.knotVecs;
 
-extraGP = varCol.extraGP;
+extraGP = task.misc.extraGP;
 
-N = varCol.N;
-formulation = varCol.formulation;
+N = task.iem.N;
+Ntot = task.iem.N;
+formulation = task.misc.formulation;
 
-noDofs = varCol.noDofs;
+noDofs = task.varCol{1}.noDofs;
 
+if task.varCol{1}.boundaryMethod
+    noElems = task.varCol{1}.noElems;
+    element = task.varCol{1}.element;
+    element2 = task.varCol{1}.element2;
+    index = task.varCol{1}.index;
+    pIndex = task.varCol{1}.pIndex;
+    n_en = prod(degree+1);
+    noSurfDofs = noDofs;
+    noDofs = 0;
+    nodes = 1:noSurfDofs;
+    noDofs_new = noSurfDofs*N;
+else
+    varColBdry = meshBoundary(task.varCol{1},'Gamma_a');
+    
+    nodes = varColBdry.nodes;
+    noElems = varColBdry.noElems;
+    element = varColBdry.element;
+    knotVecs = varColBdry.knotVecs;
+    elRange = varColBdry.elRange;
+    element2 = varColBdry.element2;
+    index = varColBdry.index;
+    pIndex = varColBdry.pIndex;
+    n_en = varColBdry.n_en;
+    noSurfDofs = varColBdry.noSurfDofs;
+    noDofs_new = noDofs + noSurfDofs*(N-1);
+end
 
 %Use chebychev polynomials
-chimin = varCol.chimin;
-chimax = varCol.chimax;
-x_0 = varCol.x_0;
-A_2 = varCol.A_2;
-[D,Dt] = generateCoeffMatrix(varCol);
-n_en = prod(degree+1);
+chimin = task.varCol{1}.chimin;
+chimax = task.varCol{1}.chimax;
+x_0 = task.iem.x_0;
+A_2 = task.iem.A_2;
+[D,Dt] = generateCoeffMatrix(task);
 
-k = varCol.k;
-Upsilon = varCol.Upsilon;
+k = task.misc.omega/task.varCol{1}.c_f;
+Upsilon = task.iem.Upsilon;
 
 useApproxRadialIntegrals = 2; % 0 is most accurate, 1 is a spline approximation (not reccomended here as Chebychev is here implemented more robust), 2 is Chebychev (reccomended)
 B1splines = {};
@@ -66,19 +87,24 @@ end
 spIdxRow = zeros((N*n_en)^2,noElems);
 spIdxCol = zeros((N*n_en)^2,noElems);
 Avalues = zeros((N*n_en)^2,noElems);
-[Q, W] = gaussTensorQuad(degree+1+extraGP);
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
-% max_r_a_recorded = -inf;
-% min_r_a_recorded = inf;
 
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building IE matrix: ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building IE matrix: ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end
 
+max_r_a_recorded = -inf;
+min_r_a_recorded = inf;
 % totArea = 0;
 % for e = 1:noElems
 parfor e = 1:noElems
@@ -97,8 +123,9 @@ parfor e = 1:noElems
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
     
-    sctr = element(e,:);
-    pts = controlPts(sctr,:);
+    sctrLocal = element(e,:);
+    sctrGlobal = nodes(sctrLocal);
+    pts = controlPts(sctrGlobal,:);
     wgts = weights(element2(e,:)); % New  
             
     Rs = NURBSbasis(I, xi, degree, knots, wgts);
@@ -283,8 +310,8 @@ parfor e = 1:noElems
         for m = 1:N
             indices = counter:(counter+n_en^2-1);
             A_inf_values_temp(indices) = reshape(temp(:,:,n,m),n_en^2,1);
-            spIdxRow_temp(indices) = copyVector(sctr+(noDofs*(n-1)),n_en,1);
-            spIdxCol_temp(indices) = copyVector(sctr+(noDofs*(m-1)),n_en,2);
+            spIdxRow_temp(indices) = copyVector(sctrLocal+(noSurfDofs*(n-1)),n_en,1);
+            spIdxCol_temp(indices) = copyVector(sctrLocal+(noSurfDofs*(m-1)),n_en,2);
             counter = counter + n_en^2;
         end
     end
@@ -297,7 +324,6 @@ end
 
 % max_r_a_recorded
 % min_r_a_recorded
-noDofs_new = noDofs*N;
 
 spIdxRow = reshape(spIdxRow,numel(spIdxRow),1);
 spIdxCol = reshape(spIdxCol,numel(spIdxCol),1);
@@ -306,7 +332,44 @@ Avalues = reshape(Avalues,numel(Avalues),1);
 [spIdx,~,IuniqueIdx] = unique([spIdxRow, spIdxCol],'rows');
 Avalues = accumarray(IuniqueIdx,Avalues);
 
-varCol.A = sparse(spIdx(:,1),spIdx(:,2),Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
+dofsToRemove = setdiff(1:noSurfDofs,unique(spIdx(:,1)));
+noDofsToRemove = numel(dofsToRemove);
+newDofsToRemove = zeros(1,noDofsToRemove*Ntot);
+i = 1;
+for n = 1:Ntot
+    newDofsToRemove(i:i+noDofsToRemove-1) = dofsToRemove+(n-1)*noSurfDofs;
+    i = i + noDofsToRemove;
+end
+ii = spIdx(:,1);
+jj = spIdx(:,2);
+if noDofs > 0
+    [ii,jj,newDofsToRemove] = modifyIndices(ii,jj,noSurfDofs,noDofs,nodes,newDofsToRemove);    
+    task.varCol{1}.Ainf = sparse(ii,jj,Avalues,noDofs_new,noDofs_new);
+else
+    task.varCol{1}.Ainf = sparse(ii,jj,Avalues,noDofs_new,noDofs_new,numel(IuniqueIdx));
+end
+dofsToRemove_old = task.varCol{1}.dofsToRemove;
+task.varCol{1}.dofsToRemove = sort(unique([dofsToRemove_old newDofsToRemove]));
+task.varCol{1}.dofsToRemove_old = dofsToRemove_old;
+task.varCol{1}.noDofs_new = noDofs_new;
 
-varCol.newDofsToRemove = setdiff(1:noDofs_new,unique(spIdxRow));
+
+function [i,j,newDofsToRemove] = modifyIndices(i,j,noSurfDofs,noDofs,nodes,newDofsToRemove)
+
+indices = i <= noSurfDofs;
+indices2 = i > noSurfDofs;
+i(indices) = nodes(i(indices));
+i(indices2) = i(indices2)+noDofs-noSurfDofs;
+indices = j <= noSurfDofs;
+indices2 = j > noSurfDofs;
+j(indices) = nodes(j(indices));
+j(indices2) = j(indices2)+noDofs-noSurfDofs;
+if nargout > 2
+    indices = newDofsToRemove <= noSurfDofs;
+    indices2 = newDofsToRemove > noSurfDofs;
+    newDofsToRemove(indices) = nodes(newDofsToRemove(indices));
+    newDofsToRemove(indices2) = newDofsToRemove(indices2)+noDofs-noSurfDofs;
+end
+
+
 

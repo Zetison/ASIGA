@@ -3,7 +3,7 @@ function k_e = stiffnessElementMatrix(dRdX,fact,d_f,n_en,operator,C)
 vectorizeOverGP = false;
 switch operator
     case 'linearElasticity'
-        if vectorizeOverGP % Warning this version is not generalized for anisotropic material
+        if vectorizeOverGP % Warning: this version is not generalized for anisotropic material
             idxMap = idxMapSwapCompAndBasis(d_f,n_en);
             RxRx = reshape(kron2(dRdX{1}, dRdX{1}) * fact, n_en, n_en);
             RyRy = reshape(kron2(dRdX{2}, dRdX{2}) * fact, n_en, n_en);
@@ -28,7 +28,7 @@ switch operator
             for i = 1:numel(fact)
                 dRdx = [dRdX{1}(i,:); dRdX{2}(i,:); dRdX{3}(i,:)];
                 B = strainDispMatrix(n_en,dRdx);
-                k_e = k_e + B' * C * B * fact(i); 
+                k_e = k_e + B.' * C * B * fact(i); 
             end
             temp = zeros(d_f*n_en,d_f*n_en);
             for i = 1:d_f

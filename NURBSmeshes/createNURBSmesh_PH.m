@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_PH(varCol, M, degree)
+function task = createNURBSmesh_PH(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 L = varCol{1}.gd;
 R_1 = varCol{1}.R_1;
@@ -7,12 +10,12 @@ t = varCol{1}.t;
 Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
 % Xi = [0,0,0,1,1,2,2,3,3,3]/3;
 
-x_0 = [-L/2, 0, 0]; % The origin of the model
+x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
-varCol{1}.x_0 = x_0;
-switch varCol{1}.method
+task.iem.x_0 = x_0;
+switch task.misc.method
     case {'IE','IENSG','ABC'}
-        varCol{1}.A_2 = [0 1 0;
+        task.iem.A_2 = [0 1 0;
                          0 0 1;
                          1 0 0];
         varCol{1}.alignWithAxis = alignWithAxis;
@@ -49,7 +52,7 @@ else
     c_xy = R_max + s*R_max;
 
     Upsilon = sqrt(c_z^2-c_xy^2);
-    varCol{1}.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
+    task.misc.r_a = evaluateProlateCoords([0,0,c_z],Upsilon);
 
     chimin = NaN;
     chimax = NaN;
@@ -84,5 +87,6 @@ end
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
-varCol{1}.Upsilon = Upsilon;
+task.iem.Upsilon = Upsilon;
+task.varCol = varCol;
 

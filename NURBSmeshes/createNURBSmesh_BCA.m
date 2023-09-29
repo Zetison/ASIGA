@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_BCA(varCol, M, degree)
+function task = createNURBSmesh_BCA(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 
 if varCol{1}.boundaryMethod
@@ -28,4 +31,5 @@ end
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
-varCol{1}.Upsilon = Upsilon;
+task.iem.Upsilon = Upsilon;
+task.varCol = varCol;

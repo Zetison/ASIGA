@@ -3,7 +3,7 @@ function Y = insertUniform2(X, n)
 % value in X and stores it in Y (which does not include the values in X)
 
 X = unique(X);
-if n == 0
+if n < 1
     Y = [];
     return
 end

@@ -1,37 +1,38 @@
-function varCol = buildGBEMmatrix(varCol,useSolidDomain)
+function task = buildGBEMmatrix(task,i_domain)
 
-degree = varCol.degree; % assume p_xi is equal in all patches
+useSolidDomain = numel(task.varCol) > 1;
+degree = task.varCol{i_domain}.degree; % assume p_xi is equal in all patches
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRange = varCol.elRange;
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
-patches = varCol.patches;
+index = task.varCol{i_domain}.index;
+noElems = task.varCol{i_domain}.noElems;
+elRange = task.varCol{i_domain}.elRange;
+element = task.varCol{i_domain}.element;
+element2 = task.varCol{i_domain}.element2;
+weights = task.varCol{i_domain}.weights;
+controlPts = task.varCol{i_domain}.controlPts;
+knotVecs = task.varCol{i_domain}.knotVecs;
+pIndex = task.varCol{i_domain}.pIndex;
+patches = task.varCol{i_domain}.patches;
 
-extraGP = varCol.extraGP;
-extraGPBEM = varCol.extraGPBEM;
-noDofs = varCol.noDofs;
-agpBEM = varCol.agpBEM;
-exteriorProblem = varCol.exteriorProblem;
-model = varCol.model;
-elemsOuter = varCol.elemsOuter;
-noDofsInner = varCol.noDofsInner;
-noElemsInner = varCol.noElemsInner;
-d_p = varCol.patches{1}.nurbs.d_p;
+extraGP = task.misc.extraGP;
+extraGPBEM = task.bem.extraGPBEM;
+noDofs = task.varCol{i_domain}.noDofs;
+agpBEM = task.bem.agpBEM;
+exteriorProblem = task.misc.exteriorProblem;
+model = task.misc.model;
+elemsOuter = task.varCol{i_domain}.elemsOuter;
+noDofsInner = task.varCol{i_domain}.noDofsInner;
+noElemsInner = task.varCol{i_domain}.noElemsInner;
+d_p = task.varCol{i_domain}.patches{1}.nurbs.d_p;
 
-quadMethodBEM = varCol.quadMethodBEM;
+quadMethodBEM = task.bem.quadMethodBEM;
 
 
 Eps = 10*eps;
 
-k = varCol.k;
+k = task.misc.omega/task.varCol{i_domain}.c_f;
 alpha = 1i/k;
-formulation = varCol.formulation;
+formulation = task.misc.formulation;
 if strcmp(formulation(end),'C')
     formulation = formulation(1:end-1);
 end
@@ -55,35 +56,35 @@ switch formulation(2:end)
 end
 useRegul = ~isnan(psiType);
 
-if strcmp(varCol.coreMethod, 'XI')
+if strcmp(task.misc.coreMethod, 'XI')
     useEnrichedBfuns = true;
-    d_vec = varCol.d_vec;
+    d_vec = task.varCol{i_domain}.d_vec;
 else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
-if isfield(varCol,'alpha_s')
-    no_angles = length(varCol.alpha_s);
+if isfield(task.ffp,'alpha_s')
+    no_angles = length(task.ffp.alpha_s);
 else
     no_angles = 1;
 end
-solveForPtot = varCol.solveForPtot;
+solveForPtot = task.misc.solveForPtot;
 if useSolidDomain && ~exteriorProblem
     p_inc = NaN;
     dp_inc = NaN;
     dpdn = @(x,n) 0;
 else
     if solveForPtot
-        p_inc = varCol.p_inc;
-        dp_inc = varCol.dp_inc;
+        p_inc = task.p_inc_;
+        dp_inc = task.dp_incdn_;
         dpdn = @(x,n) 0;
     else
         p_inc = NaN;
         dp_inc = NaN;
-        if strcmp(varCol.BC, 'SHBC')
-            dpdn = @(x,n) -varCol.dp_inc(x,n);
+        if strcmp(task.misc.BC, 'SHBC')
+            dpdn = @(x,n) -task.dp_incdn_(x,n);
         else
-            dpdn = varCol.dpdn;
+            dpdn = task.varCol{i_domain}.dpdn_;
         end
     end
 end
@@ -94,27 +95,27 @@ else
     sgn = -1;
 end
 
-useNeumanProj = varCol.useNeumanProj;
+useNeumanProj = task.bem.useNeumanProj;
 if useNeumanProj
-    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+    [U,dU] = projectBC(task.varCol{i_domain},SHBC,useCBIE,useHBIE);
 else
     U = NaN;
     dU = NaN;
 end
 
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(task.varCol{i_domain}.nurbs);
 centerPts = findCenterPoints(patches);
 
 n_en = prod(degree+1);
 
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP,extraGPBEM,quadMethodBEM);
-[Q2D,W2D] = gaussTensorQuad(degree+1+extraGP);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:d_p),extraGPBEM,quadMethodBEM);
+[Q2D,W2D] = gaussTensorQuad(degree+1+extraGP(1:d_p));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 plot_GP = 0;
-% nurbs = varCol.nurbs;
+% nurbs = task.varCol{i_domain}.nurbs;
 % pD = plotBEMGeometry(nurbs,plot_GP,100,1);
-% pD = plotBEMGeometry(varCol.nurbs,plot_GP,10,0);
+% pD = plotBEMGeometry(task.varCol{i_domain}.nurbs,plot_GP,10,0);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 idxRow = zeros(n_en, noElems);
@@ -133,10 +134,15 @@ Fvalues = complex(zeros(n_en, noElems, no_angles));
 totNoQP = 0;
 totNoQPnonPolar = 0;
 
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building BEM matrix: ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end
@@ -282,16 +288,16 @@ parfor e_x = 1:noElems
     end
     Fvalues(:,e_x,:) = F_e;
 end
-varCol.A = matrixAssembly(Avalues, idxRow, n_en, noDofs, noElems, 2);
+task.varCol{i_domain}.A_K = matrixAssembly(Avalues, idxRow, n_en, noDofs, noElems, 2);
 if useSolidDomain
-    varCol.C = matrixAssembly(Cvalues(:,:,noElemsInner+1:end), idxRow2(:,noElemsInner+1:end), n_en, noDofs-noDofsInner, noElems-noElemsInner, 4);
-    varCol.C2 = matrixAssembly(C2values, idxRow3, n_en, noDofsInner, noElemsInner, 4);
+    task.varCol{i_domain}.A_C = matrixAssembly(Cvalues(:,:,noElemsInner+1:end), idxRow2(:,noElemsInner+1:end), n_en, noDofs-noDofsInner, noElems-noElemsInner, 4);
+    task.varCol{i_domain}.A_C2 = matrixAssembly(C2values, idxRow3, n_en, noDofsInner, noElemsInner, 4);
 end
 FF = zeros(noDofs,no_angles);
 parfor i = 1:no_angles
     FF(:,i) = vectorAssembly(Fvalues(:,:,i), idxRow, noDofs);
 end
-varCol.FF = FF;
+task.varCol{i_domain}.FF = FF;
 
-varCol.totNoQPnonPolar = totNoQPnonPolar;
-varCol.totNoQP = totNoQP;
+task.varCol{i_domain}.totNoQPnonPolar = totNoQPnonPolar;
+task.varCol{i_domain}.totNoQP = totNoQP;

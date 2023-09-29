@@ -1,7 +1,7 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'BCA'; % BeTSSi submarine
-coreMethod = 'IGA';
+misc.model = 'BCA'; % BeTSSi submarine
+misc.coreMethod = 'IGA';
 
 % alpha_s = 270*pi/180;
 alpha_s = 240*pi/180;
@@ -13,7 +13,7 @@ alpha = (0:0.05:360)*pi/180;
 
 BC = 'SHBC';
 
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = 'CBM';
 
 
@@ -22,7 +22,7 @@ M = 3;
 degree = 6;
 plotResultsInParaview = 1;
 plotMesh              = 1;	% Create additional Paraview files to visualize IGA mesh
-calculateSurfaceError = 0;
+err.calculateSurfaceError = 0;
 calculateFarFieldPattern = 0;
 plotTimeOscillation   = 1;	% Create 30 paraview files in order to visualize a dynamic result
 computeCondNumber = 0;
@@ -30,6 +30,6 @@ storeSolution = 0;
 storeFullVarCol = 0;
 agpBEM = 0.6;
 solveForPtot = true;
-loopParameters = {'method','degree'};
+loopParameters = {'misc.method','degree'};
 collectIntoTasks
 

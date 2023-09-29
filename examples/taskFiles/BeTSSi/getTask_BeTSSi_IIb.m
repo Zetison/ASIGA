@@ -1,11 +1,11 @@
 
 
-scatteringCase = {'BI', 'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = {'BI', 'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = {'M5A', 'M5B'}; % BeTSSi model 5A and BeTSSi model 5B
+misc.model = {'M5A', 'M5B'}; % BeTSSi misc.model 5A and BeTSSi misc.model 5B
 
-method = {'BEM'};
-if strcmp(method, 'BEM')
+misc.method = {'BEM'};
+if strcmp(misc.method, 'BEM')
     formulation = {'CCBIE'};
 end
 
@@ -22,7 +22,7 @@ solveForPtot = true;
 % collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-model = {'M4'};
+misc.model = {'M4'};
 
 M = 4:7;
 

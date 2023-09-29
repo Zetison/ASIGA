@@ -1,13 +1,13 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'S1';
+misc.model = 'S1';
 
 
-% method = {'BA'};
+% misc.method = {'BA'};
 % formulation = {'SL2E'};
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = {'GCBIE'};
-coreMethod = {'IGA'};
+misc.coreMethod = {'IGA'};
 
 c_f = 1500;
 k = 1;
@@ -27,11 +27,11 @@ degree = 4:5;
 degree = 5;
 plotResultsInParaview = 0;
 calculateFarFieldPattern = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
 
 plotResidualError = true;
 solveForPtot = true;
-loopParameters = {'M','formulation','method','degree','coreMethod'};
+loopParameters = {'M','formulation','misc.method','degree','misc.coreMethod'};
 collectIntoTasks

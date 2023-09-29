@@ -2,7 +2,8 @@ function nurbs = getPrismData(varargin)
 
 options = struct('X', NaN, ...
                  'L', [1,1,1], ...
-                 'x_0', [0,0,0]);
+                 'x_0', [0,0,0], ...
+                 'd_p', 3);
                    
 if nargin > 0
     if numel(varargin) > 1
@@ -13,27 +14,50 @@ if nargin > 0
     options = updateOptions(options,newOptions);
 end
 
-% If the centerCoordinate is not given, the prism is placed with its center
-% at the origin
+% If the x_0 (center coordinate) is not given, the prism is placed with its center
+% at the options.L/2
 
 Xi = [0 0 1 1];
 Eta = [0 0 1 1];
-Zeta = [0 0 1 1];
-
-coeffs = ones(4,2,2,2);
-X = options.X;
-if isnan(X)
-    L = options.L;
-    X = [  0,   0,   0;
-           L(1),0,   0;
-           0,   L(2),0;
-           L(1),L(2),0;
-           0,   0,   L(3);
-           L(1),0,   L(3);
-           0,   L(2),L(3);
-           L(1),L(2),L(3)];
+switch options.d_p
+    case 2
+        coeffs = ones(4,2,2);
+        
+        X = options.X;
+        if isnan(X)
+            L = options.L;
+            if numel(L) == 1
+                L = L*ones(1,3);
+            end
+            X = [  0,   0,   0;
+                   L(1),0,   0;
+                   0,   L(2),0;
+                   L(1),L(2),0];
+        end
+        coeffs(1:3,:,:) = reshape(X.',3,2,2);
+        
+        nurbs = createNURBSobject(coeffs,{Xi, Eta});
+    case 3
+        Zeta = [0 0 1 1];
+        
+        coeffs = ones(4,2,2,2);
+        X = options.X;
+        if isnan(X)
+            L = options.L;
+            if numel(L) == 1
+                L = L*ones(1,3);
+            end
+            X = [  0,   0,   0;
+                   L(1),0,   0;
+                   0,   L(2),0;
+                   L(1),L(2),0;
+                   0,   0,   L(3);
+                   L(1),0,   L(3);
+                   0,   L(2),L(3);
+                   L(1),L(2),L(3)];
+        end
+        coeffs(1:3,:,:,:) = reshape(X.',3,2,2,2);
+        
+        nurbs = createNURBSobject(coeffs,{Xi, Eta, Zeta});
 end
-coeffs(1:3,:,:,:) = reshape(X.',3,2,2,2);
-
-nurbs = createNURBSobject(coeffs,{Xi, Eta, Zeta});
 nurbs = translateNURBS(nurbs,options.x_0);

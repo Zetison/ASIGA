@@ -24,12 +24,19 @@ if numel(R2) == 1
     R2 = [0, R2];
 end
 h = options.h;
-X = [R1(1),0,0; 
-     R2(1),0,h;
-     R1(2),0,0; 
-     R2(2),0,h];
-nurbs = getQuadrilateralData('X',X);
-nurbs = revolveNURBS(nurbs,options);
+if R1(1) == R1(2) && R2(1) == R2(2)
+    X = [R1(1),0,0; 
+         R2(1),0,h].';
+    nurbs = getLineData('x',X);
+    nurbs = revolveNURBS(nurbs,options);
+else
+    X = [R1(1),0,0; 
+         R2(1),0,h;
+         R1(2),0,0; 
+         R2(2),0,h];
+    nurbs = getQuadrilateralData('X',X);
+    nurbs = revolveNURBS(nurbs,options);
+end
 if options.uniformDegree
     nurbs = makeUniformNURBSDegree(nurbs);
 end

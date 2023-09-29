@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_Torus(varCol, M, degree)
+function task = createNURBSmesh_Torus(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 if varCol.boundaryMethod
     L_gamma = 2*(r_o+r_i);
@@ -25,3 +28,4 @@ end
 if numel(varCol) > 2
     varCol{3}.nurbs = fluid_i;
 end
+task.varCol = varCol;

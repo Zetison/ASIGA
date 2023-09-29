@@ -2,12 +2,12 @@ getDefaultTaskValues
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
-scatteringCase = 'BI';
-model = 'S1_P';  % Pulsating sphere
-method = {'IE'};
+misc.scatteringCase = 'BI';
+misc.model = 'S1_P';  % Pulsating sphere
+misc.method = {'IE'};
 BC = 'NBC';
 formulation = {'BGU'};
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 
 
 c_f = 1500;
@@ -15,7 +15,7 @@ k = 1;
 omega = k*c_f;
 f = omega/(2*pi); 
 
-applyLoad = 'pointPulsation';
+misc.applyLoad = 'pointPulsation';
 
 M = 1; 
 parm = 2;
@@ -26,19 +26,19 @@ extraGP = 0:2; % extra quadrature points
 initMeshFactZeta = 32;
 
 plotFarField          = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 calculateSurfEnrgErr = true;
 calculateFarFieldPattern = 0;
 prePlot.plot3Dgeometry = 0;
 solveForPtot = false;
-loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation'};
+loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','misc.method','formulation'};
 
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
 runTasksInParallel = 0;
-method = {'BEM'};
+misc.method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE','CHBIE','CBM','CRCBIE1','CRCBIE2','CRCBIE3'};
 % formulation = {'CCBIE'};
@@ -59,8 +59,8 @@ agpBEM = 1:12;
 % agpBEM = 2;
 quadMethodBEM = {'Simpson'};
 
-loopParameters = {'formulation','extraGPBEM','extraGP','agpBEM','colBEM_C0','method','quadMethodBEM'};
-% loopParameters = {'quadMethodBEM','formulation','extraGPBEM','extraGP','agpBEM','colBEM_C0','method'};
+loopParameters = {'formulation','extraGPBEM','extraGP','agpBEM','colBEM_C0','misc.method','quadMethodBEM'};
+% loopParameters = {'quadMethodBEM','formulation','extraGPBEM','extraGP','agpBEM','colBEM_C0','misc.method'};
 
 collectIntoTasks
 

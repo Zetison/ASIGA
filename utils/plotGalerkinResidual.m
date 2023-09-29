@@ -1,4 +1,4 @@
-function plotGalerkinResidual(varCol,U)
+function plotGalerkinResidual(varCol)
 
 p_xi = varCol.degree(1); % assume p_xi is equal in all patches
 p_eta = varCol.degree(2); % assume p_eta is equal in all patches
@@ -28,6 +28,7 @@ colMethod = varCol.colMethod;
 quadMethodBEM = varCol.quadMethodBEM;
 
 Eps = 1e4*eps;
+U = varCol{1}.U;
 
 k = varCol.k;
 alpha = 1i/k;
@@ -87,7 +88,7 @@ p_inc = varCol.p_inc;
 Eps = 1e4*eps;
 
 patches = varCol.patches;
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(varCol.nurbs);
 centerPts = findCenterPoints(patches);
 
 noPatches = varCol.noPatches;

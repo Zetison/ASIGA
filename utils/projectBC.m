@@ -8,7 +8,7 @@ if SHBC
         varCol2 = varCol;
         varCol2.formulation = 'SL2E';
         varCol2.analytic = varCol.p_inc;
-        [A, FF] = bestApproximationVec(varCol2);
+        [A, FF] = bestApproximation(varCol2);
         noDofs_tot = varCol.noDofs;
 
         A(dofsToRemove,:) = [];  
@@ -23,7 +23,7 @@ if SHBC
         varCol2 = varCol;
         varCol2.formulation = 'SL2E';
         varCol2.analytic = varCol.dp_inc;
-        [A, FF] = bestApproximationVec(varCol2);
+        [A, FF] = bestApproximation(varCol2);
         noDofs_tot = varCol.noDofs;
 
         A(dofsToRemove,:) = [];  
@@ -38,7 +38,7 @@ else
     varCol2 = varCol;
     varCol2.formulation = 'SL2E';
     varCol2.analytic = varCol.dpdn;
-    [A, FF] = bestApproximationVec(varCol2);
+    [A, FF] = bestApproximation(varCol2);
     noDofs_tot = varCol.noDofs;
 
     A(dofsToRemove,:) = [];  

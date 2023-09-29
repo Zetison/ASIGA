@@ -1,8 +1,9 @@
 function x = abcdeFormula(C)
+% Solves polynomial equation up to order 4
 
 x = zeros(size(C,1),size(C,2)-1);
 switch size(C,2)
-    case 2
+    case 2 % linear equation
         a = C(:,1);
         b = C(:,2);
         indices = a ~= 0;

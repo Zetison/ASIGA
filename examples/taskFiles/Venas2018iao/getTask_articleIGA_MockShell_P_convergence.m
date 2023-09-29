@@ -9,14 +9,14 @@ counter = 1;
 studies = cell(0,1);
 getDefaultTaskValues
 
-model = 'MS'; % Mock shell model after Ihlenburg
+misc.model = 'MS'; % Mock shell misc.model after Ihlenburg
 
-% method = {'IE','IENSG'};
+% misc.method = {'IE','IENSG'};
 % formulation = {'BGU','PGC','BGC'};
-method = 'IE';
+misc.method = 'IE';
 formulation = {'BGU','PGU','PGC','BGC'};
 formulation = {'BGU'};
-% method = 'BA';
+% misc.method = 'BA';
 % formulation = {'VL2E'};
 
 varCol = setMockShellParameters(1);
@@ -34,13 +34,13 @@ degree = 2;
 parm = 1;
 runTasksInParallel = 0;
 plotResultsInParaview = 0;
-calculateSurfaceError = 1;	% Only for spherical shell and if scatteringCase == 'Bi'
+err.calculateSurfaceError = 1;	% Only for spherical shell and if misc.scatteringCase == 'Bi'
 LpOrder = 2; % For error calculation in calcSurfError()
 
-calculateVolumeError  = 1;	% Only for spherical shell and if scatteringCase == 'Bi'
+calculateVolumeError  = 1;	% Only for spherical shell and if misc.scatteringCase == 'Bi'
 calculateFarFieldPattern = 0;
 computeCondNumber = 1;
-applyLoad = 'pointPulsation';
+misc.applyLoad = 'pointPulsation';
 BC = 'NBC';
 warning('off','NURBS:weights')
 

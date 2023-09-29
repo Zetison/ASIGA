@@ -33,8 +33,8 @@ nurbs(7:10) = rotateNURBS(nurbs(7:10),'rotAxis',[0,1,0],'theta',-pi/2);
 nurbsArc = getArcData('Xi',[0,0,0,1,1,1],'R',R,'theta',pi/2);
 xi = invertNURBS(nurbsArc{1},[sqrt(R^2-t^2/4),t/2],10*eps);
 xiKnots = [xi*ones(1,2),(1-xi)*ones(1,2)];
-knots = {xiKnots,xiKnots,[]};
-nurbs = insertKnotsInNURBS(nurbs,knots);
+nurbs(2) = insertKnotsInNURBS(nurbs(2),{[],xiKnots,[]});
+nurbs(4:10) = insertKnotsInNURBS(nurbs(4:10),{xiKnots,[],[]});
     
 nurbs(11) = translateNURBS(getQuarterDiskData('R',sqrt(R^2-t^2/4)-t/2),[1,1,0]*t/2);
 
@@ -101,5 +101,6 @@ nurbs = rotateNURBS(nurbs,'rotAxis',[1,0,0],'theta',options.theta2);
 nurbs = makeUniformNURBSDegree(nurbs);
 nurbs = explodeNURBS(nurbs);
 
+nurbs = translateNURBS(nurbs,[L/2,0,0]);
 
 

@@ -1,52 +1,99 @@
-variables = whos;
-protectedVariables = {'variables','i','j','counter','studyName','studies','studiesCol','loopParameters'};
-for i = 1:length(variables)
-    if ~any(ismember(variables(i).name,protectedVariables))
-        task.(variables(i).name) = eval(variables(i).name);
-    end
+
+structs = {'varCol','misc','msh','prePlot','sol','err','ffp','para','iem','abc','pml','bem','mfs','rt','rom'};
+for i = 1:numel(structs)
+    task.(structs{i}) = eval(structs{i});
 end
-if task.useROM
-    task.storeSolution = true;
-end
-if (~isnan(alpha_s(1)) || ~isnan(beta_s(1))) && (strcmp(scatteringCase,'MS') || strcmp(scatteringCase,'Sweep'))
-    error(['For monostatic scattering alpha_s and beta_s should not be given (they should be defined through alpha and beta). ' ...
-           'Note that alpha_s = alpha and beta_s = beta.'])
-end
-if (isnan(alpha_s(1)) || isnan(beta_s(1))) && strcmp(scatteringCase,'BI') && strcmp(applyLoad,'planeWave')
-    error('Incident direction is not set: alpha_s = NaN and/or beta_s = NaN')
-end
-if solveForPtot && ~(strcmp(method,'BEM') || strcmp(method,'BA'))
-    error('solveForPtot should can only be used with method = BEM or method = BA')
+if task.rom.useROM
+    task.misc.storeSolution = true;
 end
 loopParametersArr = cell(length(loopParameters),1);
 
 taskNames = fieldnames(task);
+allTaskNames = cell(1000,1);
+counter2 = 1;
 for j = 1:numel(taskNames)
-    idx = find(strcmp(taskNames{j},loopParameters));
+    taskName_j = task.(taskNames{j});
+    if isstruct(taskName_j)
+        subTaskNames = fieldnames(taskName_j);
+        for i = 1:numel(subTaskNames)
+            allTaskNames{counter2} = [taskNames{j} '.' subTaskNames{i}];
+            counter2 = counter2 + 1;
+        end
+    else
+        allTaskNames(counter2) = taskNames(j);
+        counter2 = counter2 + 1;
+    end
+end
+for patch = 1:numel(task.varCol)
+    subTaskNames = fieldnames(task.varCol{patch});
+    for i = 1:numel(subTaskNames)
+        allTaskNames{counter2} = ['varCol{' num2str(patch) '}.' subTaskNames{i}];
+        counter2 = counter2 + 1;
+    end
+end
+allTaskNames(counter2:end) = [];
+
+childrenParameters = cell(size(connectedParameters));
+for i = 1:numel(connectedParameters)
+    childrenParameters{i} = cell(size(connectedParameters{i}));
+    for j = 1:numel(connectedParameters{i})
+        eval(['childrenParameters{i}{j} = task.' connectedParameters{i}{j} ';'])
+    end
+end
+for j = 1:numel(allTaskNames)
+    idx = find(strcmp(allTaskNames{j},loopParameters));
     if ~isempty(idx)
-        loopParametersArr{idx} = task.(taskNames{j});
+        loopParametersArr{idx} = eval(['task.' allTaskNames{j}]);
         if ischar(loopParametersArr{idx}) % ensure cell type
             loopParametersArr{idx} = loopParametersArr(idx);
         end
-    elseif iscell(task.(taskNames{j})) && ~strcmp(taskNames{j},'varCol') % remove redundant cell type
-        temp = task.(taskNames{j});
-        task.(taskNames{j}) = temp{1};
+    elseif iscell(eval(['task.' allTaskNames{j}])) && isempty(strfind(allTaskNames{j},'postPlot')) && isempty(strfind(allTaskNames{j},'prePlot')) ...
+            && isempty(strfind(allTaskNames{j},'para')) && isempty(strfind(allTaskNames{j},'rom')) && ~strcmp(allTaskNames{j},'varCol') % remove redundant cell type
+        temp = eval(['task.' allTaskNames{j}]);
+        eval(['task.' allTaskNames{j} ' = temp{1};'])
     end
 end
 
+if saveStudies && runTasksInParallel
+    error('This may generate errors due to large memory consumption of studiesCol')
+end
 studies(counter).loopParameters = loopParameters;
 studies(counter).loopParametersArr = loopParametersArr;
 studies(counter).runTasksInParallel = runTasksInParallel;
-if exist('basisROMcell','var')
-    studies(counter).basisROMcell = basisROMcell;
-    studies(counter).k_ROM = k_ROM;
-    studies(counter).noVecsArr = noVecsArr;
-end
+studies(counter).noCoresToUse = noCoresToUse;
+studies(counter).saveStudies = saveStudies;
+studies(counter).appyCommandsAt = appyCommandsAt;
+studies(counter).connectedParameters = connectedParameters;
 
-studies(counter).tasks = createTasks([], 1, task, 1, loopParameters, loopParametersArr);
+for i = 1:numel(connectedParameters)
+    if ~isempty(connectedParameters{i})
+        if ~ismember(connectedParameters{i}{1},loopParameters)
+            error(['The connected parameter "' connectedParameters{i}{1} '" must be included in the variable loopParameters'])
+        end
+        for j = 1:numel(connectedParameters{i})
+            if eval(['length(' connectedParameters{i}{j} ')']) ~= eval(['length(' connectedParameters{i}{1} ')'])
+                error(['The connected parameter "' connectedParameters{i}{1} '" must have the same number of elements as the connected parameter "' connectedParameters{i}{j} '"'])
+            end
+        end
+    end
+end
+indices = [];
+for i = 1:numel(loopParameters)
+    for ii = 1:numel(connectedParameters)
+        if ismember(loopParameters{i},connectedParameters{ii}(2:end)) % Task should only be made for master parameter in connected Parameters
+            indices = [indices,i];
+        end
+    end
+end
+indices = setdiff(1:numel(loopParameters),indices);
+studies(counter).tasks = createTasks([], 1, task, 1, loopParameters(indices), loopParametersArr(indices), connectedParameters, childrenParameters);
+
+if isempty(studies(counter).tasks)
+    error('loopParameters contains invalid parameters')
+end
 studies(counter).postPlot = postPlot;
 if isempty(subFolderName)
-    subFolderName = model;
+    subFolderName = misc.model;
 end
 studies(counter).subFolderName = subFolderName;
 

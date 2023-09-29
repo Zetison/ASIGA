@@ -1,9 +1,9 @@
 
 
-scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'MS'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'BCA'; % BeTSSi submarine
-coreMethod = 'IGA';
+misc.model = 'BCA'; % BeTSSi submarine
+misc.coreMethod = 'IGA';
      
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
@@ -24,15 +24,15 @@ storeFullVarCol = 0;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% KDT simulation
-method = {'KDT'};
+misc.method = {'KDT'};
 formulation = '';
 prePlot.plot3Dgeometry = 0;
 degree = 6;
-calculateSurfaceError = 0;
+err.err.calculateSurfaceError = 0;
 computeCondNumber = false;
-loopParameters = {'method','M','coreMethod'};
-% coreMethod = {'linear_FEM'};
-coreMethod = {'IGA'};
+loopParameters = {'misc.method','M','misc.coreMethod'};
+% misc.coreMethod = {'linear_FEM'};
+misc.coreMethod = {'IGA'};
 M = [1,2,3];
 collectIntoTasks
 

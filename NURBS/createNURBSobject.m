@@ -1,4 +1,17 @@
-function nurbs = createNURBSobject(coeffs,knots)
+function nurbs = createNURBSobject(coeffs,knots,major,minor,color,alpha)
+
+if nargin < 6
+    alpha = 1;
+end
+if nargin < 5
+    color = getColor(1);
+end
+if nargin < 4
+    minor = 0;
+end
+if nargin < 3
+    major = 1;
+end
 if nargin < 2
     knots = {};
 end
@@ -20,4 +33,8 @@ nurbs.number = number; % array of the number of basis functions in each parametr
 nurbs.degree = sizeKnots-number-1;
 nurbs.knots = knots;
 nurbs.coeffs = coeffs;
+nurbs.major = major;
+nurbs.minor = minor;
+nurbs.color = color;
+nurbs.alpha = alpha;
 nurbs = {nurbs};

@@ -1,10 +1,49 @@
-function nurbs = getBC_modData2(a, b, L, g2, g3, alpha, beta, c, s, repLoc)
+function nurbs = getBC_modData2(a, b, L, g2, g3, alpha, beta, c, s, repLoc,addExtraKnots)
+if nargin == 0
+    container = setBCParameters;
+    fieldNames = fieldnames(container);
+    for i = 1:numel(fieldNames)
+        eval([fieldNames{i} ' = container.' fieldNames{i} ';']);
+    end
+    addExtraKnots = false;
+end
 h = g2*tan(alpha/2); % = g2/tan((pi-alpha)/2)
+x2 = g3*tan(alpha);
 t1 = 2*pi-beta;
 npts = 6;
 p2 = t1/(2*npts);
+b2 = b-h;
+b5 = abs(-b+h+x2);
 
+
+%% Create back disk and cone
+Xi2 = [0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,12]/12;
+XiTemp = [Xi2(1:end-1)/3,[2,2,3,3,3]/3];
+n = numel(XiTemp)-(2+1);
+coeffs = zeros(4,n,2);
+controlPtsTemp = parmArc(XiTemp,2*pi);
+x = -L-g2-g3;
+controlPts = [x*ones(1,n); b5*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
+coeffs(:,:,2) = controlPts;
+coeffs(1,:,1) = x;
+coeffs(4,:,1) = coeffs(4,:,2);
+backDisk = rotateNURBS(createNURBSobject(coeffs,{XiTemp, [0,0,1,1]}), 'theta', 3*p2, 'rotAxis', [1,0,0]);
+
+x = -L-g2;
+coeffs(:,:,1) = coeffs(:,:,2);
+controlPts = [x*ones(1,n); b2*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
+coeffs(:,:,2) = controlPts;
+backCone = rotateNURBS(createNURBSobject(coeffs,{XiTemp, [0,0,1,1]}), 'theta', 3*p2, 'rotAxis', [1,0,0]);
+nurbs_back = glueNURBS({backDisk{1}, backCone{1}}, 2);
+
+
+%% Create lower curve
 x1 = tan(alpha/2)*(g2/tan(alpha) + h);
+if addExtraKnots
+    Xi1 = [0,0,0,3,3,6,6,9,9,12,12,15,15,18,18,21,21,24,24,24]/24;
+else
+    Xi1 = [0,0,0,1,1,2,2,2]/2;
+end
 lowerCpts = [  -L-g2,       b-h,        1;
                -L-x1,       b,          cos(alpha/2);
                -L,          b,          1;
@@ -13,19 +52,19 @@ lowerCpts = [  -L-g2,       b-h,        1;
                 a,          b,          1/sqrt(2);
                 a,          0,          1].';
 
-Xi1 = [0,0,0,3,3,6,6,9,9,12,12,15,15,18,18,21,21,24,24,24]/24;
 Eta = [0 0 0 1 1 2 2 3 3 3]/3;
-ctrlPtsXi = parmArc(Xi1,beta);
 
-coeffs = calcTensorRotCtrlPts(ctrlPtsXi,lowerCpts);
-nurbs_lower = rotateNURBS(createNURBSobject(coeffs,{Xi1, Eta}),pi-3*p2,'Xaxis');
-nurbs_lower = insertKnotsInNURBS(nurbs_lower{1},{[] 1/6});
+nurbsLower1D = createNURBSobject(lowerCpts,Eta);
+nurbs_lower = revolveNURBS(nurbsLower1D,'Xi',Xi1, 'theta',beta,'rotAxis',[1,0,0]);
+nurbs_lower = permuteNURBS(nurbs_lower,[2,1]);
+
+nurbs_lower = rotateNURBS(nurbs_lower,'theta',pi-3*p2,'rotAxis',[1,0,0]);
+nurbs_lower = insertKnotsInNURBS(nurbs_lower,{[] 1/6});
 
 %% Create back top
 b2 = b-h;
 x_b3 = -L-g2-g3/2;
 b3 = (x_b3+L+g2+cot(alpha)*(b-h))/cot(alpha);
-Xi2 = [0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,12]/12;
 n = numel(Xi2)-(2+1);
 coeffs = zeros(4,n,2);
 controlPtsTemp = parmArc(Xi2,beta/2);
@@ -33,8 +72,7 @@ x_b3 = -L-g2-g3/2;
 coeffs(:,:,1) = [x_b3*ones(1,n); b3*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
 x_b2 = -L-g2;
 coeffs(:,:,2) = [x_b2*ones(1,n); b2*controlPtsTemp(1:2,:); controlPtsTemp(3,:)];
-backTop = rotateNURBS(createNURBSobject(coeffs,{Xi2, [0,0,1,1]}),30*pi/180,'Xaxis');
-backTop = backTop{1};
+backTop = rotateNURBS(createNURBSobject(coeffs,{Xi2, [0,0,1,1]}),'theta',30*pi/180,'rotAxis',[1,0,0]);
 
 %% Upper main body
 C_4 = c + b*cos(beta/2);
@@ -73,7 +111,7 @@ coeffs_mainTop(2,2*npts+2:end,:) = -coeffs_mainTop(2,2*npts+2:end,:);
 %% Create transition and combine into upper main body
 coeffs_top = zeros(4,25,8);
 coeffs_top(:,:,4:end) = coeffs_mainTop;
-coeffs_top(:,:,1) = backTop.coeffs(:,:,2);
+coeffs_top(:,:,1) = backTop{1}.coeffs(:,:,2);
 w2 = cos(p2/2);
 weigh_ss = linspace(w2,1,4);
 for i = 1:2*npts+1
@@ -86,12 +124,12 @@ for i = 1:2*npts+1
         pts(1,4) = weigh_ss(2);
         pts(2,4) = weigh_ss(3);
     end
-    pts(2,1) = nurbs_lower.coeffs(1,1,3);
+    pts(2,1) = nurbs_lower{1}.coeffs(1,1,3);
     
-    v1 = backTop.coeffs(1:3,i,1);
-    v2 = backTop.coeffs(1:3,i,2);
+    v1 = backTop{1}.coeffs(1:3,i,1);
+    v2 = backTop{1}.coeffs(1:3,i,2);
     
-    g4 = nurbs_lower.coeffs(1,1,2)-nurbs_lower.coeffs(1,1,1);
+    g4 = nurbs_lower{1}.coeffs(1,1,2)-nurbs_lower{1}.coeffs(1,1,1);
     
     pts(1,1:3) = (v2-v1)/norm(v2-v1)*g4/cos(alpha)+v2;
     coeffs_top(:,i,2:3) = pts.';
@@ -101,10 +139,14 @@ coeffs_top(:,(2*npts+2):end,2:3) = coeffs_top(:,2*npts:-1:1,2:3);
 coeffs_top(2,(2*npts+2):end,2:3) = -coeffs_top(2,(2*npts+2):end,2:3);
 
 
-nurbs_top = createNURBSobject(coeffs_top,{Xi2, nurbs_lower.knots{2}});
-nurbs = glueNURBS({nurbs_top,nurbs_lower},'xi');
-nurbs.knots{1} = [Xi2(1:end-1)/3,1/3+Xi1(4:end)*2/3]; % make knot vector based on the arclength of the rotationally summetric back of submarine
+nurbs_top = createNURBSobject(coeffs_top,{Xi2, nurbs_lower{1}.knots{2}});
+nurbs = glueNURBS([nurbs_top,nurbs_lower],1);
 
-if nargin == 10
+% nurbs_back = insertKnotsInNURBS(nurbs_back,{setdiff(nurbs{1}.knots{1},[0,1,2,3]/3) []});
+
+if nargin >= 10
     nurbs = insertKnotsInNURBS(nurbs,{[] copyVector(1/3+repLoc/3,2,1)}); % add degrees of freedom to enable C0 lines at rudders and sail
+else
+    nurbs = glueNURBS([nurbs_back,nurbs],2);
 end
+nurbs{1}.knots{1} = [Xi2(1:end-1)/3,1/3+Xi1(4:end)*2/3]; % make knot vector based on the arclength of the rotationally symmetric back of submarine

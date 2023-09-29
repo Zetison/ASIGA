@@ -4,6 +4,7 @@ options = struct('R1', 3,...
                  'parm', 1, ...
                  't', 0.008, ...
                  'Xi', [0,0,0,1,1,2,2,3,3,4,4,4]/4, ...
+                 'x_0', [0,0,0], ...
                  'L', 41);
 if nargin > 0
     if numel(varargin) > 1
@@ -34,7 +35,11 @@ hSphere2 = flipNURBSparametrization(hSphere2,2);
 R1 = options.R1-[t(2),0];
 R2 = options.R2-[t(2),0];
 cone = rotateNURBS(getConeData('R1',R1,'R2',R2,'Xi',Xi,'h',L),'rotAxis','Yaxis','theta',-pi/2);
-cone = permuteNURBS(cone,[3,1,2]);
+if all(t==0)
+    cone = permuteNURBS(cone,[2,1]);
+else
+    cone = permuteNURBS(cone,[3,1,2]);
+end
 cone = flipNURBSparametrization(cone,[1,2]);
 if t(1) < t(2)
     cone = insertKnotsInNURBS(cone,{0,(1-t(1)/t(2))*ones(1,cone{1}.degree(3)),0});
@@ -49,6 +54,7 @@ if parm == 2
 end
 nurbs = makeUniformNURBSDegree(nurbs);
 nurbs = rotateNURBS(nurbs,'rotAxis','Xaxis','theta',-pi/2);
-nurbs = explodeNURBS(nurbs,[1,2]);
-
+nurbs = explodeNURBS(nurbs);
+nurbs = translateNURBS(nurbs,[L/2+(options.R2-options.R1)/2,0,0]);
+nurbs = translateNURBS(nurbs,options.x_0);
 

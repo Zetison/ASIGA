@@ -1,12 +1,20 @@
-function nurbs = cleanNURBS(nurbs,parms)
-
-parms = [parms, 0, 1, 1/sqrt(2)];
-cutOff = 1e6;
-Eps = cutOff*eps;
+function nurbs = cleanNURBS(nurbs,parms,Eps)
+% This function normalizes the knots and merges control points/weights
+% which is closer than a distance Eps from one another. Also any number
+% closer than Eps to the list parms (in addition to the predefined numbers
+% below) will be updated to be equal to these numbers
+parms = [parms, 0, 1, 0.5, 0.25, 0.125, 1/sqrt(2)];
+if nargin < 3
+    Eps = 1e6*eps;
+end
 for i = 1:numel(nurbs)
     for j = 1:numel(parms)
-        nurbs{i}.coeffs(abs(nurbs{i}.coeffs - parms(j)) < Eps) = parms(j);
         nurbs{i}.coeffs(abs(nurbs{i}.coeffs + parms(j)) < Eps) = -parms(j);
+        nurbs{i}.coeffs(abs(nurbs{i}.coeffs - parms(j)) < Eps) = parms(j);
+        for ii = 1:numel(nurbs{i}.knots)
+            nurbs{i}.knots{ii}(abs(nurbs{i}.knots{ii} + parms(j)) < Eps) = -parms(j);
+            nurbs{i}.knots{ii}(abs(nurbs{i}.knots{ii} - parms(j)) < Eps) = parms(j);
+        end
     end
 end
 
@@ -35,7 +43,7 @@ end
 gluedNodes(repeatedNode == 0) = [];
 
 for i = 1:length(gluedNodes)
-    controlPts(gluedNodes{i}(2:end)) = controlPts(gluedNodes{i}(1));
+    controlPts(gluedNodes{i}(2:end),:) = repmat(controlPts(gluedNodes{i}(1),:),numel(gluedNodes{i})-1,1);
 end
 
 counter = 1;

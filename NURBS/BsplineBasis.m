@@ -9,6 +9,7 @@ function ders = BsplineBasis(i, xi, p, Xi, n)
 %       p:      the degree of the B-Spline
 %       xi:     the value for which we want to evaluate the Bspline
 %       Xi:     an open knot vector of size n+p+1
+%       n:      number of derivatives to compute
 
 % Output
 %       ders: 	array of the p+1 B-spline functions and its derivatives 
@@ -16,6 +17,7 @@ function ders = BsplineBasis(i, xi, p, Xi, n)
 if nargin < 5
     n = 0;
 end
+Xi = Xi.'; % Make Xi a column vector
 noxi = numel(xi);
 left = zeros(noxi,p+1);
 right = zeros(noxi,p+1);

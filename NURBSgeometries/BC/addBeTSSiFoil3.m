@@ -14,7 +14,7 @@ s1 = s_rep(idx);
 controlPts = [0, 1; 1, 1];
 nurbs1D_1 = createNURBSobject(controlPts,[0,0,1,1]);
 nurbs1D_1 = elevateNURBSdegree(nurbs1D_1,p_xi-1);
-nurbs1D_1 = insertKnotsInNURBS(nurbs1D_1,Xi(and(Xi < s1-10*eps, Xi > 0))/s1);
+nurbs1D_1 = insertKnotsInNURBS(nurbs1D_1,{{Xi(and(Xi < s1-10*eps, Xi > 0))/s1}});
 XiTemp = [zeros(1,p_xi+1), (Xi(and(Xi > (s1+10*eps), Xi < (s2+10*eps)))-s1)/(s2-s1), 1];
 xiT1 = aveknt(XiTemp, p_xi+1);
 X1 = @(xi) x_s + dx - xi*(s2*l_ls+dx);
@@ -53,7 +53,7 @@ for i = 1:2
     
     y = dy(i)+b_ls/2;
     controlPts1(1,1:I(idx),1,i) = dx+x_s;
-    controlPts1(axisFlipIdx,1:I(idx),1,i) = zFlip + nurbs1D_1.coeffs(1,:)*y;
+    controlPts1(axisFlipIdx,1:I(idx),1,i) = zFlip + nurbs1D_1{1}.coeffs(1,:)*y;
     controlPts1(axisFlipIdx,I(idx):end,1,i) = zFlip + y;
     controlPts1(axisFlipIdx2,:,1,i) = z;
     controlPts1(4,:,1,i) = weigh_ss;
@@ -72,3 +72,4 @@ controlPts(axisFlipIdx,:,4:6) = 2*zFlip-controlPts(axisFlipIdx,:,4:6);
 Eta = [0,0,1,2,3,4,5,5]/5;
 
 nurbs = createNURBSobject(controlPts,{Xi,Eta});
+nurbs = insertKnotsInNURBS(nurbs,{[],0.5});
