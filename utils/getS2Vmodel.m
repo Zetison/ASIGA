@@ -78,7 +78,7 @@ switch model
         app.EnforcesymmetryaboutthexyplaneCheckBox.Value = true;
         app.EnforcesymmetryaboutthexzplaneCheckBox.Value = true;
         app.AlgorithmForCase13.Value = 'A13_41';
-        app.UseaveragenormalvectorsCheckBox = false;
+        app.UseaveragenormalvectorsCheckBox.Value = false;
         view(app.UIAxes,[162,10]);
     case {'BeTSSiM4','BeTSSiM4_parm2'}
         if model(end) == '2'
@@ -154,12 +154,16 @@ switch model
         app.ThicknessEditField.Value = 1.1;
         app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
     case 'Pawn'
-        app.nurbsObjects{1,1}.nurbs = read_g2('../IGA-geometries/Chess/Pawn.g2');
+        nurbs = read_g2('../IGA-geometries/Chess/Pawn.g2');
+%         nurbs = insertKnotsInNURBS(nurbs,nurbs{1}.knots{2}(28));
+        app.nurbsObjects{1,1}.nurbs = nurbs;
         app.Eps = 1e-4;
         app.EpsEditField.Value = app.Eps;
 
         app.ThicknessEditField.Value = 1.1;
         app.AnglethresholdEditField.Value = 120; % Threshold for a "sharp" angle
+        app.EnforcesymmetryaboutthexzplaneCheckBox.Value = 1;
+        app.EnforcesymmetryabouttheyzplaneCheckBox.Value = 1;
     case 'S1_interior'
         app.nurbsObjects{1,1}.nurbs = getEllipsoidData('parm',2);
         app.AlgorithmForCase1.Value = 'A1_31';

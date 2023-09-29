@@ -603,7 +603,11 @@ for patch = 1:noPatches
         controlPolygonHandle(patch).UserData = options.UserData;
     end
     if plotParmDir && ~isempty(options.UserData)
-        parmDirHandle(patch).UserData = options.UserData;
+        for i = 1:size(parmDirHandle,1)
+            if ~isa(parmDirHandle(i,patch),'matlab.graphics.GraphicsPlaceholder') 
+                parmDirHandle(i,patch).UserData = options.UserData;
+            end
+        end
     end
     if plotNormalVectors && ~isempty(options.UserData)
         normalVectorsHandle(patch).UserData = options.UserData;

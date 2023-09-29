@@ -1535,14 +1535,14 @@ methods (Access = public)
         indices_covered = all(isnan(S2Vobj.angles),2);
         indices_op = and(or(and(sharpAngles(:,1),sharpAngles(:,2)),and(sharpAngles(:,3),sharpAngles(:,4))),~indices_covered);
         indices_nan = and(any(isnan(S2Vobj.angles),2),~indices_covered);
-        indices_input = ~indices_covered;
-        indices_input(S2Vobj.noOriginalBdryPatches+1:end) = false;
+        indices_prevLayer = ~indices_covered;
+        indices_prevLayer(S2Vobj.patchMustBeCovered+1:end) = false;
         
         noSharpAngles = sum(sharpAngles,2);
         noSharpAngles(~indices_covered) = noSharpAngles(~indices_covered) + 0.001; % In case another layer is needed after a layer is complete
         noSharpAngles(indices_op) = noSharpAngles(indices_op) + S2Vobj.options.prioritizeCasesOfOppositeFacesWeight; % Prioritize cases where opposite faces are known
         noSharpAngles(indices_nan) = noSharpAngles(indices_nan) + S2Vobj.options.prioritizeCasesSingularitiesWeight; % Prioritize cases containing singularities
-        noSharpAngles(indices_input) = noSharpAngles(indices_input) + S2Vobj.options.prioritizeInputFacesWeight; % Prioritize input surface
+        noSharpAngles(indices_prevLayer) = noSharpAngles(indices_prevLayer) + S2Vobj.options.prioritizeInputFacesWeight; % Prioritize input surface
         maxNoSharpAngles = max(noSharpAngles);
         candidates = and(noSharpAngles == maxNoSharpAngles,~indices_covered);
         avgAngles = Inf(size(sharpAngles,1),1);
