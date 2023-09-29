@@ -63,8 +63,8 @@ else
 end
 
 %% Build global matrices
-for e = 1:noElems
-% parfor e = 1:noElems
+% for e = 1:noElems
+parfor e = 1:noElems
 	if progressBars && mod(e,nProgressStepSize) == 0
         ppm.increment();
 	end
