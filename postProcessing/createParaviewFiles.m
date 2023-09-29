@@ -1,7 +1,6 @@
 function maxU = createParaviewFiles(varargin)
-varCol = varargin{1};
-options = struct('U', NaN, ... 
-                 'para_options', 0,...
+task = varargin{1};
+options = struct('para_options', 0,...
                  'rho',NaN);
 if nargin > 1
     if numel(varargin) > 2
@@ -11,9 +10,9 @@ if nargin > 1
     end
     options = updateOptions(options,newOptions);
 end
-analyticSolutionExist = varCol{1}.analyticSolutionExist;
-isPointPulsation = strcmp(varCol{1}.applyLoad,'pointPulsation');
-noDomains = numel(varCol);
+analyticSolutionExist = task.analyticSolutionExist;
+splitExteriorFields = task.splitExteriorFields;
+noDomains = numel(task.varCol);
 nodes = cell(1,noDomains);
 visElements = cell(1,noDomains);
 scalarField = cell(1,noDomains);
@@ -27,28 +26,39 @@ fprintf(['\n%-' num2str(stringShift) 's'], '    Evaluating solution ... ')
 tic
 for i_v = 1:noDomains
     para{i_v} = options.para_options;
-    if varCol{i_v}.boundaryMethod
-        celltype = 'VTK_QUAD';
-    else
-        celltype = 'VTK_HEXAHEDRON';
+    d_p = task.varCol{i_v}.nurbs{1}.d_p;
+    switch d_p
+        case 2
+            celltype = 'VTK_QUAD';
+        case 3
+            celltype = 'VTK_HEXAHEDRON';
     end
     isOuterDomain = i_v == 1;
-    varCol{i_v}.isOuterDomain = isOuterDomain;
-    d = varCol{i_v}.dimension;
+    task.varCol{i_v}.isOuterDomain = isOuterDomain;
+    d = task.varCol{i_v}.dimension;
     isSolid = d == 3;
 
     para{i_v}.celltype = celltype;
-    para{i_v}.plotP_inc = options.para_options.plotP_inc && ~isSolid && ~isPointPulsation && isOuterDomain;
+    para{i_v}.plotP_inc = options.para_options.plotP_inc && ~isSolid && splitExteriorFields && isOuterDomain;
     para{i_v}.plotScalarField = options.para_options.plotScalarField && ~isSolid && isOuterDomain;
-    para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && ~isPointPulsation; 
-    para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && ~isPointPulsation; 
+    para{i_v}.plotScalarFieldAbs = options.para_options.plotScalarField && ~isSolid && isOuterDomain;
+    para{i_v}.plotTotField = options.para_options.plotTotField && ~isSolid && splitExteriorFields; 
+    para{i_v}.plotTotFieldAbs = options.para_options.plotTotFieldAbs && ~isSolid && splitExteriorFields; 
     para{i_v}.plotAnalytic = options.para_options.plotAnalytic && analyticSolutionExist; 
-    para{i_v}.computeGrad = options.para_options.computeGrad && ~(varCol{i_v}.boundaryMethod && ~isSolid);
+    para{i_v}.computeGrad = options.para_options.computeGrad && ~(task.varCol{i_v}.boundaryMethod && ~isSolid) && d_p == 3;
     para{i_v}.plotError = options.para_options.plotError && (analyticSolutionExist && ~options.para_options.plotTimeOscillation); 
-    para{i_v}.plotErrorGrad = para{i_v}.plotError; 
-    para{i_v}.plotErrorEnergy = para{i_v}.plotError; 
+    para{i_v}.plotErrorGrad = para{i_v}.plotError && d_p == 3; 
+    para{i_v}.plotErrorEnergy = para{i_v}.plotError && d_p == 3; 
+    
+    para{i_v}.plotVonMisesStress = options.para_options.plotVonMisesStress && isSolid && d_p == 3;
+    para{i_v}.plotStressXX = options.para_options.plotStressXX && isSolid && d_p == 3;
+    para{i_v}.plotStressYY = options.para_options.plotStressYY && isSolid && d_p == 3;
+    para{i_v}.plotStressZZ = options.para_options.plotStressZZ && isSolid && d_p == 3;
+    para{i_v}.plotStressYZ = options.para_options.plotStressYZ && isSolid && d_p == 3;
+    para{i_v}.plotStressXZ = options.para_options.plotStressXZ && isSolid && d_p == 3;
+    para{i_v}.plotStressXY = options.para_options.plotStressXY && isSolid && d_p == 3;
 
-    U = options.U{i_v};
+    U = task.varCol{i_v}.U(:,para{i_v}.i_MS);
     rho = options.rho;
     if isnan(options.rho)
         rho = zeros(size(U,1),1);
@@ -59,66 +69,46 @@ for i_v = 1:noDomains
     end
     maxU = NaN;
 
-    degree = varCol{i_v}.degree;
+    degree = task.varCol{i_v}.degree;
 
     extraXiPts = options.para_options.extraXiPts;
     extraEtaPts = options.para_options.extraEtaPts;
     extraZetaPts = options.para_options.extraZetaPts;
 
-    index = varCol{i_v}.index;
-    noElems = varCol{i_v}.noElems;
-    elRange = varCol{i_v}.elRange;
-    element = varCol{i_v}.element;
-    element2 = varCol{i_v}.element2;
-    weights = varCol{i_v}.weights;
-    controlPts = varCol{i_v}.controlPts;
-    knotVecs = varCol{i_v}.knotVecs;
-    pIndex = varCol{i_v}.pIndex;
-    noDofs = varCol{i_v}.noDofs;
-    patches = varCol{i_v}.patches;
-    d = varCol{i_v}.dimension;
-    if isfield(varCol{i_v},'omega')
-        omega = varCol{i_v}.omega;
+    index = task.varCol{i_v}.index;
+    noElems = task.varCol{i_v}.noElems;
+    elRange = task.varCol{i_v}.elRange;
+    element = task.varCol{i_v}.element;
+    element2 = task.varCol{i_v}.element2;
+    weights = task.varCol{i_v}.weights;
+    controlPts = task.varCol{i_v}.controlPts;
+    knotVecs = task.varCol{i_v}.knotVecs;
+    pIndex = task.varCol{i_v}.pIndex;
+    noDofs = task.varCol{i_v}.noDofs;
+    d = task.varCol{i_v}.dimension;
+    if isfield(task.misc,'omega')
+        omega = task.misc.omega;
     else
         omega = NaN;
     end
-    isOuterDomain = varCol{i_v}.isOuterDomain;
 
-    if d == 1
-        if isfield(varCol{i_v}, 'analytic')
-            analytic = varCol{i_v}.analytic;
-        else
-            analytic = 0;
-        end
-        if isfield(varCol{i_v}, 'gAnalytic')
-            gAnalytic = varCol{i_v}.gAnalytic;
-        else
-            gAnalytic = 0;
-        end
-
-        if isOuterDomain && ~strcmp(varCol{i_v}.applyLoad,'pointPulsation')
-            p_inc = varCol{i_v}.p_inc;
-            gp_inc = varCol{i_v}.gp_inc;
-        end
-    end
     if d == 3
-        C = varCol{i_v}.C;
+        C = task.varCol{i_v}.C;
         Ux = U(1:d:noDofs);
         Uy = U(2:d:noDofs);
         Uz = U(3:d:noDofs);
         U = [Ux, Uy, Uz];
     else
-    %     varCol{i_v}.dofsToRemove = varCol{i_v}.dofsToRemove_old;
+    %     task.varCol{i_v}.dofsToRemove = task.varCol{i_v}.dofsToRemove_old;
     %     tic
     %     fprintf(['\n%-' num2str(stringShift) 's'], '    Performing least squares ... ')
-    %     dU = leastSquares(varCol{i_v},U,'gradient');
-    %     dU = leastSquares(varCol{i_v},U,'scalar');
+    %     dU = leastSquares(task.varCol{i_v},U,'gradient');
+    %     dU = leastSquares(task.varCol{i_v},U,'scalar');
     %     fprintf('using %12f seconds.', toc)
         C = 0;
     end
     n_en = prod(degree+1);
-    d_p = patches{1}.nurbs.d_p;
-    if options.para_options.plotDisplacementVectors && strcmp(varCol{1}.BC,'SHBC') && varCol{1}.boundaryMethod
+    if options.para_options.plotDisplacementVectors && strcmp(task.misc.BC,'SHBC') && task.varCol{1}.boundaryMethod
         warning('Displacement (gradient of pressure) may not be plotted for SHBC and isBoundaryMethod')
     end
     switch d_p
@@ -176,16 +166,17 @@ for i_v = 1:noDomains
 
                 I = findKnotSpans(degree, [xi(1),eta(1)], knots);
                 R = NURBSbasis(I,[xi, eta], degree, knots, wgts);
-    %             dXdxi = R{2}*pts;
-    %             dXdeta = R{3}*pts;
 
                 nodes_e = R{1}*pts;
-                scalarField_e = R{1}*Usctr;
 
                 container{e}.nodes = nodes_e;
                 container{e}.noNodes = noNodes;
                 container{e}.noVisElems = noVisElems;
-                container{e}.scalarField{i_v} = scalarField_e;
+                if d == 3
+                    container{e}.displacement{i_v} = R{1}*Usctr;
+                else
+                    container{e}.scalarField{i_v} = R{1}*Usctr;
+                end
                 container{e}.visElements = visElements_e;
             end
             noNodes = 0;
@@ -208,6 +199,7 @@ for i_v = 1:noDomains
                 count_vis = count_vis + container{e}.noVisElems;
             end
         case 3
+            Eps = 1e-6;
             noXiKnots = 2+extraXiPts;
             noEtaKnots = 2+extraEtaPts;
             noZetaKnots = 2+extraZetaPts;
@@ -225,8 +217,8 @@ for i_v = 1:noDomains
                 container{e}.visElements = zeros(noVisElems,8);
                 container{e}.strain = zeros(noNodes,6);
             end
-            for e = 1:noElems
-%             parfor e = 1:noElems
+%             for e = 1:noElems
+            parfor e = 1:noElems
                 patch = pIndex(e);
                 knots = knotVecs{patch};
 
@@ -291,18 +283,22 @@ for i_v = 1:noDomains
 
                 container{e}.nodes = R{1}*pts;
                 container{e}.visElements = visElements_e;
-                if withDensity
-                    container{e}.density{i_v} = R{1}*rho(sctr);
-                end
                 dudx = dRdx*Usctr;
                 dudy = dRdy*Usctr;
                 dudz = dRdz*Usctr;
+                singularJ = abs(J_1) < Eps;
+                dudx(or(singularJ, isnan(dudx))) = 0;
+                dudy(or(singularJ, isnan(dudy))) = 0;
+                dudz(or(singularJ, isnan(dudz))) = 0;
                 if d == 3
                     container{e}.strain = calculateStrainVectorVec(dudx, dudy, dudz);
                     container{e}.displacement{i_v} = R{1}*Usctr;
                 else
                     container{e}.scalarField{i_v} = R{1}*Usctr;
                     container{e}.gScalarField_p{i_v} = [dudx,dudy,dudz];
+                end
+                if withDensity
+                    container{e}.density{i_v} = R{1}*rho(sctr);
                 end
             end
             noNodes = 0;
@@ -339,43 +335,50 @@ for i_v = 1:noDomains
 end
 fprintf('using %12f seconds.', toc)
 if analyticSolutionExist
-    layer = varCol{1}.analyticFunctions(nodes);
+    layer = task.analyticFunctions(nodes);
 end
 
-for i_v = 1:numel(varCol)
+for i_v = 1:numel(task.varCol)
+    d_p = task.varCol{i_v}.nurbs{1}.d_p;
     fprintf(['\n%-' num2str(stringShift) 's'], '    Computing error/storing data ... ')
     tic
     isOuterDomain = i_v == 1;
     data.nodes = nodes{i_v};
     data.visElements = visElements{i_v};
     data.omega = omega;
-    switch varCol{i_v}.media
+    switch task.varCol{i_v}.media
         case 'fluid'
             if isOuterDomain
                 if para{i_v}.plotP_inc
-                    data.P_inc = real(makeDynamic(p_inc(nodes{i_v}), para{i_v}, omega)); 
+                    data.P_inc = real(makeDynamic(task.p_inc_(nodes{i_v}), para{i_v}, omega)); 
                 end
-                if varCol{i_v}.solveForPtot
+                if task.misc.solveForPtot
                     totField = scalarField{i_v};
-                    if isOuterDomain && ~isPointPulsation
-                        scalarField{i_v} = scalarField{i_v} - p_inc(nodes{i_v});
+                    if isOuterDomain && splitExteriorFields
+                        scalarField{i_v} = scalarField{i_v} - task.p_inc_(nodes{i_v});
                     end
                 else   
-                    if isPointPulsation
-                        totField = scalarField{i_v};
+                    if splitExteriorFields
+                        totField = scalarField{i_v} + task.p_inc_(nodes{i_v});
                     else
-                        totField = scalarField{i_v} + p_inc(nodes{i_v});
+                        totField = scalarField{i_v};
                     end
                 end
                 data.scalarField = real(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
+                data.scalarFieldAbs = abs(makeDynamic(scalarField{i_v}, para{i_v}, omega)); 
                 if d_p == 3
-                    rho_f = varCol{i_v}.rho;
-                    displacement{i_v} = (gScalarField_p{i_v}+gp_inc(nodes{i_v}))/(rho_f*omega^2);
+                    rho_f = task.varCol{i_v}.rho;
+                    if splitExteriorFields
+                        gp_inc = [task.dp_incdx_(nodes{i_v}),task.dp_incdy_(nodes{i_v}),task.dp_incdz_(nodes{i_v})];
+                        displacement{i_v} = (gScalarField_p{i_v}+gp_inc)/(rho_f*omega^2);
+                    else
+                        displacement{i_v} = gScalarField_p{i_v}/(rho_f*omega^2);
+                    end
                 end
             else
                 totField = scalarField{i_v};
                 if d_p == 3
-                    rho_f = varCol{i_v}.rho; 
+                    rho_f = task.varCol{i_v}.rho; 
                     displacement{i_v} = gScalarField_p{i_v}/(rho_f*omega^2);  
                 end
             end
@@ -387,7 +390,7 @@ for i_v = 1:numel(varCol)
                 p_e2 = abs(p_e).^2;
                 data.Error = sqrt(p_e2/max(p2));
                 if d_p == 3
-                    dp = [layer{i_v}.dpdx, layer{i_v}.dpdy, layer{i_v}.dpdz];
+                    dp = [layer{i_v}.dp{1}, layer{i_v}.dp{2}, layer{i_v}.dp{3}];
                     dp_e = dp-gScalarField_p{i_v};
 
                     p2 = abs(p).^2;
@@ -395,7 +398,7 @@ for i_v = 1:numel(varCol)
                     p_e2 = abs(p_e).^2;
                     dp_e2 = sum(abs(dp_e).^2,2);
 
-                    k = varCol{i_v}.k;
+                    k = omega/task.varCol{i_v}.c_f;
                     data.Error = sqrt(p_e2/max(p2));
                     data.ErrorGrad = sqrt(dp_e2/max(dp2));
                     data.ErrorEnergy = sqrt((dp_e2 + k^2*p_e2)/max(dp2 + k^2*p2));
@@ -406,30 +409,34 @@ for i_v = 1:numel(varCol)
 
         case 'solid'
             if analyticSolutionExist
-                u = [layer{2}.u_x,layer{2}.u_y,layer{2}.u_z];                
+                u = [layer{i_v}.u{1},layer{i_v}.u{2},layer{i_v}.u{3}];                
                 u_e = u-displacement{i_v};
 
                 u2 = sum(abs(u).^2,2);
                 u_e2 = sum(abs(u_e).^2,2);
 
-                sigma = [layer{2}.sigma_xx,layer{2}.sigma_yy,layer{2}.sigma_zz,layer{2}.sigma_yz,layer{2}.sigma_xz,layer{2}.sigma_xy];
-                C = varCol{i_v}.C;
+                if d_p == 3
+                    sigma = [layer{i_v}.sigma{1},layer{2}.sigma{2},layer{i_v}.sigma{3},layer{i_v}.sigma{4},layer{i_v}.sigma{5},layer{i_v}.sigma{6}];
+                    C = task.varCol{i_v}.C;
+    
+                    strain_vec = (C\sigma.').';
+    
+                    strain_e = strain_vec-strain_h{i_v};
+    
+                    eCe = real(sum((strain_e*C).*conj(strain_e),2)); % the usage of real() is to remove machine epsilon imaginary part
+                    uCu = real(sum((strain_vec*C).*conj(strain_vec),2)); % the usage of real() is to remove machine epsilon imaginary part
 
-                strain_vec = (C\sigma.').';
+                    rho_s = task.varCol{i_v}.rho; 
+                    data.ErrorGrad = sqrt(eCe/max(uCu));
+                    data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
+                end
 
-                strain_e = strain_vec-strain_h{i_v};
-
-                eCe = real(sum((strain_e*C).*conj(strain_e),2)); % the usage of real() is to remove machine epsilon imaginary part
-                uCu = real(sum((strain_vec*C).*conj(strain_vec),2)); % the usage of real() is to remove machine epsilon imaginary part
-
-                rho_s = varCol{i_v}.rho; 
                 data.Error = sqrt(u_e2/max(u2));
-                data.ErrorGrad = sqrt(eCe/max(uCu));
-                data.ErrorEnergy = sqrt((eCe + rho_s*omega^2*u_e2)/max(uCu + rho_s*omega^2*u2));
-
                 data.analytic = real(makeDynamic(u, para{i_v}, omega)); 
             end
-            data.stress = real(makeDynamic(strain_h{i_v}*C, para{i_v}, omega));
+            if d_p == 3
+                data.stress = real(makeDynamic(strain_h{i_v}*C, para{i_v}, omega));
+            end
             if withDensity
                 data.density = real(makeDynamic(density{i_v}, para{i_v}, omega));
             end
@@ -441,5 +448,12 @@ for i_v = 1:numel(varCol)
     para{i_v}.name = [para{i_v}.name '_' num2str(i_v)];
     tic
     makeVTKfile(data, para{i_v});
+    fprintf('using %12f seconds.', toc)
+end
+
+if options.para_options.plotMesh
+    fprintf(['\n%-' num2str(stringShift) 's'], '    Creating mesh-files ... ')
+    tic
+    createVTKmeshFiles(task, 'para_options', options.para_options)
     fprintf('using %12f seconds.', toc)
 end

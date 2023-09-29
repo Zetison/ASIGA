@@ -3,11 +3,11 @@ function nurbsPatches = elevateNURBSdegree(nurbsPatches,degreeElevations)
 for patch = 1:numel(nurbsPatches)
     nurbs = nurbsPatches{patch};
     d = nurbs.d;
+    coeffs = nurbs.coeffs;
     d_p = nurbs.d_p;
     d_pp1 = d_p+1;
 
-    coeffs = nurbs.coeffs;
-    coeffs = subasgnArr(coeffs,slc(coeffs,1:d).*repmat(slc(coeffs,d+1),[d,ones(1,d_p)]),1:d);
+    coeffs = NURBSprojection(coeffs,d,d_p,'unproject');
 
     knots = cell(1,d_p);
     if numel(degreeElevations) < d_p
@@ -33,9 +33,14 @@ for patch = 1:numel(nurbsPatches)
             coeffs = permute(coeffs,indices);
         end
     end
-    coeffs = subasgnArr(coeffs,slc(coeffs,1:d)./repmat(slc(coeffs,d+1),[d,ones(1,d_p)]),1:d);
+    nurbs.coeffs = coeffs;
+    coeffs = NURBSprojection(coeffs,d,d_p,'project');
 
-    nurbsPatches(patch) = createNURBSobject(coeffs,knots);
+    nurbsPatches{patch}.coeffs = coeffs;
+    nurbsPatches{patch}.knots = knots;
+    np = size(coeffs);
+    nurbsPatches{patch}.number = np(2:end);
+    nurbsPatches{patch}.degree = nurbsPatches{patch}.degree + degreeElevs;
 end
 
 

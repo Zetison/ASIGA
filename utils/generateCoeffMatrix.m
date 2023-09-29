@@ -1,15 +1,15 @@
-function [D,Dt,y_n] = generateCoeffMatrix(varCol)
+function [D,Dt,y_n] = generateCoeffMatrix(task)
 
-r_a = varCol.r_a;
-if varCol.IElocSup
-    p_ie = varCol.p_ie;
+r_a = task.misc.r_a;
+if task.iem.IElocSup
+    p_ie = task.iem.p_ie;
     N = p_ie;
     
-    n_n = varCol.N;
+    n_n = task.iem.N;
     kappa = 1:n_n;
-    if varCol.s_ie == 1
+    if task.iem.s_ie == 1
         z = 1 + (1-kappa)/n_n;
-    elseif varCol.s_ie == 2
+    elseif task.iem.s_ie == 2
         z = 1 + kappa.*(1-kappa)/(n_n*(n_n+1));
     else
         warning('Not implemented, using s = 2 instead')
@@ -18,7 +18,7 @@ if varCol.IElocSup
     y_n = 1./z;
     x = z(end-p_ie+1:end)/z(end-p_ie+1);
 else
-    N = varCol.N;
+    N = task.iem.N;
 %     a = 0.65;
 %     b = 9;
 %     logb = @(x,b) log(x)/log(b);
@@ -34,10 +34,10 @@ else
 %     x = 1./(0.5-0.5*GLL(1:end-1));
     y_n = 1./x;
 end
-switch varCol.IEbasis
+switch task.iem.IEbasis
     case 'Standard'
         error('It is assumed that the radial basis functions satisfies the Kronecker delta property at the artificial boundary')
-        k = varCol.k;
+        k = task.varCol{1}.k;
         D = eye(N)*exp(1i*k*r_a);
         Dt = D;
     case 'Chebyshev'        
@@ -71,18 +71,18 @@ switch varCol.IEbasis
         B = zeros(N);
         Bt = zeros(N);
         E = zeros(N);
-        k = varCol.k;
+        k = task.varCol{1}.k;
         for m = 1:N
             for l = 1:N
                 B(m,l) = x(l)^m;
-                switch varCol.formulation
+                switch task.misc.formulation
                     case {'PGC', 'PGU'}
                         Bt(m,l) = x(l)^(m+2);
                     case {'BGC', 'BGU', 'WBGC', 'WBGU'}
                         Bt(m,l) = B(m,l);
                 end
             end
-            if varCol.IElocSup
+            if task.iem.IElocSup
                 E(m,m) = 1;
             else
                 E(m,m) = exp(1i*k*r_a*(1-1/x(m)));

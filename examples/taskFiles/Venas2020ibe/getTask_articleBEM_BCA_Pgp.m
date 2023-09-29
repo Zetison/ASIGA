@@ -1,7 +1,7 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'BCA_P'; % BeTSSi submarine
-coreMethod = 'IGA';
+misc.model = 'BCA_P'; % BeTSSi submarine
+misc.coreMethod = 'IGA';
    
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
@@ -13,20 +13,20 @@ alpha = (0:0.05:360)*pi/180;
 plotResultsInParaview = 0;
 plotMesh              = 0;	% Create additional Paraview files to visualize IGA mesh
 plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dynamic result
-calculateSurfaceError = true;
+err.calculateSurfaceError = true;
 calculateFarFieldPattern = false;
 
 BC = 'NBC';
 
-applyLoad = 'pointPulsation';
-method = {'BEM'};
+misc.applyLoad = 'pointPulsation';
+misc.method = {'BEM'};
 formulation = {'CCBIE','CRCBIE1','CRCBIE3','CBM'};
 % formulation = {'CBM'};
 M = 1;
 storeSolution = false;
 storeFullVarCol = false;
 solveForPtot = false;
-loopParameters = {'method','degree','extraGPBEM','formulation','agpBEM'};
+loopParameters = {'misc.method','degree','extraGPBEM','formulation','agpBEM'};
 degree = [2,5];
 % degree = 5;
 
@@ -44,7 +44,7 @@ collectIntoTasks
 
 agpBEM = agpBEMold([1,end]);
 extraGPBEM = extraGPBEM([1,end]);
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks
 

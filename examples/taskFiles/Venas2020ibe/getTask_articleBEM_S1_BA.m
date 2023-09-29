@@ -1,5 +1,5 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
-model = 'S1';
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.model = 'S1';
 k = 1;
 % f = 1e2;             % Frequency
 f = k*1500/(2*pi);
@@ -15,14 +15,14 @@ beta_s = 30*pi/180;
 
 alpha = (0:0.5:360)*pi/180;
 beta = 30*pi/180;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 calculateFarFieldPattern = 1;
 solveForPtot = [0,1];
 
 % solveForPtot = true;
 solveForPtot = true;
-loopParameters = {'solveForPtot','M','parm','method','formulation'};
+loopParameters = {'solveForPtot','M','parm','misc.method','formulation'};
 
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks

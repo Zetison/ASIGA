@@ -1,18 +1,26 @@
-scatteringCase = 'BI';
+function studies = getTask_PhD_S1_BI()
+% This study is based on Figure B.10, B.11 and B.12 in Venas2019asi
+% Venas2019asi is available at http://hdl.handle.net/11250/2640443
 
-model = 'S1';  % Spherical shell
+counter = 1;
+studies = cell(0,1);
+getDefaultTaskValues
 
-coreMethod = 'IGA';
+misc.scatteringCase = 'BI';
+
+misc.model = 'S1';  % Spherical shell
+
+misc.coreMethod = 'IGA';
 varCol = setS1Parameters('double',1);
-varCol{1}.meshFile = 'createNURBSmesh_EL';
+msh.meshFile = 'createNURBSmesh_EL';
 
 
 f = 20e3;
+misc.omega = 2*pi*f;
 
-alpha_s = 0;
-beta_s = 0;   
+ffp.alpha_s = 0;
+ffp.beta_s = 0;   
 
-M = 3;
 postPlot(1).xname        	= 'alpha';
 postPlot(1).yname        	= 'TS';
 postPlot(1).plotResults  	= true;
@@ -21,9 +29,8 @@ postPlot(1).axisType      	= 'plot';
 postPlot(1).lineStyle    	= '-';
 postPlot(1).xScale       	= 1;
 postPlot(1).yScale       	= 1;
-postPlot(1).xLoopName     	= 'N';
-postPlot(1).legendEntries 	= {'coreMethod','f'};
-postPlot(1).subFolderName 	= NaN;
+postPlot(1).xLoopName     	= 'rt.N';
+
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 0;
 
@@ -40,17 +47,18 @@ postPlot(3).yname = 'error_p';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% RT simulation
-method = {'RT'};
-formulation = '';
-M = 3;
+misc.method = {'RT'};
+misc.formulation = '';
+msh.M = 3;
 prePlot.plot3Dgeometry = 0;
-degree = 2;
-calculateSurfaceError = 0;
-computeCondNumber = false;
-plotFarField = 1;
-applyLoad = 'planeWave';
-parm = 1;
-N = 3:4;
+msh.degree = 2;
+err.calculateSurfaceError = 0;
+misc.computeCondNumber = false;
+ffp.plotFarField = 1;
+misc.applyLoad = 'planeWave';
+msh.parm = 1;
+rt.N = 3;
+warning('off','RT:limitations')
 
-loopParameters = {'N','M','method'};
+loopParameters = {'rt.N'};
 collectIntoTasks

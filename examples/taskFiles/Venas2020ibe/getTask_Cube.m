@@ -1,7 +1,7 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 BC = 'NBC';
-model = 'Cube';
-method = {'BEM'};
+misc.model = 'Cube';
+misc.method = {'BEM'};
 formulation = {'CCBIE','CHBIE','CBM','GCBIE','GHBIE','GBM'};
 % formulation = {'GCBIE','GBM'};
 % formulation = {'GCBIE'};
@@ -16,7 +16,7 @@ M = 1:3;
 % degree = 2:5;
 degree = [1,5];
 degree = 2;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 calculateFarFieldPattern = 0;
 % extraGPBEM = [0,3];
 % extraGP = [0,3];
@@ -25,7 +25,7 @@ extraGPBEM = 50;
 % extraGP = 2;
 extraGP = 0;
 prePlot.plot3Dgeometry = 0;  % Plot visualization of mesh and geometry in 3D
-applyLoad = 'SimpsonTorus';
+misc.applyLoad = 'SimpsonTorus';
 % beta = 0;
 exteriorProblem = false;
 % agpBEM = [1,2,4,8]; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
@@ -37,11 +37,11 @@ runTasksInParallel = false;
 useNeumanProj = [1,0];
 
 solveForPtot = false;
-loopParameters = {'M','degree','method','formulation','extraGP','extraGPBEM','agpBEM','useNeumanProj'};
+loopParameters = {'M','degree','misc.method','formulation','extraGP','extraGPBEM','agpBEM','useNeumanProj'};
 colBEM_C0 = 0;
 quadMethodBEM = 'New';
 
-% applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
+% misc.applyLoad = 'pointPulsation'; % with analytic solution for arbitrary geometries
 % collectIntoTasks
 
 formulation = {'GCBIE','GHBIE','GBM','GRCBIE1','GRCBIE2','GRCBIE3'};
@@ -56,6 +56,6 @@ extraGPBEM = NaN;
 extraGP = 1;
 agpBEM = NaN; % parameter for adaptiv Gauss point integration around singularities for BEM formulations
 % M = 1:7;
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 collectIntoTasks

@@ -1,10 +1,10 @@
-scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = 'BI'; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'S1';
+misc.model = 'S1';
 
-method = {'BEM'};
+misc.method = {'BEM'};
 BC = 'SHBC';
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 formulation = {'CCBIE','CBM'};
 c_f = 1500;
 k = 1;
@@ -24,11 +24,11 @@ colMethod = {'Grev'};
 degree = 2:5;
 % degree = 3;
 calculateFarFieldPattern = 0;
-calculateSurfaceError = 1;
+err.calculateSurfaceError = 1;
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
 solveForPtot = true;
-loopParameters = {'colMethod','M','method','formulation','degree','parm'};
+loopParameters = {'colMethod','M','misc.method','formulation','degree','parm'};
 % agpBEM = 2;
 colBEM_C0 = 0;
 quadMethodBEM = 'Adaptive';
@@ -37,7 +37,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 formulation = {'SL2E'};
-method = {'BA'};
+misc.method = {'BA'};
 colMethod = NaN;
 
 collectIntoTasks

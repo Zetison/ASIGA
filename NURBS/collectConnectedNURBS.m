@@ -1,9 +1,10 @@
-function nurbsCol = collectConnectedNURBS(nurbs)
+function [nurbsCol,map] = collectConnectedNURBS(nurbs)
 
 patchTop = getPatchTopology(nurbs);
 noPatches = numel(nurbs);
 indices = 1:noPatches;
 nurbsCol = cell(1,noPatches);
+map = cell(1,noPatches);
 i = 1;
 while ~isempty(indices)
     I = indices(1);
@@ -15,9 +16,11 @@ while ~isempty(indices)
     indices2 = getIndices(patchTop,I,I);
     indices = setdiff(indices, indices2);
     nurbsCol{i} = nurbs(indices2);
+    map{i} = indices2;
     i = i + 1;
 end
 nurbsCol(i:end) = [];
+map(i:end) = [];
 
 function indices = getIndices(patchTop,indices,I)
 if nargin < 3

@@ -2,8 +2,8 @@ getDefaultTaskValues
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
-scatteringCase = 'BI';
-model = 'S1_P';  % Pulsating sphere
+misc.scatteringCase = 'BI';
+misc.model = 'S1_P';  % Pulsating sphere
 BC = 'NBC';
 
 c_f = 1500;
@@ -11,7 +11,7 @@ k = 1;
 omega = k*c_f;
 f = omega/(2*pi); 
 
-applyLoad = 'pointPulsation';
+misc.applyLoad = 'pointPulsation';
 
 M = 4; 
 parm = 1;
@@ -19,15 +19,15 @@ parm = 1;
 degree = 2;
 
 plotFarField          = 0;
-calculateSurfaceError = 0;
+err.calculateSurfaceError = 0;
 calculateFarFieldPattern = 0;
 prePlot.plot3Dgeometry = 0;
 solveForPtot = true;
-loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','method','formulation','quadMethodBEM'};
+loopParameters = {'extraGPBEM','extraGP','agpBEM','colBEM_C0','misc.method','formulation','quadMethodBEM'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-method = {'BEM'};
+misc.method = {'BEM'};
 % formulation = {'CCBIE','CBM','GCBIE','GBM'};
 formulation = {'CCBIE'};
 quadMethodBEM = {'Simpson'};

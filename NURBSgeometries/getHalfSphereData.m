@@ -5,6 +5,7 @@ options = struct('R', 1, ...
                  'parm', 1, ...
                  'Xi', [0,0,0,1,1,2,2,3,3,4,4,4]/4, ...
                  't', 0, ...
+                 'scaleWeights', true, ...
                  'prec', 'double');
              
 if nargin > 0
@@ -32,5 +33,7 @@ switch options.parm
         nurbs(3) = rotateNURBS(nurbs(2));
         nurbs(4) = rotateNURBS(nurbs(3));
         nurbs(5) = rotateNURBS(nurbs(4));
-        nurbs = scaleNURBSweights(nurbs,nurbs{2}.coeffs(4,end,1));
+        if options.scaleWeights
+            nurbs = scaleNURBSweights(nurbs,nurbs{2}.coeffs(4,end,1));
+        end
 end

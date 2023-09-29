@@ -1,109 +1,100 @@
-function p_h = calculateScatteredPressure(varCol, Uc, P_far, useExtraQuadPts, computeFarField)
+function p_h = calculateScatteredPressure(task, P_far, useExtraQuadPts)
 
-d_p = varCol{1}.patches{1}.nurbs.d_p;
-d = varCol{1}.patches{1}.nurbs.d;
-U = Uc{1};
-if numel(varCol) > 1 && d_p == 2
-    [~, ~, elementSolid] = meshBoundary(varCol{2},1);
-    noDofs = varCol{2}.noDofs;
-    Ux = Uc{2}(1:d:noDofs,:);
-    Uy = Uc{2}(2:d:noDofs,:);
-    Uz = Uc{2}(3:d:noDofs,:);
-else
-    elementSolid = NaN;
-    Ux = NaN;
-    Uy = NaN;
-    Uz = NaN;
-end
-rho = varCol{1}.rho;
-degree = varCol{1}.degree; % assume p_xi is equal in all patches
-noDofs = varCol{1}.noDofs;
-index = varCol{1}.index;
-noElems = varCol{1}.noElems;
-elRange = varCol{1}.elRange;
-element = varCol{1}.element;
-element2 = varCol{1}.element2;
-weights = varCol{1}.weights;
-controlPts = varCol{1}.controlPts;
-knotVecs = varCol{1}.knotVecs;
-pIndex = varCol{1}.pIndex;
-BC = varCol{1}.BC;
-k = varCol{1}.k;
-omega = varCol{1}.omega;
-method = varCol{1}.method;
-if strcmp(method,'IENSG')
-    A_2 = varCol{1}.A_2;
-    x_0 = varCol{1}.x_0;
-    Upsilon = varCol{1}.Upsilon;
-    D = varCol{1}.D;
-    N = varCol{1}.N;
-else
-    A_2 = NaN;
-    x_0 = NaN;
-    Upsilon = NaN;
-    D = NaN;
-    N = NaN;
-end
+plotFarField = task.ffp.plotFarField;
+d_p = task.varCol{1}.patches{1}.nurbs.d_p;
+d = task.varCol{1}.patches{1}.nurbs.d;
+noDofs = task.varCol{1}.noDofs;
+noElems = task.varCol{1}.noElems;
+degree = task.varCol{1}.degree(1:2); % assume p_xi is equal in all patches
 
-dp_inc = varCol{1}.dp_inc;
-
-Phi_k = varCol{1}.Phi_k;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
+rho = task.varCol{1}.rho;
 if d_p == 3
-    surfaceElements = [];
-    for e = 1:noElems
-        idZeta = index(e,3);
-        Zeta_e = elRange{3}(idZeta,:); % [zeta_k,zeta_k+1]                    
-        if Zeta_e(1) == 0
-            surfaceElements = [surfaceElements e];
-        end
-    end
+    varColBdry = meshBoundary(task.varCol{1},'Gamma');
+    
+    zeta0Nodes = varColBdry.nodes;
+    noElems = varColBdry.noElems;
+    element = varColBdry.element;
+    element2 = varColBdry.element2;
+    index = varColBdry.index;
+    pIndex = varColBdry.pIndex;
+    knotVecs = varColBdry.knotVecs;
+    elRange = varColBdry.elRange;
+    n_en = varColBdry.n_en;
 else
-    surfaceElements = 1:noElems;
-end
-solveForPtot = varCol{1}.solveForPtot;
-exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(varCol) == 1;
-if exteriorSHBC
-    if solveForPtot
-        homNeumanCond = true;
-        dpdn = @(x,n) 0;
-    else
-        homNeumanCond = false;
-        dpdn = @(x,n) -varCol{1}.dp_inc(x,n);
-    end
-else
-    homNeumanCond = false;
-    dpdn = varCol{1}.dpdn;
+    degree = task.varCol{1}.degree; % assume p_xi is equal in all patches
+    index = task.varCol{1}.index;
+    element = task.varCol{1}.element;
+    element2 = task.varCol{1}.element2;
+    pIndex = task.varCol{1}.pIndex;
+    zeta0Nodes = 1:noDofs;
+    knotVecs = task.varCol{1}.knotVecs;
+    elRange = task.varCol{1}.elRange;
+    n_en = prod(degree+1);
 end
 
-extraGP = varCol{1}.extraGP;
+BC = task.misc.BC;
+omega = task.misc.omega;
+k = omega/task.varCol{1}.c_f;
+
+dp_inc = task.dp_incdn_;
+
+Phi_k = task.varCol{1}.Phi_k;
+solveForPtot = task.misc.solveForPtot;
+exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(task.varCol) == 1;
+
+extraGP = max(task.misc.extraGP,task.ffp.extraGP);
 if useExtraQuadPts
-    noGpXi = degree(1)+1+5;
-    noGpEta = degree(2)+1+5;
+    noGp = degree+1+5;
 else
-    noGpXi = degree(1)+3+extraGP;
-    noGpEta = degree(2)+3+extraGP;
+    noGp = degree+3+extraGP(1:numel(degree));
 end
-[Q, W] = gaussTensorQuad([noGpXi,noGpEta]); 
+[Q, W] = gaussTensorQuad(noGp); 
+if numel(k) > 1 && size(P_far,1) > 1
+    error('not implemented')
+end
+p_h = zeros(max([size(P_far,1),numel(k)]),1);
 
-p_h = zeros(size(P_far,1),1);
+noRHSs = size(task.varCol{1}.U,2);
+Uvalues = zeros(n_en,noElems,noRHSs);
+for e = 1:noElems
+    sctr = zeta0Nodes(element(e,:));
+    Uvalues(:,e,:) = task.varCol{1}.U(sctr,:);
+end
+if numel(task.varCol) > 1
+    varColBdrySolid = meshBoundary(task.varCol{2},'Gamma');
+    
+    nodesSolid = varColBdrySolid.nodes;
+    elementSolid = varColBdrySolid.element;   
 
-% for i = 1:length(surfaceElements) %
-parfor i = 1:length(surfaceElements)
-    if d_p == 3
-        e = surfaceElements(i);
-    else
-        e = i;
+    Uxvalues = zeros(n_en,noElems,noRHSs);
+    Uyvalues = zeros(n_en,noElems,noRHSs);
+    Uzvalues = zeros(n_en,noElems,noRHSs); 
+
+    for e = 1:noElems
+        sctrSolid = nodesSolid(elementSolid(e,:))*d;
+        Uxvalues(:,e,:) = task.varCol{2}.U(sctrSolid-2,:);
+        Uyvalues(:,e,:) = task.varCol{2}.U(sctrSolid-1,:);
+        Uzvalues(:,e,:) = task.varCol{2}.U(sctrSolid,:);
     end
+else
+    Uxvalues = NaN(1,noElems);
+    Uyvalues = NaN(1,noElems);
+    Uzvalues = NaN(1,noElems);
+end
+% for e = 1:noElems
+parfor e = 1:noElems
     patch = pIndex(e);
     knots = knotVecs{patch};
     Xi_e = zeros(2,2);
     for ii = 1:2
         Xi_e(ii,:) = elRange{ii}(index(e,ii),:);
     end
-
-    sctr = element(e,:);
+    
+    sctr = zeta0Nodes(element(e,:));
     pts = controlPts(sctr,:);
-    wgts = weights(element2(e,:),:);
+    wgts = weights(zeta0Nodes(element2(e,:)),:);
 
     J_2 = prod(Xi_e(:,2)-Xi_e(:,1))/2^2;
 
@@ -114,61 +105,33 @@ parfor i = 1:length(surfaceElements)
     normals = crossProd./repmat(J_1,1,3);
 
     Y = R{1}*pts;  
-    if strcmp(method,'IENSG')
-        Yt = (Y-x_0)*A_2.';
-
-        r_a = evaluateProlateCoords(Yt,Upsilon);
-        p_h_gp = zeros(size(W,1),size(U,2));
-        for m = 1:N
-            temp = 0;
-            temp2 = 0;
-            for mt = 1:N
-                temp = temp + (1i*k - mt/r_a)*D(m,mt);
-                temp2 = temp2 + D(m,mt);
-            end
-            p_h_gp = p_h_gp + temp2*R{1}*U(sctr + noDofs*(m-1),:);
-        end    
-    else
-        U_sctr = U(sctr,:);
-        p_h_gp = R{1}*U_sctr;
-    end
+    p_h_gp = R{1}*squeeze(Uvalues(:,e,:));
 
     if exteriorSHBC
         dp_h_gp = -dp_inc(Y,normals); 
     else
-        if d_p == 2
-            dp_h_gp = rho*omega^2*( normals(:,1).*(R{1}*Ux(elementSolid(e,:),:)) ...
-                                   +normals(:,2).*(R{1}*Uy(elementSolid(e,:),:)) ...
-                                   +normals(:,3).*(R{1}*Uz(elementSolid(e,:),:)));
-            if ~solveForPtot
-                dp_h_gp = dp_h_gp - dp_inc(Y,normals);
-            end
-        else
-            dp_h_gp = zeros(size(p_h_gp));
-            for gp = 1:size(W,1)
-                dXdxi = R{2}*pts;
-                dXdeta = R{3}*pts;
-                dXdzeta = R{4}*pts;
-                J = [dXdxi(gp,:).' dXdeta(gp,:).' dXdzeta(gp,:).'];
-                dp_h_gp(gp,:) = (J'\[R{2}(gp,:); R{3}(gp,:); R{4}(gp,:)]*U_sctr).'*normals(gp,:).';
-            end
+        dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*squeeze(Uxvalues(:,e,:))) ...
+                                 +normals(:,2).*(R{1}*squeeze(Uyvalues(:,e,:))) ...
+                                 +normals(:,3).*(R{1}*squeeze(Uzvalues(:,e,:))));
+        if ~solveForPtot
+            dp_h_gp = dp_h_gp - dp_inc(Y,normals);
         end
     end
 
     X = P_far./repmat(norm2(P_far),1,size(P_far,2));
     
-    if computeFarField
+    if plotFarField
         x_d_n = normals*X.';
         x_d_y = Y*X.';
         if solveForPtot
-            p_h = p_h + (1i*k*p_h_gp.*x_d_n.*exp(-1i*k*x_d_y)).'* (J_1 * J_2 .* W);  
+            p_h = p_h + (1i*k.*p_h_gp.*x_d_n.*exp(-1i*k.*x_d_y)).'* (J_1 * J_2 .* W);  
         else
-            p_h = p_h + ((1i*k*p_h_gp.*x_d_n + dp_h_gp).*exp(-1i*k*x_d_y)).'* (J_1 * J_2 .* W);  
+            p_h = p_h + ((1i*k.*p_h_gp.*x_d_n + dp_h_gp).*exp(-1i*k.*x_d_y)).'* (J_1 * J_2 .* W);  
         end
     else
         xmy = reshape(P_far,[1,size(P_far,1),3]) - reshape(Y,[size(Y,1),1,3]);
         r = norm2(xmy);
-        dPhidny =  Phi_k(r)./r.^2.*(1 - 1i*k*r).*sum(xmy.*repmat(reshape(normals,size(normals,1),1,3),1,size(P_far,1),1),3);
+        dPhidny =  Phi_k(r)./r.^2.*(1 - 1i*k.*r).*sum(xmy.*repmat(reshape(normals,size(normals,1),1,3),1,size(P_far,1),1),3);
         if solveForPtot
             p_h = p_h + (p_h_gp.*dPhidny).'* (J_1 * J_2 .* W); 
         else 
@@ -176,7 +139,10 @@ parfor i = 1:length(surfaceElements)
         end 
     end
 end
-if computeFarField
+if numel(k) > 1
+    p_h = p_h.';
+end
+if plotFarField
     p_h = -1/(4*pi)*p_h;
 end
 

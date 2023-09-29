@@ -1,5 +1,7 @@
-function h = plotXY(x,y,axisType,lineStyle,color,legendEntry)
-
+function h = plotXY(x,y,axisType,lineStyle,color,legendEntry,addSlopes)
+if all(isnan(x)) || all(isnan(y))
+    error('All values are NaN')
+end
 if isempty(get(gca, 'Children'))
     xlimOld = [inf,-inf];
     ylimOld = [inf,-inf];
@@ -11,6 +13,9 @@ else
         xlimOld = xlim;
         ylimOld = ylim;
     end
+end
+if isempty(legendEntry)
+    legendEntry = '';
 end
 switch axisType
     case 'plot'
@@ -46,3 +51,20 @@ end
 legend('off');
 leg1 = legend('show');
 set(leg1,'Interpreter','latex');
+
+
+hold on
+if addSlopes && numel(x) > 1
+    X = [x,y];
+    x = log10(X(end-1,:));
+    y = log10(X(end,:));
+    x2 = x + 0.1*(y-x);
+    y2 = x + 0.9*(y-x);
+    if false
+        plot(10.^[x2(1),x2(1),y2(1)],10.^[x2(2),y2(2),y2(2)],'black')
+        text(10.^(x2(1)-0.02),10.^((x2(2)+y2(2))/2),num2str((y2(2)-x2(2))/(y2(1)-x2(1)),'%.3f'),'HorizontalAlignment', 'right');
+    else
+        plot(10.^[x2(1),y2(1),y2(1)],10.^[x2(2),x2(2),y2(2)],'black')
+        text(10.^(y2(1)+0.02),10.^((x2(2)+y2(2))/2),num2str((y2(2)-x2(2))/(y2(1)-x2(1)),'%.3f'),'HorizontalAlignment', 'left');
+    end
+end

@@ -1,9 +1,9 @@
 
 
-scatteringCase = {'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = {'MS'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'BCA'; % BeTSSi submarine
-coreMethod = 'IGA';
+misc.model = 'BCA'; % BeTSSi submarine
+misc.coreMethod = 'IGA';
  
 prePlot.plot3Dgeometry = 0;
 prePlot.plot2Dgeometry = 0;  % Plot cross section of mesh and geometr
@@ -18,8 +18,8 @@ plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dy
 % BC = 'SSBC';
 BC = 'SHBC';
 
-method = {'BEM'};
-% coreMethod = 'XI';
+misc.method = {'BEM'};
+% misc.coreMethod = 'XI';
 formulation = {'CCBIE'};
 % formulation = {'CRCBIE'};
 M = 1:3;
@@ -28,7 +28,7 @@ storeSolution = 0;
 storeFullVarCol = 0;
 agpBEM = 0.6;
 solveForPtot = true;
-loopParameters = {'method','formulation','M','degree','f','formulation','scatteringCase'};
+loopParameters = {'misc.method','formulation','M','degree','f','formulation','misc.scatteringCase'};
 % collectIntoTasks
 
 

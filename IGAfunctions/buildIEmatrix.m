@@ -1,15 +1,18 @@
-function varCol = buildIEmatrix(varCol)
+function task = buildIEmatrix(task)
 
-elRange = varCol.elRange(1:2);
-knotVecs = varCol.knotVecs;
+elRange = task.varCol{1}.elRange(1:2);
+knotVecs = task.varCol{1}.knotVecs;
 
-degree = varCol.degree(1:2); % assume degree is equal in all patches
-Ntot = varCol.N;
-r_a = varCol.r_a;
-IEbasis = varCol.IEbasis;
-p_ie = varCol.p_ie;
-IElocSup = varCol.IElocSup;
-[D,Dt,y_n] = generateCoeffMatrix(varCol);
+degree = task.varCol{1}.degree(1:2); % assume degree is equal in all patches
+Ntot = task.iem.N;
+r_a = task.misc.r_a;
+if isnan(r_a)
+    error('misc.r_a must be set, either in the mesh script or in the task script')
+end
+IEbasis = task.iem.IEbasis;
+p_ie = task.iem.p_ie;
+IElocSup = task.iem.IElocSup;
+[D,Dt,y_n] = generateCoeffMatrix(task);
 if IElocSup
     N = p_ie;
     if Ntot-2*p_ie < 0
@@ -28,29 +31,45 @@ else
     rho = NaN;
     p_ie = N;
 end
-formulation = varCol.formulation;
-A_2 = varCol.A_2;
-x_0 = varCol.x_0;
-noDofs = varCol.noDofs;
+formulation = task.misc.formulation;
+A_2 = task.iem.A_2;
+x_0 = task.iem.x_0;
+noDofs = task.varCol{1}.noDofs;
 
-weights = varCol.weights;
-controlPts = varCol.controlPts;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
 
-k = varCol.k(1);
-Upsilon = varCol.Upsilon;
-if varCol.boundaryMethod
-    noElems = varCol.noElems;
-    element = varCol.element;
-    element2 = varCol.element2;
-    index = varCol.index;
-    pIndex = varCol.pIndex;
+omega = task.misc.omega;
+if strcmp(formulation(end),'U') % unconjugated formulation
+    k = omega/task.varCol{1}.c_f;
+else
+    k = 1/task.varCol{1}.c_f; % multiply with task.misc.omega later (in order to facilitate storage of frequency independent matrices)
+end
+Upsilon = task.iem.Upsilon;
+if task.varCol{1}.boundaryMethod
+    noElems = task.varCol{1}.noElems;
+    element = task.varCol{1}.element;
+    element2 = task.varCol{1}.element2;
+    index = task.varCol{1}.index;
+    pIndex = task.varCol{1}.pIndex;
     n_en = prod(degree+1);
     noSurfDofs = noDofs;
     noDofs = 0;
     nodes = 1:noSurfDofs;
     noDofs_new = noSurfDofs*N;
 else
-    [nodes, noElems, element, element2, index, pIndex, n_en, noSurfDofs] = meshBoundary(varCol,1);
+    varColBdry = meshBoundary(task.varCol{1},'Gamma_a');
+    
+    nodes = varColBdry.nodes;
+    noElems = varColBdry.noElems;
+    element = varColBdry.element;
+    knotVecs = varColBdry.knotVecs;
+    elRange = varColBdry.elRange;
+    element2 = varColBdry.element2;
+    index = varColBdry.index;
+    pIndex = varColBdry.pIndex;
+    n_en = varColBdry.n_en;
+    noSurfDofs = varColBdry.noSurfDofs;
     noDofs_new = noDofs + noSurfDofs*(N-1);
 end
 
@@ -64,12 +83,18 @@ A3values = zeros(n_en^2,noElems);
 A4values = zeros(n_en^2,noElems);
 A5values = zeros(n_en^2,noElems);
 
-[Q, W] = gaussTensorQuad(degree+1);
+extraGP = task.misc.extraGP;
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 nProgressStepSize = ceil(noElems/1000);
 if progressBars
-    ppm = ParforProgMon('Building infinite element matrix: ', noElems, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building infinite element matrix: ', noElems, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end
@@ -190,8 +215,8 @@ A5values = sparse(spIdx(:,1),spIdx(:,2),A5values,noSurfDofs,noSurfDofs,numel(Iun
 % Note that the last two integrals (B1(end) and B1(end-1),
 % B2(end) and B2(end-1)) will be redundant for the cases 'BGC' and 'BGU'
 
-if IElocSup    
-    s = varCol.s_ie;
+if IElocSup
+    s = task.iem.s_ie;
     x = @(zeta) 1 + zeta.^s*(1/Ntot - 1);
     zeta_a = ((Ntot-p_ie)/(Ntot-1))^(1/s);
     nurbs = parmFunc(ie_Zeta,p_ie,@(xi) x(xi*zeta_a));
@@ -377,8 +402,6 @@ if IElocSup
     controlPts = varCol_ie.controlPts;
     pIndex = varCol_ie.pIndex;
     noDofs_ie = varCol_ie.noDofs;
-
-    varrho2 = k*r_a;
     
     %% Preallocation and initiallizations
     n_en = prod(degree+1);
@@ -393,13 +416,12 @@ if IElocSup
     K4values = zeros(sizeKe,noElems); 
     K5values = zeros(sizeKe,noElems); 
 
-    extraGP = varCol.extraGP;
-%     [Q, W] = gaussTensorQuad(degree+1+extraGP);
+%     [Q, W] = gaussTensorQuad(degree+1+extraGP(1));
     [Q, W] = gaussTensorQuad(50);
     %% Build global matrices
     
-    for e = 1:noElems
-%     parfor e = 1:noElems
+%     for e = 1:noElems
+    parfor e = 1:noElems
         patch = pIndex(e);
         knots = knotVecs{patch};
         Xi_e = elRange{1}(index(e,1),:);
@@ -506,19 +528,19 @@ if IElocSup
 else
     Ntot = N;
 end
-
 switch formulation
     case {'PGU', 'BGU', 'WBGU'}
+        varrho2 = k*r_a;
         K1 = K1*exp(-2*1i*varrho2);
         K2 = K2*exp(-2*1i*varrho2);
         K3 = K3*exp(-2*1i*varrho2);
         K4 = K4*exp(-2*1i*varrho2);
         K5 = K5*exp(-2*1i*varrho2);
 end
-if varCol.useROM
-    A_2 =  kron(K1_2/k^2,A1values) ...
-         + kron(K3/k^2,A3values);
-    A_1 =  kron(K1_1/k,A1values);
+if task.rom.useROM
+    A_2 =  kron(K1_2,A1values) ...
+         + kron(K3,A3values);
+    A_1 =  kron(K1_1,A1values);
     A =    kron(K1,A1values) ...
          + kron(K2,A2values) ...
          + kron(K4,A4values) ...
@@ -526,7 +548,7 @@ if varCol.useROM
 else
     switch formulation
         case {'PGC', 'BGC', 'WBGC'}
-            K1 = K1 + K1_1 + K1_2;
+            K1 = K1 + K1_1*omega + K1_2*omega^2;
     end
     A =   kron(K1,A1values) ...
         + kron(K2,A2values) ...
@@ -534,7 +556,7 @@ else
         + kron(K4,A4values) ...
         + kron(K5,A5values);
 end
-  
+
 dofsToRemove = setdiff(1:noSurfDofs,unique(spIdx(:,1)));
 noDofsToRemove = numel(dofsToRemove);
 newDofsToRemove = zeros(1,noDofsToRemove*Ntot);
@@ -544,25 +566,27 @@ for n = 1:Ntot
     i = i + noDofsToRemove;
 end
 
+[i,j,Avalues] = find(A);    
 if noDofs > 0
-    [i,j,Avalues] = find(A);    
     [i,j,newDofsToRemove] = modifyIndices(i,j,noSurfDofs,noDofs,nodes,newDofsToRemove);    
-    varCol.Ainf = sparse(i,j,Avalues,noDofs_new,noDofs_new);
+    task.varCol{1}.Ainf = sparse(i,j,Avalues,noDofs_new,noDofs_new);
     
-    if varCol.useROM
+    if task.rom.useROM
         [i,j,Avalues] = find(A_1);
         [i,j] = modifyIndices(i,j,noSurfDofs,noDofs,nodes);
-        varCol.Ainf1 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
+        task.varCol{1}.Ainf1 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
         
         [i,j,Avalues] = find(A_2);
         [i,j] = modifyIndices(i,j,noSurfDofs,noDofs,nodes);
-        varCol.Ainf2 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
+        task.varCol{1}.Ainf2 = sparse(i,j,Avalues,noDofs_new,noDofs_new);
     end
+else
+    task.varCol{1}.Ainf = sparse(i,j,Avalues,noDofs_new,noDofs_new);
 end
-dofsToRemove_old = varCol.dofsToRemove;
-varCol.dofsToRemove = sort(unique([varCol.dofsToRemove newDofsToRemove]));
-varCol.dofsToRemove_old = dofsToRemove_old;
-varCol.noDofs_new = noDofs_new;
+dofsToRemove_old = task.varCol{1}.dofsToRemove;
+task.varCol{1}.dofsToRemove = sort(unique([dofsToRemove_old newDofsToRemove]));
+task.varCol{1}.dofsToRemove_old = dofsToRemove_old;
+task.varCol{1}.noDofs_new = noDofs_new;
 
 function A = shiftMatrix(shift,noDofs,A)
 [i,j,Kvalues] = find(A);

@@ -4,6 +4,7 @@ options = struct('R', 1, ...
                  'x_0',[0, 0, 0],...
                  'parm', 1, ...
                  't', 0, ...
+                 'scaleWeights', true, ...
                  'prec', 'double');
              
 if nargin > 0
@@ -39,5 +40,7 @@ switch options.parm
         temp2 = insertKnotsInNURBS(temp2,{[], 0.5*ones(1,4), []});
         temp2 = explodeNURBS(temp2);
         nurbs(4) = temp2(2);
-        nurbs = scaleNURBSweights(nurbs,nurbs{4}.coeffs(end,end,1));
+        if options.scaleWeights
+            nurbs = scaleNURBSweights(nurbs,nurbs{4}.coeffs(end,end,1));
+        end
 end

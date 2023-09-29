@@ -1,4 +1,5 @@
-% This sub routine calculates eNeighbour which maps every element e to the
+function eNeighbour = createElementTopology(task)
+% This function calculates eNeighbour which maps every element e to the
 % set of neighboring elements eNeighbour(e,:,1) and the corresponding
 % number the neighboring elements are twisted (in order to have alligned
 % parametrizations). The indices in the 2nd dimension of eNeighbour are
@@ -6,11 +7,12 @@
 % counterclockwise.
 % For each patch eMap maps (i_xi,i_eta) -> e (the global element index)
 % 
-patchTop = varCol.patchTop;
+patchTop = task.varCol{1}.patchTop;
+patches = task.varCol{1}.patches;
 counter = 1;
 for patch = 1:numel(patches)
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
+    Xi = task.varCol{1}.knotVecs{patch}{1}; % New
+    Eta = task.varCol{1}.knotVecs{patch}{2}; % New
     uniqueXi = unique(Xi);
     uniqueEta = unique(Eta);
     noElementsXi = length(uniqueXi)-1;
@@ -101,10 +103,10 @@ for patch = 1:numel(patches)
 end
 
 counter = 1;
-eNeighbour = NaN(noElems,4,2);
+eNeighbour = NaN(task.varCol{1}.noElems,4,2);
 for patch = 1:numel(patches)
-    Xi = knotVecs{patch}{1}; % New
-    Eta = knotVecs{patch}{2}; % New
+    Xi = task.varCol{1}.knotVecs{patch}{1}; % New
+    Eta = task.varCol{1}.knotVecs{patch}{2}; % New
     uniqueXi = unique(Xi);
     uniqueEta = unique(Eta);
     noElementsXi = length(uniqueXi)-1;

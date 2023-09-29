@@ -1,21 +1,24 @@
-function varCol = createNURBSmesh_M1(varCol, M, degree)
+function task = createNURBSmesh_M1(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 
 R = varCol{1}.R;
 t = varCol{1}.t;
 L = varCol{1}.L;
 
-x_0 = [-(L-R)/2, R/2, 0]; % The origin of the model
+x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
-switch varCol{1}.method
+switch task.misc.method
     case {'IE','IENSG','MFS'}
         % A_2 maps the x-axis to the z-axis, the y-axis to the x-axis, and
         % the z-axis to the y-axis
         A_2 = [0 1 0;
                0 0 1;
                1 0 0];
-        varCol{1}.x_0 = x_0;
-        varCol{1}.A_2 = A_2;
+        task.iem.x_0 = x_0;
+        task.iem.A_2 = A_2;
         varCol{1}.alignWithAxis = alignWithAxis;
 end
 
@@ -52,7 +55,8 @@ if numel(varCol) > 2
 end
 
 varCol{1}.L_gamma = L + R;
-varCol{1}.Upsilon = Upsilon;
+task.iem.Upsilon = Upsilon;
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
+task.varCol = varCol;
 

@@ -5,6 +5,8 @@ The main focus is to compute the so-called target strength (TS) for a given geom
 ![Missing target strength plot for the BeTSSi submarine](https://github.com/Zetison/ASIGA/blob/master/miscellaneous/BC_HWBC_MS_AS_E0_F1.png?raw=true)
 The underlying governing equations and results produced by this toolbox can be found in \[[1](https://doi.org/10.1016/j.cma.2018.02.015), [2](https://www.sciencedirect.com/science/article/pii/S0045782519305559)\].
 
+
+
 ## Installation
 Get the toolbox from GitHub (the e3Dss repository is needed for exact solutions and export_fig are needed for improved graphics for publications):
 ```
@@ -12,6 +14,27 @@ git clone https://github.com/altmany/export_fig
 git clone https://github.com/Zetison/e3Dss 
 git clone https://github.com/Zetison/ASIGA
 ```
+In order to convert .iges-files to g2-files (which can be read using ASIGA), one needs the iges2go converter program from GoTools (which can be installed from https://github.com/SINTEF-Geometry/GoTools).
+```
+git clone --recursive https://github.com/SINTEF-Geometry/GoTools.git
+git remote add Zetison https://github.com/Zetison/GoTools
+git pull Zetison master
+
+git clone git@github.com:Zetison/GoTools.git
+cd GoTools
+mkdir build
+cd build
+ccmake .. # Follow instructions
+make
+sudo make install
+sudo ln -s $HOME/kode/GoTools/build/igeslib/app/iges2go /usr/local/bin/iges2go
+iges2go < ~/kode/ASIGA/miscellaneous/FreeCADsphere.iges > ~/kode/ASIGA/miscellaneous/FreeCADsphere.g2
+
+```
+## Creating the geometry
+Several CAD-like routines exist in ASIGA and can be used to create geometries manually.
+
+Note that an assumption of ASIGA is that the third parametric NURBS direction never is part of any surface parametrization and is directed outwards from the model
 
 ## Run program
 The following will run the input script scriptName.m (given that studyName = 'scriptName'; is set in availableStudies.m)
@@ -54,6 +77,9 @@ The following methods has been implemented (with available formulations)
 	- The Petrov--Galerkin Conjugated formulation (formulation = 'PGC')
 	- The Bubnov--Galerkin Unconjugated formulation (formulation = 'BGU')
 	- The Petrov--Galerkin Unconjugated formulation (formulation = 'PGU')
+- IGA using the PML method after Bérenger (method = 'PML')
+	- General spline based (formulation = 'GSB')
+	- Standard formulation (formulation = 'STD') (this is only implemented for spherical PML for testing purposes)
 - IGA using absorbing boundary conditions (method = 'ABC')
 	- Bayliss-Gunzburger-Turkel-operators (formulation = 'BGT')
 - IGA using best approximation (method = 'BA'). Only available when analytic solution exist
@@ -75,7 +101,8 @@ The following methods has been implemented (with available formulations)
 - IGA using Beam tracing (method = 'RT')
 
 
-Instead of IGA (coreMethod = 'IGA') the following alternatives are implemented
+Instead of IGA (coreMethod = 'IGA' or coreMethod = 'C0_IGA') the following alternatives are implemented
+- Subparametric IGA (coreMethod = 'sub_IGA')
 - Bilinear isoparametric FEM (coreMethod = 'linear_FEM')
 - Subparametric FEM with bilinear representation of geometry (coremethod = 'h_FEM')
 - Isoparametric FEM (coreMethod = 'hp_FEM')
@@ -216,14 +243,19 @@ r_a   	= NaN;    % Radial value for the artificial boundary
 N     	= 3;        % Number of basis function in the radial direction for the IEM
 IEbasis	= 'Chebyshev';
 
+%% Settings for the PML (perfectly matched layers)
+gamma = -log10(1e9*eps); % choosing gamma = -log10(eps) yields machine precicion at Gamma_b, but requires more "radial" elements in the PML to resolve the rapid decay function
+sigmaType = 2; % sigmaType = 1: sigma(xi) = xi*(exp(gamma*xi)-1), sigmaType = 2: sigma(xi) = gamma*xi^2
+t_PML = NaN; % radius to the PML layer for spherical coordinates
+
 %% Settings for the MFS (method of fundamental solution)
 delta = 0.1;    % Distance from the boundary to the internal source points
 
 %% Settings for ROM (reduced order modelling)
-useROM      = false;    % Toggle the usage of ROM
-noVecsArr 	= 8;        % Number of derivatives at each point (including the 0th derivative
-k_ROM    	= 3;        % Points at which to compute derivatives
-useDGP      = true;     % Use a Derivative based Galerkin Projection (instead of interpolating techniques)
+rom.useROM       = false;    % Toggle the usage of ROM
+rom.noVecsArr 	 = 8;        % Number of derivatives at each point (including the 0th derivative
+rom.k_ROM    	 = 3;        % Points at which to compute derivatives
+rom.basisROMcell = {'DGP'};  % Basis for ROM ('Pade','Taylor','DGP','Hermite' or 'Bernstein')
 ```
 
 ## Performing a study

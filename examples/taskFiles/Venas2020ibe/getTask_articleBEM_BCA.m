@@ -1,7 +1,7 @@
-scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
+misc.scatteringCase = {'BI'}; % 'BI' = Bistatic scattering, 'MS' = Monostatic scattering
 
-model = 'BCA'; % BeTSSi submarine
-coreMethod = 'IGA';
+misc.model = 'BCA'; % BeTSSi submarine
+misc.coreMethod = 'IGA';
 
 % alpha_s = 270*pi/180;
 alpha_s = 240*pi/180;
@@ -19,7 +19,7 @@ plotMesh              = 0;	% Create additional Paraview files to visualize IGA m
 plotTimeOscillation   = 0;	% Create 30 paraview files in order to visualize a dynamic result
 BC = 'SHBC';
 
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = {'CCBIE'};
 % formulation = {'CBM'};
 M = 1:3;
@@ -31,7 +31,7 @@ storeFullVarCol = 0;
 % agpBEM = 0.6;
 agpBEM = 1.4;
 solveForPtot = true;
-loopParameters = {'method','formulation','M','degree','f','scatteringCase'};
+loopParameters = {'misc.method','formulation','M','degree','f','misc.scatteringCase'};
 
 collectIntoTasks
 
@@ -48,12 +48,12 @@ M = 1;
 % collectIntoTasks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-calculateSurfaceError = 1;
-applyLoad = 'pointPulsation';
+err.calculateSurfaceError = 1;
+misc.applyLoad = 'pointPulsation';
 BC = 'NBC';
 M = 1:3;
 degree = [2,5];
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 % collectIntoTasks
 

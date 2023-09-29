@@ -17,7 +17,7 @@ function data = planeScattering(X, newOptions)
 % d_vec:	(default: [0;0;1]) is the direction of the plane incident wave.
 % omega:	(default: 2*pi*1e3) is the angular frequency of the problem.
 %          	The function accepts vector input.
-% R_i:      Array of the inner radii of the spherical shells (default: [])
+% R:      Array of the inner radii of the spherical shells (default: [])
 % R_o:      Array of the outer radii of the spherical shells (default: 1)
 % P_inc:    Amplitude of incident wave at the origin. P_inc
 %           can be given as a function handle P_inc(omega) where omega is the

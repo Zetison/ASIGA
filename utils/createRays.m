@@ -1,17 +1,17 @@
-function varCol = createRays(varCol)
+function task = createRays(task)
 
 
-switch varCol.applyLoad
+switch task.misc.applyLoad
     case 'pointSource'
         error('not implemented')
     case 'planeWave'
-        X = varCol.controlPts;
-        d_vec = varCol.d_vec;
+        X = task.varCol{1}.controlPts;
+        d_vec = task.d_vec;
         [X_m, A] = orthogonalTransform(X, d_vec);
 
         convexHull = boundary(X_m(:,1),X_m(:,2),0);
-        n = round(10^(varCol.N/2));
-%         n = round(2^parm)-1;
+        n = round(10^(task.rt.N/2));
+        
         minX_m_x = min(X_m(:,1));
         minX_m_y = min(X_m(:,2));
         maxX_m_x = max(X_m(:,1));
@@ -24,7 +24,7 @@ switch varCol.applyLoad
         minX_m_y = minX_m_y - delta_y/2;
         X = createBeamTriangulation([minX_m_x,minX_m_y],[maxX_m_x,maxX_m_y],n);
         
-        varCol.beamEnergy = abs(varCol.P_inc)^2*3*sqrt(3)/2*delta_x^2;
+        task.varCol{1}.beamEnergy = abs(task.misc.P_inc)^2*3*sqrt(3)/2*delta_x^2;
         XX_m = X(:,1).';
         YY_m = X(:,2).';
         
@@ -39,17 +39,17 @@ switch varCol.applyLoad
         beams = reshape(temp(beams(:)),size(beams,1),size(beams,2));
         beams(any(~beams,2),:) = [];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        varCol.oXX_m = XX_m;
-        varCol.oYY_m = YY_m;
-        varCol.X_m = X_m;
-        varCol.convexHull = convexHull;
+        task.varCol{1}.oXX_m = XX_m;
+        task.varCol{1}.oYY_m = YY_m;
+        task.varCol{1}.X_m = X_m;
+        task.varCol{1}.convexHull = convexHull;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         XX_m = XX_m(IN).';
         YY_m = YY_m(IN).';
         
         o = (A*[XX_m,YY_m,2*ones(size(XX_m))*min(X_m(:,3))].').';
-        varCol.o = o;
-        varCol.beams = beams;
+        task.varCol{1}.o = o;
+        task.varCol{1}.beams = beams;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         close all
@@ -59,7 +59,7 @@ switch varCol.applyLoad
 %         plot(X_m(convexHull,1),X_m(convexHull,2),'o-','color','red','MarkerFaceColor','red')
 %         set(gcf,'color','w');
 % %         export_fig('../graphics/S1/createRay1', '-pdf', '-transparent')
-%         plot(varCol.oXX_m,varCol.oYY_m,'o','color','green','MarkerFaceColor','green')
+%         plot(task.varCol{1}.oXX_m,task.varCol{1}.oYY_m,'o','color','green','MarkerFaceColor','green')
 % %         ylim([-1,1])
 % %         export_fig('../graphics/S1/createRay2', '-pdf', '-transparent')
 %         plot(XX_m,YY_m,'o','color','blue','MarkerFaceColor','blue')
@@ -75,9 +75,9 @@ switch varCol.applyLoad
 %             set(h,'Visible','off')
 %         end
 %         keyboard
-% 
-%         varCol.convexHull = convexHull;
-%         varCol.X_m = X_m;
+
+%         task.varCol{1}.convexHull = convexHull;
+%         task.varCol{1}.X_m = X_m;
 % %         
 end
 

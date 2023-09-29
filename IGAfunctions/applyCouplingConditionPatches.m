@@ -1,30 +1,38 @@
-function varColInner = applyCouplingConditionPatches(varColInner,varColOuter)
-% Future work: Vectorize over Gauss points
+function task = applyCouplingConditionPatches(task,i_domain)
 
-knotVecs = varColInner.knotVecs;
-elRange = varColInner.elRange;
-d_p = varColInner.patches{1}.nurbs.d_p;
+d_p = task.varCol{i_domain}.patches{1}.nurbs.d_p;
 
-degree = varColInner.degree(1:2);
+degree = task.varCol{i_domain}.degree(1:2);
 
 
-weights = varColInner.weights;
-controlPts = varColInner.controlPts;
+weights = task.varCol{i_domain}.weights;
+controlPts = task.varCol{i_domain}.controlPts;
 
-d_inner = varColInner.dimension;
-d_outer = varColOuter.dimension;
+d_inner = task.varCol{i_domain}.dimension;
+d_outer = task.varCol{i_domain-1}.dimension;
 
-[innerNodes,outerNodes,innerXiEtaMesh,innerIndexXiEta,innerNoElemsXiEta,pIndex,innerNodes2] ...
-                    = createSurfaceMesh(varColInner,varColOuter);
+varColBdryOuter = meshBoundary(task.varCol{i_domain},'outerCoupling');
+innerNodes = varColBdryOuter.nodes;
+innerNoElemsXiEta = varColBdryOuter.noElems;
+innerXiEtaMesh = varColBdryOuter.element;
+innerXiEtaMesh2 = varColBdryOuter.element2;
+innerIndexXiEta = varColBdryOuter.index;
+knotVecs = varColBdryOuter.knotVecs;
+elRange = varColBdryOuter.elRange;
+pIndex = varColBdryOuter.pIndex;
+n_en = varColBdryOuter.n_en;
+    
+varColBdryInner = meshBoundary(task.varCol{i_domain-1},'innerCoupling');
+outerNodes = varColBdryInner.nodes;
 
-n_en = prod(degree+1);
 Avalues = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
 spIdxRow1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 spIdxCol1 = zeros(d_inner*d_outer*n_en^2,innerNoElemsXiEta);
 
 
-[Q, W] = gaussTensorQuad(degree+1);
+extraGP = task.misc.extraGP;
+[Q, W] = gaussTensorQuad(degree+1+extraGP(1:2));
 parfor e = 1:innerNoElemsXiEta
 % for e = 1:innerNoElemsXiEta    
     patch = pIndex(e); % New
@@ -49,7 +57,7 @@ parfor e = 1:innerNoElemsXiEta
     end
 
     pts = controlPts(innerSctrXiEta,:);
-    wgts = weights(innerNodes2(innerXiEtaMesh(e,:)));
+    wgts = weights(innerNodes(innerXiEtaMesh2(e,:)));
         
     xi = parent2ParametricSpace(Xi_e, Q);
     I = findKnotSpans(degree, xi(1,:), knots);
@@ -61,7 +69,7 @@ parfor e = 1:innerNoElemsXiEta
     A_e = zeros(d_outer*n_en,d_inner*n_en);
     for gp = 1:size(W,1)
         if d_outer > d_inner
-            A_e = A_e + kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)').'*J_1(gp) * J_2 * W(gp);       
+            A_e = A_e - kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)').'*J_1(gp) * J_2 * W(gp);       
         else
             A_e = A_e + kron(kron(R{1}(gp,:),normal(gp,:)),R{1}(gp,:)')*J_1(gp) * J_2 * W(gp);       
         end
@@ -79,4 +87,4 @@ Avalues = reshape(Avalues,numel(Avalues),1);
 [spIdx1,~,IuniqueIdx1] = unique([spIdxRow1, spIdxCol1],'rows');
 Avalues = accumarray(IuniqueIdx1,Avalues);
 
-varColInner.A_C = sparse(spIdx1(:,1),spIdx1(:,2),Avalues,max(spIdx1(:,1)),max(spIdx1(:,2)),numel(IuniqueIdx1));
+task.varCol{i_domain}.A_C = sparse(spIdx1(:,1),spIdx1(:,2),Avalues,max(spIdx1(:,1)),max(spIdx1(:,2)),numel(IuniqueIdx1));

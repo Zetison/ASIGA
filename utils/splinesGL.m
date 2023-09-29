@@ -11,7 +11,7 @@ for i = 2:numel(uniqueXi)
     if m < p
         counter = counter + m;
     else
-        GLLxi = parent2ParametricSpace([0,1],gaussQuad(p+counter).');
+        GLLxi = parent2ParametricSpace([0,1],gaussLegendreQuad(p+counter).');
         if i == numel(uniqueXi)
             xiT = [xiT, xiC0+GLLxi*(xi-xiC0)];
         else

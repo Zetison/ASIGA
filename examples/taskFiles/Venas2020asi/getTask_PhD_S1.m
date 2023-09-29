@@ -1,8 +1,8 @@
-scatteringCase = 'BI';
+misc.scatteringCase = 'BI';
 
-model = 'S1';  % Spherical shell
+misc.model = 'S1';  % Spherical shell
 
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 
 
 f = 1e3;
@@ -16,39 +16,39 @@ parm = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ABC simulation
-method = {'ABC'};
+misc.method = {'ABC'};
 % formulation = {'HH','BGT'};
 formulation = {'BGT'};
 prePlot.plot2Dgeometry = 0;
 prePlot.plot3Dgeometry = 0;
 degree = 2;
 % calculateVolumeError = 1;
-calculateSurfaceError = 1;
+err.err.calculateSurfaceError = 1;
 computeCondNumber = false;
 calculateFarFieldPattern = 0;
-applyLoad = 'planeWave';
+misc.applyLoad = 'planeWave';
 N = 1:2;
 
-loopParameters = {'M','N','degree','formulation','method'};
+loopParameters = {'M','N','degree','formulation','misc.method'};
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IE simulation
-method = {'IE'};
+misc.method = {'IE'};
 formulation = {'BGU'};
 N = 1:3;
 % collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IENSG simulation
-method = {'IENSG'};
+misc.method = {'IENSG'};
 formulation = {'BGC','BGU','PGU','PGC'};
 N = [1,3,6,9];
 collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
-method = {'BA'};
+misc.method = {'BA'};
 formulation = {'SL2E'};
 N = NaN;
 collectIntoTasks

@@ -6,13 +6,13 @@
 
 % Simpson2014aib is available at https://doi.org/10.1016/j.cma.2013.10.026
 %% IE simulation
-scatteringCase = 'BI';
-model = 'SS'; % Simpson sphere
-method = {'IE'};
+misc.scatteringCase = 'BI';
+misc.model = 'SS'; % Simpson sphere
+misc.method = {'IE'};
 BC = 'SHBC';
 formulation = {'PGU','PGC','BGU','BGC'};
 % formulation = {'BGU'};
-coreMethod = 'IGA';
+misc.coreMethod = 'IGA';
 computeCondNumber = 0;
 runTasksInParallel = 0;
 
@@ -39,8 +39,8 @@ degree = 3;
 
 N = 4;
 
-loopParameters = {'M','method','formulation'};
-calculateSurfaceError = 1;
+loopParameters = {'M','misc.method','formulation'};
+err.calculateSurfaceError = 1;
 parm = 1;
 
 postPlot(1).xname       	= 'dofs';
@@ -50,14 +50,14 @@ postPlot(1).printResults 	= true;
 postPlot(1).axisType    	= 'loglog';
 postPlot(1).lineStyle   	= '*-';
 postPlot(1).xLoopName     	= 'M';
-postPlot(1).legendEntries 	= {'method','formulation','M'};
+postPlot(1).legendEntries 	= {'misc.method','formulation','M'};
 postPlot(1).subFolderName 	= '../results/articleIGA_Simpson';
 postPlot(1).fileDataHeaderX	= [];
 postPlot(1).noXLoopPrms   	= 1;
 
 postPlot(2) = postPlot(1);
 postPlot(2).noXLoopPrms     = 0;
-postPlot(2).legendEntries   = {'method','M','formulation'};
+postPlot(2).legendEntries   = {'misc.method','M','formulation'};
 postPlot(2).lineStyle       = '-';
 postPlot(2).xname           = 'alpha';
 postPlot(2).yname           = 'error_pAbs';
@@ -74,7 +74,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BA simulation
-method = {'BA'};
+misc.method = {'BA'};
 useNeumanProj = 0;
 solveForPtot = true;
 formulation = {'SL2E'};
@@ -82,7 +82,7 @@ collectIntoTasks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEM simulation
-method = {'BEM'};
+misc.method = {'BEM'};
 formulation = {'CCBIE'};
 colBEM_C0 = 0;
 solveForPtot = true;

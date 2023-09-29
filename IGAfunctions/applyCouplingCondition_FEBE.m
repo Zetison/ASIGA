@@ -1,4 +1,4 @@
-function A = applyCouplingCondition_FEBE(varCol)
+function varCol = applyCouplingCondition_FEBE(varCol)
 
 degree = varCol.degree(1:2);
 elRange = varCol.elRange;
@@ -65,4 +65,4 @@ A1values = reshape(A1values,numel(A1values),1);
 [spIdx1,~,IuniqueIdx1] = unique([spIdxRow1, spIdxCol1],'rows');
 A1values = accumarray(IuniqueIdx1,A1values);
 
-A = sparse(spIdx1(:,1),spIdx1(:,2),A1values,noDofs,d*noDofs,numel(IuniqueIdx1));
+varCol.A_C = sparse(spIdx1(:,1),spIdx1(:,2),A1values,noDofs,d*noDofs,numel(IuniqueIdx1));

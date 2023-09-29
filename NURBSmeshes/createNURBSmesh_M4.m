@@ -1,18 +1,11 @@
-function varCol = createNURBSmesh_M4(varCol, M, degree)
-
-x_0 = [0, 0, 0];
-switch varCol{1}.method
-    case {'IE','IENSG','ABC'}
-        varCol{1}.x_0 = x_0; % The origin of the model
-        varCol{1}.A_2 = [1 0 0;
-                      0 1 0;
-                      0 0 1];
-        varCol{1}.alignWithAxis = alignWithAxis;
-end
+function task = createNURBSmesh_M4(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 R = varCol{1}.R;
 t = varCol{1}.t;
-parm = varCol{1}.parm;
+parm = task.msh.parm;
 if varCol{1}.boundaryMethod
     L_gamma = R;
     if parm == 1
@@ -20,7 +13,7 @@ if varCol{1}.boundaryMethod
     else
     	noExtraKnots = (2^(M-1)-1)/(R*pi/4);
     end
-    solid = getBeTSSiM4Data('R', R, 't', t, 'parm', varCol{1}.parm);
+    solid = getBeTSSiM4Data('R', R, 't', t, 'parm', parm);
     solid = makeUniformNURBSDegree(solid,degree);
     Imap{1} = [R*0.785398163397448, R*0.707028554372548];
     solid = refineNURBSevenly(solid,noExtraKnots,Imap);
@@ -41,3 +34,4 @@ if numel(varCol) > 1
 end
 
 varCol{1}.L_gamma = L_gamma;
+task.varCol = varCol;

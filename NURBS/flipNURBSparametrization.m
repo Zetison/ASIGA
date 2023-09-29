@@ -1,4 +1,6 @@
 function nurbs = flipNURBSparametrization(nurbs,dir)
+
+% Flips the NURBS parametrizations in dir
 if nargin < 2
     dir = 1;
 end

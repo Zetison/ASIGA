@@ -1,63 +1,61 @@
-function varCol = buildCHIEFmatrix(varCol)
+function task = buildCHIEFmatrix(task)
 
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
+degree = task.varCol{1}.degree; % assume degree is equal in all patches
 
-index = varCol.index;
-noElems = varCol.noElems;
-elRangeXi = varCol.elRange{1};
-elRangeEta = varCol.elRange{2};
-element = varCol.element;
-element2 = varCol.element2;
-weights = varCol.weights;
-controlPts = varCol.controlPts;
-knotVecs = varCol.knotVecs;
-pIndex = varCol.pIndex;
-noDofs = varCol.noDofs;
+index = task.varCol{1}.index;
+noElems = task.varCol{1}.noElems;
+elRange = task.varCol{1}.elRange;
+element = task.varCol{1}.element;
+element2 = task.varCol{1}.element2;
+weights = task.varCol{1}.weights;
+controlPts = task.varCol{1}.controlPts;
+knotVecs = task.varCol{1}.knotVecs;
+pIndex = task.varCol{1}.pIndex;
+noDofs = task.varCol{1}.noDofs;
 
-extraGP = varCol.extraGP;
-extraGPBEM = varCol.extraGPBEM;
-agpBEM = varCol.agpBEM;
-exteriorProblem = varCol.exteriorProblem;
-model = varCol.model;
+extraGP = task.misc.extraGP;
+extraGPBEM = task.bem.extraGPBEM;
+agpBEM = task.bem.agpBEM;
+exteriorProblem = task.misc.exteriorProblem;
+model = task.misc.model;
 
-quadMethodBEM = varCol.quadMethodBEM;
+quadMethodBEM = task.bem.quadMethodBEM;
 
 Eps = 10*eps;
 
-k = varCol.k;
+k = task.misc.omega/task.varCol{1}.c_f;
 
 useCBIE = true;
 useHBIE = false;
 useRegul = false;
 psiType = NaN;
 
-if strcmp(varCol.coreMethod, 'XI')
+if strcmp(task.misc.coreMethod, 'XI')
     useEnrichedBfuns = true;
-    d_vec = varCol.d_vec;
+    d_vec = task.varCol{1}.d_vec;
 else
     useEnrichedBfuns = false;
     d_vec = NaN;
 end
 
-SHBC = strcmp(varCol.BC, 'SHBC');
+SHBC = strcmp(task.misc.BC, 'SHBC');
 if SHBC
-    no_angles = length(varCol.alpha_s);
+    no_angles = length(task.ffp.alpha_s);
 else
     no_angles = 1;
 end
-solveForPtot = varCol.solveForPtot;
+solveForPtot = task.misc.solveForPtot;
 if solveForPtot
-    p_inc = varCol.p_inc;
-    dp_inc = varCol.dp_inc;
+    p_inc = task.p_inc_;
+    dp_inc = task.dp_incdn_;
     dpdn = @(x,n) 0;
 else
     p_inc = NaN;
     dp_inc = NaN;
     if SHBC
-        dpdn = @(x,n) -varCol.dp_inc(x,n);
+        dpdn = @(x,n) -task.dp_incdn_(x,n);
     else
-        dpdn = varCol.dpdn;
+        dpdn = task.dpdn_;
     end
 end
 
@@ -68,15 +66,15 @@ else
 end
 
 %% Create collocation points
-patches = varCol.patches;
+patches = task.varCol{1}.patches;
 
-[~, ~, diagsMax] = findMaxElementDiameter(patches);
+[~, ~, diagsMax] = findMaxElementDiameter(task.varCol{1}.nurbs);
 centerPts = findCenterPoints(patches);
 
 %% Create source points:
 if exteriorProblem
     switch model
-        case 'S1'
+        case {'Barrel','Barrel_Sweep'}
             Xarr = linspace(-1,1,4)/4;
             Yarr = linspace(-1,1,4)/4;
             Zarr = linspace(-1,1,4)/4;
@@ -126,23 +124,27 @@ if exteriorProblem
                 cp = [cp; X(:),Y(:), Z(:)];
             end
         otherwise
-            error('Not implemented')
+            Xarr = linspace(-1,1,4)/4;
+            Yarr = linspace(-1,1,4)/4;
+            Zarr = linspace(-1,1,4)/4;
+            [X,Y,Z] = ndgrid(Xarr,Yarr,Zarr);
+            cp = [X(:),Y(:), Z(:)];
+            warning('The collocation points may not be optimal')
     end            
 else
     error('Not implemented')
 end
 n_cp = size(cp,1);
 
-useNeumanProj = varCol.useNeumanProj;
+useNeumanProj = task.bem.useNeumanProj;
 if useNeumanProj
-    [U,dU] = projectBC(varCol,SHBC,useCBIE,useHBIE);
+    [U,dU] = projectBC(task.varCol{1},SHBC,useCBIE,useHBIE);
 else
     U = NaN;
     dU = NaN;
 end
-n_en = (p_xi+1)*(p_eta+1);
-
-[Q2D_2,W2D_2,Q,W] = getBEMquadData(p_xi,p_eta,extraGP,extraGPBEM,quadMethodBEM);
+n_en = prod(degree+1);
+[Q2D_2,W2D_2,Q,W] = getBEMquadData(degree,extraGP(1:2),extraGPBEM,quadMethodBEM);
 
 A = complex(zeros(n_cp, noDofs));
 FF = complex(zeros(n_cp, no_angles));
@@ -159,9 +161,14 @@ pD = plotBEMGeometry(patches,plot_GP,10,0,0.8);
 % end
 
 nProgressStepSize = ceil(n_cp/1000);
-progressBars = varCol.progressBars;
+progressBars = task.misc.progressBars;
 if progressBars
-    ppm = ParforProgMon('Building CHIEF matrix: ', n_cp, nProgressStepSize);
+    try
+        ppm = ParforProgMon('Building CHIEF matrix: ', n_cp, nProgressStepSize);
+    catch
+        progressBars = false;
+        ppm = NaN;
+    end
 else
     ppm = NaN;
 end
@@ -181,7 +188,7 @@ parfor i = 1:n_cp
         [BIE, integrals, FF_temp, sctr_y, noGp] = getBEMquadPts(e_y,Q2D_2,W2D_2,Q,W,integrals,FF_temp,...
                 useEnrichedBfuns,k,d_vec,useNeumanProj,solveForPtot,useCBIE,useHBIE,dpdn,U,...
                 x,NaN,NaN,NaN,NaN,constants,psiType,useRegul,...
-                p_xi, p_eta,pIndex,knotVecs,index,elRangeXi,elRangeEta,element,element2,controlPts,weights,...
+                degree,pIndex,knotVecs,index,elRange,element,element2,controlPts,weights,...
                 patches,Eps,diagsMax,centerPts,agpBEM,quadMethodBEM);
         for j = 1:n_en
             A_row(sctr_y(j)) = A_row(sctr_y(j)) + BIE(j);
@@ -192,7 +199,7 @@ parfor i = 1:n_cp
     FF(i,:) = getF_eTemp(FF_temp,useNeumanProj,solveForPtot,psiType,useCBIE,useHBIE,useRegul,NaN,NaN,x,NaN,...
                 U,dU,p_inc,dp_inc,dpdn,NaN,NaN,NaN,NaN,sgn);
 end
-varCol.A = [varCol{1}.A; A];
-varCol.FF = [varCol{1}.FF; FF];
+task.varCol{1}.A_K = [task.varCol{1}.A_K; A];
+task.varCol{1}.FF = [task.varCol{1}.FF; FF];
 % totNoQP
-varCol.totNoQP = varCol.totNoQP + totNoQP;
+task.varCol{1}.totNoQP = task.varCol{1}.totNoQP + totNoQP;

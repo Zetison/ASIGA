@@ -1,20 +1,20 @@
-function [BB,element,elementInf,zeta1Nodes,zeta0Nodes] = addInfElements3_SEM(varCol)
+function [BB,element,elementInf,zeta1Nodes,zeta0Nodes] = addInfElements3_SEM(task)
 
-patches = varCol.patches;
-knotVecs = varCol.knotVecs;
-noPatches = varCol.noPatches;
+patches = task.varCol{1}.patches;
+knotVecs = task.varCol{1}.knotVecs;
+noPatches = task.varCol{1}.noPatches;
 
-p_xi = varCol.degree(1); % assume p_xi is equal in all patches
-p_eta = varCol.degree(2); % assume p_eta is equal in all patches
+p_xi = task.varCol{1}.degree(1); % assume p_xi is equal in all patches
+p_eta = task.varCol{1}.degree(2); % assume p_eta is equal in all patches
 n_en = (p_xi+1)*(p_eta+1);
 
-gluedNodes = varCol.gluedNodes;
-N = varCol.N;
-formulation = varCol.formulation;
+gluedNodes = task.varCol{1}.gluedNodes;
+N = task.iem.N;
+formulation = task.misc.formulation;
 
-k = varCol.k;
-Upsilon = varCol.Upsilon;
-r_a = varCol.r_a;
+k = task.misc.omega/task.varCol{1}.c_f;
+Upsilon = task.iem.Upsilon;
+r_a = task.misc.r_a;
 
 
 noParams = 2;
@@ -216,4 +216,70 @@ switch formulation
 end
 
 
-                    
+     
+
+function [element, index, noElems] = generateIGA2DMesh(Xi, Eta, p, q, n, m)
+% warning('This function is depricated. Use generateIGAmesh instead')
+
+uniqueXiKnots   = unique(Xi);
+uniqueEtaKnots   = unique(Eta);
+
+noElemsXi       = length(uniqueXiKnots)-1; % # of elements xi dir.
+noElemsEta       = length(uniqueEtaKnots)-1; % # of elements eta dir.
+
+chan  = zeros(m,n);
+
+count = 1;
+for j = 1:m
+    for i = 1:n
+        chan(i,j) = count;
+        count     = count + 1;
+    end
+end
+
+
+% determine our element ranges and the corresponding
+% knot indices along each direction
+
+[elRangeXi,elConnXi] = buildConnectivity(p,Xi,noElemsXi);
+[elRangeEta,elConnEta] = buildConnectivity(q,Eta,noElemsEta);
+
+noElems = noElemsXi * noElemsEta;
+element = zeros(noElems,(p+1)*(q+1));
+
+e = 1;
+for jj = 1:noElemsEta
+    vConn = elConnEta(jj,:);
+    for ii = 1:noElemsXi
+        c = 1;
+        uConn = elConnXi(ii,:);
+
+        for j = 1:length(vConn)
+            for i = 1:length(uConn)
+                element(e,c) = chan(uConn(i), vConn(j));
+                c = c + 1;
+            end
+        end
+        e = e + 1;
+    end
+end
+
+index = zeros(noElems,2);
+
+count = 1;
+for j = 1:size(elRangeEta,1)
+    for i = 1:size(elRangeXi,1)
+        index(count,1) = i;
+        index(count,2) = j;
+        count = count + 1;
+    end
+end
+
+
+
+
+
+
+
+
+

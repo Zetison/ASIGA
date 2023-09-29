@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_Shirron(varCol, M, degree)
+function task = createNURBSmesh_Shirron(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -6,7 +9,7 @@ for j = 1:numel(names)
     eval([name, ' = parms.(names{j});']);
 end
 
-x_0 = [-L/2, 0, 0]; % The origin of the model
+x_0 = [0, 0, 0]; % The center of the model
 alignWithAxis = 'Xaxis';
 switch varCol{1}.method
     case {'IE','IENSG'}
@@ -15,8 +18,8 @@ switch varCol{1}.method
         A_2 = [0 1 0;
                0 0 1;
                1 0 0];
-        varCol{1}.x_0 = x_0;
-        varCol{1}.A_2 = A_2;
+        task.iem.x_0 = x_0;
+        task.iem.A_2 = A_2;
         varCol{1}.alignWithAxis = alignWithAxis;
 end
 
@@ -110,4 +113,5 @@ end
 varCol{1}.chimin = chimin;
 varCol{1}.chimax = chimax;
 varCol{1}.L_gamma = L_gamma;
-varCol{1}.Upsilon = Upsilon;
+task.iem.Upsilon = Upsilon;
+task.varCol = varCol;

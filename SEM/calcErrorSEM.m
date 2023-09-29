@@ -1,7 +1,7 @@
-function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(varCol, UU)
+function [relL2Error, relH1Error, relH1sError, relEnergyError] = calcErrorSEM(task)
 
 %% Preallocation and initiallizations
-patches = varCol.patches;
+patches = task.varCol{1}.patches;
 nurbs = patches{1}.nurbs;
 
 Nxi = nurbs.number(1);
@@ -10,14 +10,15 @@ Nzeta = nurbs.number(3);
 nxi = Nxi+5;
 neta = Neta+5;
 nzeta = Nzeta+5;
+U = task.varCol{1}.U;
 
 noComponents = 1;
 noComponentsDeriv = 3;
-noPatches = varCol.noPatches;
+noPatches = task.varCol{1}.noPatches;
 factors = zeros(nxi*neta*nzeta,noPatches);
 nodes = zeros(nxi*neta*nzeta,noPatches,3);
-u_hs = zeros(nxi*neta*nzeta,1,noPatches);
-du_hs = zeros(nxi*neta*nzeta,noPatches,3);
+u_hs = complex(zeros(nxi*neta*nzeta,1,noPatches));
+du_hs = complex(zeros(nxi*neta*nzeta,noPatches,3));
 [Qxi, Wxi] = gaussTensorQuad(nxi);
 [Qeta, Weta] = gaussTensorQuad(neta);
 [Qzeta, Wzeta] = gaussTensorQuad(neta);
@@ -25,7 +26,7 @@ du_hs = zeros(nxi*neta*nzeta,noPatches,3);
 parfor patch = 1:noPatches
 % for patch = 1:noPatches
     nurbs = patches{patch}.nurbs;
-    U = UU((1:Nxi*Neta*Nzeta) + (patch-1)*Nxi*Neta*Nzeta,:);
+    U_sctr = U((1:Nxi*Neta*Nzeta) + (patch-1)*Nxi*Neta*Nzeta,:);
 
     c = nurbs.coeffs;
     Bxi = zeros(Nxi,nxi);
@@ -54,10 +55,10 @@ parfor patch = 1:noPatches
     du_ht = zeros(nxi,neta,nzeta,noComponentsDeriv);
     JJ = zeros(nxi,neta,nzeta,3,3);
     idx = [2,3,1];
-    u_h =           permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U,Nxi,Neta*Nzeta)), nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
-    du_ht(:,:,:,1) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((dBxi.'*reshape(U,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
-    du_ht(:,:,:,2) = permute(reshape(Bzeta.'*reshape(permute(reshape(dBeta.'*reshape(permute(reshape((Bxi.'*reshape(U,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
-    du_ht(:,:,:,3) = permute(reshape(dBzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
+    u_h =           permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)), nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
+    du_ht(:,:,:,1) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((dBxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
+    du_ht(:,:,:,2) = permute(reshape(Bzeta.'*reshape(permute(reshape(dBeta.'*reshape(permute(reshape((Bxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
+    du_ht(:,:,:,3) = permute(reshape(dBzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(U_sctr,Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
     for i = 1:3
         XX(:,:,:,i) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((Bxi.'*reshape(c(i,:,:,:),Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);
         JJ(:,:,:,i,1) = permute(reshape(Bzeta.'*reshape(permute(reshape(Beta.'*reshape(permute(reshape((dBxi.'*reshape(c(i,:,:,:),Nxi,Neta*Nzeta)),nxi,Neta,Nzeta),idx),Neta,Nzeta*nxi),neta,Nzeta,nxi),idx),Nzeta,nxi*neta),nzeta,nxi,neta),idx);        
@@ -84,11 +85,11 @@ nodes = reshape(nodes,nxi*neta*nzeta*noPatches,3);
 u_hs = reshape(u_hs,nxi*neta*nzeta*noPatches,1);
 du_hs = reshape(du_hs,nxi*neta*nzeta*noPatches,3);
 
-analyticFunctions = varCol.analyticFunctions({nodes});
+analyticFunctions = task.analyticFunctions({nodes});
 
-rho_f = varCol.rho;
-omega = varCol.omega;
-c_f = varCol.c_f;
+rho_f = task.varCol{1}.rho;
+omega = task.misc.omega;
+c_f = task.varCol{1}.c_f;
 k = omega./c_f;
 
 H1Error = 0;
@@ -101,7 +102,7 @@ normalizationH1s = 0;
 normalizationL2 = 0;
 
 p = analyticFunctions{1}.p;
-dp = [analyticFunctions{1}.dpdx, analyticFunctions{1}.dpdy, analyticFunctions{1}.dpdz];
+dp = [analyticFunctions{1}.dp{1}, analyticFunctions{1}.dp{2}, analyticFunctions{1}.dp{3}];
 p_e = p-u_hs;
 dp_e = dp-du_hs;
 

@@ -1,4 +1,7 @@
-function varCol = createNURBSmesh_S15(varCol, M, degree)
+function task = createNURBSmesh_S15(task)
+varCol = task.varCol;
+M = task.msh.M;
+degree = task.msh.degree;
 
 names = fieldnames(parms);
 for j = 1:numel(names)
@@ -7,11 +10,11 @@ for j = 1:numel(names)
 end
 
 x_0 = [0, 0, 0];
-varCol{1}.x_0 = x_0; % The origin of the model
+task.iem.x_0 = x_0; % The center of the model
 alignWithAxis = 'Zaxis';
 switch varCol{1}.method
     case {'IE','IENSG','ABC'}
-        varCol{1}.A_2 = [1 0 0;
+        task.iem.A_2 = [1 0 0;
                       0 1 0;
                       0 0 1];
         varCol{1}.alignWithAxis = alignWithAxis;
@@ -97,7 +100,7 @@ else
     
     Upsilon = sqrt(c_z^2-c_xy^2);
     varCol{1}.r_a = evaluateProlateCoords(0,0,c_z,Upsilon);
-    varCol{1}.Upsilon = Upsilon;
+    task.iem.Upsilon = Upsilon;
     
     if numel(varCol) > 1
         solid = getEllipsoidalData({'R', R_o(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t(1)});
@@ -111,8 +114,8 @@ else
     end
 
     if numel(varCol) > 2
-        t_ifluid = R_i(1)-R_o(2);
-        solid = getEllipsoidalData({'R', R_i(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_ifluid});
+        t_ifluid = R(1)-R_o(2);
+        solid = getEllipsoidalData({'R', R(1), 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_ifluid});
         solid = makeUniformNURBSDegree(solid);
         nurbsDegree = fluid_i{1}.degree(1); % assume all degrees are equal
         fluid_i = elevateDegreeInPatches(fluid_i,[1 1 1]*(degree-nurbsDegree));
@@ -131,3 +134,4 @@ if numel(varCol) > 2
 end
 
 varCol{1}.L_gamma = L_gamma;
+task.varCol = varCol;

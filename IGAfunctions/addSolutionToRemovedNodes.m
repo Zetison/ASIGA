@@ -1,20 +1,16 @@
-function U = addSolutionToRemovedNodes(U_temp,dofsToRemove,noDofs,gluedNodes,noCtrPts,homDirichletDofs)
+function varCol = addSolutionToRemovedNodes(varCol)
 
-nonDirichletNodes = setdiff(1:noDofs,dofsToRemove');
-
-U = zeros(noDofs,1);
-
-U(nonDirichletNodes) = U_temp;
-
-for i = 1:length(gluedNodes)
-    parentIdx = gluedNodes{i}(1);
-    for j = 2:length(gluedNodes{i})
-        U(gluedNodes{i}(j)) = U(parentIdx);
-        U(gluedNodes{i}(j)+noCtrPts) = U(parentIdx+noCtrPts);
-        U(gluedNodes{i}(j)+2*noCtrPts) = U(parentIdx+2*noCtrPts);
+for i_domain = 1:numel(varCol)
+    if isfield(varCol{i_domain},'U')
+        gluedNodes = varCol{i_domain}.gluedNodes;
+        d = varCol{i_domain}.dimension;
+        for i = 1:length(gluedNodes)
+            parentIdx = gluedNodes{i}(1);
+            for j = 2:length(gluedNodes{i})
+                for ii = 1:d
+                    varCol{i_domain}.U(d*(gluedNodes{i}(j)-1)+ii,:) = varCol{i_domain}.U(d*(parentIdx-1)+ii,:);
+                end
+            end
+        end
     end
-end
-
-if ~isempty(homDirichletDofs)
-    U(homDirichletDofs) = 0;
 end
