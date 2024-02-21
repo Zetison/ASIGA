@@ -3,6 +3,7 @@ close all
 
 addpath(genpath('../export_fig'))
 no2Dpoints = 1000;
+% noCoresToUse = 1;
 startMatlabPool
 para.plotResultsInParaview = 1;
 clear varCol
@@ -12,7 +13,7 @@ prePlot.plot3Dgeometry = 0;
 homeDir = expanduser('~');
 
 
-for M = 2
+for M = 1
     switch model
         case 'bridge-quadratic'
 %             nurbs = read_g2([homeDir '/OneDrive/SINTEF/DT/bridge-quadratic/' model '.g2']);

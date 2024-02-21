@@ -26,7 +26,7 @@ else
     if isempty(options.topoSetName)
         topset = topologysets.set{1};
     else
-        idx = findSet(geometry.topologysets.set,options.topoSetName);
+        idx = findSet(topologysets.set,options.topoSetName);
         topset = topologysets.set{idx};
     end
     nurbs = cell(1,6*numel(nurbs_vol));
@@ -38,8 +38,8 @@ else
         at = zeros(2,3);
         at(midx) = 1;
         nurbs(counter) = subNURBS(nurbs_vol(patch),'at',at.','outwardPointingNormals',true);
-        counter = counter + 1;
         surf2volMap(counter,:) = [patch,midx];
+        counter = counter + 1;
     end
     nurbs(counter:end) = [];
     surf2volMap(counter:end,:) = [];

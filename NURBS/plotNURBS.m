@@ -1,4 +1,4 @@
-function [handles,maxC,minC] = plotNURBS(varargin)
+function [handles,minC,maxC] = plotNURBS(varargin)
 
 %% Interpret input arguments
 nurbsPatches = varargin{1};
@@ -26,6 +26,12 @@ options = struct('resolution',[32,32,32], ...
                  'plotColorFun', true, ...
                  'plotWeights', false, ...
                  'plotJacobian', false, ...
+                 'plotJacobianRatio', false, ...
+                 'plotOrthogonality', false, ...
+                 'plotMeshQuality', false, ...
+                 'plotAffinity', false, ...
+                 'useLogForColoring', false, ...
+                 'logForColoring_shift', 1, ...
                  'coarseLinearSampling', true, ...
                  'color',jet(numel(nurbsPatches)),...
                  'alphaValue',1,...
@@ -73,6 +79,7 @@ if ~isa(quiverAutoScale,'char')
         quiverAutoScale = 'off';
     end
 end
+Eps = 1e4*eps;
 if isempty(options.app)
     options.app.S2Vmouse_click = @(src,event) NaN;
 end
@@ -110,16 +117,26 @@ elseif size(color,1) < noPatches
     color = repmat(color,ceil(noPatches/size(color,1)),1);
 end
 plotJacobian = options.plotJacobian;
+plotJacobianRatio = options.plotJacobianRatio;
+plotOrthogonality = options.plotOrthogonality;
+plotMeshQuality = options.plotMeshQuality;
+plotAffinity = options.plotAffinity;
 plotWeights = options.plotWeights;
-if plotColorFun + plotJacobian + plotWeights > 1
+if plotColorFun + plotJacobian + plotJacobianRatio + plotOrthogonality + plotAffinity + plotMeshQuality + plotWeights > 1
     warning('Only one of the options plotColorFun, plotJacobian and plotWeights will be used')
 end
-% evaluateDerivatives = double(plotParmDir || plotNormalVectors || plotJacobian || (plotColorFun && nargin(colorFun) == 2));
-evaluateDerivatives = 1;
+evaluateDerivatives =  double(plotParmDir || plotNormalVectors || plotJacobian || plotJacobianRatio || ...
+                              plotOrthogonality || plotJacobian || (plotColorFun && nargin(colorFun) == 2));
+if plotAffinity || plotMeshQuality
+    evaluateDerivatives = 2;
+end
+% evaluateDerivatives = 1;
 
 visible = 'on'; % render only in the end, but it seems faster to render on the go, so this is here set to 'on'
-maxC = NaN;
-minC = NaN;
+maxC = -Inf;
+minC = Inf;
+minC_patch = NaN;
+maxC_patch = NaN;
 d_max = -Inf;
 objectHandle = gobjects(1,noPatches);
 elementEdgesHandle = gobjects(1,noPatches);
@@ -149,7 +166,7 @@ for patch = 1:noPatches
     if d > d_max
         d_max = d;
     end
-    if plotColorFun && ((plotJacobian && d_p == 3) || plotWeights)
+    if plotColorFun && (((plotJacobian || plotJacobianRatio || plotOrthogonality || plotMeshQuality || plotAffinity) && d_p == 3) || plotWeights)
         warning('Plotting solution from function handle instead of Jacobian')
     end
     p_values = cell(1,d_p);
@@ -216,12 +233,17 @@ for patch = 1:noPatches
                     XI = (jj-1)*ones(nuk1,nuk2);
                     [ETA,ZETA] = ndgrid(p_values{indices(2)},p_values{indices(3)});
                     XIETAZETA = [XI(:), ETA(:), ZETA(:)];
-                    [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), evaluateDerivatives);
+                    if evaluateDerivatives > 1
+                        [X_temp,dvdxi,dvdeta,dvdzeta,d2vdetazeta,d2vdxizeta,d2vdxieta] = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), evaluateDerivatives);
+                    else
+                        [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), evaluateDerivatives);
+                    end
+%                     [X_temp,dvdxi,dvdeta,dvdzeta] = evaluateNURBS(nurbs, XIETAZETA(:,indicesMat2(ii,:)), evaluateDerivatives);
                     if evaluateDerivatives
                         dX_temp = zeros(nuk1*nuk2, d, d_p);
-                        dX_temp(:,:,1) = dvdxi./norm2(dvdxi);
-                        dX_temp(:,:,2) = dvdeta./norm2(dvdeta);
-                        dX_temp(:,:,3) = dvdzeta./norm2(dvdzeta);
+                        dX_temp(:,:,1) = dvdxi(:,:,1)./norm2(dvdxi(:,:,1));
+                        dX_temp(:,:,2) = dvdeta(:,:,1)./norm2(dvdeta(:,:,1));
+                        dX_temp(:,:,3) = dvdzeta(:,:,1)./norm2(dvdzeta(:,:,1));
                         if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
                             normal = cross(dX_temp(:,:,indices(2)),dX_temp(:,:,indices(3)),2);
                             normals_temp = (-1)^jj*normal./norm2(normal);
@@ -234,13 +256,51 @@ for patch = 1:noPatches
                                 end
                             end
                         end
+                        dvdxi = reshape(dvdxi,nuk1,nuk2, d, evaluateDerivatives);
+                        dvdeta = reshape(dvdeta,nuk1,nuk2, d, evaluateDerivatives);
+                        dvdzeta = reshape(dvdzeta,nuk1,nuk2, d, evaluateDerivatives);
                         if plotJacobian
-                            J_1 = dot(dX_temp(:,:,:,1),cross(dX_temp(:,:,:,2),dX_temp(:,:,:,3),3),3);
-                            J_1(J_1 < eps) = eps;
-                            if any(J_1(:) < -10*eps)
+                            J_1 = dot(dvdxi,cross(dvdeta,dvdzeta,3),3);
+                            if any(J_1(:) < -Eps)
                                 warning('Negative Jacobian encountered')
                             end
                             C(1:nuk1,counter+1:counter+nuk2) = J_1;
+                        end
+                        if plotJacobianRatio
+                            J_1 = dot(dvdxi,cross(dvdeta,dvdzeta,3),3);
+                            J_1_r = d_p*J_1./(vecnorm(dvdxi,2,3).^d_p + vecnorm(dvdeta,2,3).^d_p + vecnorm(dvdzeta,2,3).^d_p);
+                            C(1:nuk1,counter+1:counter+nuk2) = J_1_r;
+                        end
+                        if plotOrthogonality
+                            J_1 = dot(dvdxi,cross(dvdeta,dvdzeta,3),3);
+                            J_1_r = J_1./(vecnorm(dvdxi,2,3).*vecnorm(dvdeta,2,3).*vecnorm(dvdzeta,2,3));
+                            C(1:nuk1,counter+1:counter+nuk2) = J_1_r;
+                        end
+                        if plotMeshQuality
+                            d2vdetazeta = reshape(d2vdetazeta,nuk1,nuk2, d);
+                            d2vdxizeta = reshape(d2vdxizeta,nuk1,nuk2, d);
+                            d2vdxieta = reshape(d2vdxieta,nuk1,nuk2, d);
+                            J_1 = dot(dvdxi(:,:,:,1),cross(dvdeta(:,:,:,1),dvdzeta(:,:,:,1),3),3);
+                            J_1_r = J_1./(vecnorm(dvdxi(:,:,:,1),2,3).*vecnorm(dvdeta(:,:,:,1),2,3).*vecnorm(dvdzeta(:,:,:,1),2,3));
+                            C(1:nuk1,counter+1:counter+nuk2) = J_1_r.*(dot(d2vdetazeta,d2vdetazeta,3) + dot(d2vdxizeta,d2vdxizeta,3) + dot(d2vdxieta,d2vdxieta,3));
+                        end
+                        if plotAffinity
+                            d2vdetazeta = reshape(d2vdetazeta,nuk1,nuk2, d);
+                            d2vdxizeta = reshape(d2vdxizeta,nuk1,nuk2, d);
+                            d2vdxieta = reshape(d2vdxieta,nuk1,nuk2, d);
+                            if false
+                                curvature_xi = vecnorm(cross(dvdxi(:,:,:,1),dvdxi(:,:,:,2),3),2,3)./vecnorm(dvdxi(:,:,:,1),2,3)./vecnorm(dvdxi(:,:,:,2),2,3);
+                                curvature_eta = vecnorm(cross(dvdeta(:,:,:,1),dvdeta(:,:,:,2),3),2,3)./vecnorm(dvdeta(:,:,:,1),2,3)./vecnorm(dvdeta(:,:,:,2),2,3);
+                                curvature_zeta = vecnorm(cross(dvdzeta(:,:,:,1),dvdzeta(:,:,:,2),3),2,3)./vecnorm(dvdzeta(:,:,:,1),2,3)./vecnorm(dvdzeta(:,:,:,2),2,3);
+                                curvature_xi(vecnorm(dvdxi(:,:,:,2),2,3) < Eps) = 0;
+                                curvature_eta(vecnorm(dvdeta(:,:,:,2),2,3) < Eps) = 0;
+                                curvature_zeta(vecnorm(dvdzeta(:,:,:,2),2,3) < Eps) = 0;
+    
+                                C(1:nuk1,counter+1:counter+nuk2) = (1 - curvature_xi).*(1 - curvature_eta).*(1 - curvature_zeta);
+                            else
+                                C(1:nuk1,counter+1:counter+nuk2) =  vecnorm(dvdxi(:,:,:,2),2,3) + vecnorm(dvdeta(:,:,:,2),2,3) + vecnorm(dvdzeta(:,:,:,2),2,3) ...
+                                                                  + vecnorm(d2vdetazeta,2,3)    + vecnorm(d2vdxizeta,2,3)      + vecnorm(d2vdxieta,2,3);
+                            end
                         end
                     end
                     if plotWeights
@@ -298,9 +358,12 @@ for patch = 1:noPatches
         vElementEdges(elCounter:end,:) = [];
 
         if plotObject
-            maxC = max(max(C));
-            minC = min(min(C));
-            if plotColorFun || plotJacobian || plotWeights
+            if options.useLogForColoring
+                C = log10(abs(C - options.logForColoring_shift));
+            end
+            maxC_patch = max(max(C));
+            minC_patch = min(min(C));
+            if plotColorFun || plotJacobian || plotJacobianRatio || plotOrthogonality || plotMeshQuality || plotAffinity || plotWeights
                 objectHandle(patch) = surface(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
                         'LineStyle','none','FaceAlpha',alphaValue, 'DisplayName',displayName,...
                         'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
@@ -349,21 +412,21 @@ for patch = 1:noPatches
         normals = zeros(length(p_values{1}), length(p_values{2}), d);
         C = zeros(length(p_values{1}), length(p_values{2}));
         [XI,ETA] = ndgrid(p_values{1},p_values{2});
-        [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
+        if evaluateDerivatives > 1
+            [X,dvdxi,dvdeta,d2vdxieta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
+        else
+            [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
+        end
         L_gamma = norm(X(end,:)-X(1,:));
         if evaluateDerivatives
             dX = zeros(nuk1*nuk2, d, d_p);
-            dX(:,:,1) = dvdxi./norm2(dvdxi);
-            dX(:,:,2) = dvdeta./norm2(dvdeta);
+            dX(:,:,1) = dvdxi(:,:,1)./norm2(dvdxi(:,:,1));
+            dX(:,:,2) = dvdeta(:,:,1)./norm2(dvdeta(:,:,:,1));
             dX = reshape(dX,nuk1,nuk2, d, d_p);
             if plotNormalVectors || (plotColorFun && nargin(colorFun) == 2)
-                normal = cross(dvdxi,dvdeta,2);
+                normal = cross(dvdxi(:,:,1),dvdeta(:,:,1),2);
                 normals = normal./norm2(normal);
             end
-        end
-        if plotWeights
-            C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
-            C = reshape(C,nuk1,nuk2);
         end
         if plotColorFun
             switch nargin(colorFun)
@@ -376,16 +439,48 @@ for patch = 1:noPatches
             end
             C = reshape(C,nuk1,nuk2);
         end
+        if plotWeights
+            C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 1, nurbs.coeffs(4,:).');
+            C = reshape(C,nuk1,nuk2);
+        end
+        if plotJacobianRatio
+            dvdxi = reshape(dvdxi,nuk1,nuk2, d);
+            dvdeta = reshape(dvdeta,nuk1,nuk2, d);
+            J_1 = dvdxi(:,:,1).*dvdeta(:,:,2) - dvdeta(:,:,1).*dvdxi(:,:,2);
+            C = d_p*J_1./(vecnorm(dX(:,:,:,1),2,3).^d_p + vecnorm(dX(:,:,:,2),2,3).^d_p);
+        end
+        if plotOrthogonality
+            dvdxi = reshape(dvdxi,nuk1,nuk2, d);
+            dvdeta = reshape(dvdeta,nuk1,nuk2, d);
+            J_1 = dvdxi(:,:,1).*dvdeta(:,:,2) - dvdeta(:,:,1).*dvdxi(:,:,2);
+            C = J_1./(vecnorm(dvdxi,2,3).*vecnorm(dvdeta,2,3));
+        end
+        if plotMeshQuality
+            dvdxi = reshape(dvdxi,nuk1,nuk2, d, evaluateDerivatives);
+            dvdeta = reshape(dvdeta,nuk1,nuk2, d, evaluateDerivatives);
+            d2vdxieta = reshape(d2vdxieta,nuk1,nuk2, d);
+            J_1 = dvdxi(:,:,1).*dvdeta(:,:,2) - dvdeta(:,:,1).*dvdxi(:,:,2);
+            C = J_1./(vecnorm(dvdxi,2,3).*vecnorm(dvdeta,2,3)).*vecnorm(d2vdxieta,2,3);
+        end
+        if plotAffinity
+            dvdxi = reshape(dvdxi,nuk1,nuk2, d, evaluateDerivatives);
+            dvdeta = reshape(dvdeta,nuk1,nuk2, d, evaluateDerivatives);
+            d2vdxieta = reshape(d2vdxieta,nuk1,nuk2, d);
+            C = vecnorm(dvdxi(:,:,:,2),2,3) + vecnorm(dvdeta(:,:,:,2),2,3) + vecnorm(d2vdxieta,2,3);
+        end
         X = reshape(X,nuk1,nuk2,d);
     
         if plotObject
-            if plotColorFun || plotWeights
+            if plotColorFun || plotWeights || plotJacobianRatio || plotOrthogonality || plotMeshQuality || plotAffinity
+                if options.useLogForColoring
+                    C = log10(abs(C - options.logForColoring_shift));
+                end
+                maxC_patch = max(max(C));
+                minC_patch = min(min(C));
                 objectHandle(patch) = surface(ax,X(:,:,1),X(:,:,2),X(:,:,3),C,'EdgeColor','none',...
                             'LineStyle','none','FaceAlpha',alphaValue, ...
                             'FaceLighting', faceLighting, 'DisplayName',displayName,...
                             'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
-                maxC = max(max(C));
-                minC = min(min(C));
             else
                 objectHandle(patch) = surface(ax,X(:,:,1),X(:,:,2),X(:,:,3), 'FaceColor', colorPatch,...
                             'EdgeColor','none','LineStyle','none','FaceAlpha',alphaValue, ...
@@ -436,25 +531,48 @@ for patch = 1:noPatches
                     'DisplayName',[displayName, ' - normal vectors'],'color',colorNormals,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
         end
     elseif d_p == 2 && d == 2
-        if plotColorFun || plotParmDir
+        if plotParmDir || plotNormalVectors || plotJacobian || plotJacobianRatio || ...
+           plotOrthogonality || plotJacobian || plotColorFun || plotWeights || plotAffinity
             nuk1 = length(p_values{1});
             nuk2 = length(p_values{2});
             C = zeros(length(p_values{1}), length(p_values{2}));
             [XI,ETA] = ndgrid(p_values{1},p_values{2});
-            [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
+            if evaluateDerivatives > 1
+                [X,dvdxi,dvdeta,d2vdxieta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
+            else
+                [X,dvdxi,dvdeta] = evaluateNURBS(nurbs, [XI(:) ETA(:)], evaluateDerivatives);
+            end
             L_gamma = norm(X(end,:)-X(1,:));
             if isnan(quiverScale)
                 quiverScale = L_gamma/20;
             end
             if evaluateDerivatives
                 dX = zeros(nuk1*nuk2, d, d_p);
-                dX(:,:,1) = dvdxi./norm2(dvdxi);
-                dX(:,:,2) = dvdeta./norm2(dvdeta);
+                dX(:,:,1) = dvdxi(:,:,1,1)./norm2(dvdxi(:,:,1,1));
+                dX(:,:,2) = dvdeta(:,:,1,1)./norm2(dvdeta(:,:,:,1,1));
                 dX = reshape(dX,nuk1,nuk2, d, d_p);
             end
             if plotWeights
                 C = evaluateNURBS(nurbs, [XI(:) ETA(:)], 0, nurbs.coeffs(4,:).');
                 C = reshape(C,nuk1,nuk2);
+            end
+            if plotJacobianRatio
+                dvdxi = reshape(dvdxi,nuk1,nuk2, d, evaluateDerivatives);
+                dvdeta = reshape(dvdeta,nuk1,nuk2, d, evaluateDerivatives);
+                J_1 = dvdxi(:,:,1).*dvdeta(:,:,2,1) - dvdeta(:,:,1,1).*dvdxi(:,:,2);
+                C = d_p*J_1./(vecnorm(dvdxi,2,3).^d_p + vecnorm(dvdeta,2,3).^d_p);
+            end
+            if plotOrthogonality
+                dvdxi = reshape(dvdxi,nuk1,nuk2, d, evaluateDerivatives);
+                dvdeta = reshape(dvdeta,nuk1,nuk2, d, evaluateDerivatives);
+                J_1 = dvdxi(:,:,1,1).*dvdeta(:,:,2,1) - dvdeta(:,:,1,1).*dvdxi(:,:,2,1);
+                C = J_1./(vecnorm(dvdxi(:,:,:,1),2,3).*vecnorm(dvdeta(:,:,:,1),2,3));
+            end
+            if plotAffinity
+                dvdxi = reshape(dvdxi,nuk1,nuk2, d, evaluateDerivatives);
+                dvdeta = reshape(dvdeta,nuk1,nuk2, d, evaluateDerivatives);
+                d2vdxieta = reshape(d2vdxieta,nuk1,nuk2, d);
+                C = vecnorm(dvdxi(:,:,:,2),2,3) + vecnorm(dvdeta(:,:,:,2),2,3) + vecnorm(d2vdxieta,2,3);
             end
             if plotColorFun
                 switch nargin(colorFun)
@@ -467,10 +585,13 @@ for patch = 1:noPatches
             end
             X = reshape(X,nuk1,nuk2,d);
 
-            maxC = max(max(C));
-            minC = min(min(C));
+            if options.useLogForColoring
+                C = log10(abs(C - options.logForColoring_shift));
+            end
+            maxC_patch = max(max(C));
+            minC_patch = min(min(C));
             if plotObject
-                objectHandle(patch) = surface(ax,X(:,:,1),X(:,:,2),C-maxC,C,'EdgeColor','none',...
+                objectHandle(patch) = surface(ax,X(:,:,1),X(:,:,2),C-maxC_patch,C,'EdgeColor','none',...
                             'LineStyle','none','FaceAlpha',alphaValue, 'FaceLighting', faceLighting, ...
                             'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
             end
@@ -540,18 +661,18 @@ for patch = 1:noPatches
             end
         end
     elseif d_p == 1 && plotObject
-        C = evaluateNURBS(nurbs, p_values{1});
+        v = evaluateNURBS(nurbs, p_values{1});
         switch d
             case 1
-                objectHandle(patch) = line(ax,C,zeros(size(C)), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));  
+                objectHandle(patch) = line(ax,v,zeros(size(v)), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));  
             case 2
-                objectHandle(patch) = line(ax,C(:,1), C(:,2), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));  
+                objectHandle(patch) = line(ax,v(:,1), v(:,2), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));  
             case 3
-                objectHandle(patch) = line(ax,C(:,1), C(:,2), C(:,3), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event)); 
+                objectHandle(patch) = line(ax,v(:,1), v(:,2), v(:,3), 'color', colorPatch, 'DisplayName',displayName,'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event)); 
         end  
-        C = evaluateNURBS(nurbs, uniqueKnots{1}.');
+        v = evaluateNURBS(nurbs, uniqueKnots{1}.');
         if plotElementEdges
-            elementEdgesHandle(patch) = line(ax,C(:,1), C(:,2), 'Marker', 'x', 'LineStyle', 'none', 'DisplayName',[displayName, ' - elements'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
+            elementEdgesHandle(patch) = line(ax,v(:,1), v(:,2), 'Marker', 'x', 'LineStyle', 'none', 'DisplayName',[displayName, ' - elements'],'Visible',visible,'ButtonDownFcn',@(src,event)options.app.S2Vmouse_click(src,event));
         end
     end
     if plotControlPolygon
@@ -611,6 +732,12 @@ for patch = 1:noPatches
     end
     if plotNormalVectors && ~isempty(options.UserData)
         normalVectorsHandle(patch).UserData = options.UserData;
+    end
+    if maxC_patch > maxC
+        maxC = maxC_patch;
+    end
+    if minC_patch < minC
+        minC = minC_patch;
     end
 end
 if strcmp(visible,'off')

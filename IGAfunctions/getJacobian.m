@@ -4,13 +4,13 @@ if nargin < 4
 end
 
 if using_R
-    J1 = R{2}*pts;
+    J1 = R{2}(:,:,1)*pts;
 end
 switch d_p
     case 3
         if using_R
-            J2 = R{3}*pts;
-            J_1 = dot(J1,cross(J2,R{4}*pts,2),2);
+            J2 = R{3}(:,:,1)*pts;
+            J_1 = dot(J1,cross(J2,R{4}(:,:,1)*pts,2),2);
         else
             J_1 = dot(R{1},cross(R{2},R{3},2),2);
         end
@@ -23,7 +23,7 @@ switch d_p
         end
     case 2
         if using_R
-            J2 = R{3}*pts;
+            J2 = R{3}(:,:,1)*pts;
             if size(J1,2) == 2
                 crossProd = J1(:,1).*J2(:,2) - J2(:,1).*J1(:,2);
             else

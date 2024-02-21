@@ -30,8 +30,8 @@ for i = 1:d_p
     shift = shift*number(i);
 end
 w = weights(w_i);
-
-RdR = NURBSbasis(I,xi,degree,knots,w,n);
+computeMixedDerivs = nargout > d_p+1;
+RdR = NURBSbasis(I,xi,degree,knots,w,n,computeMixedDerivs);
 if nargin < 4
     coeffs = nurbs.coeffs(1:d,:).';
     U = reshape(coeffs(w_i,:),npts,n_en,d);
@@ -39,10 +39,20 @@ else
     U = reshape(U(w_i,:),npts,n_en,size(U,2));
 end
 d_p = numel(knots);
-varargout = cell(1,d_p+1);
+varargout = cell(1,nargout);
 varargout{1} = reshape(sum(RdR{1}.*U,2),[],size(U,3));
 for i = 1:d_p
     for j = 1:n
         varargout{i+1}(:,:,j) = reshape(sum(RdR{i+1}(:,:,j).*U,2),[],size(U,3));
+    end
+end
+if computeMixedDerivs
+    if n == 2
+        for i = (2+d_p):nargout
+            varargout{i}(:,:,1) = reshape(sum(RdR{i}(:,:,1).*U,2),[],size(U,3));
+        end
+    else
+        varargout{end-1} = RdR;
+        varargout{end} = w_i;
     end
 end
