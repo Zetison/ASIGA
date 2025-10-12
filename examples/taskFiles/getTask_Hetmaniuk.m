@@ -24,24 +24,26 @@ misc.applyLoad = 'planeWave';
 % BCs = {'SHBC'};
 % BCs = {'SSBC'};
 % BCs = {'NNBC'};
-BCs = {'SHBC','SSBC','NNBC'};
+BCs = {'NNBC','SSBC','SHBC'};
 if strcmp(misc.applyLoad,'pointPulsation')
     BCs = {'NBC'};
 end
 ffp.plotFarField = ~hetmaniukCase;
 % plotFarField = true;     % If false, plots the near field instead
 
-HetmaniukMesh = 0;
+HetmaniukMesh = 1;
 if HetmaniukMesh
     BCs = {'SHBC'};
     if 0
         misc.coreMethod = {'sub_IGA','hp_FEM'};
         msh.M = [7,6]; % 6
-%         msh.M = [5,4]; % 6
+%         msh.M = [2,1]; % 6
     else
         misc.coreMethod = {'hp_FEM','sub_IGA'};
         msh.M = [6,7]; % 6
-%         msh.M = [4,5]; % 6
+%         msh.M = [1,2]; % 6
+        misc.coreMethod = {'sub_IGA'};
+        msh.M = [7]; % 6
     end
     connectedParameters = {{'msh.M','misc.coreMethod'}};
 end
@@ -383,7 +385,7 @@ for i = 1:numel(BCs)
     misc.method = {'BA'};
     misc.formulation = {'SL2E'};
 %     misc.formulation = {'VL2E'};
-    collectIntoTasks
+%     collectIntoTasks
 end
 % Study to show the influence of refining the resolution through the
 % thickness of the solid domain
@@ -408,6 +410,7 @@ for i = 1:numel(BCs)
     misc.method = {'PML'};
     misc.formulation = {'GSB'};
     msh.extraSolidKnots = 0:(msh.degree+2);
+    connectedParameters = {{}};
     loopParameters = {'msh.M','misc.method','misc.coreMethod','misc.BC','misc.omega','msh.extraSolidKnots'};
     postPlot(7) = postPlot(1);
     postPlot(7).plotResults = true;
@@ -431,7 +434,254 @@ for i_task = 1:numel(study.tasks)
     plotROMresiduals(task);
 end
 
+function format_noDerivatives_results()
+
+% Directory and file pattern
+BCs = {'SHBC', 'SSBC', 'NNBC'};
+iters = [2,3,5];
+for j = 1:length(BCs)
+    folder = 'C:\Users\jonv\results\ASIGA\Hetmaniuk2012raa\';
+    filePrefix = ['Hetmaniuk2012raa_M7_PML_IGA_' BCs{j} '_basisROMDGP_noDerivatives_iter'];
+    fileSuffix = '.txt';
+    
+    % Number of iterations/files
+    numFiles = iters(j);
+    
+    % Initialize cell array to hold LaTeX table rows
+    latexRows = cell(numFiles, 1);
+    
+    for i = 1:numFiles
+        % Construct full file name
+        filename = fullfile(folder, [filePrefix num2str(i) fileSuffix]);
+    
+        % Read the data (skip header row)
+        data = readmatrix(filename, 'NumHeaderLines', 1);
+    
+        % Extract columns
+        k_vals = data(:,1);
+        jp_vals = data(:,2);
+    
+        % Convert k values to comma-separated %g format
+        k_str = sprintf('%g, ', k_vals);
+        k_str(end-1:end) = [];  % Remove last comma
+    
+        % Convert J_P values to comma-separated integer format
+        jp_str = sprintf('%d, ', jp_vals);
+        jp_str(end-1:end) = [];
+    
+        % Sum of J_P values
+        total_jp = sum(jp_vals);
+    
+        % Format LaTeX row
+        latexRows{i} = sprintf('%d\t& %s\t\t& %s\t\t& %d\t\\\\', i, k_str, jp_str, total_jp);
+    end
+    
+    % Print LaTeX rows
+    fprintf('\nGenerated LaTeX table rows for %s:\n\n', BC{1});
+    for i = 1:numFiles
+        fprintf('%s\n', latexRows{i});
+    end
+    fprintf('\n\n\n');
+end
+
+function clean_log_file()
+
+% Input and output file paths
+inputFile = 'ASIGA.log';       % <-- replace with your actual file
+outputFile = 'ASIGA_clean.log';   % or use same name to overwrite
+
+% Read the file into a cell array of lines
+fid = fopen(inputFile, 'r');
+lines = {};
+tline = fgetl(fid);
+while ischar(tline)
+    lines{end+1} = tline; %#ok<AGROW>
+    tline = fgetl(fid);
+end
+fclose(fid);
+
+% Filter out lines that start with "Surface error = "
+cleanedLines = lines(~startsWith(lines, 'Surface error = '));
+
+% Write cleaned lines to the output file
+fid = fopen(outputFile, 'w');
+for i = 1:length(cleanedLines)
+    fprintf(fid, '%s\n', cleanedLines{i});
+end
+fclose(fid);
+
+fprintf('Cleaned file written to: %s\n', outputFile);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function analyze_log_file()
+
+% File: extract_avg_timings.m
 
 
+% Define cases
+cases = {'SHBC', 'SSBC', 'NNBC'};
 
+fprintf('%39s & %20s & %20s & %20s & %20s & %20s & %20s\n', 'Mesh', 'FOM avg eval time', 'FOM tot time', 'ROM avg eval time', 'ROM tot time', 'Speedup online', 'Speedup tot')
 
+noFreqs = [541, 1201, 1201];
+
+for j = 1:length(cases)
+    BC = cases{j};
+    % Read the log file
+    filename = ['Hetmaniuk2012raa_M7_PML_IGA_' BC '.log'];
+    fid = fopen(filename, 'r');
+    logData = textscan(fid, '%s', 'Delimiter', '\n');
+    fclose(fid);
+    logLines = logData{1};
+    
+    % Initialize arrays for timing values
+    totalFreqTimings = [];
+    surfaceErrorTimings = [];
+    totalTaskTime = NaN;
+    
+    % Regex patterns
+    freqPattern = 'Total time spent on frequency \d+ of \d+: +([0-9.]+)';
+    errorPattern = 'Calculating surface error .*?using +([0-9.]+) seconds';
+    finalTaskPattern = 'Total time spent on task\s*[:=]?\s*([0-9.]+)';
+    
+    % Loop through lines and extract timing values
+    for i = 1:length(logLines)
+        line = logLines{i};
+        
+        % Frequency timing
+        freqMatch = regexp(line, freqPattern, 'tokens');
+        if ~isempty(freqMatch)
+            totalFreqTimings(end + 1) = str2double(freqMatch{1}{1});
+        end
+        
+        % Surface error timing
+        errorMatch = regexp(line, errorPattern, 'tokens');
+        if ~isempty(errorMatch)
+            surfaceErrorTimings(end + 1) = str2double(errorMatch{1}{1});
+        end
+        
+        % Final total task time
+        finalMatch = regexp(line, finalTaskPattern, 'tokens');
+        if ~isempty(finalMatch)
+            totalTaskTime = str2double(finalMatch{1}{1});
+        end
+    end
+    
+    % Compute averages
+    avgFreqTime = mean(totalFreqTimings);
+    avgSurfaceErrorTime = mean(surfaceErrorTimings);
+    FOMsweepTiming = totalTaskTime - sum(surfaceErrorTimings);
+    
+%     % Display results
+%     fprintf('--- Timing Summary ---\n');
+%     fprintf('Frequencies analyzed: %d\n', length(totalFreqTimings));
+%     fprintf('Average total time per frequency: %.6f seconds\n', avgFreqTime);
+%     
+%     if ~isempty(surfaceErrorTimings)
+%         fprintf('Surface error calculations: %d\n', length(surfaceErrorTimings));
+%         fprintf('Average surface error time: %.6f seconds\n', avgSurfaceErrorTime);
+%     else
+%         fprintf('No "Calculating surface error" timings found.\n');
+%     end
+%     
+%     if ~isnan(totalTaskTime)
+%         fprintf('Final total time spent on task: %.6f seconds\n', totalTaskTime);
+%     else
+%         fprintf('Final "Total time spent on task" not found.\n');
+%     end
+    
+    % File: extract_rom_timings.m
+    
+    % Read the ROM log file
+    filename = ['Hetmaniuk2012raa_M7_PML_IGA_' BC '_basisROMDGP.log'];
+    fid = fopen(filename, 'r');
+    logData = textscan(fid, '%s', 'Delimiter', '\n');
+    fclose(fid);
+    logLines = logData{1};
+    
+    % Initialize
+    surfaceErrorTimings = [];
+    farfieldTimings = [];
+    ROMevalTimings = [];
+    adaptiveROMTime = NaN;
+    ROMerrorTime = NaN;
+    totalTaskTimeROM = NaN;
+    
+    % Regular expressions
+    errorPattern = 'Calculating surface error.*?using +([0-9.]+) seconds';
+    farfieldPattern = 'Computing far-field pattern.*?using +([0-9.]+) seconds';
+    ROMsolPattern = 'Computing ROM solution.*?using +([0-9.]+) seconds';
+    adaptiveROMPattern = 'Total time for adaptive ROM basis computations[:=]? +([0-9.]+)';
+    compute_ROM_error = 'Computing final ROM residual/error .*?using +([0-9.]+) seconds';
+
+    
+    % Loop through lines and extract relevant times
+    for i = 1:length(logLines)
+        line = logLines{i};
+    
+        % Extract surface error timings
+        errorMatch = regexp(line, errorPattern, 'tokens');
+        if ~isempty(errorMatch)
+            surfaceErrorTimings(end + 1) = str2double(errorMatch{1}{1});
+        end
+    
+        % Extract surface error timings
+        errorMatch = regexp(line, farfieldPattern, 'tokens');
+        if ~isempty(errorMatch)
+            farfieldTimings(end + 1) = str2double(errorMatch{1}{1});
+        end
+    
+        % Extract surface error timings
+        errorMatch = regexp(line, ROMsolPattern, 'tokens');
+        if ~isempty(errorMatch)
+            ROMevalTimings(end + 1) = str2double(errorMatch{1}{1});
+        end
+    
+        % Extract total adaptive ROM basis time
+        romMatch = regexp(line, adaptiveROMPattern, 'tokens');
+        if ~isempty(romMatch)
+            adaptiveROMTime = str2double(romMatch{1}{1});
+        end
+    
+        % Extract total ROM error calculation time
+        romErrorMatch = regexp(line, compute_ROM_error, 'tokens');
+        if ~isempty(romErrorMatch)
+            ROMerrorTime = str2double(romErrorMatch{1}{1});
+        end
+        
+        % Final total task time
+        finalMatch = regexp(line, finalTaskPattern, 'tokens');
+        if ~isempty(finalMatch)
+            totalTaskTimeROM = str2double(finalMatch{1}{1});
+        end
+    end
+    nf = noFreqs(j);
+    
+    % Compute average surface error time
+    avgSurfaceErrorTimeROM = mean(surfaceErrorTimings);
+    avgfarfieldTimeROM = mean(farfieldTimings);
+    avgROMevalTimeROM = mean(ROMevalTimings);
+
+    ROMsweepTiming = totalTaskTimeROM - ROMerrorTime - sum(surfaceErrorTimings);
+    ROMevalTiming = avgROMevalTimeROM + avgfarfieldTimeROM;
+    
+    % Display results
+%     fprintf('--- ROM Simulation Timing Summary ---\n');
+%     fprintf('Number of surface error entries: %d\n', length(surfaceErrorTimings));
+%     fprintf('Average surface error time: %.6f seconds\n', avgSurfaceErrorTimeROM);
+%     
+%     fprintf('Total adaptive ROM basis computation time: %.6f seconds\n', adaptiveROMTime);
+    speedup_online = FOMsweepTiming/nf/ROMevalTiming;
+    speedup_tot = FOMsweepTiming/ROMsweepTiming;
+    meshStr = sprintf('Mesh ${\\cal M}_{7,3,2}^{\\textsc{%s}}$', lower(BC));
+
+    fprintf('%39s & %20.2f & %20.2f & %20.2f & %20.2f  & %20.2f  & %20.2f  \\\\\n', meshStr, FOMsweepTiming/nf, FOMsweepTiming, ROMevalTiming, ROMsweepTiming, speedup_online, speedup_tot)
+end
+% nf = 776;
+% totalTaskTime_h = 79.672;
+% 
+% totalTaskTime = totalTaskTime_h*3600;
+% ROMevalTiming = NaN;
+% ROMsweepTiming_h = 42.1603;
+% fprintf('%s & %20.2f & %20.2f & %20.2f & %20.2f  & %20.2f  & %20.2f  \\\\\n', 'IMS', totalTaskTime/nf, totalTaskTime_h, ROMevalTiming, ROMsweepTiming, speedup_online, speedup_tot)

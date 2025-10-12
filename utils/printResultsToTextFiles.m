@@ -355,7 +355,8 @@ if plotResults
             case 'abs_p'
                 yLabel = '$$|p|$$';
             case 'error_p'
-                yLabel = '$$\frac{|p-p_h|}{|p|}$$';
+%                 yLabel = '$$\frac{|p-p_h|}{|p|}$$';
+                yLabel = '$$|p-p_h|$$';
             case 'error_pAbs'
                 yLabel = '$$\frac{||p|-|p_h||}{|p|}$$';
             case 'surfaceError'

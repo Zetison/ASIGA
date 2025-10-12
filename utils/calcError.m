@@ -12,7 +12,7 @@ for i = 1:noDomains
         U = task.varCol{i}.U(:,i_o);
     end
     %% Extract all needed data from task.varCol
-    if i == 1 && strcmp(task.misc.method,'PML')
+    if i == 1 && (strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL'))
         varCol_dummy = task.varCol{1};
         domain = varCol_dummy.geometry.domains.domain;
         [j,setFound] = findSet(domain,'Omega_a');

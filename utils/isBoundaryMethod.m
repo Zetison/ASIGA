@@ -1,7 +1,7 @@
 function boundaryMethod = isBoundaryMethod(task)
 
 switch task.misc.method
-    case {'IE','ABC','PML'}
+    case {'IE','ABC','PML','NIL'}
         boundaryMethod = false;
     case {'IENSG'}
         boundaryMethod = task.iem.boundaryMethod;

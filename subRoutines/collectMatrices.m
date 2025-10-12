@@ -14,7 +14,7 @@ else
     useCSLP = false;
 end
 switch task.misc.method
-    case {'IE','IENSG','BEM','BA','ABC','MFS','PML'}
+    case {'IE','IENSG','BEM','BA','ABC','MFS','PML','NIL'}
         tic
         if task.misc.printLog
             fprintf(['\n%-' num2str(task.misc.stringShift) 's'], 'Collecting matrices ... ')

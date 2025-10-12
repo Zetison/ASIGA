@@ -7,6 +7,44 @@ tic
 v = getFarFieldPoints(task);
 
 switch task.misc.method
+    case {'NIL'}
+        if task.ffp.plotFarField
+            if task.ffp.splineBasedNFPcalc
+                U = task.varCol{1}.U;
+                p_h = complex([]);
+                v = [];
+                paramPts = task.ffp.paramPts;
+                for patch = 1:task.varCol{1}.noPatches
+                    if isempty(paramPts{patch})
+                        continue
+                    end
+                    noCtrlPtsPatch = task.varCol{1}.noCtrlPtsPatch;
+                    Uindices = (sum(noCtrlPtsPatch(1:patch-1))+1):sum(noCtrlPtsPatch(1:patch));
+        
+                    xi = paramPts{patch};
+                    p_h = [p_h; evaluateNURBS(task.varCol{1}.nurbs{patch},xi,0,U(Uindices,:))];
+                    v = [v; evaluateNURBS(task.varCol{1}.nurbs{patch},xi)];
+                    r = norm2(v);
+                    k = task.varCol{1}.k;
+                    p_h = r.*exp(-1i*k*r).*p_h;
+                end
+%                 [v,I] = unique(v,'rows');
+%                 p_h = p_h(I,:);
+                task.ffp.theta = acos(v(:,3)./norm2(v)).';
+                alpha = atan2(v(:,2),v(:,1));
+                alpha(alpha < 0) = alpha(alpha < 0) + 2*pi;
+                if abs(alpha(end)) < 1e-10
+                    alpha(end) = 2*pi;
+                end
+                task.ffp.alpha = alpha;
+                task.ffp.beta = pi/2-task.ffp.theta;
+                task.ffp.r = norm2(v);
+            else
+                p_h = calculateScatteredPressure(task, v, 0);
+            end
+        else
+            p_h = calculateScatteredPressure(task, v, 0);
+        end
     case {'IE','ABC','IENSG','BA','BEM','PML'}
         if task.ffp.splineBasedNFPcalc
             if 1
@@ -28,7 +66,12 @@ switch task.misc.method
                 [v,I] = unique(v,'rows');
                 p_h = p_h(I,:);
                 task.ffp.theta = acos(v(:,3)./norm2(v)).';
-                task.ffp.alpha = atan2(v(:,2),v(:,1));
+                alpha = atan2(v(:,2),v(:,1));
+                alpha(alpha < 0) = alpha(alpha < 0) + 2*pi;
+                if abs(alpha(end)) < 1e-10
+                    alpha(end) = 2*pi;
+                end
+                task.ffp.alpha = alpha;
                 task.ffp.beta = pi/2-task.ffp.theta;
                 task.ffp.r = norm2(v);
                 task.ffp.plotFarField = false;

@@ -1,7 +1,7 @@
 function task = ASIGAsolve(task,omega,i_o)
 
 switch task.misc.method
-    case {'IE','IENSG','BEM','BA','ABC','MFS','PML'}        
+    case {'IE','IENSG','BEM','BA','ABC','MFS','PML','NIL'}        
         %% SOLVE SYSTEM
         useA = isfield(task,'A');
         t_start_sol = tic;

@@ -2,7 +2,7 @@ function task = ASIGAassembly(task,t_start)
 
 task = getAnalyticSolutions(task);
 switch task.misc.method
-    case {'IE','ABC','IENSG','PML'}
+    case {'IE','ABC','IENSG','PML','NIL'}
         task.timeBuildSystem = 0;
         for i_domain = 1:task.noDomains
             if ~(strcmp(task.misc.method,'IENSG') && task.iem.boundaryMethod && i_domain == 1)

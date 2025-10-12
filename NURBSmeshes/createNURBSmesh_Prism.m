@@ -36,7 +36,7 @@ else
     task = defineDomains(task);
     
     refLength = max(L);
-    if strcmp(task.misc.method,'PML')
+    if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL')
         t_pml = task.pml.t;
         fluid_pml = getPrismShellData('x_0',-(L+2*t_fluid+2*t_pml)/2,'L',L+2*t_fluid,'t',t_pml,'addPMLinfo', true, 't_extraKnots', t_fluid);
         fluid = [fluid,explodeNURBS(fluid_pml,1:3,true)];

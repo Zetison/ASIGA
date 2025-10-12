@@ -155,7 +155,7 @@ else
     L_gamma = 2*c_z_g;
 
     varCol{1}.nurbs = getEllipsoidData('C', C, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t_fluid, 'Xi', Xi, 'theta_eta', theta_eta);
-    if strcmp(task.misc.method,'PML')
+    if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL')
         C = C + task.pml.t;
     end
     c_max = max(C);
@@ -179,8 +179,9 @@ else
         dirs = 1:3;
     end
     varCol{1}.nurbs = makeUniformNURBSDegree(varCol{1}.nurbs,degreeVec);
-    
-    task.misc.r_a = evaluateProlateCoords([0,0,C(end)],Upsilon);
+    if ~(strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL'))
+        task.misc.r_a = evaluateProlateCoords([0,0,C(end)],Upsilon);
+    end
     if numel(varCol) > 1
         varCol{2}.nurbs = getEllipsoidData('C', C_g, 'alignWithAxis', alignWithAxis, 'x_0', x_0, 'parm', parm, 't', t, 'Xi', Xi, 'theta_eta', theta_eta);
         varCol{2}.nurbs = makeUniformNURBSDegree(varCol{2}.nurbs,degreeVec);

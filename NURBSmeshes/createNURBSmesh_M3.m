@@ -80,7 +80,7 @@ if varCol{1}.boundaryMethod
     varCol{1}.noElemsInner = 0;
 else
     t_fluid = task.misc.r_a-R2;
-    if ~(strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'IENSG'))
+    if ~(strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL') || strcmp(task.misc.method,'IENSG'))
         if strcmp(task.misc.model,'MS')
             Xi = [0,0,0,1,1,2,2,3,3,4,4,4]/4;
             c_z = 1.2*(L+2*R1)/2; % 30
@@ -124,7 +124,7 @@ else
             varCol{2}.nurbs = insertKnotsInNURBS(varCol{2}.nurbs,[0,0,task.msh.extraSolidKnots]);
         end
     end
-    if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'IENSG')
+    if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL') || strcmp(task.misc.method,'IENSG')
         solid_outer = getBeTSSiM3Data('R1', R1, 'R2', R2, 't', 0, 'L', L, 'parm', parm, 'Xi', Xi, 'x_0', task.msh.x_0);
         [Gamma_a,~,c_xy,c_z] = getBeTSSiSmoothM3Data('R1', R1, 'R2', R2, 't', t_fluid, 'L', L, 'Xi', Xi, 'x_0', task.msh.x_0);
         Upsilon = sqrt(c_z^2-c_xy^2);
@@ -145,7 +145,7 @@ varCol{1}.refLength = refLength;
 if parm == 2 && degree < 4
     warning(['parm=2 requires degree >= 4. Using degree=4 instead of degree=' num2str(degree)])
 end
-if ~strcmp(task.misc.method,'PML')
+if ~(strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL'))
     varCol{1}.chimin = chimin;
     varCol{1}.chimax = chimax;
     varCol{1}.c_z = c_z;

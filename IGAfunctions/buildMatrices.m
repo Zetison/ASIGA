@@ -38,11 +38,12 @@ end
 extraGP = task.misc.extraGP;
 isPML = task.varCol{i_varCol}.isPML;
 usePML = any(isPML(:)) && isfield(task,'pml');
+method = task.misc.method;
 
 if usePML
     pml = task.pml;
+    k = task.misc.omega/task.varCol{i_varCol}.c_f;
     if isnan(pml.gamma)
-        k = task.misc.omega/task.varCol{i_varCol}.c_f;
         switch pml.sigmaType
             case 1
                 pml.gamma = 5;
@@ -57,9 +58,12 @@ if usePML
     formulation = task.misc.formulation;
     r_a = task.misc.r_a;
     task.pml = pml;
+    d = task.pml.t;
 else
+    k = NaN;
     pml = NaN;
     r_a = NaN;
+    d = NaN;
     isPML = false(noElems,1);
     formulation = 'GSB';
 end
@@ -223,6 +227,26 @@ parfor e = 1:noElems
         J_1 = getJacobian(R,pts,d_p);
     end
     fact = J_1 * J_2.* W;
+    useNIL = strcmp(method, 'NIL') && strcmp(operator, 'Laplace') && any(isPML(e,:));
+    if useNIL
+        X = R{1}*pts;
+        x = X(:,1);
+        y = X(:,2);
+        z = X(:,3);
+        rho = norm2(X);
+        Om = 1 - (r_a-rho).^4/d^4;
+        eL = 1 - (r_a-rho).^3.*(r_a+3*rho)/d^4;
+        Omstr2 = -12*(r_a-rho).^2/d^4;
+        
+        A11 = (Om.^2.*x.^2 + eL.^2.*(y.^2+z.^2))./(eL.*rho.^2);
+        A12 = ((Om.^2-eL.^2).*x.*y)./(eL.*rho.^2);
+        A13 = ((Om.^2-eL.^2).*x.*z)./(eL.*rho.^2);
+        A22 = (Om.^2.*y.^2 + eL.^2.*(x.^2+z.^2))./(eL.*rho.^2);
+        A23 = ((Om.^2-eL.^2).*y.*z)./(eL.*rho.^2);
+        A33 = (Om.^2.*z.^2 + eL.^2.*(x.^2+y.^2))./(eL.*rho.^2);
+        B   = 2*1i*k*(eL - Om.^2)./eL;        
+        C_NIL  = (Om.^2.*Omstr2.*rho.^2.*(1 - 1i*k*rho) + 2*eL.^2.*(1i + k*rho).*(1i*Om + k*rho) - eL.*Om.^2.*(-2 + k*rho.*(4i + k*rho)))./(eL.^2.*rho.^2);
+    end
 
     if buildStiffnessMatrix        
         a11 = J{1}(:,1);
@@ -274,10 +298,28 @@ parfor e = 1:noElems
             dRdX{3} = JinvT3(:,1).*R{2} + JinvT3(:,2).*R{3} + JinvT3(:,3).*R{4};
         end
 
-        Kvalues(:,e) = stiffnessElementMatrix(dRdX,fact,d_f,n_en,operator,C);
+        if useNIL
+            k_e = zeros(n_en);
+            for i = 1:numel(fact)
+                dRdx = [dRdX{1}(i,:); dRdX{2}(i,:); dRdX{3}(i,:)];
+                Aij = [A11(i),A12(i),A13(i);
+                       A12(i),A22(i),A23(i);
+                       A13(i),A23(i),A33(i)];
+                Bj = X(i,:)*B(i)/rho(i);
+                k_e = k_e + (Aij*dRdx).'*dRdx * fact(i); 
+                k_e = k_e - ((Bj*dRdx).'*R{1}(i,:)).' * fact(i); 
+            end
+            Kvalues(:,e) = reshape(k_e, (d_f*n_en)^2, 1);
+        else
+            Kvalues(:,e) = stiffnessElementMatrix(dRdX,fact,d_f,n_en,operator,C);
+        end
     end
     if buildMassMatrix
-        Mvalues(:,e) = kron2(R{1},R{1}) * fact;
+        if useNIL
+            Mvalues(:,e) = kron2(R{1},R{1}) * (fact.*C_NIL/k^2);
+        else
+            Mvalues(:,e) = kron2(R{1},R{1}) * fact;
+        end
     end
     if applyBodyLoading
         v = R{1}*pts;

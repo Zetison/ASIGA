@@ -35,8 +35,9 @@ function studyName = availableStudies()
 
 % studyName = 'CSLP'; %getTask_CSLP
 % studyName = 'Hetmaniuk'; %getTask_Hetmaniuk
-studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
+% studyName = 'Ihlenburg_MS'; %getTask_Ihlenburg_MS
 
+studyName = 'Anil'; %getTask_Anil
 
 %% Venas2020ibe
 % studyName = 'articleBEM_S1_quadVis'; %getTask_articleBEM_S1_quadVis

@@ -93,7 +93,7 @@ else
     chimin = 1.8;
     chimax = 2.7;
     fluid = getBarrelData('R', R+t_fluid, 't', t_fluid, 'parm', parm, 'L', L+2*t_fluid, 'd_p', 3, 'Xi', Xi);
-    if strcmp(task.misc.method,'PML')
+    if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL')
         pmlLayer = getBarrelData('R', R+2*t_fluid, 't', t_pml, 'parm', parm, 'L', L+4*t_fluid, 'd_p', 3, 'Xi', Xi,'pmlFill', task.msh.pmlFill);
         if parm == 1
             pmlLayer{1}.isPML = [0,0,1];

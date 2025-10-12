@@ -5,7 +5,6 @@ if ~isfield(task.msh, 'meshFile')
 end
 eval(['task = ' task.msh.meshFile '(task);'])
 
-task = repeatKnots(task);
 if task.msh.explodeNURBS
     for i = 1:numel(task.varCol)
         task.varCol{i}.nurbs = explodeNURBS(task.varCol{i}.nurbs);
@@ -19,7 +18,7 @@ for i = 1:numel(task.varCol)
         task.varCol = copySet(task.varCol,i, 'outer', 'outerCoupling');
     end
 end
-if strcmp(task.misc.method,'PML') 
+if strcmp(task.misc.method,'PML') || strcmp(task.misc.method,'NIL') 
     PMLpatchFound = false;
     for i = 1:numel(task.varCol{1}.nurbs)
         if isfield(task.varCol{1}.nurbs{i},'isPML') && any(task.varCol{1}.nurbs{i}.isPML)
@@ -41,6 +40,7 @@ end
 if task.msh.autoRefine
     task.varCol = autoRefineDomains(task.varCol,task.msh.h_max,task.msh.dirs);
 end
+task = repeatKnots(task);
 task = degenerateIGAtoFEM(task);
 
 for i = 1:numel(task.varCol)

@@ -42,7 +42,7 @@ dp_inc = task.dp_incdn_;
 
 Phi_k = task.varCol{1}.Phi_k;
 solveForPtot = task.misc.solveForPtot;
-exteriorSHBC = (strcmp(BC, 'SHBC') || strcmp(BC, 'NBC')) && numel(task.varCol) == 1;
+exteriorProblem = (strcmp(BC, 'SHBC') || strcmp(BC, 'SSBC') || strcmp(BC, 'NBC')) && numel(task.varCol) == 1;
 
 extraGP = max(task.misc.extraGP,task.ffp.extraGP);
 if useExtraQuadPts
@@ -107,7 +107,7 @@ parfor e = 1:noElems
     Y = R{1}*pts;  
     p_h_gp = R{1}*squeeze(Uvalues(:,e,:));
 
-    if exteriorSHBC
+    if exteriorProblem
         dp_h_gp = -dp_inc(Y,normals); 
     else
         dp_h_gp = rho*omega.^2.*( normals(:,1).*(R{1}*squeeze(Uxvalues(:,e,:))) ...

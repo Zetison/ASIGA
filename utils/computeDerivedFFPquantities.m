@@ -20,5 +20,6 @@ if task.analyticSolutionExist
     task.results.TS_ref = 20*log10(abs(p_ref/task.misc.P_inc));
 
     task.results.error_pAbs = 100*abs(abs(p_ref)-abs(p_h))./abs(p_ref);
-    task.results.error_p = 100*abs(p_ref-p_h)./abs(p_ref);
+%     task.results.error_p = 100*abs(p_ref-p_h)./abs(p_ref);
+    task.results.error_p = abs(p_ref-p_h);
 end
